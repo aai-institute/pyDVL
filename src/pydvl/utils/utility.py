@@ -23,12 +23,12 @@ for testing and for demonstration purposes.
     learning](https://arxiv.org/abs/2107.06336). arXiv preprint arXiv:2107.06336.
 
 """
+import hashlib
 import logging
 import warnings
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from joblib import hashing
 from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.metrics import check_scoring
@@ -154,7 +154,8 @@ class Utility:
         self.cache = cache_backend
         if cached_func_options is None:
             cached_func_options = CachedFuncConfig()
-        cached_func_options.hash_prefix = hashing.hash((model, data, scorer))
+        # TODO: Find a better way to do this
+        cached_func_options.hash_prefix = str(hash((model, data, scorer)))
         self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
 
