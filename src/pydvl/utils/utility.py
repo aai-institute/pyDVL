@@ -28,6 +28,7 @@ import warnings
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from joblib import hashing
 from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.metrics import check_scoring
@@ -147,13 +148,14 @@ class Utility:
         self.default_score = scorer.default if scorer is not None else default_score
         # TODO: auto-fill from known scorers ?
         self.score_range = scorer.range if scorer is not None else np.array(score_range)
+        self.clone_before_fit = clone_before_fit
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.cache = cache_backend
         if cached_func_options is None:
             cached_func_options = CachedFuncConfig()
+        cached_func_options.hash_prefix = hashing.hash((model, data, scorer))
         self.cached_func_options = cached_func_options
-        self.clone_before_fit = clone_before_fit
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a
@@ -163,7 +165,7 @@ class Utility:
     def _initialize_utility_wrapper(self):
         if self.cache is not None:
             self._utility_wrapper = self.cache.wrap(
-                self._utility, cached_func_config=self.cached_func_options
+                self._utility, config=self.cached_func_options
             )
         else:
             self._utility_wrapper = self._utility

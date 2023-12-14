@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Collection
+from typing import Collection, Optional
 
 __all__ = ["CachedFuncConfig"]
 
@@ -13,6 +13,7 @@ class CachedFuncConfig:
     of a [Utility][pydvl.utils.utility.Utility].
 
     Args:
+        hash_prefix: Optional string prefix that be prepended to the cache key.
         ignore_args: Do not take these keyword arguments into account when
             hashing the wrapped function for usage as key. This allows
             sharing the cache among different jobs for the same experiment run if
@@ -33,6 +34,7 @@ class CachedFuncConfig:
             this number to higher values to reduce variance.
     """
 
+    hash_prefix: Optional[str] = None
     ignore_args: Collection[str] = field(default_factory=list)
     time_threshold: float = 0.3
     allow_repeated_evaluations: bool = False

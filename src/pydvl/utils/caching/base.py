@@ -3,7 +3,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Collection, Dict, Optional, Tuple, TypeVar, cast
+from typing import Any, Callable, Collection, Dict, Optional, Tuple, cast
 
 from joblib import hashing
 from joblib.func_inspect import filter_args
@@ -70,13 +70,13 @@ class CacheBackend(ABC):
         self,
         func: Callable,
         *,
-        cached_func_config: CachedFuncConfig = CachedFuncConfig(),
+        config: Optional[CachedFuncConfig] = None,
     ) -> "CachedFunc":
         """Wraps a function to cache its results.
 
         Args:
             func: The function to wrap.
-            cached_func_config: Optional caching options for the wrapped function.
+            config: Optional caching options for the wrapped function.
 
         Returns:
             The wrapped cached function.
@@ -84,7 +84,7 @@ class CacheBackend(ABC):
         return CachedFunc(
             func,
             cache_backend=self,
-            cached_func_options=cached_func_config,
+            config=config,
         )
 
     @abstractmethod
@@ -136,7 +136,7 @@ class CachedFunc:
         func: Callable to wrap.
         cache_backend: Instance of CacheBackendBase that handles
             setting and getting values.
-        cached_func_options: Configuration for wrapped function.
+        config: Configuration for wrapped function.
     """
 
     def __init__(
@@ -144,11 +144,13 @@ class CachedFunc:
         func: Callable[..., float],
         *,
         cache_backend: CacheBackend,
-        cached_func_options: CachedFuncConfig = CachedFuncConfig(),
+        config: Optional[CachedFuncConfig] = None,
     ) -> None:
         self.func = func
         self.cache_backend = cache_backend
-        self.cached_func_options = cached_func_options
+        if config is None:
+            config = CachedFuncConfig()
+        self.config = config
 
         self.__doc__ = f"A wrapper around {func.__name__}() with caching enabled.\n" + (
             CachedFunc.__doc__ or ""
@@ -193,18 +195,17 @@ class CachedFunc:
             value, duration = self._force_call(args, kwargs)
             result = CacheResult(value)
             if (
-                duration >= self.cached_func_options.time_threshold
-                or self.cached_func_options.allow_repeated_evaluations
+                duration >= self.config.time_threshold
+                or self.config.allow_repeated_evaluations
             ):
                 self.cache_backend.set(key, result)
         else:
             result = cached_result
-            if self.cached_func_options.allow_repeated_evaluations:
+            if self.config.allow_repeated_evaluations:
                 error_on_average = (result.variance / result.count) ** (1 / 2)
                 if (
-                    error_on_average
-                    > self.cached_func_options.rtol_stderr * result.value
-                    or result.count <= self.cached_func_options.min_repetitions
+                    error_on_average > self.config.rtol_stderr * result.value
+                    or result.count <= self.config.min_repetitions
                 ):
                     new_value, _ = self._force_call(args, kwargs)
                     new_avg, new_var = running_moments(
@@ -223,9 +224,10 @@ class CachedFunc:
         """Returns a string key used to identify the function and input parameter hash."""
         func_hash = self._hash_function(self.func)
         argument_hash = self._hash_arguments(
-            self.func, self.cached_func_options.ignore_args, args, kwargs
+            self.func, self.config.ignore_args, args, kwargs
         )
-        key = self.cache_backend.combine_hashes(func_hash, argument_hash)
+        hashes = list(filter(bool, [self.config.hash_prefix, func_hash, argument_hash]))
+        key = self.cache_backend.combine_hashes(*hashes)
         return key
 
     @staticmethod

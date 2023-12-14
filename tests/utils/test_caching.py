@@ -142,7 +142,7 @@ def test_cache_backend_serialization(cache_backend):
 
 def test_single_job(cache_backend):
     cached_func_config = CachedFuncConfig(time_threshold=0.0)
-    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, config=cached_func_config)
 
     n = 1000
     wrapped_foo(np.arange(n))
@@ -169,7 +169,7 @@ def test_memcached_failed_connection():
 
 def test_cache_time_threshold(cache_backend):
     cached_func_config = CachedFuncConfig(time_threshold=1.0)
-    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, config=cached_func_config)
 
     n = 1000
     indices = np.arange(n)
@@ -190,7 +190,7 @@ def test_cache_ignore_args(cache_backend):
         time_threshold=0.0,
         ignore_args=["job_id"],
     )
-    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, config=cached_func_config)
 
     n = 1000
     indices = np.arange(n)
@@ -212,7 +212,7 @@ def test_parallel_jobs(cache_backend, parallel_config):
     cached_func_config = CachedFuncConfig(
         ignore_args=["job_id", "run_id"],
     )
-    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, config=cached_func_config)
 
     n = 1234
     n_runs = 10
@@ -243,7 +243,7 @@ def test_repeated_training(cache_backend, worker_id: str):
     )
     wrapped_foo = cache_backend.wrap(
         foo_with_random,
-        cached_func_config=cached_func_config,
+        config=cached_func_config,
     )
 
     n = 7
@@ -264,7 +264,7 @@ def test_faster_with_repeated_training(cache_backend, worker_id: str):
     )
     wrapped_foo = cache_backend.wrap(
         foo_with_random_and_sleep,
-        cached_func_config=cached_func_config,
+        config=cached_func_config,
     )
 
     n = 3
@@ -311,7 +311,7 @@ def test_parallel_repeated_training(
     )
     wrapped_map_func = cache_backend.wrap(
         map_func,
-        cached_func_config=cached_func_config,
+        config=cached_func_config,
     )
 
     def reduce_func(chunks: NDArray[np.float_]) -> float:
