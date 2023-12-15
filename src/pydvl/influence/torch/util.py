@@ -20,19 +20,20 @@ from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
 
-from ..array import NumpyConverter, TensorAggregator
+from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "to_model_device",
-    "reshape_vector_to_tensors",
     "TorchTensorContainerType",
     "align_structure",
     "align_with_model",
     "flatten_dimensions",
-    "TorchCatAggregator",
     "TorchNumpyConverter",
+    "TorchCatAggregator",
+    "NestedTorchCatAggregator",
+    "torch_dataset_to_dask_array",
 ]
 
 
@@ -57,22 +58,26 @@ def reshape_vector_to_tensors(
     """
     Reshape a 1D tensor into multiple tensors with specified shapes.
 
-    This function takes a 1D tensor (input_vector) and reshapes it into a series of tensors with shapes given by
-    'target_shapes'. The reshaped tensors are returned as a tuple in the same order as their corresponding shapes.
+    This function takes a 1D tensor (input_vector) and reshapes it into a series of
+    tensors with shapes given by 'target_shapes'.
+    The reshaped tensors are returned as a tuple in the same order
+    as their corresponding shapes.
 
-    Note: The total number of elements in 'input_vector' must be equal to the sum of the products of the shapes
-        in 'target_shapes'.
+    Note:
+        The total number of elements in 'input_vector' must be equal to the
+            sum of the products of the shapes in 'target_shapes'.
 
     Args:
         input_vector: The 1D tensor to be reshaped. Must be 1D.
-        target_shapes: An iterable of tuples. Each tuple defines the shape of a tensor to be reshaped from the
-            'input_vector'.
+        target_shapes: An iterable of tuples. Each tuple defines the shape of a tensor
+            to be reshaped from the 'input_vector'.
 
     Returns:
         A tuple of reshaped tensors.
 
     Raises:
-        ValueError: If 'input_vector' is not a 1D tensor or if the total number of elements in 'input_vector' does not
+        ValueError: If 'input_vector' is not a 1D tensor or if the total
+            number of elements in 'input_vector' does not
             match the sum of the products of the shapes in 'target_shapes'.
     """
 
@@ -83,7 +88,8 @@ def reshape_vector_to_tensors(
 
     if total_elements != input_vector.shape[0]:
         raise ValueError(
-            f"The total elements in shapes {total_elements} does not match the vector length {input_vector.shape[0]}"
+            f"The total elements in shapes {total_elements} "
+            f"does not match the vector length {input_vector.shape[0]}"
         )
 
     tensors = []
@@ -135,7 +141,8 @@ def align_structure(
         if [v.shape for v in target.values()] != [v.shape for v in source.values()]:
 
             raise ValueError(
-                "The shapes of the values in 'target' do not match the shapes of the values in 'source'."
+                "The shapes of the values in 'target' do not match the shapes "
+                "of the values in 'source'."
             )
 
         tangent_dict = target
@@ -145,8 +152,8 @@ def align_structure(
         if [v.shape for v in target] != [v.shape for v in source.values()]:
 
             raise ValueError(
-                "'target' is a tuple/list but its elements' shapes do not match the shapes "
-                "of the values in 'source'."
+                "'target' is a tuple/list but its elements' shapes do not match "
+                "the shapes of the values in 'source'."
             )
 
         tangent_dict = dict(zip(source.keys(), target))
@@ -164,7 +171,8 @@ def align_structure(
             )
         except Exception as e:
             raise ValueError(
-                f"'target' is a tensor but cannot be reshaped to match 'source'. Original error: {e}"
+                f"'target' is a tensor but cannot be reshaped to match 'source'. "
+                f"Original error: {e}"
             )
 
     else:
@@ -175,8 +183,8 @@ def align_structure(
 
 def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
     """
-    Aligns an input to the model's parameter structure, i.e. transforms it into a dict with the same keys as
-    model.named_parameters() and matching tensor shapes
+    Aligns an input to the model's parameter structure, i.e. transforms it into a dict
+    with the same keys as model.named_parameters() and matching tensor shapes
 
     Args:
         x: The input to be aligned. It can be a dictionary, tuple, or tensor.
@@ -199,17 +207,19 @@ def flatten_dimensions(
     concat_at: int = -1,
 ) -> torch.Tensor:
     """
-    Flattens the dimensions of each tensor in the given iterable and concatenates them along a specified dimension.
+    Flattens the dimensions of each tensor in the given iterable and concatenates them
+    along a specified dimension.
 
     This function takes an iterable of PyTorch tensors and flattens each tensor.
     Optionally, each tensor can be reshaped to a specified shape before concatenation.
     The concatenation is performed along the dimension specified by `concat_at`.
 
     Args:
-        tensors: An iterable containing PyTorch tensors to be flattened and concatenated.
-        shape: A tuple representing the desired shape to which each tensor is reshaped before concatenation.
-            If None, tensors are flattened to 1D. Defaults to None.
-        concat_at: The dimension along which to concatenate the tensors. Defaults to -1.
+        tensors: An iterable containing PyTorch tensors to be flattened
+            and concatenated.
+        shape: A tuple representing the desired shape to which each tensor is reshaped
+            before concatenation. If None, tensors are flattened to 1D.
+        concat_at: The dimension along which to concatenate the tensors.
 
     Returns:
         A single tensor resulting from the concatenation of the input tensors,
@@ -246,7 +256,8 @@ def torch_dataset_to_dask_array(
     Args:
         dataset: A PyTorch [dataset][torch.utils.data.Dataset]
         chunk_size: The size of the chunks for the resulting Dask arrays.
-        total_size: If the dataset does not implement len, provide the length via this parameter. If None
+        total_size: If the dataset does not implement len, provide the length
+            via this parameter. If None
             the length of the dataset is inferred via accessing the dataset once.
         resulting_dtype: The dtype of the resulting [dask.array.Array][dask.array.Array]
 
@@ -269,13 +280,17 @@ def torch_dataset_to_dask_array(
             n_data = len(d_set)
             if total_size is not None and n_data != total_size:
                 raise ValueError(
-                    f"The number of samples in the dataset ({n_data}), derived from calling ´len´, "
-                    f"does not match the provided total number of samples ({total_size}). Call"
-                    f"the function without total_size."
+                    f"The number of samples in the dataset ({n_data}), derived "
+                    f"from calling ´len´, does not match the provided "
+                    f"total number of samples ({total_size}). "
+                    f"Call the function without total_size."
                 )
             return n_data
         except TypeError as e:
-            err_msg = f"Could not infer the number of samples in the dataset from calling ´len´. Original error: {e}."
+            err_msg = (
+                f"Could not infer the number of samples in the dataset from "
+                f"calling ´len´. Original error: {e}."
+            )
             if total_size is not None:
                 logger.warning(
                     err_msg
@@ -284,10 +299,11 @@ def torch_dataset_to_dask_array(
                 return total_size
             else:
                 logger.warning(
-                    err_msg
-                    + f" Infer the number of samples from the dataset, via iterating the dataset once. "
+                    err_msg + f" Infer the number of samples from the dataset, "
+                    f"via iterating the dataset once. "
                     f"This might induce severe overhead, so consider"
-                    f"providing total_size, if you know the number of samples beforehand."
+                    f"providing total_size, if you know the number of samples "
+                    f"beforehand."
                 )
                 idx = 0
                 while True:
@@ -349,10 +365,12 @@ def torch_dataset_to_dask_array(
 
 class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
     """
-    Helper class for converting between [torch.Tensor][torch.Tensor] and [numpy.ndarray][numpy.ndarray]
+    Helper class for converting between [torch.Tensor][torch.Tensor] and
+    [numpy.ndarray][numpy.ndarray]
 
     Args:
-        device: Optional device parameter to move the resulting torch tensors to the specified device
+        device: Optional device parameter to move the resulting torch tensors to the
+            specified device
 
     """
 
@@ -361,15 +379,16 @@ class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
 
     def to_numpy(self, x: torch.Tensor) -> NDArray:
         """
-        Convert a detached [torch.Tensor][torch.Tensor] to [numpy.ndarray][numpy.ndarray]
+        Convert a detached [torch.Tensor][torch.Tensor] to
+        [numpy.ndarray][numpy.ndarray]
         """
         arr: NDArray = x.cpu().numpy()
         return arr
 
     def from_numpy(self, x: NDArray) -> torch.Tensor:
         """
-        Convert a [numpy.ndarray][numpy.ndarray] to [torch.Tensor][torch.Tensor] and optionally move it to a provided
-        device
+        Convert a [numpy.ndarray][numpy.ndarray] to [torch.Tensor][torch.Tensor] and
+        optionally move it to a provided device
         """
         t = torch.from_numpy(x)
         if self.device is not None:
@@ -377,30 +396,53 @@ class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
         return t
 
 
-class TorchCatAggregator(TensorAggregator):
+class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     """
-    An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat] function. This class
-    is designed to aggregate tensors from generators, either nested or single-level, into a
-    single tensor by concatenating them along a specified dimension.
+    An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat]
+    function. Concatenation is done along the first dimension of the chunks.
     """
 
-    def aggregate_from_nested_generators(
+    def __call__(self, tensor_generator: Generator[torch.Tensor, None, None]):
+        """
+        Aggregates tensors from a single-level generator into a single tensor by
+        concatenating them. This method is a straightforward way to combine a sequence
+        of tensors into one larger tensor.
+
+        Args:
+            tensor_generator: A generator that yields `torch.Tensor` objects.
+
+        Returns:
+            A single tensor formed by concatenating all tensors from the generator.
+                The concatenation is performed along the default dimension (0).
+        """
+        return torch.cat(list(tensor_generator))
+
+
+class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
+    """
+    An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat]
+    function. Concatenation is done along the first two dimensions of the chunks.
+    """
+
+    def __call__(
         self,
         nested_generators_of_tensors: Generator[
             Generator[torch.Tensor, None, None], None, None
         ],
-    ) -> torch.Tensor:
+    ):
         """
-        Aggregates tensors from a nested generator structure into a single tensor by concatenating.
-        Each inner generator is first concatenated along dimension 1 into a tensor, and then
-        these tensors are concatenated along dimension 0 together to form the final tensor.
+        Aggregates tensors from a nested generator structure into a single tensor by
+        concatenating. Each inner generator is first concatenated along dimension 1 into
+        a tensor, and then these tensors are concatenated along dimension 0 together to
+        form the final tensor.
 
         Args:
-            nested_generators_of_tensors: A generator of generators, where each inner generator
-                yields `torch.Tensor` objects.
+            nested_generators_of_tensors: A generator of generators, where each inner
+                generator yields `torch.Tensor` objects.
 
         Returns:
-            A single tensor formed by concatenating all tensors from the nested generators.
+            A single tensor formed by concatenating all tensors from the nested
+            generators.
 
         """
         return torch.cat(
@@ -411,19 +453,3 @@ class TorchCatAggregator(TensorAggregator):
                 )
             )
         )
-
-    def aggregate_from_generator(
-        self, tensor_generator: Generator[torch.Tensor, None, None]
-    ) -> torch.Tensor:
-        """
-        Aggregates tensors from a single-level generator into a single tensor by concatenating them.
-        This method is a straightforward way to combine a sequence of tensors into one larger tensor.
-
-        Args:
-            tensor_generator: A generator that yields `torch.Tensor` objects.
-
-        Returns:
-            torch.Tensor: A single tensor formed by concatenating all tensors from the generator.
-                          The concatenation is performed along the default dimension (0).
-        """
-        return torch.cat(list(tensor_generator))

@@ -3,15 +3,15 @@ from enum import Enum
 from typing import Collection, Generic, Iterable, Optional, TypeVar
 
 
-class InfluenceType(str, Enum):
+class InfluenceMode(str, Enum):
     r"""
     Enum representation for the types of influence.
 
     Attributes:
-        Up: Up-weighting a training point, see section 2.1 of
-            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
-        Perturbation: Perturb a training point, see section 2.2 of
-            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+        Up: [Approximating the influence of a point]
+            [approximating-the-influence-of-a-point]
+        Perturbation: [Perturbation definition of the influence score]
+            [perturbation-definition-of-the-influence-score]
 
     """
 
@@ -19,18 +19,19 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
-class UnsupportedInfluenceTypeException(ValueError):
-    def __init__(self, influence_type: str):
+class UnsupportedInfluenceModeException(ValueError):
+    def __init__(self, mode: str):
         super().__init__(
-            f"Provided {influence_type=} is not supported. Choose one of InfluenceType.Up "
-            f"and InfluenceType.Perturbation"
+            f"Provided {mode=} is not supported. Choose one of InfluenceMode.Up "
+            f"and InfluenceMode.Perturbation"
         )
 
 
 class NotFittedException(ValueError):
     def __init__(self):
         super().__init__(
-            f"Objects of type InfluenceFunctionModel must be fitted before calling influence methods. "
+            f"Objects of type InfluenceFunctionModel must be fitted before calling "
+            f"influence methods. "
             f"Call method fit with appropriate input."
         )
 
@@ -42,8 +43,9 @@ DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     """
-    Generic abstract base class for computing influence related quantities. For a specific influence algorithm and
-    tensor framework, inherit from this base class
+    Generic abstract base class for computing influence related quantities.
+    For a specific influence algorithm and tensor framework,
+    inherit from this base class
     """
 
     @property
@@ -53,17 +55,22 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
     @property
     @abstractmethod
+    def is_thread_safe(self) -> bool:
+        """Whether the influence computation is thread safe"""
+
+    @property
+    @abstractmethod
     def is_fitted(self):
-        """Overwrite this, to expose the fitting status of the instance."""
+        """Override this, to expose the fitting status of the instance."""
 
     @abstractmethod
-    def fit(self, data_loader: DataLoaderType):
+    def fit(self, data: DataLoaderType):
         """
-        Overwrite this method to fit the influence function model to training data, e.g. pre-compute hessian matrix
-        or matrix decompositions
+        Override this method to fit the influence function model to training data,
+        e.g. pre-compute hessian matrix or matrix decompositions
 
         Args:
-            data_loader:
+            data:
 
         Returns:
             The fitted instance
@@ -77,7 +84,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     @abstractmethod
     def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
-        Overwrite this method to implement the approximation of
+        Override this method to implement the approximation of
 
         \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
 
@@ -98,11 +105,11 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         y_test: TensorType,
         x: Optional[TensorType] = None,
         y: Optional[TensorType] = None,
-        influence_type: InfluenceType = InfluenceType.Up,
+        mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
         if not self.is_fitted:
             raise NotFittedException()
-        return self._influences(x_test, y_test, x, y, influence_type)
+        return self._influences(x_test, y_test, x, y, mode)
 
     @abstractmethod
     def _influences(
@@ -111,12 +118,13 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         y_test: TensorType,
         x: Optional[TensorType] = None,
         y: Optional[TensorType] = None,
-        influence_type: InfluenceType = InfluenceType.Up,
+        mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
         r"""
-        Overwrite this method to implement the approximation of
+        Override this method to implement the approximation of
 
-        \[ \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+        \[ \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}},
+            f_{\theta}(x_{\text{test}})),
             \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the case of up-weighting influence, resp.
@@ -130,10 +138,13 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
             x_test: model input to use in the gradient computations
                 of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
             y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$,
-                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{test}$
+            x: optional model input to use in the gradient computations
+                $\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{test}$
             y: optional label tensor to compute gradients
-            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_modl.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -146,26 +157,33 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         z_test_factors: TensorType,
         x: TensorType,
         y: TensorType,
-        influence_type: InfluenceType = InfluenceType.Up,
+        mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
         r"""
-        Overwrite this method to implement the computation of
+        Override this method to implement the computation of
 
-        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the case of up-weighting influence, resp.
 
-        \[ \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
-        for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
+        for the perturbation type influence case. The gradient is meant to be per sample
+        of the batch $(x, y)$.
 
         Args:
              z_test_factors: pre-computed array, approximating
-                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
+             x: model input to use in the gradient computations
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{\text{test}}$
              y: label tensor to compute gradients
-             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+             mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_modl.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch

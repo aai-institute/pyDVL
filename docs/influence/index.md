@@ -71,8 +71,7 @@ and without re-training the full model.
 
 pyDVL supports two ways of computing the empirical influence function, namely
 up-weighting of samples and perturbation influences. The choice is done by the
-parameter `influence_type` in the main entry point 
-[compute_influences][pydvl.influence.general.compute_influences].
+parameter `mode`.
 
 ### Approximating the influence of a point
 
@@ -186,8 +185,8 @@ The main abstraction of the library for influence calculation is
 [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]. 
 On implementations of this abstraction, you can call the method `influences`
 to compute influences. We provide implementations to use with pytorch model in
-[pydvl.influence.torch][pydvl.influence.torch.influence_model]. For detailed information on available
-implementations see the documentation in [InfluenceFunctionModel](influence_function_model.md).
+[pydvl.influence.torch][pydvl.influence.torch.influence_model]. For detailed information 
+on available implementations see the documentation in [InfluenceFunctionModel](influence_function_model.md).
 
 Given a pre-trained pytorch model and a loss, a basic example would look like
 
@@ -251,14 +250,16 @@ as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 ### Perturbation influences
 
 The method of empirical influence computation can be selected with the
-parameter `influence_type`:
+parameter `mode`:
 
 ```python
-from pydvl.influence import InfluenceType
-influences = if_model.influences(x_test, y_test, x, y, influence_type=InfluenceType.Perturbation)
+from pydvl.influence import InfluenceMode
+
+influences = if_model.influences(x_test, y_test, x, y,
+                                 mode=InfluenceMode.Perturbation)
 ```
 The result is a tensor with at least three dimensions. The first two dimensions
-are the same as in the case of `influence_type=InfluenceType.Up` case, i.e. one row per test
+are the same as in the case of `mode=InfluenceMode.Up` case, i.e. one row per test
 point and one column per training point. The remaining dimensions are the same
 as the number of input features in the data. Therefore, each entry in the tensor
 represents the influence of each feature of each training point on each test
@@ -270,8 +271,8 @@ point.
 The influence factors(refer to
 [the previous section](#approximating-the-influence-of-a-point) for a definition)
 are typically the most computationally demanding part of influence calculation.
-They can be obtained via calling the `influence_factors` method, saved, and later used for influence calculation
-on different subsets of the training dataset.
+They can be obtained via calling the `influence_factors` method, saved, and later used 
+for influence calculation on different subsets of the training dataset.
 
 ```python
 influence_factors = if_model.influence_factors(x_test, y_test)

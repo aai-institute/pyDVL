@@ -70,6 +70,7 @@ plugins:
             - https://pytorch.org/docs/stable/objects.inv
             - https://pymemcache.readthedocs.io/en/latest/objects.inv
             - https://docs.dask.org/en/latest/objects.inv
+            - https://distributed.dask.org/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             inherited_members: true

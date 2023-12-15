@@ -15,7 +15,7 @@ into memory.
 
 ```python
 from pydvl.influence import SequentialInfluenceCalculator
-from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
+from pydvl.influence.torch.util import NestedTorchCatAggregator, TorchNumpyConverter
 from pydvl.influence.torch import CgInfluence
 
 batch_size = 10
@@ -31,7 +31,7 @@ seq_calc = SequentialInfluenceCalculator(if_model)
 lazy_influences = seq_calc.influences(test_dataloader, train_dataloader)
 
 # trigger computation and pull the result into main memory, result is the full tensor for all combinations of the two loaders
-influences = lazy_influences.compute(tensor_aggregator=TorchCatAggregator())
+influences = lazy_influences.compute(aggregator=NestedTorchCatAggregator())
 # or
 # trigger computation and write results chunk-wise to disk using zarr in a sequential manner
 lazy_influences.to_zarr("local_path/or/url", TorchNumpyConverter())
@@ -68,11 +68,16 @@ and the following [blog entry](https://blog.dask.org/2021/11/02/choosing-dask-ch
 from torch.utils.data import Dataset, DataLoader
 from pydvl.influence import DaskInfluenceCalculator
 from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.util import torch_dataset_to_dask_array, TorchNumpyConverter
-from distributed import Client
+from pydvl.influence.torch.util import (
+    torch_dataset_to_dask_array,
+    TorchNumpyConverter,
+)
+# from distributed import Client, LocalCluster, SSHCluster
 
-train_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
-test_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
+train_data_set: Dataset = LargeDataSet(
+    ...)  # Possible some out of memory large Dataset
+test_data_set: Dataset = LargeDataSet(
+    ...)  # Possible some out of memory large Dataset
 
 train_dataloader = DataLoader(train_data_set)
 if_model = CgInfluence(model, loss, hessian_regularization=0.01)
@@ -81,14 +86,16 @@ if_model = if_model.fit(train_dataloader)
 # wrap your input data into dask arrays
 chunk_size = 10
 da_x, da_y = torch_dataset_to_dask_array(train_data_set, chunk_size=chunk_size)
-da_x_test, da_y_test = torch_dataset_to_dask_array(test_data_set, chunk_size=chunk_size)
+da_x_test, da_y_test = torch_dataset_to_dask_array(test_data_set,
+                                                   chunk_size=chunk_size)
 
-client = Client(n_workers=4, threads_per_worker=1)  # use only one thread for scheduling, due to non-thread safety of some torch operations
-
-da_calc = DaskInfluenceCalculator(if_model, numpy_converter=TorchNumpyConverter())
+client = Client(n_workers=4, threads_per_worker=1)
+DisableThreadedClientCheck = "DEFINEMESOMEWHERE"
+da_calc = DaskInfluenceCalculator(if_model, converter=TorchNumpyConverter(),
+                                  client=DisableThreadedClientCheck)
 da_influences = da_calc.influences(da_x_test, da_y_test, da_x, da_y)
+# use only one thread for scheduling, due to non-thread safety of some torch operations
 # da_influences is a dask.array.Array
-
 # trigger computation and write chunks to disk in parallel
 da_influences.to_zarr("path/or/url")
 

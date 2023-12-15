@@ -1,4 +1,4 @@
-from .influence_model import (
+from .influence_function_model import (
     ArnoldiInfluence,
     CgInfluence,
     DirectInfluence,

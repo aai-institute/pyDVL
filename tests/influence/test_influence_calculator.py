@@ -1,3 +1,4 @@
+import logging
 import shutil
 import uuid
 
@@ -8,15 +9,23 @@ import torch
 from distributed import Client
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import DaskInfluenceCalculator, InfluenceType
-from pydvl.influence.base_influence_model import UnsupportedInfluenceTypeException
+from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
+from pydvl.influence.base_influence_function_model import (
+    UnsupportedInfluenceModeException,
+)
 from pydvl.influence.influence_calculator import (
+    DisableClientSingleThreadCheck,
     InvalidDimensionChunksError,
     SequentialInfluenceCalculator,
+    ThreadSafetyViolationError,
     UnalignedChunksError,
 )
 from pydvl.influence.torch import ArnoldiInfluence, CgInfluence, DirectInfluence
-from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
+from pydvl.influence.torch.util import (
+    NestedTorchCatAggregator,
+    TorchCatAggregator,
+    TorchNumpyConverter,
+)
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 
 
@@ -88,7 +97,9 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
         model, test_case.loss, train_dataloader, test_case.hessian_reg
     )
     numpy_converter = TorchNumpyConverter()
-    dask_inf = DaskInfluenceCalculator(influence_model, numpy_converter)
+    dask_inf = DaskInfluenceCalculator(
+        influence_model, numpy_converter, DisableClientSingleThreadCheck
+    )
     dask_fac = dask_inf.influence_factors(da_x_train, da_y_train)
     dask_fac = dask_fac.compute(scheduler="synchronous")
     torch_fac = influence_model.influence_factors(x_train, y_train).numpy()
@@ -99,11 +110,11 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
         da_y_test,
         da_x_train,
         da_y_train,
-        influence_type=test_case.influence_type,
+        mode=test_case.mode,
     )
     dask_val = dask_val.compute(scheduler="synchronous")
     torch_val = influence_model.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
     assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
 
@@ -135,8 +146,10 @@ def test_dask_influence_nn(model_and_data, test_case):
         hessian_regularization=test_case.hessian_reg,
     ).fit(train_dataloader)
 
-    numpy_converter = TorchNumpyConverter()
-    dask_influence = DaskInfluenceCalculator(inf_model, numpy_converter)
+    converter = TorchNumpyConverter()
+    dask_influence = DaskInfluenceCalculator(
+        inf_model, converter, DisableClientSingleThreadCheck
+    )
 
     da_factors = dask_influence.influence_factors(da_x_test, da_y_test)
     torch_factors = inf_model.influence_factors(x_test, y_test)
@@ -148,11 +161,11 @@ def test_dask_influence_nn(model_and_data, test_case):
     )
 
     torch_values_from_factors = inf_model.influences_from_factors(
-        torch_factors, x_train, y_train, influence_type=test_case.influence_type
+        torch_factors, x_train, y_train, mode=test_case.mode
     )
 
     da_values_from_factors = dask_influence.influences_from_factors(
-        da_factors, da_x_train, da_y_train, influence_type=test_case.influence_type
+        da_factors, da_x_train, da_y_train, mode=test_case.mode
     )
 
     assert np.allclose(
@@ -167,28 +180,26 @@ def test_dask_influence_nn(model_and_data, test_case):
         da_y_test,
         da_x_train,
         da_y_train,
-        influence_type=test_case.influence_type,
+        mode=test_case.mode,
     ).compute(scheduler="synchronous")
     torch_values = inf_model.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     )
     assert np.allclose(da_values, torch_values.numpy(), atol=1e-6, rtol=1e-3)
 
     da_sym_values = dask_influence.influences(
-        da_x_train, da_y_train, influence_type=test_case.influence_type
+        da_x_train, da_y_train, mode=test_case.mode
     ).compute(scheduler="synchronous")
-    torch_sym_values = inf_model.influences(
-        x_train, y_train, influence_type=test_case.influence_type
-    )
+    torch_sym_values = inf_model.influences(x_train, y_train, mode=test_case.mode)
     assert np.allclose(da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3)
 
-    with pytest.raises(UnsupportedInfluenceTypeException):
+    with pytest.raises(UnsupportedInfluenceModeException):
         dask_influence.influences(
             da_x_test,
             da_y_test,
             da_x_train,
             da_y_train,
-            influence_type="fancy_influence",
+            mode="fancy_influence",
         )
 
     with pytest.raises(ValueError):
@@ -198,14 +209,20 @@ def test_dask_influence_nn(model_and_data, test_case):
         dask_influence.influences(da_x_test, da_y_test, x=None, y=da_y_train)
 
     # test distributed scheduler
-    if test_case.influence_type == InfluenceType.Up:
-        with Client(threads_per_worker=1):
-            numpy_converter = TorchNumpyConverter()
-            dask_influence_client = DaskInfluenceCalculator(inf_model, numpy_converter)
+    if test_case.mode == InfluenceMode.Up:
+        with Client(threads_per_worker=1) as client:
+            converter = TorchNumpyConverter()
+            dask_influence_client = DaskInfluenceCalculator(
+                inf_model, converter, client
+            )
             da_factors_client = dask_influence_client.influence_factors(
                 da_x_test, da_y_test
             )
             np.allclose(torch_factors.numpy(), da_factors_client.compute())
+
+        with pytest.raises(ThreadSafetyViolationError):
+            with Client() as client:
+                DaskInfluenceCalculator(inf_model, converter, client)
 
     with pytest.raises(InvalidDimensionChunksError):
         da_x_test_wrong_chunks = da.from_array(
@@ -243,11 +260,10 @@ def test_sequential_calculator(model_and_data, test_case):
         hessian_regularization=test_case.hessian_reg,
     ).fit(train_dataloader)
 
-    block_aggregator = TorchCatAggregator()
     seq_calculator = SequentialInfluenceCalculator(inf_model)
 
     seq_factors_lazy_array = seq_calculator.influence_factors(test_dataloader)
-    seq_factors = seq_factors_lazy_array.compute(block_aggregator)
+    seq_factors = seq_factors_lazy_array.compute(aggregator=TorchCatAggregator())
 
     torch_factors = inf_model.influence_factors(x_test, y_test)
     zarr_factors_path = str(uuid.uuid4())
@@ -259,7 +275,7 @@ def test_sequential_calculator(model_and_data, test_case):
     shutil.rmtree(zarr_factors_path)
 
     torch_values_from_factors = inf_model.influences_from_factors(
-        torch_factors, x_train, y_train, influence_type=test_case.influence_type
+        torch_factors, x_train, y_train, mode=test_case.mode
     )
 
     seq_factors_data_loader = DataLoader(
@@ -269,10 +285,10 @@ def test_sequential_calculator(model_and_data, test_case):
     seq_values_from_factors_lazy_array = seq_calculator.influences_from_factors(
         seq_factors_data_loader,
         train_dataloader,
-        influence_type=test_case.influence_type,
+        mode=test_case.mode,
     )
     seq_values_from_factors = seq_values_from_factors_lazy_array.compute(
-        block_aggregator
+        aggregator=NestedTorchCatAggregator()
     )
     zarr_values_from_factors_path = str(uuid.uuid4())
     seq_values_from_factors_from_zarr = seq_values_from_factors_lazy_array.to_zarr(
@@ -286,16 +302,16 @@ def test_sequential_calculator(model_and_data, test_case):
     shutil.rmtree(zarr_values_from_factors_path)
 
     seq_values_lazy_array = seq_calculator.influences(
-        test_dataloader, train_dataloader, influence_type=test_case.influence_type
+        test_dataloader, train_dataloader, mode=test_case.mode
     )
-    seq_values = seq_values_lazy_array.compute(block_aggregator)
+    seq_values = seq_values_lazy_array.compute(aggregator=NestedTorchCatAggregator())
     zarr_values_path = str(uuid.uuid4())
     seq_values_from_zarr = seq_values_lazy_array.to_zarr(
         zarr_values_path, TorchNumpyConverter(), return_stored=True
     )
 
     torch_values = inf_model.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     )
     assert torch.allclose(seq_values, torch_values, atol=1e-6)
     assert np.allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)

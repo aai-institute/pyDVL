@@ -4,7 +4,7 @@ invert the complete Hessian in memory. pyDVL offers several implementations of t
 the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_model.DirectInfluence]).
 
 
-#### Conjugate Gradient
+### Conjugate Gradient
 
 This classical procedure for solving linear systems of equations is an iterative
 method that does not require the explicit inversion of the Hessian. Instead, it
@@ -33,7 +33,7 @@ respectively the initial guess for the solution, the relative
 tolerance, the absolute tolerance, and the maximum number of iterations.
 
 
-#### Linear time Stochastic Second-Order Approximation (LiSSA)
+### Linear time Stochastic Second-Order Approximation (LiSSA)
 
 The LiSSA method is a stochastic approximation of the inverse Hessian vector
 product. Compared to [conjugate gradient](#conjugate-gradient)
@@ -70,7 +70,7 @@ being the maximum number of iterations, the dampening factor, the scaling
 factor, the initial guess for the solution and the relative tolerance,
 respectively.
 
-#### Arnoldi
+### Arnoldi
 
 The [Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) is a
 Krylov subspace method for approximating dominating eigenvalues and

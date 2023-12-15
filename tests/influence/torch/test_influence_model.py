@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from pydvl.influence.base_influence_model import NotFittedException
-from pydvl.influence.torch.influence_model import (
+from pydvl.influence.base_influence_function_model import NotFittedException
+from pydvl.influence.torch.influence_function_model import (
     ArnoldiInfluence,
     CgInfluence,
     DirectInfluence,
@@ -22,7 +22,7 @@ from pytest_cases import fixture, parametrize, parametrize_with_cases
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import InfluenceType
+from pydvl.influence import InfluenceMode
 from tests.influence.conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,
@@ -66,7 +66,7 @@ class TestCase(NamedTuple):
     input_dim: Tuple[int, ...]
     output_dim: int
     loss: nn.modules.loss._Loss
-    influence_type: InfluenceType
+    mode: InfluenceMode
     hessian_reg: float = 1e3
     train_data_len: int = 20
     test_data_len: int = 10
@@ -80,7 +80,7 @@ class InfluenceTestCases:
             input_dim=(5, 3, 3, 3),
             output_dim=3,
             loss=nn.MSELoss(),
-            influence_type=InfluenceType.Up,
+            mode=InfluenceMode.Up,
         )
 
     def case_conv3d_nn_pert(self) -> TestCase:
@@ -89,7 +89,7 @@ class InfluenceTestCases:
             input_dim=(5, 3, 3, 3),
             output_dim=3,
             loss=nn.SmoothL1Loss(),
-            influence_type=InfluenceType.Perturbation,
+            mode=InfluenceMode.Perturbation,
         )
 
     def case_conv2d_nn_up(self) -> TestCase:
@@ -98,7 +98,7 @@ class InfluenceTestCases:
             input_dim=(5, 5, 5),
             output_dim=3,
             loss=nn.MSELoss(),
-            influence_type=InfluenceType.Up,
+            mode=InfluenceMode.Up,
         )
 
     def case_conv2d_nn_pert(self) -> TestCase:
@@ -107,7 +107,7 @@ class InfluenceTestCases:
             input_dim=(5, 5, 5),
             output_dim=3,
             loss=nn.SmoothL1Loss(),
-            influence_type=InfluenceType.Perturbation,
+            mode=InfluenceMode.Perturbation,
         )
 
     def case_conv1d_nn_up(self) -> TestCase:
@@ -116,7 +116,7 @@ class InfluenceTestCases:
             input_dim=(5, 3),
             output_dim=3,
             loss=nn.MSELoss(),
-            influence_type=InfluenceType.Up,
+            mode=InfluenceMode.Up,
         )
 
     def case_conv1d_nn_pert(self) -> TestCase:
@@ -125,7 +125,7 @@ class InfluenceTestCases:
             input_dim=(5, 3),
             output_dim=3,
             loss=nn.SmoothL1Loss(),
-            influence_type=InfluenceType.Perturbation,
+            mode=InfluenceMode.Perturbation,
         )
 
     def case_simple_nn_up(self) -> TestCase:
@@ -134,7 +134,7 @@ class InfluenceTestCases:
             input_dim=(10,),
             output_dim=1,
             loss=nn.MSELoss(),
-            influence_type=InfluenceType.Up,
+            mode=InfluenceMode.Up,
         )
 
     def case_simple_nn_pert(self) -> TestCase:
@@ -143,7 +143,7 @@ class InfluenceTestCases:
             input_dim=(10,),
             output_dim=1,
             loss=nn.SmoothL1Loss(),
-            influence_type=InfluenceType.Perturbation,
+            mode=InfluenceMode.Perturbation,
         )
 
 
@@ -202,7 +202,7 @@ def direct_influences(
 ) -> NDArray:
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     return direct_influence_function_model.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
 
 
@@ -214,7 +214,7 @@ def direct_sym_influences(
 ) -> NDArray:
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     return direct_influence_function_model.influences(
-        x_train, y_train, influence_type=test_case.influence_type
+        x_train, y_train, mode=test_case.mode
     ).numpy()
 
 
@@ -229,9 +229,9 @@ def direct_factors(
 
 
 @pytest.mark.parametrize(
-    "influence_type",
-    InfluenceType,
-    ids=[ifl.value for ifl in InfluenceType],
+    "mode",
+    InfluenceMode,
+    ids=[ifl.value for ifl in InfluenceMode],
 )
 @pytest.mark.parametrize(
     "train_set_size",
@@ -271,7 +271,7 @@ def direct_factors(
 def test_influence_linear_model(
     influence_factory: Callable,
     rtol,
-    influence_type: InfluenceType,
+    mode: InfluenceMode,
     train_set_size: int,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
@@ -293,14 +293,14 @@ def test_influence_linear_model(
         (A, b),
         *train_data,
         *test_data,
-        influence_type=influence_type,
+        mode=mode,
         hessian_regularization=hessian_reg,
     )
     sym_analytical_influences = analytical_linear_influences(
         (A, b),
         *train_data,
         *train_data,
-        influence_type=influence_type,
+        mode=mode,
         hessian_regularization=hessian_reg,
     )
 
@@ -311,14 +311,14 @@ def test_influence_linear_model(
     x_train, y_train = tuple(map(torch.from_numpy, train_data))
     x_test, y_test = tuple(map(torch.from_numpy, test_data))
     influence_values = influence.influences(
-        x_test, y_test, x_train, y_train, influence_type=influence_type
+        x_test, y_test, x_train, y_train, mode=mode
     ).numpy()
     sym_influence_values = influence.influences(
-        x_train, y_train, x_train, y_train, influence_type=influence_type
+        x_train, y_train, x_train, y_train, mode=mode
     ).numpy()
 
     with pytest.raises(ValueError):
-        influence.influences(x_test, y_test, x=x_train, influence_type=influence_type)
+        influence.influences(x_test, y_test, x=x_train, mode=mode)
 
     def upper_quantile_equivalence(
         approx_inf: NDArray, analytical_inf: NDArray, quantile: float
@@ -377,20 +377,20 @@ def test_influences_nn(
         model, loss, train_dataloader, test_case.hessian_reg
     )
     approx_influences = influence_model.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
     assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
 
-    if test_case.influence_type == InfluenceType.Up:
+    if test_case.mode == InfluenceMode.Up:
         assert approx_influences.shape == (
             test_case.test_data_len,
             test_case.train_data_len,
         )
 
-    if test_case.influence_type == InfluenceType.Perturbation:
+    if test_case.mode == InfluenceMode.Perturbation:
         assert approx_influences.shape == (
             test_case.test_data_len,
             test_case.train_data_len,
@@ -434,7 +434,7 @@ def test_influences_arnoldi(
 
     with pytest.raises(NotFittedException):
         arnoldi_influence.influences(
-            x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+            x_test, y_test, x_train, y_train, mode=test_case.mode
         )
 
     with pytest.raises(NotFittedException):
@@ -443,11 +443,11 @@ def test_influences_arnoldi(
     arnoldi_influence = arnoldi_influence.fit(train_dataloader)
 
     low_rank_influence = arnoldi_influence.influences(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
 
     sym_low_rank_influence = arnoldi_influence.influences(
-        x_train, y_train, influence_type=test_case.influence_type
+        x_train, y_train, mode=test_case.mode
     ).numpy()
 
     low_rank_factors = arnoldi_influence.influence_factors(x_test, y_test)
@@ -455,26 +455,22 @@ def test_influences_arnoldi(
         direct_factors, arnoldi_influence.influence_factors(x_train, y_train).numpy()
     )
 
-    if test_case.influence_type is InfluenceType.Up:
+    if test_case.mode is InfluenceMode.Up:
         low_rank_influence_transpose = arnoldi_influence.influences(
-            x_train, y_train, x_test, y_test, influence_type=test_case.influence_type
+            x_train, y_train, x_test, y_test, mode=test_case.mode
         ).numpy()
         assert np.allclose(
             low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
         )
 
     low_rank_values_from_factors = arnoldi_influence.influences_from_factors(
-        low_rank_factors, x_train, y_train, influence_type=test_case.influence_type
+        low_rank_factors, x_train, y_train, mode=test_case.mode
     ).numpy()
     assert np.allclose(direct_influences, low_rank_influence)
     assert np.allclose(direct_sym_influences, sym_low_rank_influence)
     assert np.allclose(low_rank_influence, low_rank_values_from_factors)
 
     with pytest.raises(ValueError):
-        arnoldi_influence.influences(
-            x_test, y_test, x=x_train, influence_type=test_case.influence_type
-        )
+        arnoldi_influence.influences(x_test, y_test, x=x_train, mode=test_case.mode)
     with pytest.raises(ValueError):
-        arnoldi_influence.influences(
-            x_test, y_test, y=y_train, influence_type=test_case.influence_type
-        )
+        arnoldi_influence.influences(x_test, y_test, y=y_train, mode=test_case.mode)

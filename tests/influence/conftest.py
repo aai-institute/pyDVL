@@ -5,7 +5,7 @@ import pytest
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 
-from pydvl.influence import InfluenceType
+from pydvl.influence import InfluenceMode
 from pydvl.utils import Dataset, random_matrix_with_condition_number
 
 
@@ -204,34 +204,34 @@ def analytical_linear_influences(
     y: NDArray[np.float_],
     x_test: NDArray[np.float_],
     y_test: NDArray[np.float_],
-    influence_type: InfluenceType = InfluenceType.Up,
+    mode: InfluenceMode = InfluenceMode.Up,
     hessian_regularization: float = 0,
 ):
-    """Calculates analytically the influence of each training sample on the
-     test samples for an ordinary least squares model (Ax+b=y with quadratic
-     loss).
+    """
+    Calculates analytically the influence of each training sample on the
+    test samples for an ordinary least squares model (Ax+b=y with quadratic
+    loss).
 
-    :param linear_model: A tuple of arrays of shapes (N, M) and N representing A
-        and b respectively.
-    :param x: An array of shape (M, K) containing the features of the
-        training set.
-    :param y: An array of shape (M, L) containing the targets of the
-        training set.
-    :param x_test: An array of shape (N, K) containing the features of the test
-        set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
-        set.
-    :param influence_type: the type of the influence.
-    :param hessian_regularization: regularization value for the hessian
-    :returns: An array of shape (B, C) with the influences of the training points
-        on the test points if influence_type is "up", an array of shape (K, L,
-        M) if influence_type is "perturbation".
+    Args:
+        linear_model: A tuple of arrays of shapes (N, M) and N representing A
+            and b respectively.
+        x: An array of shape (M, K) containing the features of thr training set.
+        y: An array of shape (M, L) containing the targets of the training set.
+        x_test: An array of shape (N, K) containing the features of the test set.
+        y_test: An array of shape (N, L) containing the targets of the test set.
+        mode: the type of the influence.
+        hessian_regularization: regularization value for the hessian
+
+    Returns:
+        An array of shape (B, C) with the influences of the training points
+            on the test points if `mode` is "up", an array of shape (K, L, M)
+            if `mode` is "perturbation".
     """
 
     s_test_analytical = linear_analytical_influence_factors(
         linear_model, x, y, x_test, y_test, hessian_regularization
     )
-    if influence_type == InfluenceType.Up:
+    if mode == InfluenceMode.Up:
         train_grads_analytical = linear_derivative_analytical(
             linear_model,
             x,
@@ -240,7 +240,7 @@ def analytical_linear_influences(
         result: NDArray = np.einsum(
             "ia,ja->ij", s_test_analytical, train_grads_analytical
         )
-    elif influence_type == InfluenceType.Perturbation:
+    elif mode == InfluenceMode.Perturbation:
         train_second_deriv_analytical = linear_mixed_second_derivative_analytical(
             linear_model,
             x,

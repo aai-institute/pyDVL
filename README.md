@@ -118,7 +118,7 @@ For influence computation, follow these steps:
    from torch.utils.data import DataLoader, TensorDataset
    
    from pydvl.influence.torch import DirectInfluence
-   from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
+   from pydvl.influence.torch.util import NestedTorchCatAggregator, TorchNumpyConverter
    from pydvl.influence import SequentialInfluenceCalculator
    ```
 
@@ -140,9 +140,9 @@ For influence computation, follow these steps:
 
    ```python
    nn_architecture = nn.Sequential(
-   nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-   nn.Flatten(),
-   nn.Linear(27, 3),
+     nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+     nn.Flatten(),
+     nn.Linear(27, 3),
    )
    ```
 
@@ -155,14 +155,14 @@ For influence computation, follow these steps:
 5. Instantiate an `InfluenceFunctionModel` and fit it to the training data
 
    ```python
-   influence_function_model = DirectInfluence(nn_architecture, loss, hessian_regularization=0.01)
-   influence_function_model = influence_function_model.fit(train_data_loader)
+   infl_model = DirectInfluence(nn_architecture, loss, hessian_regularization=0.01)
+   infl_model = infl_model.fit(train_data_loader)
    ```
 
 6. For small input data call influence method on the fitted instance. 
 
    ```python
-   influences = influence_function_model.influences(test_x, test_y, train_x, train_y)
+   influences = infl_model.influences(test_x, test_y, train_x, train_y)
    ```
    The result is a tensor of shape `(training samples x test samples)`
    that contains at index `(i, j`) the influence of training sample `i` on
@@ -171,13 +171,13 @@ For influence computation, follow these steps:
 7. For larger data, wrap the model into a
    calculator and call methods on the calculator.
    ```python
-   sequential_influence_calculator = SequentialInfluenceCalculator(influence_function_model)
+   infl_calc = SequentialInfluenceCalculator(infl_model)
    
     # Lazy object providing arrays batch-wise in a sequential manner
-   lazy_influences = sequential_influence_calculator.influences(test_data_loader, train_data_loader)
+   lazy_influences = infl_calc.influences(test_data_loader, train_data_loader)
 
    # Trigger computation and pull results to memory
-   influences = lazy_influences.compute(tensor_aggregator=TorchCatAggregator())
+   influences = lazy_influences.compute(aggregator=NestedTorchCatAggregator())
 
    # Trigger computation and write results batch-wise to disk
    lazy_influences.to_zarr("influences_result", TorchNumpyConverter())
