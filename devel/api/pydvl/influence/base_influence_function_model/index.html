@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/inversion/">
+        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/base_influence_function_model/">
       
       
-        <link rel="prev" href="../general/">
+        <link rel="prev" href="../array/">
       
       
-        <link rel="next" href="../twice_differentiable/">
+        <link rel="next" href="../influence_calculator/">
       
       
       <link rel="icon" href="../../../../assets/signet.svg">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Inversion - pyDVL</title>
+        <title>Base influence function model - pyDVL</title>
       
     
     
@@ -98,7 +98,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pydvl.influence.inversion" class="md-skip">
+        <a href="#pydvl.influence.base_influence_function_model" class="md-skip">
           Skip to content
         </a>
       
@@ -151,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Inversion
+              Base influence function model
             
           </span>
         </div>
@@ -747,6 +747,46 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../../../influence/influence_function_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Influence Function Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../influence/scaling_computation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scaling Computation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
     
     
     
@@ -756,9 +796,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -769,8 +809,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -1001,11 +1041,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../general/" class="md-nav__link">
+      <a href="../array/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    General
+    Array
   </span>
   
 
@@ -1032,7 +1072,7 @@
           
   
   <span class="md-ellipsis">
-    Inversion
+    Base influence function model
   </span>
   
 
@@ -1043,7 +1083,7 @@
         
   
   <span class="md-ellipsis">
-    Inversion
+    Base influence function model
   </span>
   
 
@@ -1063,50 +1103,64 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion" class="md-nav__link">
-    inversion
+  <a href="#pydvl.influence.base_influence_function_model" class="md-nav__link">
+    base_influence_function_model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionMethod" class="md-nav__link">
-    InversionMethod
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceMode" class="md-nav__link">
+    InfluenceMode
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry" class="md-nav__link">
-    InversionRegistry
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel" class="md-nav__link">
+    InfluenceFunctionModel
   </a>
   
-    <nav class="md-nav" aria-label="InversionRegistry">
+    <nav class="md-nav" aria-label="InfluenceFunctionModel">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry.register" class="md-nav__link">
-    register()
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.n_parameters" class="md-nav__link">
+    n_parameters
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry.call" class="md-nav__link">
-    call()
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_thread_safe" class="md-nav__link">
+    is_thread_safe
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_fitted" class="md-nav__link">
+    is_fitted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.fit" class="md-nav__link">
+    fit()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.influences_from_factors" class="md-nav__link">
+    influences_from_factors()
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.solve_hvp" class="md-nav__link">
-    solve_hvp()
-  </a>
   
 </li>
       
@@ -1125,11 +1179,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../twice_differentiable/" class="md-nav__link">
+      <a href="../influence_calculator/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Twice differentiable
+    Influence calculator
   </span>
   
 
@@ -1207,11 +1261,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../torch/torch_differentiable/" class="md-nav__link">
+      <a href="../torch/influence_function_model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Torch differentiable
+    Influence function model
   </span>
   
 
@@ -2557,50 +2611,64 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion" class="md-nav__link">
-    inversion
+  <a href="#pydvl.influence.base_influence_function_model" class="md-nav__link">
+    base_influence_function_model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionMethod" class="md-nav__link">
-    InversionMethod
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceMode" class="md-nav__link">
+    InfluenceMode
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry" class="md-nav__link">
-    InversionRegistry
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel" class="md-nav__link">
+    InfluenceFunctionModel
   </a>
   
-    <nav class="md-nav" aria-label="InversionRegistry">
+    <nav class="md-nav" aria-label="InfluenceFunctionModel">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry.register" class="md-nav__link">
-    register()
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.n_parameters" class="md-nav__link">
+    n_parameters
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.InversionRegistry.call" class="md-nav__link">
-    call()
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_thread_safe" class="md-nav__link">
+    is_thread_safe
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_fitted" class="md-nav__link">
+    is_fitted
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.fit" class="md-nav__link">
+    fit()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.influences_from_factors" class="md-nav__link">
+    influences_from_factors()
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.influence.inversion.solve_hvp" class="md-nav__link">
-    solve_hvp()
-  </a>
   
 </li>
       
@@ -2622,16 +2690,14 @@
   
 
 
-  <h1>Inversion</h1>
+  <h1>Base influence function model</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="pydvl.influence.inversion"></a>
+<a id="pydvl.influence.base_influence_function_model"></a>
   <div class="doc doc-contents first">
-  
-      <p>Contains methods to invert the hessian vector product.</p>
 
   
 
@@ -2649,11 +2715,11 @@
 
 
 
-<h2 id="pydvl.influence.inversion.InversionMethod" class="doc doc-heading">
-          <code>InversionMethod</code>
+<h2 id="pydvl.influence.base_influence_function_model.InfluenceMode" class="doc doc-heading">
+          <code>InfluenceMode</code>
 
 
-<a href="#pydvl.influence.inversion.InversionMethod" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pydvl.influence.base_influence_function_model.InfluenceMode" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
@@ -2661,7 +2727,40 @@
             Bases: <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>, <code><a class="autorefs autorefs-external" title="enum.Enum" href="https://docs.python.org/3/library/enum.html#enum.Enum">Enum</a></code></p>
 
   
-      <p>Different inversion methods types.</p>
+      <p>Enum representation for the types of influence.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>ATTRIBUTE</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>Up</code></td>
+          <td class="doc-attribute-details">
+            <div class="doc-md-description">
+              <p><a class="autorefs autorefs-internal" href="../../../../influence/#approximating-the-influence-of-a-point">Approximating the influence of a point</a></p>
+            </div>
+            <p>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>Perturbation</code></td>
+          <td class="doc-attribute-details">
+            <div class="doc-md-description">
+              <p><a class="autorefs autorefs-internal" href="../../../../influence/#perturbation-definition-of-the-influence-score">Perturbation definition of the influence score</a></p>
+            </div>
+            <p>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
 
   
@@ -2689,17 +2788,21 @@
 
 
 
-<h2 id="pydvl.influence.inversion.InversionRegistry" class="doc doc-heading">
-          <code>InversionRegistry</code>
+<h2 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel" class="doc doc-heading">
+          <code>InfluenceFunctionModel</code>
 
 
-<a href="#pydvl.influence.inversion.InversionRegistry" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-external" title="typing.Generic" href="https://docs.python.org/3/library/typing.html#typing.Generic">Generic</a>[<span title="pydvl.influence.base_influence_function_model.TensorType">TensorType</span>, <span title="pydvl.influence.base_influence_function_model.DataLoaderType">DataLoaderType</span>]</code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
 
   
-      <p>A registry to hold inversion methods for different models.</p>
+      <p>Generic abstract base class for computing influence related quantities.
+For a specific influence algorithm and tensor framework,
+inherit from this base class</p>
 
 
   
@@ -2712,6 +2815,75 @@
 
 
 
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h3 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel.n_parameters" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">n_parameters</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.n_parameters" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Number of trainable parameters of the underlying model</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h3 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_thread_safe" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">is_thread_safe</span><span class="p">:</span> <span class="nb">bool</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_thread_safe" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Whether the influence computation is thread safe</p>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h3 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_fitted" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">is_fitted</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.is_fitted" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Override this, to expose the fitting status of the instance.</p>
+  </div>
+
+</div>
+
 
 
 
@@ -2720,22 +2892,20 @@
 
 
 
-<h3 id="pydvl.influence.inversion.InversionRegistry.register" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="n">model_type</span><span class="p">,</span> <span class="n">inversion_method</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<h3 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel.fit" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
-<a href="#pydvl.influence.inversion.InversionRegistry.register" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.fit" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
   <div class="doc doc-contents ">
   
-      <p>Register a function for a specific model type and inversion method.</p>
-<p>The function to be registered must conform to the following signature:
-<code>(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType,
-hessian_perturbation: float = 0.0, ...)</code>.</p>
+      <p>Override this method to fit the influence function model to training data,
+e.g. pre-compute hessian matrix or matrix decompositions</p>
 
 
 
@@ -2748,90 +2918,17 @@ hessian_perturbation: float = 0.0, ...)</code>.</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>model_type</code></td>
+          <td><code>data</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>The type of the model the function should be registered for.</p>
+              
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[<a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.TwiceDifferentiable" href="../twice_differentiable/#pydvl.influence.twice_differentiable.TwiceDifferentiable">TwiceDifferentiable</a>]</code>
+                    <code><span title="pydvl.influence.base_influence_function_model.DataLoaderType">DataLoaderType</span></code>
                 </span>
             </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>inversion_method</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>The inversion method the function should be
-registered for.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.inversion.InversionMethod" href="#pydvl.influence.inversion.InversionMethod">InversionMethod</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>overwrite</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>If <code>True</code>, allows overwriting of an existing registered
-function for the same model type and inversion method. If <code>False</code>,
-logs a warning when attempting to register a function for an already
-registered model type and inversion method.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>False</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>RAISES</b></th>
-        <th><b>DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-            <span class="doc-raises-annotation">
-                <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#TypeError">TypeError</a></code>
-            </span>
-          </td>
-          <td class="doc-raises-details">
-            <div class="doc-md-description">
-              <p>If the provided model_type or inversion_method are of the wrong type.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <span class="doc-raises-annotation">
-                <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/exceptions.html#ValueError">ValueError</a></code>
-            </span>
-          </td>
-          <td class="doc-raises-details">
-            <div class="doc-md-description">
-              <p>If the function to be registered does not match the required signature.</p>
-            </div>
           </td>
         </tr>
     </tbody>
@@ -2852,7 +2949,7 @@ registered model type and inversion method.</p>
           </td>
           <td class="doc-returns-details">
             <div class="doc-md-description">
-              <p>A decorator for registering a function.</p>
+              <p>The fitted instance</p>
             </div>
           </td>
         </tr>
@@ -2860,162 +2957,30 @@ registered model type and inversion method.</p>
   </table>
 
           <details class="quote">
-            <summary>Source code in <code>src/pydvl/influence/inversion.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
-<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span>
-<span class="normal"><a href="#__codelineno-0-112">112</a></span>
-<span class="normal"><a href="#__codelineno-0-113">113</a></span>
-<span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span>
-<span class="normal"><a href="#__codelineno-0-116">116</a></span>
-<span class="normal"><a href="#__codelineno-0-117">117</a></span>
-<span class="normal"><a href="#__codelineno-0-118">118</a></span>
-<span class="normal"><a href="#__codelineno-0-119">119</a></span>
-<span class="normal"><a href="#__codelineno-0-120">120</a></span>
-<span class="normal"><a href="#__codelineno-0-121">121</a></span>
-<span class="normal"><a href="#__codelineno-0-122">122</a></span>
-<span class="normal"><a href="#__codelineno-0-123">123</a></span>
-<span class="normal"><a href="#__codelineno-0-124">124</a></span>
-<span class="normal"><a href="#__codelineno-0-125">125</a></span>
-<span class="normal"><a href="#__codelineno-0-126">126</a></span>
-<span class="normal"><a href="#__codelineno-0-127">127</a></span>
-<span class="normal"><a href="#__codelineno-0-128">128</a></span>
-<span class="normal"><a href="#__codelineno-0-129">129</a></span>
-<span class="normal"><a href="#__codelineno-0-130">130</a></span>
-<span class="normal"><a href="#__codelineno-0-131">131</a></span>
-<span class="normal"><a href="#__codelineno-0-132">132</a></span>
-<span class="normal"><a href="#__codelineno-0-133">133</a></span>
-<span class="normal"><a href="#__codelineno-0-134">134</a></span>
-<span class="normal"><a href="#__codelineno-0-135">135</a></span>
-<span class="normal"><a href="#__codelineno-0-136">136</a></span>
-<span class="normal"><a href="#__codelineno-0-137">137</a></span>
-<span class="normal"><a href="#__codelineno-0-138">138</a></span>
-<span class="normal"><a href="#__codelineno-0-139">139</a></span>
-<span class="normal"><a href="#__codelineno-0-140">140</a></span>
-<span class="normal"><a href="#__codelineno-0-141">141</a></span>
-<span class="normal"><a href="#__codelineno-0-142">142</a></span>
-<span class="normal"><a href="#__codelineno-0-143">143</a></span>
-<span class="normal"><a href="#__codelineno-0-144">144</a></span>
-<span class="normal"><a href="#__codelineno-0-145">145</a></span>
-<span class="normal"><a href="#__codelineno-0-146">146</a></span>
-<span class="normal"><a href="#__codelineno-0-147">147</a></span>
-<span class="normal"><a href="#__codelineno-0-148">148</a></span>
-<span class="normal"><a href="#__codelineno-0-149">149</a></span>
-<span class="normal"><a href="#__codelineno-0-150">150</a></span>
-<span class="normal"><a href="#__codelineno-0-151">151</a></span>
-<span class="normal"><a href="#__codelineno-0-152">152</a></span>
-<span class="normal"><a href="#__codelineno-0-153">153</a></span>
-<span class="normal"><a href="#__codelineno-0-154">154</a></span>
-<span class="normal"><a href="#__codelineno-0-155">155</a></span>
-<span class="normal"><a href="#__codelineno-0-156">156</a></span>
-<span class="normal"><a href="#__codelineno-0-157">157</a></span>
-<span class="normal"><a href="#__codelineno-0-158">158</a></span>
-<span class="normal"><a href="#__codelineno-0-159">159</a></span>
-<span class="normal"><a href="#__codelineno-0-160">160</a></span>
-<span class="normal"><a href="#__codelineno-0-161">161</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="nd">@classmethod</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span> <span class="nf">register</span><span class="p">(</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="bp">cls</span><span class="p">,</span>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="n">model_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TwiceDifferentiable</span><span class="p">],</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="n">inversion_method</span><span class="p">:</span> <span class="n">InversionMethod</span><span class="p">,</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="p">):</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    Register a function for a specific model type and inversion method.</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    The function to be registered must conform to the following signature:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">    `(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType,</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">    hessian_perturbation: float = 0.0, ...)`.</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        model_type: The type of the model the function should be registered for.</span>
-</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        inversion_method: The inversion method the function should be</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">            registered for.</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        overwrite: If ``True``, allows overwriting of an existing registered</span>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="sd">            function for the same model type and inversion method. If ``False``,</span>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">            logs a warning when attempting to register a function for an already</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">            registered model type and inversion method.</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    Raises:</span>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">        TypeError: If the provided model_type or inversion_method are of the wrong type.</span>
-</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">        ValueError: If the function to be registered does not match the required signature.</span>
-</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a>
-</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">        A decorator for registering a function.</span>
-</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>
-</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_type</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
-</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>            <span class="sa">f</span><span class="s2">&quot;&#39;model_type&#39; is of type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model_type</span><span class="p">)</span><span class="si">}</span><span class="s2"> but should be a Type[TwiceDifferentiable]&quot;</span>
-</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="p">)</span>
-</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a>
-</span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inversion_method</span><span class="p">,</span> <span class="n">InversionMethod</span><span class="p">):</span>
-</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-</span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>            <span class="sa">f</span><span class="s2">&quot;&#39;inversion_method&#39; must be an &#39;InversionMethod&#39; &quot;</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>            <span class="sa">f</span><span class="s2">&quot;but has type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inversion_method</span><span class="p">)</span><span class="si">}</span><span class="s2"> instead.&quot;</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>        <span class="p">)</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">model_type</span><span class="p">,</span> <span class="n">inversion_method</span><span class="p">)</span>
-</span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>
-</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
-</span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">:</span>
-</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a>                <span class="sa">f</span><span class="s2">&quot;There is already a function registered for model type </span><span class="si">{</span><span class="n">model_type</span><span class="si">}</span><span class="s2"> &quot;</span>
-</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a>                <span class="sa">f</span><span class="s2">&quot;and inversion method </span><span class="si">{</span><span class="n">inversion_method</span><span class="si">}</span><span class="s2">. &quot;</span>
-</span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a>                <span class="sa">f</span><span class="s2">&quot;To overwrite the existing function </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">, set overwrite to True.&quot;</span>
-</span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="p">)</span>
-</span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-</span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a>
-</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="n">expected_args</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a>            <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="n">model_type</span><span class="p">),</span>
-</span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a>            <span class="p">(</span><span class="s2">&quot;training_data&quot;</span><span class="p">,</span> <span class="n">DataLoaderType</span><span class="o">.</span><span class="n">__bound__</span><span class="p">),</span>
-</span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a>            <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">model_type</span><span class="o">.</span><span class="n">tensor_type</span><span class="p">()),</span>
-</span><span id="__span-0-142"><a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="p">(</span><span class="s2">&quot;hessian_perturbation&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span>
-</span><span id="__span-0-143"><a id="__codelineno-0-143" name="__codelineno-0-143"></a>        <span class="p">]</span>
-</span><span id="__span-0-144"><a id="__codelineno-0-144" name="__codelineno-0-144"></a>
-</span><span id="__span-0-145"><a id="__codelineno-0-145" name="__codelineno-0-145"></a>        <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">typ</span><span class="p">),</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">expected_args</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-</span><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-</span><span id="__span-0-147"><a id="__codelineno-0-147" name="__codelineno-0-147"></a>                <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
-</span><span id="__span-0-148"><a id="__codelineno-0-148" name="__codelineno-0-148"></a>                <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">annotation</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
-</span><span id="__span-0-149"><a id="__codelineno-0-149" name="__codelineno-0-149"></a>            <span class="p">):</span>
-</span><span id="__span-0-150"><a id="__codelineno-0-150" name="__codelineno-0-150"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="__span-0-151"><a id="__codelineno-0-151" name="__codelineno-0-151"></a>                    <span class="sa">f</span><span class="s1">&#39;Parameter &quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; must be of type &quot;</span><span class="si">{</span><span class="n">typ</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
-</span><span id="__span-0-152"><a id="__codelineno-0-152" name="__codelineno-0-152"></a>                <span class="p">)</span>
-</span><span id="__span-0-153"><a id="__codelineno-0-153" name="__codelineno-0-153"></a>
-</span><span id="__span-0-154"><a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-</span><span id="__span-0-155"><a id="__codelineno-0-155" name="__codelineno-0-155"></a>        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="__span-0-156"><a id="__codelineno-0-156" name="__codelineno-0-156"></a>            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="__span-0-157"><a id="__codelineno-0-157" name="__codelineno-0-157"></a>
-</span><span id="__span-0-158"><a id="__codelineno-0-158" name="__codelineno-0-158"></a>        <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrapper</span>
-</span><span id="__span-0-159"><a id="__codelineno-0-159" name="__codelineno-0-159"></a>        <span class="k">return</span> <span class="n">wrapper</span>
-</span><span id="__span-0-160"><a id="__codelineno-0-160" name="__codelineno-0-160"></a>
-</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="k">return</span> <span class="n">decorator</span>
+            <summary>Source code in <code>src/pydvl/influence/base_influence_function_model.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="nd">@abstractmethod</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataLoaderType</span><span class="p">):</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    Override this method to fit the influence function model to training data,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    e.g. pre-compute hessian matrix or matrix decompositions</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        data:</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        The fitted instance</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -3028,19 +2993,26 @@ registered model type and inversion method.</p>
 
 
 
-<h3 id="pydvl.influence.inversion.InversionRegistry.call" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="n">inversion_method</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">training_data</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">hessian_perturbation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<h3 id="pydvl.influence.base_influence_function_model.InfluenceFunctionModel.influences_from_factors" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">influences_from_factors</span><span class="p">(</span><span class="n">z_test_factors</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">InfluenceMode</span><span class="o">.</span><span class="n">Up</span><span class="p">)</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
   </span>
 
-<a href="#pydvl.influence.inversion.InversionRegistry.call" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pydvl.influence.base_influence_function_model.InfluenceFunctionModel.influences_from_factors" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
   <div class="doc doc-contents ">
   
-      <p>Call a registered function with the provided parameters.</p>
+      <p>Override this method to implement the computation of</p>
+<div class="arithmatex">\[ \langle z_{\text{test_factors}},
+    \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]</div>
+<p>for the case of up-weighting influence, resp.</p>
+<div class="arithmatex">\[ \langle z_{\text{test_factors}},
+    \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]</div>
+<p>for the perturbation type influence case. The gradient is meant to be per sample
+of the batch <span class="arithmatex">\((x, y)\)</span>.</p>
 
 
 
@@ -3053,81 +3025,66 @@ registered model type and inversion method.</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>inversion_method</code></td>
+          <td><code>z_test_factors</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>The inversion method to use.</p>
+              <p>pre-computed array, approximating
+<span class="arithmatex">\(H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+f_{\theta}(x_{\text{test}}))\)</span></p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.inversion.InversionMethod" href="#pydvl.influence.inversion.InversionMethod">InversionMethod</a></code>
+                    <code><span title="pydvl.influence.base_influence_function_model.TensorType">TensorType</span></code>
                 </span>
             </p>
           </td>
         </tr>
         <tr>
-          <td><code>model</code></td>
+          <td><code>x</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>A model wrapped in the TwiceDifferentiable interface.</p>
+              <p>model input to use in the gradient computations
+<span class="arithmatex">\(\nabla_{\theta}\ell(y, f_{\theta}(x))\)</span>,
+resp. <span class="arithmatex">\(\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))\)</span>,
+if None, use <span class="arithmatex">\(x=x_{\text{test}}\)</span></p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.TwiceDifferentiable" href="../twice_differentiable/#pydvl.influence.twice_differentiable.TwiceDifferentiable">TwiceDifferentiable</a></code>
+                    <code><span title="pydvl.influence.base_influence_function_model.TensorType">TensorType</span></code>
                 </span>
             </p>
           </td>
         </tr>
         <tr>
-          <td><code>training_data</code></td>
+          <td><code>y</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>The training data to use.</p>
+              <p>label tensor to compute gradients</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.DataLoaderType" href="../twice_differentiable/#pydvl.influence.twice_differentiable.DataLoaderType">DataLoaderType</a></code>
+                    <code><span title="pydvl.influence.base_influence_function_model.TensorType">TensorType</span></code>
                 </span>
             </p>
           </td>
         </tr>
         <tr>
-          <td><code>b</code></td>
+          <td><code>mode</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>Array as the right hand side of the equation <span class="arithmatex">\(Ax = b\)</span>.</p>
+              <p>enum value of [InfluenceMode][pydvl.influence.base_influence_modl.InfluenceMode]</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.TensorType" href="../twice_differentiable/#pydvl.influence.twice_differentiable.TensorType">TensorType</a></code>
+                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.base_influence_function_model.InfluenceMode" href="#pydvl.influence.base_influence_function_model.InfluenceMode">InfluenceMode</a></code>
                 </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>hessian_perturbation</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>Regularization of the hessian.</p>
-            </div>
-            <p>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>kwargs</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>Additional keyword arguments to pass to the inversion method.</p>
-            </div>
-            <p>
                 <span class="doc-param-default">
                   <b>DEFAULT:</b> 
-                    <code>{}</code>
+                    <code><span title="pydvl.influence.base_influence_function_model.InfluenceMode.Up">Up</span></code>
                 </span>
             </p>
           </td>
@@ -3148,15 +3105,12 @@ registered model type and inversion method.</p>
         <tr>
           <td>
               <span class="doc-returns-annotation">
-                  <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.InverseHvpResult" href="../twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a></code>
+                  <code><span title="pydvl.influence.base_influence_function_model.TensorType">TensorType</span></code>
               </span>
           </td>
           <td class="doc-returns-details">
             <div class="doc-md-description">
-              <p>An instance of <a class="autorefs autorefs-internal" href="../twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>,
-that contains an array, which solves the inverse problem,
-i.e. it returns <span class="arithmatex">\(x\)</span> such that <span class="arithmatex">\(Ax = b\)</span>, and a dictionary containing information
-about the inversion process.</p>
+              <p>Tensor representing the element-wise scalar products for the provided batch</p>
             </div>
           </td>
         </tr>
@@ -3164,8 +3118,29 @@ about the inversion process.</p>
   </table>
 
           <details class="quote">
-            <summary>Source code in <code>src/pydvl/influence/inversion.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-175">175</a></span>
+            <summary>Source code in <code>src/pydvl/influence/base_influence_function_model.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
 <span class="normal"><a href="#__codelineno-0-176">176</a></span>
 <span class="normal"><a href="#__codelineno-0-177">177</a></span>
 <span class="normal"><a href="#__codelineno-0-178">178</a></span>
@@ -3181,51 +3156,44 @@ about the inversion process.</p>
 <span class="normal"><a href="#__codelineno-0-188">188</a></span>
 <span class="normal"><a href="#__codelineno-0-189">189</a></span>
 <span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span>
-<span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span>
-<span class="normal"><a href="#__codelineno-0-194">194</a></span>
-<span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-175"><a id="__codelineno-0-175" name="__codelineno-0-175"></a><span class="nd">@classmethod</span>
-</span><span id="__span-0-176"><a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
-</span><span id="__span-0-177"><a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="bp">cls</span><span class="p">,</span>
-</span><span id="__span-0-178"><a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="n">inversion_method</span><span class="p">:</span> <span class="n">InversionMethod</span><span class="p">,</span>
-</span><span id="__span-0-179"><a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">model</span><span class="p">:</span> <span class="n">TwiceDifferentiable</span><span class="p">,</span>
-</span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="n">training_data</span><span class="p">:</span> <span class="n">DataLoaderType</span><span class="p">,</span>
-</span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="n">b</span><span class="p">:</span> <span class="n">TensorType</span><span class="p">,</span>
-</span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="n">hessian_perturbation</span><span class="p">,</span>
-</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseHvpResult</span><span class="p">:</span>
-</span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    Call a registered function with the provided parameters.</span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-154"><a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="nd">@abstractmethod</span>
+</span><span id="__span-0-155"><a id="__codelineno-0-155" name="__codelineno-0-155"></a><span class="k">def</span> <span class="nf">influences_from_factors</span><span class="p">(</span>
+</span><span id="__span-0-156"><a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-157"><a id="__codelineno-0-157" name="__codelineno-0-157"></a>    <span class="n">z_test_factors</span><span class="p">:</span> <span class="n">TensorType</span><span class="p">,</span>
+</span><span id="__span-0-158"><a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="n">x</span><span class="p">:</span> <span class="n">TensorType</span><span class="p">,</span>
+</span><span id="__span-0-159"><a id="__codelineno-0-159" name="__codelineno-0-159"></a>    <span class="n">y</span><span class="p">:</span> <span class="n">TensorType</span><span class="p">,</span>
+</span><span id="__span-0-160"><a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="n">mode</span><span class="p">:</span> <span class="n">InfluenceMode</span> <span class="o">=</span> <span class="n">InfluenceMode</span><span class="o">.</span><span class="n">Up</span><span class="p">,</span>
+</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorType</span><span class="p">:</span>
+</span><span id="__span-0-162"><a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-163"><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">    Override this method to implement the computation of</span>
+</span><span id="__span-0-164"><a id="__codelineno-0-164" name="__codelineno-0-164"></a>
+</span><span id="__span-0-165"><a id="__codelineno-0-165" name="__codelineno-0-165"></a><span class="sd">    \[ \langle z_{\text{test_factors}},</span>
+</span><span id="__span-0-166"><a id="__codelineno-0-166" name="__codelineno-0-166"></a><span class="sd">        \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]</span>
+</span><span id="__span-0-167"><a id="__codelineno-0-167" name="__codelineno-0-167"></a>
+</span><span id="__span-0-168"><a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="sd">    for the case of up-weighting influence, resp.</span>
+</span><span id="__span-0-169"><a id="__codelineno-0-169" name="__codelineno-0-169"></a>
+</span><span id="__span-0-170"><a id="__codelineno-0-170" name="__codelineno-0-170"></a><span class="sd">    \[ \langle z_{\text{test_factors}},</span>
+</span><span id="__span-0-171"><a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="sd">        \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]</span>
+</span><span id="__span-0-172"><a id="__codelineno-0-172" name="__codelineno-0-172"></a>
+</span><span id="__span-0-173"><a id="__codelineno-0-173" name="__codelineno-0-173"></a><span class="sd">    for the perturbation type influence case. The gradient is meant to be per sample</span>
+</span><span id="__span-0-174"><a id="__codelineno-0-174" name="__codelineno-0-174"></a><span class="sd">    of the batch $(x, y)$.</span>
+</span><span id="__span-0-175"><a id="__codelineno-0-175" name="__codelineno-0-175"></a>
+</span><span id="__span-0-176"><a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-177"><a id="__codelineno-0-177" name="__codelineno-0-177"></a><span class="sd">         z_test_factors: pre-computed array, approximating</span>
+</span><span id="__span-0-178"><a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="sd">            $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},</span>
+</span><span id="__span-0-179"><a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="sd">            f_{\theta}(x_{\text{test}}))$</span>
+</span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">         x: model input to use in the gradient computations</span>
+</span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="sd">            $\nabla_{\theta}\ell(y, f_{\theta}(x))$,</span>
+</span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">            resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,</span>
+</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">            if None, use $x=x_{\text{test}}$</span>
+</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="sd">         y: label tensor to compute gradients</span>
+</span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">         mode: enum value of [InfluenceMode]</span>
+</span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">            [pydvl.influence.base_influence_modl.InfluenceMode]</span>
 </span><span id="__span-0-187"><a id="__codelineno-0-187" name="__codelineno-0-187"></a>
-</span><span id="__span-0-188"><a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-189"><a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="sd">        inversion_method: The inversion method to use.</span>
-</span><span id="__span-0-190"><a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">        model: A model wrapped in the TwiceDifferentiable interface.</span>
-</span><span id="__span-0-191"><a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="sd">        training_data: The training data to use.</span>
-</span><span id="__span-0-192"><a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">        b: Array as the right hand side of the equation \(Ax = b\).</span>
-</span><span id="__span-0-193"><a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">        hessian_perturbation: Regularization of the hessian.</span>
-</span><span id="__span-0-194"><a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">        kwargs: Additional keyword arguments to pass to the inversion method.</span>
-</span><span id="__span-0-195"><a id="__codelineno-0-195" name="__codelineno-0-195"></a>
-</span><span id="__span-0-196"><a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-197"><a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">        An instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],</span>
-</span><span id="__span-0-198"><a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">            that contains an array, which solves the inverse problem,</span>
-</span><span id="__span-0-199"><a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">            i.e. it returns \(x\) such that \(Ax = b\), and a dictionary containing information</span>
-</span><span id="__span-0-200"><a id="__codelineno-0-200" name="__codelineno-0-200"></a><span class="sd">            about the inversion process.</span>
-</span><span id="__span-0-201"><a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-202"><a id="__codelineno-0-202" name="__codelineno-0-202"></a>
-</span><span id="__span-0-203"><a id="__codelineno-0-203" name="__codelineno-0-203"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">inversion_method</span><span class="p">)(</span>
-</span><span id="__span-0-204"><a id="__codelineno-0-204" name="__codelineno-0-204"></a>        <span class="n">model</span><span class="p">,</span> <span class="n">training_data</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">hessian_perturbation</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-</span><span id="__span-0-205"><a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="p">)</span>
+</span><span id="__span-0-188"><a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-189"><a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="sd">        Tensor representing the element-wise scalar products for the provided batch</span>
+</span><span id="__span-0-190"><a id="__codelineno-0-190" name="__codelineno-0-190"></a>
+</span><span id="__span-0-191"><a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -3240,241 +3208,6 @@ about the inversion process.</p>
 
 </div>
 
-
-
-<div class="doc doc-object doc-function">
-
-
-
-
-<h2 id="pydvl.influence.inversion.solve_hvp" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">solve_hvp</span><span class="p">(</span><span class="n">inversion_method</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">training_data</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hessian_perturbation</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
-
-<a href="#pydvl.influence.inversion.solve_hvp" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Finds <span class="arithmatex">\( x \)</span> such that <span class="arithmatex">\( Ax = b \)</span>, where <span class="arithmatex">\( A \)</span> is the hessian of the model,
-and <span class="arithmatex">\( b \)</span> a vector. Depending on the inversion method, the hessian is either
-calculated directly and then inverted, or implicitly and then inverted through
-matrix vector product. The method also allows to add a small regularization term
-(hessian_perturbation) to facilitate inversion of non fully trained models.</p>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>inversion_method</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.inversion.InversionMethod" href="#pydvl.influence.inversion.InversionMethod">InversionMethod</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>model</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>A model wrapped in the TwiceDifferentiable interface.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.TwiceDifferentiable" href="../twice_differentiable/#pydvl.influence.twice_differentiable.TwiceDifferentiable">TwiceDifferentiable</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>training_data</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.DataLoaderType" href="../twice_differentiable/#pydvl.influence.twice_differentiable.DataLoaderType">DataLoaderType</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>b</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>Array as the right hand side of the equation <span class="arithmatex">\( Ax = b \)</span></p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.TensorType" href="../twice_differentiable/#pydvl.influence.twice_differentiable.TensorType">TensorType</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>hessian_perturbation</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>regularization of the hessian.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>0.0</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>kwargs</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>kwargs to pass to the inversion method.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>{}</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>RETURNS</b></th>
-        <th><b>DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-              <span class="doc-returns-annotation">
-                  <code><a class="autorefs autorefs-internal" title="pydvl.influence.twice_differentiable.InverseHvpResult" href="../twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a></code>
-              </span>
-          </td>
-          <td class="doc-returns-details">
-            <div class="doc-md-description">
-              <p>Instance of <a class="autorefs autorefs-internal" href="../twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>, with
-an array that solves the inverse problem, i.e., it returns <span class="arithmatex">\( x \)</span> such that <span class="arithmatex">\( Ax = b \)</span>
-and a dictionary containing information about the inversion process.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>src/pydvl/influence/inversion.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="k">def</span> <span class="nf">solve_hvp</span><span class="p">(</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">inversion_method</span><span class="p">:</span> <span class="n">InversionMethod</span><span class="p">,</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">model</span><span class="p">:</span> <span class="n">TwiceDifferentiable</span><span class="p">,</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">training_data</span><span class="p">:</span> <span class="n">DataLoaderType</span><span class="p">,</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">b</span><span class="p">:</span> <span class="n">TensorType</span><span class="p">,</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">hessian_perturbation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseHvpResult</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    Finds \( x \) such that \( Ax = b \), where \( A \) is the hessian of the model,</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    and \( b \) a vector. Depending on the inversion method, the hessian is either</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    calculated directly and then inverted, or implicitly and then inverted through</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    matrix vector product. The method also allows to add a small regularization term</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    (hessian_perturbation) to facilitate inversion of non fully trained models.</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        inversion_method:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        model: A model wrapped in the TwiceDifferentiable interface.</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">        training_data:</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        b: Array as the right hand side of the equation \( Ax = b \)</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        hessian_perturbation: regularization of the hessian.</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        kwargs: kwargs to pass to the inversion method.</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult], with</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">            an array that solves the inverse problem, i.e., it returns \( x \) such that \( Ax = b \)</span>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            and a dictionary containing information about the inversion process.</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">return</span> <span class="n">InversionRegistry</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="n">inversion_method</span><span class="p">,</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">model</span><span class="p">,</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="n">training_data</span><span class="p">,</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="n">hessian_perturbation</span><span class="o">=</span><span class="n">hessian_perturbation</span><span class="p">,</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-          </details>
-  </div>
-
-</div>
 
 
 
@@ -3489,11 +3222,11 @@ and a dictionary containing information about the inversion process.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-11</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-15</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-11</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-15</span>
       
     
   </small>
@@ -3525,7 +3258,7 @@ and a dictionary containing information about the inversion process.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../general/" class="md-footer__link md-footer__link--prev" aria-label="Previous: General" rel="prev">
+          <a href="../array/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Array" rel="prev">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -3535,20 +3268,20 @@ and a dictionary containing information about the inversion process.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                General
+                Array
               </div>
             </div>
           </a>
         
         
           
-          <a href="../twice_differentiable/" class="md-footer__link md-footer__link--next" aria-label="Next: Twice differentiable" rel="next">
+          <a href="../influence_calculator/" class="md-footer__link md-footer__link--next" aria-label="Next: Influence calculator" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Twice differentiable
+                Influence calculator
               </div>
             </div>
             <div class="md-footer__button md-icon">

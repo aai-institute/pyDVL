@@ -14,7 +14,7 @@
         <link rel="prev" href="../examples/data_oob/">
       
       
-        <link rel="next" href="../examples/influence_imagenet/">
+        <link rel="next" href="influence_function_model/">
       
       
       <link rel="icon" href="../assets/signet.svg">
@@ -814,20 +814,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#perturbation-influences" class="md-nav__link">
-    Perturbation influences
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#approximate-matrix-inversion" class="md-nav__link">
-    Approximate matrix inversion
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#hessian-regularization" class="md-nav__link">
     Hessian regularization
   </a>
@@ -835,49 +821,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#perturbation-influences" class="md-nav__link">
+    Perturbation influences
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#influence-factors" class="md-nav__link">
     Influence factors
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#methods-for-inverse-hvp-calculation" class="md-nav__link">
-    Methods for inverse HVP calculation
-  </a>
-  
-    <nav class="md-nav" aria-label="Methods for inverse HVP calculation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#direct-inversion" class="md-nav__link">
-    Direct inversion
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#conjugate-gradient" class="md-nav__link">
-    Conjugate Gradient
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#linear-time-stochastic-second-order-approximation-lissa" class="md-nav__link">
-    Linear time Stochastic Second-Order Approximation (LiSSA)
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#arnoldi-solver" class="md-nav__link">
-    Arnoldi solver
   </a>
   
 </li>
@@ -901,6 +853,46 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="influence_function_model/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Influence Function Model
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="scaling_computation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scaling Computation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
     
     
     
@@ -910,9 +902,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -923,8 +915,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -1149,11 +1141,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/influence/general/" class="md-nav__link">
+      <a href="../api/pydvl/influence/array/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    General
+    Array
   </span>
   
 
@@ -1169,11 +1161,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/influence/inversion/" class="md-nav__link">
+      <a href="../api/pydvl/influence/base_influence_function_model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Inversion
+    Base influence function model
   </span>
   
 
@@ -1189,11 +1181,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/influence/twice_differentiable/" class="md-nav__link">
+      <a href="../api/pydvl/influence/influence_calculator/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Twice differentiable
+    Influence calculator
   </span>
   
 
@@ -1271,11 +1263,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/torch_differentiable/" class="md-nav__link">
+      <a href="../api/pydvl/influence/torch/influence_function_model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Torch differentiable
+    Influence function model
   </span>
   
 
@@ -2663,20 +2655,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#perturbation-influences" class="md-nav__link">
-    Perturbation influences
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#approximate-matrix-inversion" class="md-nav__link">
-    Approximate matrix inversion
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#hessian-regularization" class="md-nav__link">
     Hessian regularization
   </a>
@@ -2684,49 +2662,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#perturbation-influences" class="md-nav__link">
+    Perturbation influences
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#influence-factors" class="md-nav__link">
     Influence factors
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#methods-for-inverse-hvp-calculation" class="md-nav__link">
-    Methods for inverse HVP calculation
-  </a>
-  
-    <nav class="md-nav" aria-label="Methods for inverse HVP calculation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#direct-inversion" class="md-nav__link">
-    Direct inversion
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#conjugate-gradient" class="md-nav__link">
-    Conjugate Gradient
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#linear-time-stochastic-second-order-approximation-lissa" class="md-nav__link">
-    Linear time Stochastic Second-Order Approximation (LiSSA)
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#arnoldi-solver" class="md-nav__link">
-    Arnoldi solver
   </a>
   
 </li>
@@ -2807,9 +2751,7 @@ networks. To circumvent this problem, we can just calculate a first order
 approximation of <span class="arithmatex">\(\hat{\theta}\)</span>. This can be done through single backpropagation
 and without re-training the full model.</p>
 <p>pyDVL supports two ways of computing the empirical influence function, namely
-up-weighting of samples and perturbation influences. The choice is done by the
-parameter <code>influence_type</code> in the main entry point 
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a>.</p>
+up-weighting of samples and perturbation influences.</p>
 <h3 id="approximating-the-influence-of-a-point">Approximating the influence of a point<a class="headerlink" href="#approximating-the-influence-of-a-point" title="Permanent link">&para;</a></h3>
 <p>Let's define</p>
 <div class="arithmatex">\[\hat{\theta}_{\epsilon, z} = \arg \min_\theta \frac{1}{n}\sum_{i=1}^n L(z_i,
@@ -2889,80 +2831,40 @@ estimate of the impact of a point on the models loss and it is subject to large
 approximation errors. It can nonetheless be used to build training-set attacks,
 as done in (Koh and Liang, 2017)<sup id="fnref3:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
 <h2 id="computation">Computation<a class="headerlink" href="#computation" title="Permanent link">&para;</a></h2>
-<p>The main entry point of the library for influence calculation is
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a>. Given a
-pre-trained pytorch model with a loss, first an instance of
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/torch_differentiable/#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable">TorchTwiceDifferentiable</a>
-needs to be created:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">TorchTwiceDifferentiable</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+<p>The main abstraction of the library for influence calculation is
+<a class="autorefs autorefs-internal" href="../api/pydvl/influence/base_influence_function_model/#pydvl.influence.base_influence_function_model.InfluenceFunctionModel">InfluenceFunctionModel</a>. 
+On implementations of this abstraction, you can call the method <code>influences</code>
+to compute influences. </p>
+<p>pyDVL provides implementations to use with pytorch model in
+<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model">pydvl.influence.torch</a>. For detailed information 
+on available implementations see the documentation in <a href="influence_function_model/">InfluenceFunctionModel</a>.</p>
+<p>Given a pre-trained pytorch model and a loss, a basic example would look like</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">DirectInfluence</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </span></code></pre></div>
-<p>The device specifies where influence calculation will be run. </p>
-<p>Given training and test data loaders, the influence of each training point on
-each test point can be calculated via:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">test_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">compute_influences</span><span class="p">(</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>The result is a tensor with one row per test point and one column per training
-point. Thus, each entry <span class="arithmatex">\((i, j)\)</span> represents the influence of training point <span class="arithmatex">\(j\)</span>
-on test point <span class="arithmatex">\(i\)</span>. A large positive influence indicates that training point <span class="arithmatex">\(j\)</span>
+for batches <span class="arithmatex">\(z_{\text{test}} = (x_{\text{test}}, y_{\text{test}})\)</span> and
+<span class="arithmatex">\(z = (x, y)\)</span> of data. The result is a tensor with one row per test point in 
+<span class="arithmatex">\(z_{\text{test}}\)</span> and one column per point in <span class="arithmatex">\(z\)</span>. 
+Thus, each entry <span class="arithmatex">\((i, j)\)</span> represents the influence of training point <span class="arithmatex">\(z[j]\)</span>
+on test point <span class="arithmatex">\(z_{\text{test}}[i]\)</span>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Compared to the mathematical definitions above, we switch the ordering
+of <span class="arithmatex">\(z\)</span> and <span class="arithmatex">\(z_{\text{test}}\)</span>, in order to make the input ordering consistent
+with the dimensions of the resulting tensor. More concrete if the first
+dimension of <span class="arithmatex">\(z_{\text{test}}\)</span> is <span class="arithmatex">\(N\)</span> and that of <span class="arithmatex">\(z\)</span>, the resulting tensor
+is of shape <span class="arithmatex">\(N \times M\)</span></p>
+</div>
+<p>A large positive influence indicates that training point <span class="arithmatex">\(j\)</span>
 tends to improve the performance of the model on test point <span class="arithmatex">\(i\)</span>, and vice versa,
 a large negative influence indicates that training point <span class="arithmatex">\(j\)</span> tends to worsen the
 performance of the model on test point <span class="arithmatex">\(i\)</span>.</p>
-<h3 id="perturbation-influences">Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permanent link">&para;</a></h3>
-<p>The method of empirical influence computation can be selected in
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a> with the
-parameter <code>influence_type</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">compute_influences</span><span class="p">(</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>   <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;perturbation&quot;</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>The result is a tensor with at least three dimensions. The first two dimensions
-are the same as in the case of <code>influence_type=up</code> case, i.e. one row per test
-point and one column per training point. The remaining dimensions are the same
-as the number of input features in the data. Therefore, each entry in the tensor
-represents the influence of each feature of each training point on each test
-point.</p>
-<h3 id="approximate-matrix-inversion">Approximate matrix inversion<a class="headerlink" href="#approximate-matrix-inversion" title="Permanent link">&para;</a></h3>
-<p>In almost every practical application it is not possible to construct, even less
-invert the complete Hessian in memory. pyDVL offers several approximate
-algorithms to invert it by setting the parameter <code>inversion_method</code> of
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">compute_influences</span><span class="p">(</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>Each inversion method has its own set of parameters that can be tuned to improve
-the final result. These parameters can be passed directly to
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a> as keyword
-arguments. For example, the following code sets the maximum number of iterations
-for conjugate gradient to <span class="arithmatex">\(100\)</span> and the minimum relative error to <span class="arithmatex">\(0.01\)</span>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">compute_influences</span><span class="p">(</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>   <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>   <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>   <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">)</span>
-</span></code></pre></div>
 <h3 id="hessian-regularization">Hessian regularization<a class="headerlink" href="#hessian-regularization" title="Permanent link">&para;</a></h3>
 <p>Additionally, and as discussed in <a href="#the-influence-function">the introduction</a>,
 in machine learning training rarely converges to a global minimum of the loss.
@@ -2973,183 +2875,51 @@ methods, such as the <a href="#arnoldi-solver">Arnoldi method</a> are robust aga
 problems, but most are not.</p>
 <p>To circumvent this problem, many approximate methods can be implemented. The
 simplest adds a small <em>hessian perturbation term</em>, i.e. <span class="arithmatex">\(H_{\hat{\theta}} +
-\lambda \mathbb{I}\)</span>, with <span class="arithmatex">\(\mathbb{I}\)</span> being the identity matrix. This standard
+\lambda \mathbb{I}\)</span>, with <span class="arithmatex">\(\mathbb{I}\)</span> being the identity matrix. </p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">DirectInfluence</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
+</span></code></pre></div>
+<p>This standard
 trick ensures that the eigenvalues of <span class="arithmatex">\(H_{\hat{\theta}}\)</span> are bounded away from
 zero and therefore the matrix is invertible. In order for this regularization
 not to corrupt the outcome too much, the parameter <span class="arithmatex">\(\lambda\)</span> should be as small
 as possible while still allowing a reliable inversion of <span class="arithmatex">\(H_{\hat{\theta}} +
 \lambda \mathbb{I}\)</span>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">compute_influences</span><span class="p">(</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>   <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">1e-4</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
+<h3 id="perturbation-influences">Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permanent link">&para;</a></h3>
+<p>The method of empirical influence computation can be selected with the
+parameter <code>mode</code>:</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">InfluenceMode</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                                   <span class="n">mode</span><span class="o">=</span><span class="n">InfluenceMode</span><span class="o">.</span><span class="n">Perturbation</span><span class="p">)</span>
 </span></code></pre></div>
+The result is a tensor with at least three dimensions. The first two dimensions
+are the same as in the case of <code>mode=InfluenceMode.Up</code> case, i.e. one row per test
+point and one column per training point. The remaining dimensions are the same
+as the number of input features in the data. Therefore, each entry in the tensor
+represents the influence of each feature of each training point on each test
+point.</p>
 <h3 id="influence-factors">Influence factors<a class="headerlink" href="#influence-factors" title="Permanent link">&para;</a></h3>
-<p>The <a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a>
-method offers a fast way to obtain the influence scores given a model
-and a dataset. Nevertheless, it is often more convenient
-to inspect and save some of the intermediate results of
-influence calculation for later use.</p>
 <p>The influence factors(refer to
 <a href="#approximating-the-influence-of-a-point">the previous section</a> for a definition)
 are typically the most computationally demanding part of influence calculation.
-They can be obtained via the
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influence_factors">compute_influence_factors</a>
-function, saved, and later used for influence calculation
-on different subsets of the training dataset.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influence_factors</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">influence_factors</span> <span class="o">=</span> <span class="n">compute_influence_factors</span><span class="p">(</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>   <span class="n">test_data_loader</span><span class="p">,</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+They can be obtained via calling the <code>influence_factors</code> method, saved, and later used 
+for influence calculation on different subsets of the training dataset.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">influence_factors</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influence_factors</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences_from_factors</span><span class="p">(</span><span class="n">influence_factors</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </span></code></pre></div>
-<p>The result is an object of type 
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>,
-which holds the calculated influence factors (<code>influence_factors.x</code>) and a
-dictionary with the info on the inversion process (<code>influence_factors.info</code>).</p>
-<h2 id="methods-for-inverse-hvp-calculation">Methods for inverse HVP calculation<a class="headerlink" href="#methods-for-inverse-hvp-calculation" title="Permanent link">&para;</a></h2>
-<p>In order to calculate influence values, pydvl implements several methods for the
-calculation of the inverse Hessian vector product (<abbr title="inverse Hessian-vector product">iHVP</abbr>). More precisely, given
-a model, training data and a tensor <span class="arithmatex">\(b\)</span>, the function
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/inversion/#pydvl.influence.inversion.solve_hvp">solve_hvp</a>
-will find <span class="arithmatex">\(x\)</span> such that <span class="arithmatex">\(H x = b\)</span>, with <span class="arithmatex">\(H\)</span> is the hessian of model.</p>
-<p>Many different inversion methods can be selected via the parameter
-<code>inversion_method</code> of
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/general/#pydvl.influence.general.compute_influences">compute_influences</a>.</p>
-<p>The following subsections will offer more detailed explanations for each method.</p>
-<h3 id="direct-inversion">Direct inversion<a class="headerlink" href="#direct-inversion" title="Permanent link">&para;</a></h3>
-<p>With <code>inversion_method = "direct"</code> pyDVL will calculate the inverse Hessian
-using the direct matrix inversion. This means that the Hessian will first be
-explicitly created and then inverted. This method is the most accurate, but also
-the most computationally demanding. It is therefore not recommended for large
-datasets or models with many parameters.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">torch</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">solve_hvp</span><span class="p">(</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>   <span class="s2">&quot;direct&quot;</span><span class="p">,</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>   <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>The result, an object of type 
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>,
-which holds two objects: <code>influence_factors.x</code> and <code>influence_factors.info</code>.
-The first one is the inverse Hessian vector product, while the second one is a
-dictionary with the info on the inversion process. For this method, the info
-consists of the Hessian matrix itself.</p>
-<h3 id="conjugate-gradient">Conjugate Gradient<a class="headerlink" href="#conjugate-gradient" title="Permanent link">&para;</a></h3>
-<p>This classical procedure for solving linear systems of equations is an iterative
-method that does not require the explicit inversion of the Hessian. Instead, it
-only requires the calculation of Hessian-vector products, making it a good
-choice for large datasets or models with many parameters. It is nevertheless
-much slower to converge than the direct inversion method and not as accurate.
-More info on the theory of conjugate gradient can be found on
-<a href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">Wikipedia</a>.</p>
-<p>In pyDVL, you can select conjugate gradient with <code>inversion_method = "cg"</code>, like
-this:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">solve_hvp</span><span class="p">(</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>   <span class="s2">&quot;cg&quot;</span><span class="p">,</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>   <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>   <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>   <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>   <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>   <span class="n">maxiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>The additional optional parameters <code>x0</code>, <code>rtol</code>, <code>atol</code>, and <code>maxiter</code> are passed
-to the <a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/torch_differentiable/#pydvl.influence.torch.torch_differentiable.solve_batch_cg">solve_batch_cg</a>
-function, and are respecively the initial guess for the solution, the relative
-tolerance, the absolute tolerance, and the maximum number of iterations.</p>
-<p>The resulting
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a> holds
-the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and some info on the inversion
-process <code>influence_factors.info</code>. More specifically, for each batch this will
-contain the number of iterations, a boolean indicating if the inversion
-converged, and the residual of the inversion.</p>
-<h3 id="linear-time-stochastic-second-order-approximation-lissa">Linear time Stochastic Second-Order Approximation (<abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr>)<a class="headerlink" href="#linear-time-stochastic-second-order-approximation-lissa" title="Permanent link">&para;</a></h3>
-<p>The <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> method is a stochastic approximation of the inverse Hessian vector
-product. Compared to <a href="#conjugate-gradient">conjugate gradient</a>
-it is faster but less accurate and typically suffers from instability.</p>
-<p>In order to find the solution of the HVP, <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> iteratively approximates the
-inverse of the Hessian matrix with the following update:</p>
-<div class="arithmatex">\[H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},\]</div>
-<p>where <span class="arithmatex">\(d\)</span> and <span class="arithmatex">\(s\)</span> are a dampening and a scaling factor, which are essential
-for the convergence of the method and they need to be chosen carefully, and I 
-is the identity matrix. More info on the theory of <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> can be found in the 
-original paper (Agarwal et al., 2017)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
-<p>In pyDVL, you can select <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> with <code>inversion_method = "lissa"</code>, like this:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">solve_hvp</span><span class="p">(</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>   <span class="s2">&quot;lissa&quot;</span><span class="p">,</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>   <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>   <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>   <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>   <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>   <span class="n">dampen</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>   <span class="n">scale</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>   <span class="n">h0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>   <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>with the additional optional parameters <code>maxiter</code>, <code>dampen</code>, <code>scale</code>, <code>h0</code>, and
-<code>rtol</code>, which are passed to the
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/torch_differentiable/#pydvl.influence.torch.torch_differentiable.solve_lissa">solve_lissa</a> function,
-being the maximum number of iterations, the dampening factor, the scaling
-factor, the initial guess for the solution and the relative tolerance,
-respectively.</p>
-<p>The resulting <a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>
-holds the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and,
-within <code>influence_factors.info</code>, the maximum percentage error
-and the mean percentage error of the approximation.</p>
-<h3 id="arnoldi-solver">Arnoldi solver<a class="headerlink" href="#arnoldi-solver" title="Permanent link">&para;</a></h3>
-<p>The <a href="https://en.wikipedia.org/wiki/Arnoldi_iteration">Arnoldi method</a> is a
-Krylov subspace method for approximating dominating eigenvalues and
-eigenvectors. Under a low rank assumption on the Hessian at a minimizer (which
-is typically observed for deep neural networks), this approximation captures the
-essential action of the Hessian. More concretely, for <span class="arithmatex">\(Hx=b\)</span> the solution is
-approximated by</p>
-<div class="arithmatex">\[x \approx V D^{-1} V^T b\]</div>
-<p>where <span class="arithmatex">\(D\)</span> is a diagonal matrix with the top (in absolute value) eigenvalues of
-the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding eigenvectors. See also
- (Schioppa et al., 2021)<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
-<p>In pyDVL, you can use Arnoldi with <code>inversion_method = "arnoldi"</code>, as follows:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">solve_hvp</span><span class="p">(</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">&quot;arnoldi&quot;</span><span class="p">,</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">wrapped_model</span><span class="p">,</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">training_data_loader</span><span class="p">,</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">b</span><span class="p">,</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">hessian_perturbation</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">rank_estimate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    <span class="n">eigen_computation_on_gpu</span><span class="o">=</span><span class="kc">False</span> 
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>For the parameters, check
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/torch_differentiable/#pydvl.influence.torch.torch_differentiable.solve_arnoldi">solve_arnoldi</a>. The
-resulting
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a> holds
-the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and, within
-<code>influence_factors.info</code>, the computed eigenvalues and eigenvectors.</p>
 <div class="footnote">
 <hr />
 <ol>
 <li id="fn:1">
-<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
-<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2021. Scaling Up Influence Functions. Presented at the AAAI-22, arXiv. <a href="https://doi.org/10.48550/arXiv.2112.03052">https://doi.org/10.48550/arXiv.2112.03052</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2021. Scaling Up Influence Functions. Presented at the AAAI-22, arXiv. <a href="https://doi.org/10.48550/arXiv.2112.03052">https://doi.org/10.48550/arXiv.2112.03052</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 <li id="fn:3">
 <p>Hampel, F.R., 1974. The Influence Curve and Its Role in Robust Estimation. J. Am. Stat. Assoc. 69, 383–393. <a href="https://doi.org/10.2307/2285666">https://doi.org/10.2307/2285666</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
@@ -3165,11 +2935,11 @@ the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <c
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-11</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-15</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-11</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-15</span>
       
     
   </small>
@@ -3218,13 +2988,13 @@ the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <c
         
         
           
-          <a href="../examples/influence_imagenet/" class="md-footer__link md-footer__link--next" aria-label="Next: For CNNs" rel="next">
+          <a href="influence_function_model/" class="md-footer__link md-footer__link--next" aria-label="Next: Influence Function Model" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                For CNNs
+                Influence Function Model
               </div>
             </div>
             <div class="md-footer__button md-icon">
