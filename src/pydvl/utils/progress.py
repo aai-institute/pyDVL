@@ -6,11 +6,16 @@
     the `disable` argument of `tqdm`.
 """
 import collections.abc
+import logging
+from functools import wraps
+from time import time
 from typing import Iterable, Iterator, Union
 
 from tqdm.auto import tqdm
 
-__all__ = ["maybe_progress"]
+__all__ = ["maybe_progress", "log_duration"]
+
+logger = logging.getLogger(__name__)
 
 
 class MockProgress(collections.abc.Iterator):
@@ -72,3 +77,21 @@ def maybe_progress(
     if isinstance(it, int):
         it = range(it)  # type: ignore
     return tqdm(it, **kwargs) if display else MockProgress(it)
+
+
+def log_duration(func):
+    """
+    Decorator to log execution time of a function
+    """
+
+    @wraps(func)
+    def wrapper_log_duration(*args, **kwargs):
+        func_name = func.__qualname__
+        logger.info(f"Function '{func_name}' is starting.")
+        start_time = time()
+        result = func(*args, **kwargs)
+        duration = time() - start_time
+        logger.info(f"Function '{func_name}' completed. Duration: {duration:.2f} sec")
+        return result
+
+    return wrapper_log_duration
