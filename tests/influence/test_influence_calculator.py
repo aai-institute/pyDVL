@@ -119,8 +119,20 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
 
 
+@pytest.fixture(scope="session")
+def single_threaded_distributed_client():
+    return Client(threads_per_worker=1)
+
+
+@pytest.fixture(scope="session")
+def multi_threaded_distributed_client():
+    return Client(threads_per_worker=2)
+
+
 @pytest.mark.torch
-def test_dask_influence_nn(model_and_data, test_case):
+def test_dask_influence_nn(
+    model_and_data, test_case, single_threaded_distributed_client
+):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     chunk_size = int(test_case.train_data_len / 4)
     test_chunk_size = int(test_case.test_data_len / 4)
@@ -210,19 +222,14 @@ def test_dask_influence_nn(model_and_data, test_case):
 
     # test distributed scheduler
     if test_case.mode == InfluenceMode.Up:
-        with Client(threads_per_worker=1) as client:
-            converter = TorchNumpyConverter()
-            dask_influence_client = DaskInfluenceCalculator(
-                inf_model, converter, client
-            )
-            da_factors_client = dask_influence_client.influence_factors(
-                da_x_test, da_y_test
-            )
-            np.allclose(torch_factors.numpy(), da_factors_client.compute())
-
-        with pytest.raises(ThreadSafetyViolationError):
-            with Client() as client:
-                DaskInfluenceCalculator(inf_model, converter, client)
+        converter = TorchNumpyConverter()
+        dask_influence_client = DaskInfluenceCalculator(
+            inf_model, converter, single_threaded_distributed_client
+        )
+        da_factors_client = dask_influence_client.influence_factors(
+            da_x_test, da_y_test
+        )
+        np.allclose(torch_factors.numpy(), da_factors_client.compute())
 
     with pytest.raises(InvalidDimensionChunksError):
         da_x_test_wrong_chunks = da.from_array(
@@ -242,6 +249,21 @@ def test_dask_influence_nn(model_and_data, test_case):
         )
         dask_influence.influence_factors(
             da_x_test_unaligned_chunks, da_y_test_unaligned_chunks
+        )
+
+
+def test_thread_safety_violation_error(
+    model_and_data, multi_threaded_distributed_client, test_case
+):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+    inf_model = ArnoldiInfluence(
+        model,
+        test_case.loss,
+        hessian_regularization=test_case.hessian_reg,
+    )
+    with pytest.raises(ThreadSafetyViolationError):
+        DaskInfluenceCalculator(
+            inf_model, TorchNumpyConverter(), multi_threaded_distributed_client
         )
 
 
