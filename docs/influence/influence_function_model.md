@@ -1,7 +1,7 @@
 In almost every practical application it is not possible to construct, even less
 invert the complete Hessian in memory. pyDVL offers several implementations of the interface
-[InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], which do not compute
-the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_model.DirectInfluence]).
+[InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel], which do not compute
+the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_function_model.DirectInfluence]).
 
 
 ### Conjugate Gradient

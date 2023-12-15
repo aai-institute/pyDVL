@@ -70,8 +70,7 @@ and without re-training the full model.
 
 
 pyDVL supports two ways of computing the empirical influence function, namely
-up-weighting of samples and perturbation influences. The choice is done by the
-parameter `mode`.
+up-weighting of samples and perturbation influences.
 
 ### Approximating the influence of a point
 
@@ -182,10 +181,12 @@ as done in [@koh_understanding_2017].
 ## Computation
 
 The main abstraction of the library for influence calculation is
-[InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]. 
+[InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel]. 
 On implementations of this abstraction, you can call the method `influences`
-to compute influences. We provide implementations to use with pytorch model in
-[pydvl.influence.torch][pydvl.influence.torch.influence_model]. For detailed information 
+to compute influences. 
+
+pyDVL provides implementations to use with pytorch model in
+[pydvl.influence.torch][pydvl.influence.torch.influence_function_model]. For detailed information 
 on available implementations see the documentation in [InfluenceFunctionModel](influence_function_model.md).
 
 Given a pre-trained pytorch model and a loss, a basic example would look like
@@ -195,10 +196,10 @@ from torch.utils.data import DataLoader
 from pydvl.influence.torch import DirectInfluence
 
 training_data_loader = DataLoader(...)
-if_model = DirectInfluence(model, loss)
-if_model = if_model.fit(training_data_loader)
+infl_model = DirectInfluence(model, loss)
+infl_model = infl_model.fit(training_data_loader)
 
-influences = if_model.influences(x_test, y_test, x, y)
+influences = infl_model.influences(x_test, y_test, x, y)
 ```
 for batches $z_{\text{test}} = (x_{\text{test}}, y_{\text{test}})$ and
 $z = (x, y)$ of data. The result is a tensor with one row per test point in 
@@ -237,7 +238,8 @@ from torch.utils.data import DataLoader
 from pydvl.influence.torch import DirectInfluence
 
 training_data_loader = DataLoader(...)
-if_model = DirectInfluence(model, loss, hessian_regularization=0.01)
+infl_model = DirectInfluence(model, loss, hessian_regularization=0.01)
+infl_model = infl_model.fit(training_data_loader)
 ```
 
 This standard
@@ -255,8 +257,8 @@ parameter `mode`:
 ```python
 from pydvl.influence import InfluenceMode
 
-influences = if_model.influences(x_test, y_test, x, y,
-                                 mode=InfluenceMode.Perturbation)
+influences = infl_model.influences(x_test, y_test, x, y,
+                                   mode=InfluenceMode.Perturbation)
 ```
 The result is a tensor with at least three dimensions. The first two dimensions
 are the same as in the case of `mode=InfluenceMode.Up` case, i.e. one row per test
@@ -275,8 +277,8 @@ They can be obtained via calling the `influence_factors` method, saved, and late
 for influence calculation on different subsets of the training dataset.
 
 ```python
-influence_factors = if_model.influence_factors(x_test, y_test)
-influences = if_model.influences_from_factors(influence_factors, x, y)
+influence_factors = infl_model.influence_factors(x_test, y_test)
+influences = infl_model.influences_from_factors(influence_factors, x, y)
 ```
 
 

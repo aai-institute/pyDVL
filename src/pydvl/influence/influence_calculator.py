@@ -617,7 +617,7 @@ class SequentialInfluenceCalculator:
                 and corresponding targets.
 
         Returns:
-            A
+            A lazy data structure representing the chunks of the resulting tensor
         """
         tensors_gen_factory = partial(self._influence_factors_gen, data_iterable)
         return LazyChunkSequence(tensors_gen_factory)
@@ -668,7 +668,7 @@ class SequentialInfluenceCalculator:
                 [pydvl.influence.base_influence_model.InfluenceType]
 
         Returns:
-            Tensor representing the element-wise scalar products for the provided batch.
+            A lazy data structure representing the chunks of the resulting tensor
 
         """
         nested_tensor_gen_factory = partial(
@@ -728,7 +728,7 @@ class SequentialInfluenceCalculator:
                 [pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
-          Tensor representing the element-wise scalar product of the provided batch
+          A lazy data structure representing the chunks of the resulting tensor
 
         """
         nested_tensor_gen = partial(
