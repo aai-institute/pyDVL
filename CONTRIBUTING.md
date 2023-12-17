@@ -106,7 +106,7 @@ There are a few important arguments:
   To start memcached locally in the background with Docker use:
 
   ```shell
-   run --name pydvl-memcache -p 11211:11211 -d memcached
+  docker run --name pydvl-memcache -p 11211:11211 -d memcached
   ```
 
 - `-n` sets the number of parallel workers for 

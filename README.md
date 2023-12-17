@@ -116,37 +116,34 @@ For influence computation, follow these steps:
    import torch
    from torch import nn
    from torch.utils.data import DataLoader, TensorDataset
-   from pydvl.influence import compute_influences, InversionMethod
-   from pydvl.influence.torch import TorchTwiceDifferentiable
+   
+   from pydvl.influence.torch import DirectInfluence
+   from pydvl.influence.torch.util import NestedTorchCatAggregator, TorchNumpyConverter
+   from pydvl.influence import SequentialInfluenceCalculator
    ```
 
 2. Create PyTorch data loaders for your train and test splits.
 
    ```python
-   torch.manual_seed(16)
-   
    input_dim = (5, 5, 5)
    output_dim = 3
+   train_x = torch.rand((10, *input_dim))
+   train_y = torch.rand((10, output_dim))
+   test_x = torch.rand((5, *input_dim))
+   test_y = torch.rand((5, output_dim))
 
-   train_data_loader = DataLoader(
-      TensorDataset(torch.rand((10, *input_dim)), torch.rand((10, output_dim))),
-      batch_size=2,
-   )
-   test_data_loader = DataLoader(
-      TensorDataset(torch.rand((5, *input_dim)), torch.rand((5, output_dim))),
-      batch_size=1,
-   )
+   train_data_loader = DataLoader(TensorDataset(train_x, train_y), batch_size=2)
+   test_data_loader = DataLoader(TensorDataset(test_x, test_y), batch_size=1)
    ```
 
 3. Instantiate your neural network model.
 
    ```python
    nn_architecture = nn.Sequential(
-      nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-      nn.Flatten(),
-      nn.Linear(27, 3),
+     nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+     nn.Flatten(),
+     nn.Linear(27, 3),
    )
-   nn_architecture.eval()
    ```
 
 4. Define your loss:
@@ -155,29 +152,37 @@ For influence computation, follow these steps:
    loss = nn.MSELoss()
    ```
 
-5. Wrap your model and loss in a `TorchTwiceDifferentiable` object.
+5. Instantiate an `InfluenceFunctionModel` and fit it to the training data
 
    ```python
-   model = TorchTwiceDifferentiable(nn_architecture, loss)
+   infl_model = DirectInfluence(nn_architecture, loss, hessian_regularization=0.01)
+   infl_model = infl_model.fit(train_data_loader)
    ```
 
-6. Compute influence factors by providing training data and inversion method.
-   Using the conjugate gradient algorithm, this would look like:
+6. For small input data call influence method on the fitted instance. 
 
    ```python
-   influences = compute_influences(
-      model,
-      training_data=train_data_loader,
-      test_data=test_data_loader,
-      inversion_method=InversionMethod.Cg,
-      hessian_regularization=1e-1,
-      maxiter=200,
-      progress=True,
-   )
+   influences = infl_model.influences(test_x, test_y, train_x, train_y)
    ```
    The result is a tensor of shape `(training samples x test samples)`
    that contains at index `(i, j`) the influence of training sample `i` on
    test sample `j`.
+
+7. For larger data, wrap the model into a
+   calculator and call methods on the calculator.
+   ```python
+   infl_calc = SequentialInfluenceCalculator(infl_model)
+   
+    # Lazy object providing arrays batch-wise in a sequential manner
+   lazy_influences = infl_calc.influences(test_data_loader, train_data_loader)
+
+   # Trigger computation and pull results to memory
+   influences = lazy_influences.compute(aggregator=NestedTorchCatAggregator())
+
+   # Trigger computation and write results batch-wise to disk
+   lazy_influences.to_zarr("influences_result", TorchNumpyConverter())
+   ```
+   
 
    The higher the absolute value of the influence of a training sample
    on a test sample, the more influential it is for the chosen test sample, model
@@ -328,6 +333,7 @@ We currently implement the following papers:
   [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
   In Proceedings of the AAAI-22. arXiv, 2021.
 
+  
 # License
 
 pyDVL is distributed under

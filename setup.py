@@ -24,7 +24,12 @@ setup(
     extras_require={
         "cupy": ["cupy-cuda11x>=12.1.0"],
         "memcached": ["pymemcache"],
-        "influence": ["torch>=2.0.0"],
+        "influence": [
+            "torch>=2.0.0",
+            "dask>=2023.5.0",
+            "distributed>=2023.5.0",
+            "zarr>=2.16.1",
+        ],
         "ray": ["ray>=0.8"],
     },
     author="appliedAI Institute gGmbH",
