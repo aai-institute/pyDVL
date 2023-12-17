@@ -14,8 +14,6 @@ from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
 from tqdm.auto import tqdm
 
-from pydvl.influence.torch import as_tensor
-
 from .types import Losses
 
 logger = logging.getLogger(__name__)

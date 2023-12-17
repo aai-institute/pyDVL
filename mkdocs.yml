@@ -69,8 +69,11 @@ plugins:
             - https://scikit-learn.org/stable/objects.inv
             - https://pytorch.org/docs/stable/objects.inv
             - https://pymemcache.readthedocs.io/en/latest/objects.inv
+            - https://docs.dask.org/en/latest/objects.inv
+            - https://distributed.dask.org/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
+            inherited_members: true
             docstring_style: google
             docstring_section_style: spacy
             line_length: 80
@@ -205,6 +208,8 @@ nav:
       - Data OOB: examples/data_oob.ipynb
   - The Influence Function:
     - Introduction: influence/index.md
+    - Influence Function Model: influence/influence_function_model.md
+    - Scaling Computation: influence/scaling_computation.md
     - Examples:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
