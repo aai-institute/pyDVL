@@ -120,6 +120,20 @@ class Utility:
         0.9
         ```
 
+        With caching enabled:
+
+        ```pycon
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> cache_backend = InMemoryCacheBackend()
+        >>> u = Utility(LogisticRegression(random_state=16), dataset, cache_backend=cache_backend)
+        >>> u(dataset.indices)
+        0.9
+        ```
+
     """
 
     model: SupervisedModel
@@ -154,14 +168,12 @@ class Utility:
         self.cache = cache_backend
         if cached_func_options is None:
             cached_func_options = CachedFuncConfig()
-        # TODO: Find a better way to do this
-        cached_func_options.hash_prefix = str(hash((model, data, scorer)))
+        # TODO: Find a better way to do this.
+        if cached_func_options.hash_prefix is None:
+            # FIX: This does not handle reusing the same across runs.
+            cached_func_options.hash_prefix = str(hash((model, data, scorer)))
         self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
-
-        # FIXME: can't modify docstring of methods. Instead, I could use a
-        #  factory which creates the class on the fly with the right doc.
-        # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def _initialize_utility_wrapper(self):
         if self.cache is not None:

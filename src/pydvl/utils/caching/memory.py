@@ -30,8 +30,8 @@ class InMemoryCacheBackend(CacheBackend):
         ```
 
         ``` pycon
-        >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
-        >>> cache_backend = MemcachedCacheBackend()
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> cache_backend = InMemoryCacheBackend()
         >>> cache_backend.clear()
         >>> value = 42
         >>> def foo(x: int):

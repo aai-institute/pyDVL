@@ -132,6 +132,13 @@ class CachedFunc:
 
     This class is heavily inspired from that of [joblib.memory.MemorizedFunc][].
 
+    This class caches calls to the wrapped callable by generating a hash key
+    based on the wrapped callable's code, the arguments passed to it and the optional
+    hash_prefix.
+
+    !!! Warning
+        This class only works with hashable arguments to the wrapped callable.
+
     Args:
         func: Callable to wrap.
         cache_backend: Instance of CacheBackendBase that handles

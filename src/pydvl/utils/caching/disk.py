@@ -29,7 +29,7 @@ class DiskCacheBackend(CacheBackend):
     ??? Examples
         ``` pycon
         >>> from pydvl.utils.caching.disk import DiskCacheBackend
-        >>> cache_backend = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
+        >>> cache_backend = DiskCacheBackend()
         >>> cache_backend.clear()
         >>> value = 42
         >>> cache_backend.set("key", value)
@@ -38,8 +38,8 @@ class DiskCacheBackend(CacheBackend):
         ```
 
         ``` pycon
-        >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
-        >>> cache_backend = MemcachedCacheBackend()
+        >>> from pydvl.utils.caching.disk import DiskCacheBackend
+        >>> cache_backend = DiskCacheBackend()
         >>> cache_backend.clear()
         >>> value = 42
         >>> def foo(x: int):

@@ -14,6 +14,7 @@ class CachedFuncConfig:
 
     Args:
         hash_prefix: Optional string prefix that be prepended to the cache key.
+            This can be provided in order to guarantee cache reuse across runs.
         ignore_args: Do not take these keyword arguments into account when
             hashing the wrapped function for usage as key. This allows
             sharing the cache among different jobs for the same experiment run if
@@ -26,8 +27,8 @@ class CachedFuncConfig:
             running standard deviation of the mean stabilizes below
             `rtol_stderr * mean`.
         rtol_stderr: relative tolerance for repeated evaluations. More precisely,
-            [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function once the
-            standard deviation of the mean is smaller than `rtol_stderr * mean`.
+            [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function
+            once the standard deviation of the mean is smaller than `rtol_stderr * mean`.
         min_repetitions: minimum number of times that a function evaluation
             on the same arguments is repeated before returning cached values. Useful
             for stochastic functions only. If the model training is very noisy, set
