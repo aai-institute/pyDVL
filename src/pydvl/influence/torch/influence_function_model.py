@@ -13,8 +13,10 @@ from typing import Callable, Optional
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
-from ...utils import log_duration, maybe_progress
+from pydvl.utils.progress import log_duration
+
 from ..base_influence_function_model import (
     InfluenceFunctionModel,
     InfluenceMode,
@@ -522,7 +524,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
         batch_cg = torch.zeros_like(rhs)
 
         for idx, bi in enumerate(
-            maybe_progress(rhs, self.progress, desc="Conjugate gradient")
+            tqdm(rhs, disable=not self.progress, desc="Conjugate gradient")
         ):
             batch_result = self._solve_cg(
                 reg_hvp,
@@ -689,7 +691,7 @@ class LissaInfluence(TorchInfluenceFunctionModel):
             create_batch_hvp_function(self.model, self.loss),
             in_dims=(None, None, None, 0),
         )
-        for _ in maybe_progress(range(self.maxiter), self.progress, desc="Lissa"):
+        for _ in tqdm(range(self.maxiter), disable=not self.progress, desc="Lissa"):
             x, y = next(iter(shuffled_training_data))
             # grad_xy = model.grad(x, y, create_graph=True)
             reg_hvp = (

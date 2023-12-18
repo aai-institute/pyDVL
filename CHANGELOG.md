@@ -4,6 +4,7 @@
 ## Unreleased
 
 ### Added
+
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
@@ -14,11 +15,12 @@
 
 ### Changed
 
+- Simplify display of computation progress
+  [PR #466](https://github.com/aai-institute/pyDVL/pull/466)
 - Improve readme and explain better the examples
   [PR #465](https://github.com/aai-institute/pyDVL/pull/465)
 - Simplify and improve tests, add CodeCov code coverage
   [PR #429](https://github.com/aai-institute/pyDVL/pull/429)
-- 
 - **Breaking Changes**
   - Removed `compute_influences` and all related code.
     Replaced by new `InfluenceFunctionModel` interface. Removed modules:

@@ -9,15 +9,14 @@
 import operator
 from enum import Enum
 from functools import reduce
-from itertools import cycle, takewhile
 from typing import Optional, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
-from tqdm import tqdm
 
 from pydvl.parallel import MapReduceJob, ParallelConfig
 from pydvl.utils import Utility, random_powerset
+from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import MinUpdates
@@ -76,11 +75,10 @@ def _owen_sampling_shapley(
 
     rng = np.random.default_rng(seed)
     done = MinUpdates(1)
-    repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
-    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
-    for idx in repeat_indices:
-        pbar.n = 100 * done.completion()
-        pbar.refresh()
+
+    for idx in repeat_indices(
+        indices, result=result, done=done, disable=not progress, position=job_id
+    ):
         e = np.zeros(max_q)
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         for j, q in enumerate(q_steps):

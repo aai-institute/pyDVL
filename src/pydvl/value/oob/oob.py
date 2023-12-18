@@ -12,8 +12,9 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from tqdm.auto import tqdm
 
-from pydvl.utils import Seed, Utility, maybe_progress
+from pydvl.utils import Seed, Utility
 from pydvl.utils.types import LossFunction
 from pydvl.value.result import ValuationResult
 
@@ -112,8 +113,8 @@ def compute_data_oob(
 
     bag.fit(u.data.x_train, u.data.y_train)
 
-    for est, samples in maybe_progress(
-        zip(bag.estimators_, bag.estimators_samples_), progress, total=n_est
+    for est, samples in tqdm(
+        zip(bag.estimators_, bag.estimators_samples_), disable=not progress, total=n_est
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.setxor1d(u.data.indices, np.unique(samples))
         array_loss = loss(

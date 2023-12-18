@@ -30,9 +30,10 @@ import cvxpy as cp
 import numpy as np
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
+from tqdm.auto import trange
 
 from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
@@ -155,7 +156,7 @@ def _group_testing_shapley(
     )  # indicator vars
     uu = np.empty(n_samples)  # utilities
 
-    for t in maybe_progress(n_samples, progress=progress, position=job_id):
+    for t in trange(n_samples, disable=not progress, position=job_id):
         k = rng.choice(const.kk, size=1, p=const.q).item()
         s = random_subset_of_size(u.data.indices, k, seed=rng)
         uu[t] = u(s)

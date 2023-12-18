@@ -65,8 +65,8 @@ def test_analytic_montecarlo_shapley(
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
-        progress=False,
         seed=seed,
+        progress=True,
         **kwargs
     )
 

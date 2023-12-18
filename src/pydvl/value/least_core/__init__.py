@@ -96,7 +96,7 @@ def compute_least_core_values(
             solver_options.update(kwargs)
 
     if mode == LeastCoreMode.MonteCarlo:
-        # TODO fix progress showing and maybe_progress in remote case
+        # TODO fix progress showing in remote case
         progress = False
         if n_iterations is None:
             raise ValueError("n_iterations cannot be None for Monte Carlo Least Core")
