@@ -4,10 +4,10 @@ from typing import Iterable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
 from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.progress import maybe_progress
 from pydvl.utils.types import Seed
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
@@ -175,7 +175,7 @@ def _montecarlo_least_core(
     A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
-        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
+        tqdm(power_set, disable=not progress, total=n_iterations, position=job_id)
     ):
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True

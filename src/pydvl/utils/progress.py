@@ -1,82 +1,42 @@
-"""
-!!! Warning
-    This module is deprecated and will be removed in a future release.
-    It implements a wrapper for the [tqdm](https://tqdm.github.io/) progress bar
-    iterator for easy toggling, but this functionality is already provided by
-    the `disable` argument of `tqdm`.
-"""
-import collections.abc
 import logging
 from functools import wraps
+from itertools import cycle, takewhile
 from time import time
-from typing import Iterable, Iterator, Union
+from typing import TYPE_CHECKING, Collection, Iterator
 
 from tqdm.auto import tqdm
 
-__all__ = ["maybe_progress", "log_duration"]
+# This is needed to avoid circular import errors
+if TYPE_CHECKING:
+    from pydvl.value.result import ValuationResult
+    from pydvl.value.stopping import StoppingCriterion
+
+__all__ = ["repeat_indices", "log_duration"]
 
 logger = logging.getLogger(__name__)
 
 
-class MockProgress(collections.abc.Iterator):
-    """A Naive mock class to use with maybe_progress and tqdm.
-    Mocked methods don't support return values.
-    Mocked properties don't do anything
-    """
-
-    class MiniMock:
-        def __call__(self, *args, **kwargs):
-            pass
-
-        def __add__(self, other):
-            pass
-
-        def __sub__(self, other):
-            pass
-
-        def __mul__(self, other):
-            pass
-
-        def __floordiv__(self, other):
-            pass
-
-        def __truediv__(self, other):
-            pass
-
-    def __init__(self, iterator: Union[Iterator, Iterable]):
-        # Since there is no _it in __dict__ at this point, doing here
-        # self._it = iterator
-        # results in a call to __getattr__() and the assignment fails, so we
-        # use __dict__ instead
-        self.__dict__["_it"] = iterator
-
-    def __iter__(self):
-        return iter(self._it)
-
-    def __next__(self):
-        return next(self._it)
-
-    def __getattr__(self, key):
-        return self.MiniMock()
-
-    def __setattr__(self, key, value):
-        pass
-
-
-def maybe_progress(
-    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs
-) -> Union[tqdm, MockProgress]:
-    """Returns either a tqdm progress bar or a mock object which wraps the
-    iterator as well, but ignores any accesses to methods or properties.
+def repeat_indices(
+    indices: Collection[int],
+    result: "ValuationResult",
+    done: "StoppingCriterion",
+    **kwargs,
+) -> Iterator[int]:
+    """Helper function to cycle indefinitely over a collection of indices
+    until the stopping criterion is satisfied while displaying progress.
 
     Args:
-        it: the iterator to wrap
-        display: set to True to return a tqdm bar
-        kwargs: Keyword arguments that will be forwarded to tqdm
+        indices: Collection of indices that will be cycled until done.
+        result: Object containing the current results.
+        done: Stopping criterion.
+        kwargs: Keyword arguments passed to tqdm.
     """
-    if isinstance(it, int):
-        it = range(it)  # type: ignore
-    return tqdm(it, **kwargs) if display else MockProgress(it)
+    with tqdm(total=100, unit="%", **kwargs) as pbar:
+        it = takewhile(lambda _: not done(result), cycle(indices))
+        for i in it:
+            yield i
+            pbar.update(100 * done.completion() - pbar.n)
+            pbar.refresh()
 
 
 def log_duration(func):

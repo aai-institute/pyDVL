@@ -2,8 +2,9 @@ from typing import Dict, Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_removal_score"]
@@ -44,7 +45,7 @@ def compute_removal_score(
     # We sort in descending order if we want to remove the best values
     values.sort(reverse=remove_best)
 
-    for pct in maybe_progress(percentages, display=progress, desc="Removal Scores"):
+    for pct in tqdm(percentages, disable=not progress, desc="Removal Scores"):
         n_removal = int(pct * len(u.data))
         indices = values.indices[n_removal:]
         score = u(indices)
