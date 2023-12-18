@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Collection, Iterator
 
 from tqdm.auto import tqdm
 
+# This is needed to avoid circular import errors
 if TYPE_CHECKING:
     from pydvl.value.result import ValuationResult
     from pydvl.value.stopping import StoppingCriterion
