@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional, Tuple
 
 import torch
 from torch import nn as nn
@@ -32,7 +32,11 @@ from .functional import (
     hessian,
     model_hessian_low_rank,
 )
-from .util import flatten_dimensions
+from .util import (
+    EkfacRepresentation,
+    empirical_cross_entropy_loss_fn,
+    flatten_dimensions,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -875,4 +879,262 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     def to(self, device: torch.device):
         return ArnoldiInfluence(
             self.model.to(device), self.loss, self.low_rank_representation.to(device)
+        )
+
+
+class EkfacInfluence(TorchInfluenceFunctionModel):
+
+    ekfac_representation: EkfacRepresentation
+
+    def __init__(
+        self,
+        model: nn.Module,
+        hessian_regularization: float = 0.0,
+    ):
+
+        super().__init__(model, empirical_cross_entropy_loss_fn)
+        self.hessian_regularization = hessian_regularization
+        self.active_layers = self._parse_active_layers()
+
+    @property
+    def is_fitted(self):
+        try:
+            return self.ekfac_representation is not None
+        except AttributeError:
+            return False
+
+    def _parse_active_layers(self) -> Dict[str, torch.nn.Module]:
+        active_layers: Dict[str, torch.nn.Module] = {}
+        for m_name, module in self.model.named_modules():
+            if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
+                layer_requires_grad = [
+                    param.requires_grad for param in module.parameters()
+                ]
+                if all(layer_requires_grad):
+                    active_layers[m_name] = module
+                elif any(layer_requires_grad):
+                    raise RuntimeError(
+                        f"Layer {m_name} has some parameters that require grad and some that do not."
+                        f"This is not supported. Please set all parameters of the layer to require grad."
+                    )
+        return active_layers
+
+    @staticmethod
+    def init_layer_kfac_blocks(
+        module: torch.nn.Module,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        if isinstance(module, nn.Linear):
+            with_bias = module.bias is not None
+            sG = module.out_features
+            sA = module.in_features + int(with_bias)
+            forward_x_layer = torch.zeros((sA, sA), device=module.weight.device)
+            grad_y_layer = torch.zeros((sG, sG), device=module.weight.device)
+        else:
+            raise NotImplementedError(
+                f"Only Linear layers are supported, but found module {module} requiring grad."
+            )
+        return forward_x_layer, grad_y_layer
+
+    @staticmethod
+    def get_layer_kfac_hooks(
+        m_name: str,
+        module: torch.nn.Module,
+        forward_x: Dict[str, torch.Tensor],
+        grad_y: Dict[str, torch.Tensor],
+    ) -> Tuple[Callable, Callable]:
+        if isinstance(module, nn.Linear):
+            with_bias = module.bias is not None
+
+            def input_hook(m, x, y):
+                x = x[0]
+                if with_bias:
+                    x = torch.cat(
+                        (x, torch.ones((x.shape[0], 1), device=module.weight.device)),
+                        dim=1,
+                    )
+                forward_x[m_name] += torch.mm(x.t(), x)
+
+            def grad_hook(m, m_grad, m_out):
+                m_out = m_out[0]
+                grad_y[m_name] += torch.mm(m_out.t(), m_out)
+
+        else:
+            raise NotImplementedError(
+                f"Only Linear layers are supported, but found module {module} requiring grad."
+            )
+        return input_hook, grad_hook
+
+    def get_kfac_blocks(
+        self,
+        data: DataLoader,
+    ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        forward_x = {}
+        grad_y = {}
+        hooks = []
+        data_len = 0
+
+        for m_name, module in self.active_layers.items():
+            forward_x[m_name], grad_y[m_name] = self.init_layer_kfac_blocks(module)
+            layer_input_hook, layer_grad_hook = self.get_layer_kfac_hooks(
+                m_name, module, forward_x, grad_y
+            )
+            hooks.append(module.register_forward_hook(layer_input_hook))
+            hooks.append(module.register_full_backward_hook(layer_grad_hook))
+
+        for x, _ in data:
+            data_len += x.shape[0]
+            pred_y = self.model(x)
+            loss = self.loss(pred_y)
+            loss.backward()
+
+        for key in forward_x.keys():
+            forward_x[key] /= data_len
+            grad_y[key] /= data_len
+
+        for hook in hooks:
+            hook.remove()
+
+        return forward_x, grad_y
+
+    def fit(self, data: DataLoader) -> EkfacInfluence:
+        forward_x, grad_y = self.get_kfac_blocks(data)
+        layers_evecs_a = {}
+        layers_evect_g = {}
+        layers_diags = {}
+        for key in self.active_layers.keys():
+            evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
+            evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
+            layers_evecs_a[key] = evecs_a
+            layers_evect_g[key] = evecs_g
+            layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
+
+        self.ekfac_representation = EkfacRepresentation(
+            self.active_layers.keys(),
+            self.active_layers.values(),
+            layers_evect_g.values(),
+            layers_evecs_a.values(),
+            layers_diags.values(),
+        )
+        return self
+
+    @staticmethod
+    def init_layer_diag(module: torch.nn.Module) -> torch.Tensor:
+        if isinstance(module, nn.Linear):
+            with_bias = module.bias is not None
+            sG = module.out_features
+            sA = module.in_features + int(with_bias)
+            layer_diag = torch.zeros((sA * sG), device=module.weight.device)
+        else:
+            raise NotImplementedError(
+                f"Only Linear layers are supported, but found module {module} requiring grad."
+            )
+        return layer_diag
+
+    def get_layer_diag_hooks(
+        self,
+        m_name: str,
+        module: torch.nn.Module,
+        last_x_kfe: Dict[str, torch.Tensor],
+        diags: Dict[str, torch.Tensor],
+    ) -> Tuple[Callable, Callable]:
+
+        evecs_a, evecs_g = self.ekfac_representation.get_layer_evecs()
+        if isinstance(module, nn.Linear):
+            with_bias = module.bias is not None
+
+            def input_hook(m, x, y):
+                x = x[0]
+                if with_bias:
+                    x = torch.cat(
+                        (x, torch.ones((x.shape[0], 1), device=module.weight.device)),
+                        dim=1,
+                    )
+                last_x_kfe[m_name] = torch.mm(x, evecs_a[m_name])
+
+            def grad_hook(m, m_grad, m_out):
+                m_out = m_out[0]
+                gy_kfe = torch.mm(m_out, evecs_g[m_name])
+                diags[m_name] += torch.mm(
+                    gy_kfe.t() ** 2, last_x_kfe[m_name] ** 2
+                ).view(-1)
+
+        else:
+            raise NotImplementedError(
+                f"Only Linear layers are supported, but found module {module} requiring grad."
+            )
+        return input_hook, grad_hook
+
+    def update_diag(
+        self,
+        data: DataLoader,
+    ) -> EkfacInfluence:
+
+        if not self.is_fitted:
+            raise ValueError(
+                "EkfacInfluence must be fitted before calling update_diag on it. "
+                "Please call fit first."
+            )
+        diags = {}
+        last_x_kfe: Dict[str, torch.Tensor] = {}
+        hooks = []
+        data_len = 0
+
+        for m_name, module in self.active_layers.items():
+            diags[m_name] = self.init_layer_diag(module)
+            input_hook, grad_hook = self.get_layer_diag_hooks(
+                m_name, module, last_x_kfe, diags
+            )
+            hooks.append(module.register_forward_hook(input_hook))
+            hooks.append(module.register_full_backward_hook(grad_hook))
+
+        for x, _ in data:
+            data_len += x.shape[0]
+            pred_y = self.model(x)
+            loss = self.loss(pred_y)
+            loss.backward()
+
+        for key in diags.keys():
+            diags[key] /= data_len
+
+        for hook in hooks:
+            hook.remove()
+
+        self.ekfac_representation.diags = diags.values()
+
+        return self
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        x = rhs.clone()
+        start_idx = 0
+        for _, (_, evecs_a, evecs_g, diag) in self.ekfac_representation:
+            end_idx = start_idx + diag.shape[0]
+            rhs_layer = rhs[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
+                rhs.shape[0], evecs_g.shape[0], -1
+            )
+            bias_layer_b = rhs[:, end_idx - evecs_g.shape[0] : end_idx]
+            rhs_layer = torch.cat([rhs_layer, bias_layer_b.unsqueeze(2)], dim=2)
+            v_kfe = torch.einsum(
+                "bij,jk->bik",
+                torch.einsum("ij,bjk->bik", evecs_g.t(), rhs_layer),
+                evecs_a,
+            )
+            inv_diag = 1 / (
+                diag.reshape(*v_kfe.shape[1:]) + self.hessian_regularization
+            )
+            inv_kfe = torch.einsum("bij,ij->bij", v_kfe, inv_diag)
+            inv = torch.einsum(
+                "bij,jk->bik",
+                torch.einsum("ij,bjk->bik", evecs_g, inv_kfe),
+                evecs_a.t(),
+            )
+            x[:, start_idx:end_idx] = torch.cat(
+                [inv[:, :, :-1].reshape(rhs.shape[0], -1), inv[:, :, -1]], dim=1
+            )
+            start_idx = end_idx
+        x.detach_()
+        return x
+
+    def to(self, device: torch.device):
+        return EkfacInfluence(
+            self.model.to(device), self.ekfac_representation.to(device)
         )
