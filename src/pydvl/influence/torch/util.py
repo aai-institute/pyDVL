@@ -480,7 +480,7 @@ class EkfacRepresentation:
         return iter(
             zip(
                 self.layer_names,
-                zip(self.layers_module, self.evecs_g, self.evecs_a, self.diags),
+                zip(self.layers_module, self.evecs_a, self.evecs_g, self.diags),
             )
         )
 

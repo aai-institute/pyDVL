@@ -1011,8 +1011,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self.ekfac_representation = EkfacRepresentation(
             self.active_layers.keys(),
             self.active_layers.values(),
-            layers_evect_g.values(),
             layers_evecs_a.values(),
+            layers_evect_g.values(),
             layers_diags.values(),
         )
         return self
