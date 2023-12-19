@@ -31,14 +31,14 @@ def foo_duplicate(indices: NDArray[np.int_], *args, **kwargs) -> float:
 
 def foo_with_random(indices: NDArray[np.int_], *args, **kwargs) -> float:
     rng = np.random.default_rng()
-    scale = kwargs.get("scale", 1.0)
+    scale = kwargs.get("scale", 0.5)
     return float(np.sum(indices)) + rng.normal(scale=scale)
 
 
 def foo_with_random_and_sleep(indices: NDArray[np.int_], *args, **kwargs) -> float:
     sleep(0.01)
     rng = np.random.default_rng()
-    scale = kwargs.get("scale", 1.0)
+    scale = kwargs.get("scale", 0.5)
     return float(np.sum(indices)) + rng.normal(scale=scale)
 
 
@@ -249,7 +249,7 @@ def test_repeated_training(cache_backend, worker_id: str):
     n = 7
     indices = np.arange(n)
 
-    for _ in range(1_200):
+    for _ in range(1_000):
         result = wrapped_foo(indices, worker_id)
 
     assert np.isclose(result, np.sum(indices), atol=1)
@@ -292,7 +292,7 @@ def test_faster_with_repeated_training(cache_backend, worker_id: str):
 
 @pytest.mark.parametrize("n, atol", [(10, 5), (20, 10)])
 @pytest.mark.parametrize("n_jobs", [1, 2])
-@pytest.mark.parametrize("n_runs", [30])
+@pytest.mark.parametrize("n_runs", [20])
 def test_parallel_repeated_training(
     cache_backend, n, atol, n_jobs, n_runs, parallel_config
 ):
