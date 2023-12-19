@@ -23,6 +23,7 @@ setup(
     tests_require=["pytest"],
     extras_require={
         "cupy": ["cupy-cuda11x>=12.1.0"],
+        "memcached": ["pymemcache"],
         "influence": [
             "torch>=2.0.0",
             "dask>=2023.5.0",

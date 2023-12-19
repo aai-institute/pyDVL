@@ -69,6 +69,7 @@ plugins:
             - https://scikit-learn.org/stable/objects.inv
             - https://pytorch.org/docs/stable/objects.inv
             - https://pymemcache.readthedocs.io/en/latest/objects.inv
+            - https://joblib.readthedocs.io/en/stable/objects.inv
             - https://docs.dask.org/en/latest/objects.inv
             - https://distributed.dask.org/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder

@@ -23,9 +23,9 @@ for testing and for demonstration purposes.
     learning](https://arxiv.org/abs/2107.06336). arXiv preprint arXiv:2107.06336.
 
 """
+import hashlib
 import logging
 import warnings
-from dataclasses import asdict
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -34,8 +34,7 @@ from sklearn.base import clone
 from sklearn.metrics import check_scoring
 
 from pydvl.utils import Dataset
-from pydvl.utils.caching import CacheStats, memcached, serialize
-from pydvl.utils.config import MemcachedConfig
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.score import Scorer
 from pydvl.utils.types import SupervisedModel
 
@@ -102,8 +101,11 @@ class Utility:
             calculations. When this happens, the `default_score` is returned as
             a score and computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
-        enable_cache: If `True`, use memcached for memoization.
-        cache_options: Optional configuration object for memcached.
+        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+            used to wrap the _utility method of the Utility instance.
+            By default, this is set to None and that means that the utility evaluations
+            will not be cached.
+        cached_func_options: Optional configuration object for cached utility evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
 
@@ -114,6 +116,20 @@ class Utility:
         >>> from sklearn.datasets import load_iris
         >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
         >>> u = Utility(LogisticRegression(random_state=16), dataset)
+        >>> u(dataset.indices)
+        0.9
+        ```
+
+        With caching enabled:
+
+        ```pycon
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> cache_backend = InMemoryCacheBackend()
+        >>> u = Utility(LogisticRegression(random_state=16), dataset, cache_backend=cache_backend)
         >>> u(dataset.indices)
         0.9
         ```
@@ -134,8 +150,8 @@ class Utility:
         score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        enable_cache: bool = False,
-        cache_options: Optional[MemcachedConfig] = None,
+        cache_backend: Optional[CacheBackend] = None,
+        cached_func_options: Optional[CachedFuncConfig] = None,
         clone_before_fit: bool = True,
     ):
         self.model = self._clone_model(model)
@@ -146,25 +162,23 @@ class Utility:
         self.default_score = scorer.default if scorer is not None else default_score
         # TODO: auto-fill from known scorers ?
         self.score_range = scorer.range if scorer is not None else np.array(score_range)
+        self.clone_before_fit = clone_before_fit
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
-        self.enable_cache = enable_cache
-        self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
-        self.clone_before_fit = clone_before_fit
-        self._signature = serialize((hash(self.model), hash(data), hash(scorer)))
+        self.cache = cache_backend
+        if cached_func_options is None:
+            cached_func_options = CachedFuncConfig()
+        # TODO: Find a better way to do this.
+        if cached_func_options.hash_prefix is None:
+            # FIX: This does not handle reusing the same across runs.
+            cached_func_options.hash_prefix = str(hash((model, data, scorer)))
+        self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
 
-        # FIXME: can't modify docstring of methods. Instead, I could use a
-        #  factory which creates the class on the fly with the right doc.
-        # self.__call__.__doc__ = self._utility_wrapper.__doc__
-
     def _initialize_utility_wrapper(self):
-        if self.enable_cache:
-            # asdict() is recursive, but we want client_config to remain a dataclass
-            options = asdict(self.cache_options)
-            options["client_config"] = self.cache_options.client_config
-            self._utility_wrapper = memcached(**options)(  # type: ignore
-                self._utility, signature=self._signature
+        if self.cache is not None:
+            self._utility_wrapper = self.cache.wrap(
+                self._utility, config=self.cached_func_options
             )
         else:
             self._utility_wrapper = self._utility
@@ -182,7 +196,8 @@ class Utility:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
 
-        If the object is constructed with `enable_cache = True`, results are
+        If an instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        is passed during construction, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices or when randomly
         sampling from the powerset of indices.
@@ -245,18 +260,14 @@ class Utility:
         return model
 
     @property
-    def signature(self):
-        """Signature used for caching model results."""
-        return self._signature
-
-    @property
     def cache_stats(self) -> Optional[CacheStats]:
         """Cache statistics are gathered when cache is enabled.
-        See [CacheStats][pydvl.utils.caching.CacheStats] for all fields returned.
+        See [CacheStats][pydvl.utils.caching.base.CacheStats] for all fields returned.
         """
-        if self.enable_cache:
-            return self._utility_wrapper.stats  # type: ignore
-        return None
+        cache_stats: Optional[CacheStats] = None
+        if self.cache is not None:
+            cache_stats = self._utility_wrapper.stats
+        return cache_stats
 
     def __getstate__(self):
         state = self.__dict__.copy()

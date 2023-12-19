@@ -13,32 +13,6 @@ To install the latest release use:
 pip install pyDVL
 ```
 
-To use all features of influence functions use instead:
-
-```shell
-pip install pyDVL[influence]
-```
-
-This includes a dependency on [PyTorch](https://pytorch.org/) (Version 2.0 and
-above) and thus is left out by default.
-
-In case that you have a supported version of CUDA installed (v11.2 to 11.8 as of
-this writing), you can enable eigenvalue computations for low-rank approximations
-with [CuPy](https://docs.cupy.dev/en/stable/index.html) on the GPU by using:
-
-```shell
-pip install pyDVL[cupy]
-```
-
-If you use a different version of CUDA, please install CuPy
-[manually](https://docs.cupy.dev/en/stable/install.html).
-
-In order to check the installation you can use:
-
-```shell
-python -c "import pydvl; print(pydvl.__version__)"
-```
-
 You can also install the latest development version from
 [TestPyPI](https://test.pypi.org/project/pyDVL/):
 
@@ -46,42 +20,71 @@ You can also install the latest development version from
 pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
+In order to check the installation you can use:
+
+```shell
+python -c "import pydvl; print(pydvl.__version__)"
+```
+
 ## Dependencies
 
-pyDVL requires Python >= 3.8, [Memcached](https://memcached.org/) for caching
-and [Ray](https://ray.io) for parallelization in a cluster (locally it uses joblib).
-Additionally, the [Influence functions][pydvl.influence] module requires PyTorch
-(see [[installation]]).
+pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
+[scikit-learn](https://scikit-learn.org/stable/), [scipy](https://scipy.org/),
+[cvxpy](https://www.cvxpy.org/) for the Core methods,
+and [joblib](https://joblib.readthedocs.io/en/stable/)
+for parallelization locally. Additionally,the [Influence functions][pydvl.influence]
+module requires PyTorch (see [[installation#extras]]).
 
-ray is used to distribute workloads across nodes in a cluster (it can be used
-locally as well, but for this we recommend joblib instead). Please follow the
-instructions in their documentation to set up the cluster. Once you have a
-running cluster, you can use it by passing the address of the head node to
-parallel methods via [ParallelConfig][pydvl.utils.parallel].
+### Extras
 
-## Setting up the cache
+pyDVL has a few [extra](https://peps.python.org/pep-0508/#extras) dependencies
+that can be optionally installed:
 
-[memcached](https://memcached.org/) is an in-memory key-value store accessible
-over the network. pyDVL uses it to cache the computation of the utility function
-and speed up some computations (in particular, semi-value computations with the
-[PermutationSampler][pydvl.value.sampler.PermutationSampler] but other methods
-may benefit as well).
+- `influence`:
 
-You can either install it as a package or run it inside a docker container (the
-simplest). For installation instructions, refer to the [Getting
-started](https://github.com/memcached/memcached/wiki#getting-started) section in
-memcached's wiki. Then you can run it with:
+    To use all features of influence functions use instead:
+    
+    ```shell
+    pip install pyDVL[influence]
+    ```
+    
+    This includes a dependency on [PyTorch](https://pytorch.org/) (Version 2.0 and
+    above) and thus is left out by default.
 
-```shell
-memcached -u user
-```
+- `cupy`:
 
-To run memcached inside a container in daemon mode instead, do:
+    In case that you have a supported version of CUDA installed (v11.2 to 11.8 as of
+    this writing), you can enable eigenvalue computations for low-rank approximations
+    with [CuPy](https://docs.cupy.dev/en/stable/index.html) on the GPU by using:
+    
+    ```shell
+    pip install pyDVL[cupy]
+    ```
+  
+    This installs [cupy-cuda11x](https://pypi.org/project/cupy-cuda11x/).
+    
+    If you use a different version of CUDA, please install CuPy
+    [manually](https://docs.cupy.dev/en/stable/install.html).
 
-```shell
-docker container run -d --rm -p 11211:11211 memcached:latest
-```
+- `ray`:
 
-!!! tip "Using the cache"
-    Continue reading about the cache in the [First Steps](first-steps.md#caching)
-    and the documentation for the [caching module][pydvl.utils.caching].
+    If you want to use [Ray](https://www.ray.io/) to distribute data valuation
+    workloads across nodes in a cluster (it can be used locally as well,
+    but for this we recommend joblib instead) install pyDVL using:
+
+    ```shell
+    pip install pyDVL[ray]
+    ```
+
+    see [[getting-started#ray]] for more details on how to use it.
+
+- `memcached`:
+
+    If you want to use [Memcached](https://memcached.org/) for caching
+    utility evaluations, use:
+  
+    ```shell
+    pip install pyDVL[memcached]
+    ```
+    
+    This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally.

@@ -8,6 +8,7 @@ from sklearn.utils import Bunch
 
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -72,7 +73,6 @@ def dummy_utility(num_samples):
         score_range=(0, x.sum() / x.max()),
         catch_errors=False,
         show_warnings=True,
-        enable_cache=False,
     )
 
 
@@ -117,12 +117,18 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
     args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
     u_cache_key = f"linear_shapley_u_{args_hash}"
     exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"
-    u = cache.get(u_cache_key, None)
-    exact_values = cache.get(exact_values_cache_key, None)
+    try:
+        u = cache.get(u_cache_key, None)
+        exact_values = cache.get(exact_values_cache_key, None)
+    except Exception:
+        cache.clear_cache(cache._cachedir)
+        raise
 
     if u is None:
         u = Utility(
-            LinearRegression(), data=linear_dataset, scorer=scorer, enable_cache=False
+            LinearRegression(),
+            data=linear_dataset,
+            scorer=scorer,
         )
         exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
         cache.set(u_cache_key, u)
@@ -133,3 +139,10 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module")
 def parallel_config():
     yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
+
+
+@pytest.fixture()
+def cache_backend():
+    cache = InMemoryCacheBackend()
+    yield cache
+    cache.clear()

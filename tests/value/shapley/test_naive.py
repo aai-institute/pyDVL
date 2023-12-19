@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.utils import GroupedDataset, Utility
 from pydvl.value.shapley.naive import (
     combinatorial_exact_shapley,
     permutation_exact_shapley,
@@ -43,13 +43,18 @@ def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_
     ],
 )
 def test_linear(
-    linear_dataset, memcache_client_config, scorer, rtol=0.01, total_atol=1e-5
+    linear_dataset,
+    memcache_client_config,
+    scorer,
+    cache_backend,
+    rtol=0.01,
+    total_atol=1e-5,
 ):
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
 
     values_combinatorial = combinatorial_exact_shapley(linear_utility, progress=False)
@@ -70,6 +75,7 @@ def test_grouped_linear(
     num_groups,
     memcache_client_config,
     scorer,
+    cache_backend,
     rtol=0.01,
     total_atol=1e-5,
 ):
@@ -81,7 +87,7 @@ def test_grouped_linear(
         LinearRegression(),
         data=grouped_linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     values_combinatorial = combinatorial_exact_shapley(
         grouped_linear_utility, progress=False
@@ -107,7 +113,7 @@ def test_grouped_linear(
     ],
 )
 def test_linear_with_outlier(
-    linear_dataset, memcache_client_config, scorer, total_atol=1e-5
+    linear_dataset, memcache_client_config, scorer, cache_backend, total_atol=1e-5
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     linear_dataset.y_train[outlier_idx] -= 100
@@ -115,7 +121,7 @@ def test_linear_with_outlier(
         LinearRegression(),
         data=linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     values = permutation_exact_shapley(linear_utility, progress=False)
     values.sort()
@@ -169,6 +175,7 @@ def test_polynomial_with_outlier(
     polynomial_pipeline,
     memcache_client_config,
     scorer,
+    cache_backend,
     total_atol=1e-5,
 ):
     dataset, _ = polynomial_dataset
@@ -178,7 +185,7 @@ def test_polynomial_with_outlier(
         polynomial_pipeline,
         dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
 
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)

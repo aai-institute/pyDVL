@@ -1,10 +1,11 @@
 # Changelog
 
-
 ## Unreleased
 
 ### Added
 
+- New cache backends: InMemoryCacheBackend and DiskCacheBackend
+  [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
@@ -15,6 +16,8 @@
 
 ### Changed
 
+- Refactor and simplify caching implementation 
+  [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 - Simplify display of computation progress
   [PR #466](https://github.com/aai-institute/pyDVL/pull/466)
 - Improve readme and explain better the examples
