@@ -1712,26 +1712,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Caching
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../api/pydvl/utils/config/" class="md-nav__link">
         
   
@@ -1921,6 +1901,156 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/utils/caching/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_5_2_4_11">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/disk/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disk
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memcached/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memcached
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2848,7 +2978,7 @@ particular, the constructor accepts the same types as argument as
 <p><code>Utility</code> will wrap the <code>fit()</code> method of the model to cache its results. This
 greatly reduces computation times of Monte Carlo methods. Because of how caching
 is implemented, it is important not to reuse <code>Utility</code> objects for different
-datasets. You can read more about <a class="autorefs autorefs-internal" href="../getting-started/installation/#setting-up-the-cache">setting up the cache</a>
+datasets. You can read more about [setting up the cache][setting-up-the-cache]
 in the installation guide and the documentation
 of the <a class="autorefs autorefs-internal" href="../api/pydvl/utils/caching/#pydvl.utils.caching">caching</a> module.</p>
 <h4 id="using-custom-scorers">Using custom scorers<a class="headerlink" href="#using-custom-scorers" title="Permanent link">&para;</a></h4>
@@ -2969,7 +3099,7 @@ can also introduce issues in the low-value regime.</p>
   variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
   configure the caching system to allow multiple evaluations of the utility for
   every index set. A moving average is computed and returned once the standard
-  error is small, see <a class="autorefs autorefs-internal" href="../api/pydvl/utils/config/#pydvl.utils.config.MemcachedConfig">MemcachedConfig</a>.
+  error is small, see [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
   (Wang and Jia, 2022)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
@@ -3036,11 +3166,11 @@ can also introduce issues in the low-value regime.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
     
   </small>

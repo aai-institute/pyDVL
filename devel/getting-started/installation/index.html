@@ -396,12 +396,18 @@
     Dependencies
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#setting-up-the-cache" class="md-nav__link">
-    Setting up the cache
+    <nav class="md-nav" aria-label="Dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extras" class="md-nav__link">
+    Extras
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1671,26 +1677,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/pydvl/utils/caching/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Caching
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../api/pydvl/utils/config/" class="md-nav__link">
         
   
@@ -1880,6 +1866,156 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/pydvl/utils/caching/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_5_2_4_11">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/disk/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disk
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/memcached/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memcached
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/memory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2569,12 +2705,18 @@
     Dependencies
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#setting-up-the-cache" class="md-nav__link">
-    Setting up the cache
+    <nav class="md-nav" aria-label="Dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extras" class="md-nav__link">
+    Extras
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2600,66 +2742,72 @@
 <p>To install the latest release use:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL
 </span></code></pre></div>
+<p>You can also install the latest development version from
+<a href="https://test.pypi.org/project/pyDVL/">TestPyPI</a>:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="w"> </span>--index-url<span class="w"> </span>https://test.pypi.org/simple/
+</span></code></pre></div>
+<p>In order to check the installation you can use:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import pydvl; print(pydvl.__version__)&quot;</span>
+</span></code></pre></div>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<p>pyDVL requires Python &gt;= 3.8, <a href="https://numpy.org/">numpy</a>,
+<a href="https://scikit-learn.org/stable/">scikit-learn</a>, <a href="https://scipy.org/">scipy</a>,
+<a href="https://www.cvxpy.org/">cvxpy</a> for the Core methods,
+and <a href="https://joblib.readthedocs.io/en/stable/">joblib</a>
+for parallelization locally. Additionally,the <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/#pydvl.influence">Influence functions</a>
+module requires PyTorch (see <a href="./#extras">Installing pyDVL</a>).</p>
+<h3 id="extras">Extras<a class="headerlink" href="#extras" title="Permanent link">&para;</a></h3>
+<p>pyDVL has a few <a href="https://peps.python.org/pep-0508/#extras">extra</a> dependencies
+that can be optionally installed:</p>
+<ul>
+<li>
+<p><code>influence</code>:</p>
 <p>To use all features of influence functions use instead:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>influence<span class="o">]</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>influence<span class="o">]</span>
 </span></code></pre></div>
 <p>This includes a dependency on <a href="https://pytorch.org/">PyTorch</a> (Version 2.0 and
 above) and thus is left out by default.</p>
+</li>
+<li>
+<p><code>cupy</code>:</p>
 <p>In case that you have a supported version of CUDA installed (v11.2 to 11.8 as of
 this writing), you can enable eigenvalue computations for low-rank approximations
 with <a href="https://docs.cupy.dev/en/stable/index.html">CuPy</a> on the GPU by using:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>cupy<span class="o">]</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>cupy<span class="o">]</span>
 </span></code></pre></div>
+<p>This installs <a href="https://pypi.org/project/cupy-cuda11x/">cupy-cuda11x</a>.</p>
 <p>If you use a different version of CUDA, please install CuPy
 <a href="https://docs.cupy.dev/en/stable/install.html">manually</a>.</p>
-<p>In order to check the installation you can use:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import pydvl; print(pydvl.__version__)&quot;</span>
+</li>
+<li>
+<p><code>ray</code>:</p>
+<p>If you want to use <a href="https://www.ray.io/">Ray</a> to distribute data valuation
+workloads across nodes in a cluster (it can be used locally as well,
+but for this we recommend joblib instead) install pyDVL using:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>ray<span class="o">]</span>
 </span></code></pre></div>
-<p>You can also install the latest development version from
-<a href="https://test.pypi.org/project/pyDVL/">TestPyPI</a>:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="w"> </span>--index-url<span class="w"> </span>https://test.pypi.org/simple/
+<p>see <a href="../first-steps/#ray">Getting Started</a> for more details on how to use it.</p>
+</li>
+<li>
+<p><code>memcached</code>:</p>
+<p>If you want to use <a href="https://memcached.org/">Memcached</a> for caching
+utility evaluations, use:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>memcached<span class="o">]</span>
 </span></code></pre></div>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>pyDVL requires Python &gt;= 3.8, <a href="https://memcached.org/">Memcached</a> for caching
-and <a href="https://ray.io">Ray</a> for parallelization in a cluster (locally it uses joblib).
-Additionally, the <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/#pydvl.influence">Influence functions</a> module requires PyTorch
-(see <a href="./">Installing pyDVL</a>).</p>
-<p>ray is used to distribute workloads across nodes in a cluster (it can be used
-locally as well, but for this we recommend joblib instead). Please follow the
-instructions in their documentation to set up the cluster. Once you have a
-running cluster, you can use it by passing the address of the head node to
-parallel methods via <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/parallel/#pydvl.utils.parallel">ParallelConfig</a>.</p>
-<h2 id="setting-up-the-cache">Setting up the cache<a class="headerlink" href="#setting-up-the-cache" title="Permanent link">&para;</a></h2>
-<p><a href="https://memcached.org/">memcached</a> is an in-memory key-value store accessible
-over the network. pyDVL uses it to cache the computation of the utility function
-and speed up some computations (in particular, semi-value computations with the
-<a class="autorefs autorefs-internal" href="../../api/pydvl/value/sampler/#pydvl.value.sampler.PermutationSampler">PermutationSampler</a> but other methods
-may benefit as well).</p>
-<p>You can either install it as a package or run it inside a docker container (the
-simplest). For installation instructions, refer to the <a href="https://github.com/memcached/memcached/wiki#getting-started">Getting
-started</a> section in
-memcached's wiki. Then you can run it with:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>memcached<span class="w"> </span>-u<span class="w"> </span>user
-</span></code></pre></div>
-<p>To run memcached inside a container in daemon mode instead, do:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>container<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">11211</span>:11211<span class="w"> </span>memcached:latest
-</span></code></pre></div>
-<div class="admonition tip">
-<p class="admonition-title">Using the cache</p>
-<p>Continue reading about the cache in the <a href="../first-steps/#caching">First Steps</a>
-and the documentation for the <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/#pydvl.utils.caching">caching module</a>.</p>
-</div>
+<p>This installs <a href="https://github.com/pinterest/pymemcache">pymemcache</a> additionally.</p>
+</li>
+</ul>
 
   <hr>
 <div class="md-source-file">
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
     
   </small>

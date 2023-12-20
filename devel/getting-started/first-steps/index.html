@@ -425,6 +425,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    Advanced usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#caching" class="md-nav__link">
+    Caching
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallelization" class="md-nav__link">
+    Parallelization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1671,26 +1698,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/pydvl/utils/caching/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Caching
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../api/pydvl/utils/config/" class="md-nav__link">
         
   
@@ -1880,6 +1887,156 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/pydvl/utils/caching/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_5_2_4_11">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/disk/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disk
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/memcached/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memcached
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/utils/caching/memory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2578,6 +2735,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    Advanced usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#caching" class="md-nav__link">
+    Caching
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallelization" class="md-nav__link">
+    Parallelization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2600,8 +2784,7 @@
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Make sure you have read <a href="../installation/">Installing pyDVL</a> before using the library. 
-In particular read about how caching and parallelization work,
-since they might require additional setup.</p>
+In particular read about which extra dependencies you may need.</p>
 </div>
 <h2 id="main-concepts">Main concepts<a class="headerlink" href="#main-concepts" title="Permanent link">&para;</a></h2>
 <p>pyDVL aims to be a repository of production-ready, reference implementations of
@@ -2624,25 +2807,41 @@ by browsing our worked-out examples illustrating pyDVL's capabilities either:</p
   have to install jupyter first manually since it's not a dependency of the
   library.</li>
 </ul>
-<h1 id="advanced-usage">Advanced usage<a class="headerlink" href="#advanced-usage" title="Permanent link">&para;</a></h1>
-<p>Besides the do's and don'ts of data valuation itself, which are the subject of
+<h2 id="advanced-usage">Advanced usage<a class="headerlink" href="#advanced-usage" title="Permanent link">&para;</a></h2>
+<p>Besides the dos and don'ts of data valuation itself, which are the subject of
 the examples and the documentation of each method, there are two main things to
 keep in mind when using pyDVL.</p>
-<h2 id="caching">Caching<a class="headerlink" href="#caching" title="Permanent link">&para;</a></h2>
-<p>pyDVL uses <a href="https://memcached.org/">memcached</a> to cache the computation of the
-utility function and speed up some computations (see the <a href="../installation/#setting-up-the-cache">installation
-guide</a>).</p>
-<p>Caching of the utility function is disabled by default. When it is enabled it
-takes into account the data indices passed as argument and the utility function
-wrapped into the <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/utility/#pydvl.utils.utility.Utility">Utility</a> object. This means that
+<h3 id="caching">Caching<a class="headerlink" href="#caching" title="Permanent link">&para;</a></h3>
+<p>PyDVL can cache (memoize) the computation of the utility function
+and speed up some computations for data valuation.
+It is however disabled by default.
+When it is enabled it takes into account the data indices passed as argument
+and the utility function wrapped into the
+<a class="autorefs autorefs-internal" href="../../api/pydvl/utils/utility/#pydvl.utils.utility.Utility">Utility</a> object. This means that
 care must be taken when reusing the same utility function with different data,
-see the documentation for the <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/#pydvl.utils.caching">caching module</a> for more
+see the documentation for the <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/#pydvl.utils.caching">caching package</a> for more
 information.</p>
 <p>In general, caching won't play a major role in the computation of Shapley values
 because the probability of sampling the same subset twice, and hence needing
 the same utility function computation, is very low. However, it can be very
 useful when comparing methods that use the same utility function, or when
 running multiple experiments with the same data.</p>
+<p>pyDVL supports 3 different caching backends:</p>
+<ul>
+<li><a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/memory/#pydvl.utils.caching.memory.InMemoryCacheBackend">InMemoryCacheBackend</a>:
+  an in-memory cache backend that uses a dictionary to store and retrieve
+  cached values. This is used to share cached values between threads
+  in a single process.</li>
+<li><a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/disk/#pydvl.utils.caching.disk.DiskCacheBackend">DiskCacheBackend</a>:
+  a disk-based cache backend that uses pickled values written to and read from disk.<br />
+  This is used to share cached values between processes in a single machine.</li>
+<li><a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/memcached/#pydvl.utils.caching.memcached.MemcachedCacheBackend">MemcachedCacheBackend</a>:
+  a <a href="https://memcached.org/">Memcached</a>-based cache backend that uses pickled values written to
+  and read from a Memcached server. This is used to share cached values
+  between processes across multiple machines.</li>
+</ul>
+<p><strong>Note</strong> This specific backend requires optional dependencies.
+  See <a href="../installation/#extras">Installing pyDVL</a> for more information)</p>
 <div class="admonition tip">
 <p class="admonition-title">When is the cache really necessary?</p>
 <p>Crucially, semi-value computations with the
@@ -2650,29 +2849,58 @@ running multiple experiments with the same data.</p>
 to be enabled, or they will take twice as long as the direct implementation
 in <a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/common/#pydvl.value.shapley.common.compute_shapley_values">compute_shapley_values</a>.</p>
 </div>
-<h2 id="parallelization">Parallelization<a class="headerlink" href="#parallelization" title="Permanent link">&para;</a></h2>
-<p>pyDVL supports <a href="https://joblib.readthedocs.io/en/latest/">joblib</a> for local
-parallelization (within one machine) and <a href="https://ray.io">ray</a> for distributed
-parallelization (across multiple machines).</p>
-<p>The former works out of the box but for the latter you will need to provide a
-running cluster (or run ray in local mode).</p>
+<div class="admonition tip">
+<p class="admonition-title">Using the cache</p>
+<p>Continue reading about the cache in the documentation
+for the <a class="autorefs autorefs-internal" href="../../api/pydvl/utils/caching/#pydvl.utils.caching">caching package</a>.</p>
+</div>
+<h4 id="setting-up-the-memcached-cache">Setting up the Memcached cache<a class="headerlink" href="#setting-up-the-memcached-cache" title="Permanent link">&para;</a></h4>
+<p><a href="https://memcached.org/">Memcached</a> is an in-memory key-value store accessible
+over the network. pyDVL can use it to cache the computation of the utility function
+and speed up some computations (in particular, semi-value computations with the
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/sampler/#pydvl.value.sampler.PermutationSampler">PermutationSampler</a> but other methods
+may benefit as well).</p>
+<p>You can either install it as a package or run it inside a docker container (the
+simplest). For installation instructions, refer to the <a href="https://github.com/memcached/memcached/wiki#getting-started">Getting
+started</a> section in
+memcached's wiki. Then you can run it with:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>memcached<span class="w"> </span>-u<span class="w"> </span>user
+</span></code></pre></div>
+<p>To run memcached inside a container in daemon mode instead, use:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>container<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">11211</span>:11211<span class="w"> </span>memcached:latest
+</span></code></pre></div>
+<h3 id="parallelization">Parallelization<a class="headerlink" href="#parallelization" title="Permanent link">&para;</a></h3>
+<p>pyDVL uses <a href="https://joblib.readthedocs.io/en/latest/">joblib</a> for local
+parallelization (within one machine) and supports using
+<a href="https://ray.io">Ray</a> for distributed parallelization (across multiple machines).</p>
+<p>The former works out of the box but for the latter you will need to install
+additional dependencies (see <a href="../installation/#extras">Installing pyDVL</a> )
+and to provide a running cluster (or run ray in local mode).</p>
 <p>As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
 cluster, so you will need to make sure that each worker has enough resources to
 handle the tasks it receives. A data valuation task using game-theoretic methods
 will typically make a copy of the whole model and dataset to each worker, even
 if the re-training only happens on a subset of the data. This means that you
 should make sure that each worker has enough memory to handle the whole dataset.</p>
+<h4 id="ray">Ray<a class="headerlink" href="#ray" title="Permanent link">&para;</a></h4>
+<p>Please follow the instructions in Ray's documentation to set up a cluster.
+Once you have a running cluster, you can use it by passing the address
+of the head node to parallel methods via <a class="autorefs autorefs-internal" href="../../api/pydvl/parallel/config/#pydvl.parallel.config.ParallelConfig">ParallelConfig</a>.</p>
+<p>For a local ray cluster you would use:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.parallel.config</span> <span class="kn">import</span> <span class="n">ParallelConfig</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span> 
+</span></code></pre></div>
 
   <hr>
 <div class="md-source-file">
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
     
   </small>

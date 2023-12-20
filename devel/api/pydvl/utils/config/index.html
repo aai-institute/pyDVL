@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/config/">
       
       
-        <link rel="prev" href="../caching/">
+        <link rel="prev" href="../">
       
       
         <link rel="next" href="../dataset/">
@@ -1619,26 +1619,6 @@
                 
   
   
-  
-    <li class="md-nav__item">
-      <a href="../caching/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Caching
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1697,15 +1677,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.utils.config.MemcachedClientConfig" class="md-nav__link">
-    MemcachedClientConfig
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.utils.config.MemcachedConfig" class="md-nav__link">
-    MemcachedConfig
+  <a href="#pydvl.utils.config.CachedFuncConfig" class="md-nav__link">
+    CachedFuncConfig
   </a>
   
 </li>
@@ -1894,6 +1867,156 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../caching/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+            </a>
+            
+              <label class="md-nav__link " for="__nav_5_2_4_11">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2_4_11">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Config
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/disk/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disk
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/memcached/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memcached
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/memory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2591,15 +2714,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.utils.config.MemcachedClientConfig" class="md-nav__link">
-    MemcachedClientConfig
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.utils.config.MemcachedConfig" class="md-nav__link">
-    MemcachedConfig
+  <a href="#pydvl.utils.config.CachedFuncConfig" class="md-nav__link">
+    CachedFuncConfig
   </a>
   
 </li>
@@ -2793,172 +2909,21 @@ This has no effect when using an existing ray cluster.</p>
 
 
 
-<h2 id="pydvl.utils.config.MemcachedClientConfig" class="doc doc-heading">
-          <code>MemcachedClientConfig</code>
+<h2 id="pydvl.utils.config.CachedFuncConfig" class="doc doc-heading">
+          <code>CachedFuncConfig</code>
 
   
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
   </span>
 
-<a href="#pydvl.utils.config.MemcachedClientConfig" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pydvl.utils.config.CachedFuncConfig" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
 
   
-      <p>Configuration of the memcached client.</p>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>server</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>A tuple of (IP|domain name, port).</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Tuple" href="https://docs.python.org/3/library/typing.html#typing.Tuple">Tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a>]</code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>(&#39;localhost&#39;, 11211)</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>connect_timeout</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>How many seconds to wait before raising
-<code>ConnectionRefusedError</code> on failure to connect.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>1.0</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>timeout</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>seconds to wait for send or recv calls on the socket
-connected to memcached.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>1.0</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>no_delay</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>set the <code>TCP_NODELAY</code> flag, which may help with performance
-in some cases.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>True</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>serde</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>a serializer / deserializer ("serde"). The default <code>PickleSerde</code>
-should work in most cases. See <a href="https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client">pymemcached's
-documentation</a>
-for details.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="pymemcache.serde.PickleSerde" href="https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.serde.html#pymemcache.serde.PickleSerde">PickleSerde</a></code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code><a class="autorefs autorefs-external" title="pymemcache.serde.PickleSerde" href="https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.serde.html#pymemcache.serde.PickleSerde">PickleSerde</a>(pickle_version=<span title="pydvl.utils.config.PICKLE_VERSION">PICKLE_VERSION</span>)</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-
-<h2 id="pydvl.utils.config.MemcachedConfig" class="doc doc-heading">
-          <code>MemcachedConfig</code>
-
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#pydvl.utils.config.MemcachedConfig" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>Configuration for <a class="autorefs autorefs-internal" href="../caching/#pydvl.utils.caching.memcached">memcached()</a>, providing
+      <p>Configuration for cached functions and methods, providing
 memoization of function calls.</p>
 <p>Instances of this class are typically used as arguments for the construction
 of a <a class="autorefs autorefs-internal" href="../utility/#pydvl.utils.utility.Utility">Utility</a>.</p>
@@ -2974,19 +2939,42 @@ of a <a class="autorefs autorefs-internal" href="../utility/#pydvl.utils.utility
     </thead>
     <tbody>
         <tr>
-          <td><code>client_config</code></td>
+          <td><code>hash_prefix</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>Configuration for the connection to the memcached server.</p>
+              <p>Optional string prefix that be prepended to the cache key.
+This can be provided in order to guarantee cache reuse across runs.</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.utils.config.MemcachedClientConfig" href="#pydvl.utils.config.MemcachedClientConfig">MemcachedClientConfig</a></code>
+                    <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
                 </span>
                 <span class="doc-param-default">
                   <b>DEFAULT:</b> 
-                    <code><a class="autorefs autorefs-external" title="dataclasses.field" href="https://docs.python.org/3/library/dataclasses.html#dataclasses.field">field</a>(default_factory=<a class="autorefs autorefs-internal" title="pydvl.utils.config.MemcachedClientConfig" href="#pydvl.utils.config.MemcachedClientConfig">MemcachedClientConfig</a>)</code>
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ignore_args</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Do not take these keyword arguments into account when
+hashing the wrapped function for usage as key. This allows
+sharing the cache among different jobs for the same experiment run if
+the callable happens to have "nuisance" parameters like <code>job_id</code> which
+do not affect the result of the computation.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="typing.Collection" href="https://docs.python.org/3/library/typing.html#typing.Collection">Collection</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code><a class="autorefs autorefs-external" title="dataclasses.field" href="https://docs.python.org/3/library/dataclasses.html#dataclasses.field">field</a>(default_factory=<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a>)</code>
                 </span>
             </p>
           </td>
@@ -2995,8 +2983,8 @@ of a <a class="autorefs autorefs-internal" href="../utility/#pydvl.utils.utility
           <td><code>time_threshold</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>computations taking less time than this many seconds are
-not cached.</p>
+              <p>Computations taking less time than this many seconds are
+not cached. A value of 0 means that it will always cache results.</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
@@ -3016,7 +3004,7 @@ not cached.</p>
             <div class="doc-md-description">
               <p>If <code>True</code>, repeated calls to a function
 with the same arguments will be allowed and outputs averaged until the
-running standard deviation of the mean stabilises below
+running standard deviation of the mean stabilizes below
 <code>rtol_stderr * mean</code>.</p>
             </div>
             <p>
@@ -3036,9 +3024,8 @@ running standard deviation of the mean stabilises below
           <td class="doc-param-details">
             <div class="doc-md-description">
               <p>relative tolerance for repeated evaluations. More precisely,
-<a class="autorefs autorefs-internal" href="../caching/#pydvl.utils.caching.memcached">memcached()</a> will stop evaluating
-the function once the standard deviation of the mean is smaller than
-<code>rtol_stderr * mean</code>.</p>
+<a class="autorefs autorefs-internal" href="../caching/memcached/#pydvl.utils.caching.memcached">memcached()</a> will stop evaluating the function
+once the standard deviation of the mean is smaller than <code>rtol_stderr * mean</code>.</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
@@ -3069,25 +3056,6 @@ this number to higher values to reduce variance.</p>
                 <span class="doc-param-default">
                   <b>DEFAULT:</b> 
                     <code>3</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>ignore_args</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>Do not take these keyword arguments into account when hashing
-the wrapped function for usage as key in memcached.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Iterable" href="https://docs.python.org/3/library/typing.html#typing.Iterable">Iterable</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]]</code>
-                </span>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>None</code>
                 </span>
             </p>
           </td>
@@ -3130,11 +3098,11 @@ the wrapped function for usage as key in memcached.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-18</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-12-20</span>
       
     
   </small>
@@ -3166,7 +3134,7 @@ the wrapped function for usage as key in memcached.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../caching/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Caching" rel="prev">
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Utils" rel="prev">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -3176,7 +3144,7 @@ the wrapped function for usage as key in memcached.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Caching
+                Utils
               </div>
             </div>
           </a>

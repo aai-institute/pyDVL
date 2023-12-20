@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/parallel/backends/joblib/">
+        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/caching/memory/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../memcached/">
       
       
-        <link rel="next" href="../ray/">
+        <link rel="next" href="../../../value/">
       
       
       <link rel="icon" href="../../../../../assets/signet.svg">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Joblib - pyDVL</title>
+        <title>Memory - pyDVL</title>
       
     
     
@@ -98,7 +98,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pydvl.parallel.backends.joblib" class="md-skip">
+        <a href="#pydvl.utils.caching.memory" class="md-skip">
           Skip to content
         </a>
       
@@ -151,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Joblib
+              Memory
             
           </span>
         </div>
@@ -1215,24 +1215,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
+            <a href="../../../parallel/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1248,7 +1246,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2">
             <span class="md-nav__icon md-icon"></span>
             Parallel
@@ -1261,7 +1259,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../backend/" class="md-nav__link">
+      <a href="../../../parallel/backend/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1281,7 +1279,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/" class="md-nav__link">
+      <a href="../../../parallel/config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1301,7 +1299,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map_reduce/" class="md-nav__link">
+      <a href="../../../parallel/map_reduce/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1319,24 +1317,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../../parallel/backends/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1352,7 +1348,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2_4">
             <span class="md-nav__icon md-icon"></span>
             Backends
@@ -1363,27 +1359,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Joblib
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../parallel/backends/joblib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1392,51 +1370,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib" class="md-nav__link">
-    joblib
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend" class="md-nav__link">
-    JoblibParallelBackend
-  </a>
-  
-    <nav class="md-nav" aria-label="JoblibParallelBackend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend.wrap" class="md-nav__link">
-    wrap()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1448,7 +1381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ray/" class="md-nav__link">
+      <a href="../../../parallel/backends/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1489,7 +1422,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../futures/" class="md-nav__link ">
+            <a href="../../../parallel/futures/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1518,7 +1451,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../futures/ray/" class="md-nav__link">
+      <a href="../../../parallel/futures/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1642,22 +1575,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../utils/" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1673,7 +1608,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_4">
             <span class="md-nav__icon md-icon"></span>
             Utils
@@ -1686,7 +1621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/config/" class="md-nav__link">
+      <a href="../../config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1706,7 +1641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/dataset/" class="md-nav__link">
+      <a href="../../dataset/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1726,7 +1661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/functional/" class="md-nav__link">
+      <a href="../../functional/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1746,7 +1681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/numeric/" class="md-nav__link">
+      <a href="../../numeric/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1766,7 +1701,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/parallel/" class="md-nav__link">
+      <a href="../../parallel/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1786,7 +1721,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/progress/" class="md-nav__link">
+      <a href="../../progress/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1806,7 +1741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/score/" class="md-nav__link">
+      <a href="../../score/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1826,7 +1761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/status/" class="md-nav__link">
+      <a href="../../status/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1846,7 +1781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1866,7 +1801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/utility/" class="md-nav__link">
+      <a href="../../utility/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1884,22 +1819,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_4_11" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../utils/caching/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1915,7 +1852,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_4_11_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_4_11">
             <span class="md-nav__icon md-icon"></span>
             Caching
@@ -1928,7 +1865,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/caching/base/" class="md-nav__link">
+      <a href="../base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1948,7 +1885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/caching/config/" class="md-nav__link">
+      <a href="../config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1968,7 +1905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/caching/disk/" class="md-nav__link">
+      <a href="../disk/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1988,7 +1925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/caching/memcached/" class="md-nav__link">
+      <a href="../memcached/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2006,9 +1943,27 @@
                 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../../utils/caching/memory/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Memory
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -2017,6 +1972,79 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory" class="md-nav__link">
+    memory
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend" class="md-nav__link">
+    InMemoryCacheBackend
+  </a>
+  
+    <nav class="md-nav" aria-label="InMemoryCacheBackend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.wrap" class="md-nav__link">
+    wrap()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.get" class="md-nav__link">
+    get()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.set" class="md-nav__link">
+    set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.clear" class="md-nav__link">
+    clear()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.combine_hashes" class="md-nav__link">
+    combine_hashes()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2708,23 +2736,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib" class="md-nav__link">
-    joblib
+  <a href="#pydvl.utils.caching.memory" class="md-nav__link">
+    memory
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend" class="md-nav__link">
-    JoblibParallelBackend
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend" class="md-nav__link">
+    InMemoryCacheBackend
   </a>
   
-    <nav class="md-nav" aria-label="JoblibParallelBackend">
+    <nav class="md-nav" aria-label="InMemoryCacheBackend">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend.wrap" class="md-nav__link">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.wrap" class="md-nav__link">
     wrap()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.get" class="md-nav__link">
+    get()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.set" class="md-nav__link">
+    set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.clear" class="md-nav__link">
+    clear()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.combine_hashes" class="md-nav__link">
+    combine_hashes()
   </a>
   
 </li>
@@ -2752,13 +2808,13 @@
   
 
 
-  <h1>Joblib</h1>
+  <h1>Memory</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="pydvl.parallel.backends.joblib"></a>
+<a id="pydvl.utils.caching.memory"></a>
   <div class="doc doc-contents first">
 
   
@@ -2777,60 +2833,91 @@
 
 
 
-<h2 id="pydvl.parallel.backends.joblib.JoblibParallelBackend" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">JoblibParallelBackend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
+<h2 id="pydvl.utils.caching.memory.InMemoryCacheBackend" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">InMemoryCacheBackend</span><span class="p">()</span></code>
 
-<a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
           <p class="doc doc-class-bases">
-            Bases: <code><a class="autorefs autorefs-internal" title="pydvl.parallel.backend.BaseParallelBackend" href="../../backend/#pydvl.parallel.backend.BaseParallelBackend">BaseParallelBackend</a></code></p>
+            Bases: <code><a class="autorefs autorefs-internal" title="pydvl.utils.caching.base.CacheBackend" href="../base/#pydvl.utils.caching.base.CacheBackend">CacheBackend</a></code></p>
 
   
-      <p>Class used to wrap joblib to make it transparent to algorithms.</p>
-<p>It shouldn't be initialized directly. You should instead call
-<a class="autorefs autorefs-internal" href="../../backend/#pydvl.parallel.backend.init_parallel_backend">init_parallel_backend()</a>.</p>
+      <p>In-memory cache backend that stores results in a dictionary.</p>
+<p>Implements the CacheBackend interface for an in-memory-based cache.
+Stores cache entries as values in a dictionary, keyed by cache key.
+This allows sharing evaluations across threads in a single process.</p>
+<p>The implementation is not thread-safe.</p>
 
 
 
   <table>
     <thead>
       <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
+        <th><b>ATTRIBUTE</b></th>
+        <th><b>DESCRIPTION</b></th>
       </tr>
     </thead>
     <tbody>
         <tr>
-          <td><code>config</code></td>
-          <td class="doc-param-details">
+          <td><code>cached_values</code></td>
+          <td class="doc-attribute-details">
             <div class="doc-md-description">
-              <p>instance of <a class="autorefs autorefs-internal" href="../../../utils/config/#pydvl.utils.config.ParallelConfig">ParallelConfig</a>
-with cluster address, number of cpus, etc.</p>
+              <p>Dictionary used to store cached values.</p>
             </div>
             <p>
-                <span class="doc-param-annotation">
+                <span class="doc-attribute-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.parallel.config.ParallelConfig" href="../../config/#pydvl.parallel.config.ParallelConfig">ParallelConfig</a></code>
+                    <code><a class="autorefs autorefs-external" title="typing.Dict" href="https://docs.python.org/3/library/typing.html#typing.Dict">Dict</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
                 </span>
             </p>
           </td>
         </tr>
     </tbody>
   </table>
+      <details class="examples">
+<summary>Examples</summary>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.caching.memory</span> <span class="kn">import</span> <span class="n">InMemoryCacheBackend</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span> <span class="o">=</span> <span class="n">InMemoryCacheBackend</span><span class="p">()</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="go">42</span>
+</span></code></pre></div>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.caching.memory</span> <span class="kn">import</span> <span class="n">InMemoryCacheBackend</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span> <span class="o">=</span> <span class="n">InMemoryCacheBackend</span><span class="p">()</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="gp">... </span>    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gp">...</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span> <span class="o">=</span> <span class="n">cache_backend</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="go">43</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">misses</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="go">1</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="go">0</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="go">43</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">misses</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="go">1</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="go">1</span>
+</span></code></pre></div>
+</details>
 
                 <details class="quote">
-                  <summary>Source code in <code>src/pydvl/parallel/backends/joblib.py</code></summary>
-                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="s2">&quot;logging_level&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">,</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="s2">&quot;n_jobs&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span><span class="p">,</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="p">}</span>
+                  <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
+                  <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the in-memory cache backend.&quot;&quot;&quot;</span>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 </span></code></pre></div></td></tr></table></div>
                 </details>
 
@@ -2852,15 +2939,15 @@ with cluster address, number of cpus, etc.</p>
 
 
 
-<h3 id="pydvl.parallel.backends.joblib.JoblibParallelBackend.wrap" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">wrap</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<h3 id="pydvl.utils.caching.memory.InMemoryCacheBackend.wrap" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">wrap</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
-<a href="#pydvl.parallel.backends.joblib.JoblibParallelBackend.wrap" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.wrap" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
   <div class="doc doc-contents ">
   
-      <p>Wraps a function as a joblib delayed.</p>
+      <p>Wraps a function to cache its results.</p>
 
 
 
@@ -2873,15 +2960,33 @@ with cluster address, number of cpus, etc.</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>fun</code></td>
+          <td><code>func</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>the function to wrap</p>
+              <p>The function to wrap.</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
                     <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>config</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Optional caching options for the wrapped function.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-internal" title="pydvl.utils.caching.config.CachedFuncConfig" href="../config/#pydvl.utils.caching.config.CachedFuncConfig">CachedFuncConfig</a>]</code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
                 </span>
             </p>
           </td>
@@ -2902,12 +3007,12 @@ with cluster address, number of cpus, etc.</p>
         <tr>
           <td>
               <span class="doc-returns-annotation">
-                  <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
+                  <code><a class="autorefs autorefs-internal" title="pydvl.utils.caching.base.CachedFunc" href="../base/#pydvl.utils.caching.base.CachedFunc">CachedFunc</a></code>
               </span>
           </td>
           <td class="doc-returns-details">
             <div class="doc-md-description">
-              <p>The delayed function.</p>
+              <p>The wrapped cached function.</p>
             </div>
           </td>
         </tr>
@@ -2915,26 +3020,293 @@ with cluster address, number of cpus, etc.</p>
   </table>
 
           <details class="quote">
-            <summary>Source code in <code>src/pydvl/parallel/backends/joblib.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+            <summary>Source code in <code>src/pydvl/utils/caching/base.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CachedFuncConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CachedFunc&quot;</span><span class="p">:</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function to cache its results.</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        func: The function to wrap.</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        config: Optional caching options for the wrapped function.</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        The wrapped cached function.</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="k">return</span> <span class="n">CachedFunc</span><span class="p">(</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="n">func</span><span class="p">,</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="n">cache_backend</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="pydvl.utils.caching.memory.InMemoryCacheBackend.get" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
+
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.get" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get a value from the cache.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>key</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Cache key.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <span class="doc-returns-annotation">
+                  <code><a class="autorefs autorefs-external" title="typing.Optional" href="https://docs.python.org/3/library/typing.html#typing.Optional">Optional</a>[<a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]</code>
+              </span>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>Cached value or None if not found.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
 <span class="normal"><a href="#__codelineno-0-62">62</a></span>
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
 <span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a joblib delayed.</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        fun: the function to wrap</span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a value from the cache.</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        The delayed function.</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">return</span> <span class="n">delayed</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        key: Cache key.</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        Cached value or None if not found.</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">misses</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">return</span> <span class="n">value</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="pydvl.utils.caching.memory.InMemoryCacheBackend.set" class="doc doc-heading">
+          <code class="highlight language-python"><span class="nb">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></code>
+
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.set" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set a value in the cache.</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>key</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Cache key.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>value</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Value to cache.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="typing.Any" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set a value in the cache.</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        key: Cache key.</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        value: Value to cache.</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sets</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="pydvl.utils.caching.memory.InMemoryCacheBackend.clear" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">clear</span><span class="p">()</span></code>
+
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.clear" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Deletes cache dictionary and recreates it.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Deletes cache dictionary and recreates it.&quot;&quot;&quot;</span>
+</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span>
+</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span> <span class="o">=</span> <span class="p">{}</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h3 id="pydvl.utils.caching.memory.InMemoryCacheBackend.combine_hashes" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">combine_hashes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></code>
+
+<a href="#pydvl.utils.caching.memory.InMemoryCacheBackend.combine_hashes" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Join cache key components.</p>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="k">def</span> <span class="nf">combine_hashes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Join cache key components.&quot;&quot;&quot;</span>
+</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -2999,7 +3371,7 @@ with cluster address, number of cpus, etc.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Backends" rel="prev">
+          <a href="../memcached/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Memcached" rel="prev">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -3009,20 +3381,20 @@ with cluster address, number of cpus, etc.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Backends
+                Memcached
               </div>
             </div>
           </a>
         
         
           
-          <a href="../ray/" class="md-footer__link md-footer__link--next" aria-label="Next: Ray" rel="next">
+          <a href="../../../value/" class="md-footer__link md-footer__link--next" aria-label="Next: Value" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Ray
+                Value
               </div>
             </div>
             <div class="md-footer__button md-icon">
