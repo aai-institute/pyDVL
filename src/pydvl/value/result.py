@@ -671,7 +671,7 @@ class ValuationResult(
         self,
         factor: float,
         indices: Optional[NDArray[IndexT]] = None,
-        scale_history: bool = False,
+        scale_history: bool = True,
     ):
         """
         Scales the values and variances of the result by a coefficient.
