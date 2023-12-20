@@ -12,7 +12,7 @@ from typing import Callable, Dict, Optional, Tuple
 
 import torch
 from torch import nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
 from pydvl.utils.progress import log_duration
@@ -892,7 +892,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         hessian_regularization: float = 0.0,
     ):
 
-        super().__init__(model, empirical_cross_entropy_loss_fn)
+        super().__init__(model, torch.nn.functional.cross_entropy)
         self.hessian_regularization = hessian_regularization
         self.active_layers = self._parse_active_layers()
 
@@ -984,7 +984,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         for x, _ in data:
             data_len += x.shape[0]
             pred_y = self.model(x)
-            loss = self.loss(pred_y)
+            loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
         for key in forward_x.keys():
