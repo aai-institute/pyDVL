@@ -1090,7 +1090,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         for x, _ in data:
             data_len += x.shape[0]
             pred_y = self.model(x)
-            loss = self.loss(pred_y)
+            loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
         for key in diags.keys():
