@@ -47,14 +47,13 @@ import math
 import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
-from itertools import cycle, takewhile
 from typing import Optional, Sequence, Union
 
 import numpy as np
 from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from pydvl.parallel import (
     CancellationPolicy,
@@ -65,6 +64,7 @@ from pydvl.parallel import (
     init_parallel_backend,
 )
 from pydvl.utils.numeric import random_powerset
+from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
@@ -141,7 +141,7 @@ def permutation_montecarlo_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-    seed: Seed = None,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Computes an approximate Shapley value by sampling independent
     permutations of the index set, approximating the sum:
@@ -281,11 +281,10 @@ def _combinatorial_montecarlo_shapley(
     )
 
     rng = np.random.default_rng(seed)
-    repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
-    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
-    for idx in repeat_indices:
-        pbar.n = 100 * done.completion()
-        pbar.refresh()
+
+    for idx in repeat_indices(
+        indices, result=result, done=done, disable=not progress, position=job_id
+    ):
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         s = next(random_powerset(subset, n_samples=1, seed=rng))

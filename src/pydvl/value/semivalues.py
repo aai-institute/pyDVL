@@ -216,7 +216,7 @@ def compute_generic_semivalues(
 
     from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
 
-    if isinstance(sampler, PermutationSampler) and not u.enable_cache:
+    if isinstance(sampler, PermutationSampler) and u.cache is None:
         log.warning(
             "PermutationSampler requires caching to be enabled or computation "
             "will be doubled wrt. a 'direct' implementation of permutation MC"
@@ -272,7 +272,7 @@ def compute_generic_semivalues(
                     # Filter out samples for indices that have already converged
                     filtered_samples = samples
                     if skip_converged and len(done.converged) > 0:
-                        # cloudpickle can't pickle this on python 3.8:
+                        # TODO: cloudpickle can't pickle this on python 3.8:
                         # filtered_samples = filter(
                         #     lambda t: not done.converged[t[0]], samples
                         # )
@@ -501,7 +501,7 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[StochasticSampler[IndexT]] = PermutationSampler[IndexT],
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,

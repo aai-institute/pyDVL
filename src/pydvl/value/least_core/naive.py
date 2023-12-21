@@ -4,8 +4,9 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
-from pydvl.utils import Utility, maybe_progress, powerset
+from pydvl.utils import Utility, powerset
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.result import ValuationResult
 
@@ -103,14 +104,17 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
 
     logger.debug("Iterating over all subsets")
     utility_values = np.zeros(powerset_size)
-    for i, subset in enumerate(
-        maybe_progress(
-            powerset(u.data.indices), progress, total=powerset_size - 1, position=0
+    for i, subset in enumerate(  # type: ignore
+        tqdm(
+            powerset(u.data.indices),
+            disable=not progress,
+            total=powerset_size - 1,
+            position=0,
         )
     ):
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
-        utility_values[i] = u(subset)
+        utility_values[i] = u(subset)  # type: ignore
 
     return LeastCoreProblem(utility_values, A_lb)

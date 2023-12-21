@@ -270,6 +270,26 @@ def plot_shapley(
     return ax
 
 
+def plot_influence_distribution(
+    influences: NDArray[np.float_], index: int, title_extra: str = ""
+) -> plt.Axes:
+    """Plots the histogram of the influence that all samples in the training set
+    have over a single sample index.
+
+    Args:
+       influences: array of influences (training samples x test samples)
+       index: Index of the test sample for which the influences
+            will be plotted.
+       title_extra: Additional text that will be appended to the title.
+    """
+    _, ax = plt.subplots()
+    ax.hist(influences[:, index], alpha=0.7)
+    ax.set_xlabel("Influence values")
+    ax.set_ylabel("Number of samples")
+    ax.set_title(f"Distribution of influences {title_extra}")
+    return ax
+
+
 def plot_influence_distribution_by_label(
     influences: NDArray[np.float_], labels: NDArray[np.float_], title_extra: str = ""
 ):
@@ -279,7 +299,7 @@ def plot_influence_distribution_by_label(
     Args:
        influences: array of influences (training samples x test samples)
        labels: labels for the training set.
-       title_extra:
+       title_extra: Additional text that will be appended to the title.
     """
     _, ax = plt.subplots()
     unique_labels = np.unique(labels)
@@ -287,6 +307,6 @@ def plot_influence_distribution_by_label(
         ax.hist(influences[labels == label], label=label, alpha=0.7)
     ax.set_xlabel("Influence values")
     ax.set_ylabel("Number of samples")
-    ax.set_title(f"Distribution of influences " + title_extra)
+    ax.set_title(f"Distribution of influences {title_extra}")
     ax.legend()
     plt.show()

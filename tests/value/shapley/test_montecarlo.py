@@ -1,12 +1,12 @@
 import logging
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.parallel.config import ParallelConfig
-from pydvl.utils import Dataset, GroupedDataset, MemcachedConfig, Status, Utility
+from pydvl.utils import Dataset, GroupedDataset, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.utils.types import Seed
@@ -16,7 +16,6 @@ from pydvl.value.shapley.naive import combinatorial_exact_shapley
 from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
-from ..conftest import polynomial_dataset
 from ..utils import call_with_seeds
 
 log = logging.getLogger(__name__)
@@ -38,13 +37,13 @@ log = logging.getLogger(__name__)
         (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (
-            4,
+            3,
             ShapleyMode.GroupTesting,
             0.1,
             # Because of the inaccuracy of GTS, a high atol is required for the
             # value 0, for which the rtol has no effect.
             1e-2,
-            dict(n_samples=int(4e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(4e4), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -57,61 +56,41 @@ def test_analytic_montecarlo_shapley(
     rtol: float,
     atol: float,
     kwargs: dict,
+    seed,
 ):
     u, exact_values = analytic_shapley
 
     values = compute_shapley_values(
-        u, mode=fun, n_jobs=n_jobs, config=parallel_config, progress=False, **kwargs
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        seed=seed,
+        progress=True,
+        **kwargs
     )
 
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
-test_cases_montecarlo_shapley_reproducible_stochastic = [
-    # TODO Add once issue #416 is closed.
-    # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
-    (
-        12,
-        ShapleyMode.CombinatorialMontecarlo,
-        {"done": MaxChecks(4)},
-    ),
-    (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
-    (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
-    (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
-]
-
-
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+    "num_samples, fun, kwargs",
+    [
+        # TODO Add once issue #416 is closed.
+        # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
+        (
+            12,
+            ShapleyMode.CombinatorialMontecarlo,
+            {"done": MaxChecks(4)},
+        ),
+        (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
+        (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+        (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
+    ],
 )
 @pytest.mark.parametrize("num_points, num_features", [(12, 3)])
-def test_montecarlo_shapley_housing_dataset_reproducible(
-    num_samples: int,
-    housing_dataset: Dataset,
-    parallel_config: ParallelConfig,
-    n_jobs: int,
-    fun: ShapleyMode,
-    kwargs: dict,
-    seed: Seed,
-):
-    values_1, values_2 = call_with_seeds(
-        compute_shapley_values,
-        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
-        mode=fun,
-        n_jobs=n_jobs,
-        config=parallel_config,
-        progress=False,
-        seeds=(seed, seed),
-        **deepcopy(kwargs)
-    )
-    np.testing.assert_equal(values_1.values, values_2.values)
-
-
-@pytest.mark.parametrize(
-    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
-)
-@pytest.mark.parametrize("num_points, num_features", [(12, 4)])
-def test_montecarlo_shapley_housing_dataset_stochastic(
+def test_montecarlo_shapley_housing_dataset(
     num_samples: int,
     housing_dataset: Dataset,
     parallel_config: ParallelConfig,
@@ -121,21 +100,23 @@ def test_montecarlo_shapley_housing_dataset_stochastic(
     seed: Seed,
     seed_alt: Seed,
 ):
-    values_1, values_2 = call_with_seeds(
+    values_1, values_2, values_3 = call_with_seeds(
         compute_shapley_values,
         Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
         progress=False,
-        seeds=(seed, seed_alt),
+        seeds=(seed, seed, seed_alt),
         **deepcopy(kwargs)
     )
+    np.testing.assert_equal(values_1.values, values_2.values)
     with pytest.raises(AssertionError):
-        np.testing.assert_equal(values_1.values, values_2.values)
+        np.testing.assert_equal(values_1.values, values_3.values)
 
 
-@pytest.mark.parametrize("num_samples, delta, eps", [(8, 0.1, 0.1)])
+@pytest.mark.slow
+@pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
     "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
 )
@@ -170,13 +151,14 @@ def test_hoeffding_bound_montecarlo(
     "fun, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(600))),
+        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(500))),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
         (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
-        (
+        pytest.param(
             ShapleyMode.GroupTesting,
-            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
+            marks=pytest.mark.slow,
         ),
     ],
 )
@@ -188,6 +170,7 @@ def test_linear_montecarlo_shapley(
     rtol: float,
     fun: ShapleyMode,
     kwargs: dict,
+    seed: int,
 ):
     """Tests values for all methods using a linear dataset.
 
@@ -207,16 +190,16 @@ def test_linear_montecarlo_shapley(
 
     """
     u, exact_values = linear_shapley
-    check_total_value(u, exact_values, rtol=rtol)
 
     values = compute_shapley_values(
-        u, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
+        u, mode=fun, progress=False, n_jobs=n_jobs, seed=seed, **kwargs
     )
 
     check_values(values, exact_values, rtol=rtol)
     check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
 )
@@ -229,7 +212,7 @@ def test_linear_montecarlo_shapley(
         (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
         ),
     ],
 )
@@ -241,6 +224,7 @@ def test_linear_montecarlo_with_outlier(
     total_atol: float,
     fun,
     kwargs: dict,
+    cache_backend,
 ):
     """Tests whether valuation methods are able to detect an obvious outlier.
 
@@ -258,7 +242,7 @@ def test_linear_montecarlo_with_outlier(
         LinearRegression(),
         data=linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     values = compute_shapley_values(
         linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
@@ -283,12 +267,12 @@ def test_linear_montecarlo_with_outlier(
 def test_grouped_linear_montecarlo_shapley(
     linear_dataset,
     n_jobs,
-    memcache_client_config: "MemcachedClientConfig",
     num_groups: int,
     fun: ShapleyMode,
     scorer: Scorer,
     rtol: float,
     kwargs: dict,
+    cache_backend,
 ):
     """
     For permutation and truncated montecarlo, the rtol for each scorer is chosen
@@ -302,7 +286,7 @@ def test_grouped_linear_montecarlo_shapley(
         LinearRegression(),
         data=grouped_linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
 

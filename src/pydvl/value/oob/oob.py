@@ -6,18 +6,16 @@
 In: Published at ICML 2023
 
 """
-
-from __future__ import annotations
-
-from collections.abc import Callable
 from typing import Optional, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from tqdm.auto import tqdm
 
-from pydvl.utils import Seed, Utility, maybe_progress
+from pydvl.utils import Seed, Utility
+from pydvl.utils.types import LossFunction
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_data_oob"]
@@ -30,8 +28,8 @@ def compute_data_oob(
     *,
     n_est: int = 10,
     max_samples: float = 0.8,
-    loss: Callable = None,
-    n_jobs: int = None,
+    loss: Optional[LossFunction] = None,
+    n_jobs: Optional[int] = None,
     seed: Optional[Seed] = None,
     progress: bool = False,
 ) -> ValuationResult:
@@ -71,7 +69,7 @@ def compute_data_oob(
         max_samples: The fraction of samples to draw to train each base
             estimator.
         loss: A function taking as parameters model prediction and corresponding
-            data labels(preds, y) and returning an array of point-wise errors.
+            data labels(y_true, y_pred) and returning an array of point-wise errors.
         n_jobs: The number of jobs to run in parallel used in the bagging
             procedure for both fit and predict.
         seed: Either an instance of a numpy random number generator or a seed
@@ -115,12 +113,13 @@ def compute_data_oob(
 
     bag.fit(u.data.x_train, u.data.y_train)
 
-    for est, samples in maybe_progress(
-        zip(bag.estimators_, bag.estimators_samples_), progress, total=n_est
+    for est, samples in tqdm(
+        zip(bag.estimators_, bag.estimators_samples_), disable=not progress, total=n_est
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.setxor1d(u.data.indices, np.unique(samples))
         array_loss = loss(
-            y_true=u.data.y_train[oob_idx], y_pred=est.predict(u.data.x_train[oob_idx])
+            y_true=u.data.y_train[oob_idx],
+            y_pred=est.predict(u.data.x_train[oob_idx]),
         )
         result += ValuationResult(
             algorithm="data_oob",

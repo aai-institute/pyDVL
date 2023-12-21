@@ -1,4 +1,4 @@
 torch==2.0.1
 torchvision==0.15.2
-datasets==2.6.1
+datasets==2.14.6
 pillow==9.3.0

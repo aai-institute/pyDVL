@@ -19,8 +19,9 @@ from typing import Dict, Union
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+from tqdm.auto import tqdm
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import Utility
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
 
@@ -76,7 +77,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     n = len(u.data)
     yt = u.data.y_train
     iterator = enumerate(zip(u.data.y_test, indices), start=1)
-    for j, (y, ii) in maybe_progress(iterator, progress):
+    for j, (y, ii) in tqdm(iterator, disable=not progress):
         value_at_x = int(yt[ii[-1]] == y) / n
         values[ii[-1]] += (value_at_x - values[ii[-1]]) / j
         for i in range(n - 2, n_neighbors, -1):  # farthest to closest

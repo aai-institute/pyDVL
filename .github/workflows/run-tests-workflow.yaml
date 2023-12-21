@@ -3,8 +3,12 @@ name: Run Tests
 on:
   workflow_call:
     inputs:
-      tests_to_run:
-        description: "Determines which tests to run using Tox. Should be one of: base, torch, notebooks"
+      split_size:
+        description: "Determines the number of groups into which the tests should be split"
+        type: string
+        default: 4
+      group_number:
+        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
         type: string
         required: true
       python_version:
@@ -29,17 +33,16 @@ jobs:
     - name: Cache Tox Directory for Tests
       uses: actions/cache@v3
       with:
-        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
+        key: tox-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox
     - name: Set up memcached
       uses: niden/actions-memcached@v7
-    - name: Test Base Modules
-      run: tox -e base
-      if: inputs.tests_to_run == 'base'
-    - name: Test Modules that rely on PyTorch
-      run: tox -e torch
-      if: inputs.tests_to_run == 'torch'
-    - name: Test Notebooks
-      run: tox -e notebooks
-      if: inputs.tests_to_run == 'notebooks'
-      continue-on-error: true
+    - name: Test Group ${{ inputs.group_number }}
+      run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        env_vars: OS,PYTHON
+        verbose: false
