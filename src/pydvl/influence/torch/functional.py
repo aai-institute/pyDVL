@@ -407,6 +407,7 @@ def hessian(
     flat_params = flatten_dimensions(params.values())
 
     if use_hessian_avg:
+        n_samples = 0
         hessian = to_model_device(
             torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
@@ -418,11 +419,12 @@ def hessian(
             return blf(align_with_model(p, model), t_x, t_y)
 
         for x, y in iter(data_loader):
-            hessian += torch.func.hessian(flat_input_batch_loss_function)(
+            n_samples += x.shape[0]
+            hessian += x.shape[0] * torch.func.hessian(flat_input_batch_loss_function)(
                 flat_params, to_model_device(x, model), to_model_device(y, model)
             )
 
-        hessian /= len(data_loader)
+        hessian /= n_samples
     else:
 
         def flat_input_empirical_loss(p: torch.Tensor):

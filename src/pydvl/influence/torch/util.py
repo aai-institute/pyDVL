@@ -456,7 +456,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class EkfacRepresentation:
     r"""
     Container class for the EKFAC representation of the Hessian.
