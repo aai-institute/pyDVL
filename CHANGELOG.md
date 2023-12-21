@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 
 ### Added
 
