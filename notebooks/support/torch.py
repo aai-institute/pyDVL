@@ -74,8 +74,6 @@ class TorchMLP(nn.Module):
             layers.append(nn.Tanh())
         layers.pop()
 
-        # layers.append(nn.Softmax(dim=-1))
-
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
