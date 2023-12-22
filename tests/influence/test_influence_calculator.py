@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import torch
 from distributed import Client
+from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
@@ -20,13 +21,19 @@ from pydvl.influence.influence_calculator import (
     ThreadSafetyViolationError,
     UnalignedChunksError,
 )
-from pydvl.influence.torch import ArnoldiInfluence, CgInfluence, DirectInfluence
+from pydvl.influence.torch import (
+    ArnoldiInfluence,
+    CgInfluence,
+    DirectInfluence,
+    EkfacInfluence,
+)
 from pydvl.influence.torch.util import (
     NestedTorchCatAggregator,
     TorchCatAggregator,
     TorchNumpyConverter,
 )
 from tests.influence.torch.test_influence_model import model_and_data, test_case
+from tests.influence.torch.test_util import are_active_layers_linear
 
 
 @pytest.fixture
@@ -34,7 +41,7 @@ from tests.influence.torch.test_influence_model import model_and_data, test_case
     "influence_factory",
     [
         lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
-            model, loss, train_dataLoader
+            model, loss, train_dataLoader, hessian_reg
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
             model, loss, hessian_reg
@@ -338,3 +345,50 @@ def test_sequential_calculator(model_and_data, test_case):
     assert torch.allclose(seq_values, torch_values, atol=1e-6)
     assert np.allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)
     shutil.rmtree(zarr_values_path)
+
+
+@pytest.mark.torch
+def test_dask_ekfac_influence(model_and_data, test_case):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+    chunk_size = int(test_case.train_data_len / 4)
+    da_x_train = da.from_array(
+        x_train.numpy(), chunks=(chunk_size, *[-1 for _ in x_train.shape[1:]])
+    )
+    da_y_train = da.from_array(
+        y_train.numpy(), chunks=(chunk_size, *[-1 for _ in y_train.shape[1:]])
+    )
+    da_x_test = da.from_array(
+        x_test.numpy(), chunks=(chunk_size, *[-1 for _ in x_test.shape[1:]])
+    )
+    da_y_test = da.from_array(
+        y_test.numpy(), chunks=(chunk_size, *[-1 for _ in y_test.shape[1:]])
+    )
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+
+    if not are_active_layers_linear(model):
+        with pytest.raises(NotImplementedError):
+            EkfacInfluence(model).fit(train_dataloader)
+    elif isinstance(loss, nn.CrossEntropyLoss):
+        ekfac_influence = EkfacInfluence(
+            model, hessian_regularization=test_case.hessian_reg
+        ).fit(train_dataloader)
+
+        numpy_converter = TorchNumpyConverter()
+        dask_inf = DaskInfluenceCalculator(
+            ekfac_influence, numpy_converter, DisableClientSingleThreadCheck
+        )
+
+        dask_val = dask_inf.influences(
+            da_x_test,
+            da_y_test,
+            da_x_train,
+            da_y_train,
+            mode=test_case.mode,
+        )
+        dask_val = dask_val.compute(scheduler="synchronous")
+        torch_val = ekfac_influence.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        ).numpy()
+        assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)

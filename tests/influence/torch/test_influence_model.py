@@ -20,7 +20,6 @@ torch = pytest.importorskip("torch")
 import torch
 import torch.nn.functional as F
 from pytest_cases import fixture, parametrize, parametrize_with_cases
-from scipy.stats import pearsonr, spearmanr
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -29,6 +28,10 @@ from tests.influence.conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,
     linear_model,
+)
+from tests.influence.torch.test_util import (
+    are_active_layers_linear,
+    check_influence_correlations,
 )
 
 # Mark the entire module
@@ -55,7 +58,7 @@ def create_conv1d_nn():
     return nn.Sequential(
         nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
         nn.Flatten(),
-        nn.Linear(6, 3),
+        nn.Linear(6, 2),
     )
 
 
@@ -67,7 +70,7 @@ def create_conv1d_no_grad():
     return nn.Sequential(
         nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2).requires_grad_(False),
         nn.Flatten(),
-        nn.Linear(6, 3),
+        nn.Linear(6, 2),
     )
 
 
@@ -131,7 +134,7 @@ class InfluenceTestCases:
         return TestCase(
             module_factory=create_conv1d_nn,
             input_dim=(5, 3),
-            output_dim=3,
+            output_dim=2,
             loss=nn.MSELoss(),
             mode=InfluenceMode.Up,
         )
@@ -140,7 +143,7 @@ class InfluenceTestCases:
         return TestCase(
             module_factory=create_conv1d_nn,
             input_dim=(5, 3),
-            output_dim=3,
+            output_dim=2,
             loss=nn.SmoothL1Loss(),
             mode=InfluenceMode.Perturbation,
         )
@@ -167,7 +170,7 @@ class InfluenceTestCases:
         return TestCase(
             module_factory=create_conv1d_no_grad,
             input_dim=(5, 3),
-            output_dim=3,
+            output_dim=2,
             loss=nn.CrossEntropyLoss(),
             mode=InfluenceMode.Up,
         )
@@ -553,28 +556,10 @@ def test_influences_ekfac(
     with pytest.raises(NotFittedException):
         ekfac_influence.influence_factors(x_test, y_test)
 
-    def is_active_layers_linear():
-        for module in model.modules():
-            if not isinstance(module, nn.Linear):
-                param_requires_grad = [p.requires_grad for p in module.parameters()]
-                if any(param_requires_grad):
-                    with pytest.raises(NotImplementedError):
-                        ekfac_influence.fit(train_dataloader)
-                    return False
-        return True
-
-    def check_correlations(true_infl, approx_infl, threshold=0.95):
-        for axis in range(0, true_infl.ndim):
-            mean_true_infl = np.mean(true_infl, axis=axis)
-            mean_approx_infl = np.mean(approx_infl, axis=axis)
-            assert np.all(
-                pearsonr(mean_true_infl, mean_approx_infl).statistic > threshold
-            )
-            assert np.all(
-                spearmanr(mean_true_infl, mean_approx_infl).statistic > threshold
-            )
-
-    if is_active_layers_linear and isinstance(loss, nn.CrossEntropyLoss):
+    if not are_active_layers_linear:
+        with pytest.raises(NotImplementedError):
+            ekfac_influence.fit(train_dataloader)
+    elif isinstance(loss, nn.CrossEntropyLoss):
         ekfac_influence = ekfac_influence.fit(train_dataloader)
         ekfac_influence = ekfac_influence.update_diag(train_dataloader)
         ekfac_influence_values = ekfac_influence.influences(
@@ -592,5 +577,5 @@ def test_influences_ekfac(
         ).numpy()
 
         assert np.allclose(ekfac_influence_values, influence_from_factors)
-        check_correlations(direct_influences, ekfac_influence_values)
-        check_correlations(direct_sym_influences, ekfac_self_influence)
+        check_influence_correlations(direct_influences, ekfac_influence_values)
+        check_influence_correlations(direct_sym_influences, ekfac_self_influence)
