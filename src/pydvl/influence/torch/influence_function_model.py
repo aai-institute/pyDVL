@@ -883,6 +883,20 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
+    r"""
+    Solves the linear system Hx = b, where H is the Hessian of a model with the empirical
+    categorical cross entropy as loss function and b is the given right-hand side vector.
+    It employs the EK-FAC method [@george2018fast], which is based on the kronecker
+    factorization of the Hessian first introduced in [@martens2015optimizing].
+    Contrary to the other influence function methods, this implementation can only
+    be used for classification tasks with a cross entropy loss function. However, it
+    is much faster than the other methods and can be used efficiently for very large
+    datasets and models. For more information, see [Eigenvalue Corrected K-FAC][ekfac].
+
+    Args:
+        model: Instance of [torch.nn.Module][torch.nn.Module].
+        hessian_regularization: Regularization of the hessian.
+    """
 
     ekfac_representation: EkfacRepresentation
 
@@ -904,6 +918,11 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             return False
 
     def _parse_active_layers(self) -> Dict[str, torch.nn.Module]:
+        """
+        Find all layers of the model that have parameters that require grad
+        and return them in a dictionary. If a layer has some parameters that require
+        grad and some that do not, raise an error.
+        """
         active_layers: Dict[str, torch.nn.Module] = {}
         for m_name, module in self.model.named_modules():
             if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
@@ -913,7 +932,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 if all(layer_requires_grad):
                     active_layers[m_name] = module
                 elif any(layer_requires_grad):
-                    raise RuntimeError(
+                    raise ValueError(
                         f"Layer {m_name} has some parameters that require grad and some that do not."
                         f"This is not supported. Please set all parameters of the layer to require grad."
                     )
@@ -923,6 +942,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     def init_layer_kfac_blocks(
         module: torch.nn.Module,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Initialize the tensors that will store the cumulative forward and
+        backward KFAC blocks for the layer.
+        """
         if isinstance(module, nn.Linear):
             with_bias = module.bias is not None
             sG = module.out_features
@@ -942,6 +965,13 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         forward_x: Dict[str, torch.Tensor],
         grad_y: Dict[str, torch.Tensor],
     ) -> Tuple[Callable, Callable]:
+        """
+        Create the hooks that will be used to compute the forward and backward KFAC
+        blocks for the layer. The hooks are registered to the layer and will be called
+        during the forward and backward passes. At each pass, the hooks will update the
+        tensors that store the cumulative forward and backward KFAC blocks for the layer.
+        These tensors are stored in the forward_x and grad_y dictionaries.
+        """
         if isinstance(module, nn.Linear):
             with_bias = module.bias is not None
 
@@ -968,6 +998,11 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self,
         data: DataLoader,
     ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        """
+        Compute the KFAC blocks for each layer of the model, using the provided data.
+        Returns the average forward and backward KFAC blocks for each layer in
+        dictionaries.
+        """
         forward_x = {}
         grad_y = {}
         hooks = []
@@ -997,6 +1032,11 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return forward_x, grad_y
 
     def fit(self, data: DataLoader) -> EkfacInfluence:
+        """
+        Compute the KFAC blocks for each layer of the model, using the provided data.
+        It then creates an EkfacRepresentation object that stores the KFAC blocks for
+        each layer, their eigenvalue decomposition and diagonal values.
+        """
         forward_x, grad_y = self.get_kfac_blocks(data)
         layers_evecs_a = {}
         layers_evect_g = {}
@@ -1019,6 +1059,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
     @staticmethod
     def init_layer_diag(module: torch.nn.Module) -> torch.Tensor:
+        """
+        Initialize the tensor that will store the updated diagonal values of the layer.
+        """
         if isinstance(module, nn.Linear):
             with_bias = module.bias is not None
             sG = module.out_features
@@ -1037,7 +1080,13 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         last_x_kfe: Dict[str, torch.Tensor],
         diags: Dict[str, torch.Tensor],
     ) -> Tuple[Callable, Callable]:
-
+        """
+        Create the hooks that will be used to update the diagonal values of the layer.
+        The hooks are registered to the layer and will be called during the forward and
+        backward passes. At each pass, the hooks will update the tensor that stores the
+        updated diagonal values of the layer. This tensor is stored in the diags
+        dictionary.
+        """
         evecs_a, evecs_g = self.ekfac_representation.get_layer_evecs()
         if isinstance(module, nn.Linear):
             with_bias = module.bias is not None
@@ -1068,7 +1117,11 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self,
         data: DataLoader,
     ) -> EkfacInfluence:
-
+        """
+        Compute the updated diagonal values for each layer of the model, using the
+        provided data. It then updates the EkfacRepresentation object that stores the
+        KFAC blocks for each layer, their eigenvalue decomposition and diagonal values.
+        """
         if not self.is_fitted:
             raise ValueError(
                 "EkfacInfluence must be fitted before calling update_diag on it. "
@@ -1099,10 +1152,17 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         for hook in hooks:
             hook.remove()
 
-        self.ekfac_representation.diags = diags.values()
+        self.ekfac_representation = EkfacRepresentation(
+            self.ekfac_representation.layer_names,
+            self.ekfac_representation.layers_module,
+            self.ekfac_representation.evecs_a,
+            self.ekfac_representation.evecs_g,
+            diags.values(),
+        )
 
         return self
 
+    @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         x = rhs.clone()
         start_idx = 0
