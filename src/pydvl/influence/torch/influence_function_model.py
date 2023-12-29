@@ -91,7 +91,7 @@ class TorchInfluenceFunctionModel(
         return flatten_dimensions(grads.values(), shape=shape)
 
     @log_duration
-    def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor):
+    def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         mixed_grads = create_per_sample_mixed_derivative_function(
             self.model, self.loss
         )(self.model_params, x, y)
@@ -191,7 +191,7 @@ class TorchInfluenceFunctionModel(
         x: torch.Tensor,
         y: torch.Tensor,
         mode: InfluenceMode = InfluenceMode.Up,
-    ):
+    ) -> torch.Tensor:
         if mode == InfluenceMode.Up:
             if x_test.shape[0] <= x.shape[0]:
                 factor = self.influence_factors(x_test, y_test)
@@ -896,6 +896,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     Args:
         model: Instance of [torch.nn.Module][torch.nn.Module].
         hessian_regularization: Regularization of the hessian.
+        progress: If True, display progress bars.
     """
 
     ekfac_representation: EkfacRepresentation
@@ -904,11 +905,13 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         hessian_regularization: float = 0.0,
+        progress: bool = False,
     ):
 
         super().__init__(model, torch.nn.functional.cross_entropy)
         self.hessian_regularization = hessian_regularization
         self.active_layers = self._parse_active_layers()
+        self.progress = progress
 
     @property
     def is_fitted(self):
@@ -1016,7 +1019,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(layer_input_hook))
             hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
-        for x, _ in data:
+        for x, _ in tqdm(data, disable=not self.progress, desc="K-FAC blocks"):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
@@ -1140,7 +1143,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(input_hook))
             hooks.append(module.register_full_backward_hook(grad_hook))
 
-        for x, _ in data:
+        for x, _ in tqdm(data, disable=not self.progress, desc="Update Diagonal"):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
@@ -1162,11 +1165,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
         return self
 
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        x = rhs.clone()
+    def _solve_hvp_by_layer(self, rhs: torch.Tensor) -> Dict[str, torch.Tensor]:
+        hvp_layers = {}
         start_idx = 0
-        for _, (_, evecs_a, evecs_g, diag) in self.ekfac_representation:
+        for layer_id, (_, evecs_a, evecs_g, diag) in self.ekfac_representation:
             end_idx = start_idx + diag.shape[0]
             rhs_layer = rhs[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
                 rhs.shape[0], evecs_g.shape[0], -1
@@ -1187,12 +1189,161 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 torch.einsum("ij,bjk->bik", evecs_g, inv_kfe),
                 evecs_a.t(),
             )
-            x[:, start_idx:end_idx] = torch.cat(
+            hvp_layers[layer_id] = torch.cat(
                 [inv[:, :, :-1].reshape(rhs.shape[0], -1), inv[:, :, -1]], dim=1
             )
             start_idx = end_idx
+        return hvp_layers
+
+    @log_duration
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        x = rhs.clone()
+        start_idx = 0
+        layer_hvp = self._solve_hvp_by_layer(rhs)
+        for hvp in layer_hvp.values():
+            end_idx = start_idx + hvp.shape[1]
+            x[:, start_idx:end_idx] = hvp
+            start_idx = end_idx
         x.detach_()
         return x
+
+    def influences_by_layer(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
+
+        if x is None:
+
+            if y is not None:
+                raise ValueError(
+                    "Providing labels y, without providing model input x "
+                    "is not supported"
+                )
+
+            return self._symmetric_values_by_layer(
+                x_test.to(self.model_device),
+                y_test.to(self.model_device),
+                mode,
+            )
+
+        if y is None:
+            raise ValueError(
+                "Providing model input x without providing labels y is not supported"
+            )
+
+        return self._non_symmetric_values_by_layer(
+            x_test.to(self.model_device),
+            y_test.to(self.model_device),
+            x.to(self.model_device),
+            y.to(self.model_device),
+            mode,
+        )
+
+    def influence_factors_by_layer(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
+
+        return self._solve_hvp_by_layer(
+            self._loss_grad(x.to(self.model_device), y.to(self.model_device))
+        )
+
+    def influences_from_factors_by_layer(
+        self,
+        z_test_factors: Dict[str, torch.Tensor],
+        x: torch.Tensor,
+        y: torch.Tensor,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        if mode == InfluenceMode.Up:
+            total_grad = self._loss_grad(
+                x.to(self.model_device), y.to(self.model_device)
+            )
+            start_idx = 0
+            influences = {}
+            for layer_id, layer_z_test in z_test_factors.items():
+                end_idx = start_idx + layer_z_test.shape[1]
+                influences[layer_id] = (
+                    layer_z_test @ total_grad[:, start_idx:end_idx].T
+                ) * (layer_z_test.shape[1] / total_grad.shape[1])
+                start_idx = end_idx
+            return influences
+        elif mode == InfluenceMode.Perturbation:
+            total_mixed_grad = self._flat_loss_mixed_grad(
+                x.to(self.model_device), y.to(self.model_device)
+            )
+            start_idx = 0
+            influences = {}
+            for layer_id, layer_z_test in z_test_factors.items():
+                end_idx = start_idx + layer_z_test.shape[1]
+                influences[layer_id] = torch.einsum(
+                    "ia,j...a->ij...",
+                    layer_z_test,
+                    total_mixed_grad[:, start_idx:end_idx],
+                ) * (layer_z_test.shape[1] / total_mixed_grad.shape[1])
+                start_idx = end_idx
+            return influences
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+
+    def _non_symmetric_values_by_layer(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        if mode == InfluenceMode.Up:
+            if x_test.shape[0] <= x.shape[0]:
+                fac = self.influence_factors_by_layer(x_test, y_test)
+                values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+            else:
+                fac = self.influence_factors_by_layer(x, y)
+                values = self.influences_from_factors_by_layer(
+                    fac, x_test, y_test, mode=mode
+                ).T
+        elif mode == InfluenceMode.Perturbation:
+            fac = self.influence_factors_by_layer(x_test, y_test)
+            values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+        return values
+
+    def _symmetric_values_by_layer(
+        self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
+    ) -> Dict[str, torch.Tensor]:
+
+        grad = self._loss_grad(x, y)
+        fac = self._solve_hvp_by_layer(grad)
+
+        if mode == InfluenceMode.Up:
+            values = {}
+            start_idx = 0
+            for layer_id, layer_fac in fac.items():
+                end_idx = start_idx + layer_fac.shape[1]
+                values[layer_id] = (layer_fac @ grad[:, start_idx:end_idx].T) * (
+                    layer_fac.shape[1] / grad.shape[1]
+                )
+                start_idx = end_idx
+        elif mode == InfluenceMode.Perturbation:
+            values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+        return values
 
     def to(self, device: torch.device):
         return EkfacInfluence(
