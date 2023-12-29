@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch import nn as nn
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from pydvl.utils.progress import log_duration
@@ -904,12 +904,12 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     def __init__(
         self,
         model: nn.Module,
-        hessian_regularization: float = 0.0,
+        hessian_regularization: Optional[float] = None,
         progress: bool = False,
     ):
 
         super().__init__(model, torch.nn.functional.cross_entropy)
-        self.hessian_regularization = hessian_regularization
+        self._hessian_regularization = hessian_regularization
         self.active_layers = self._parse_active_layers()
         self.progress = progress
 
@@ -919,6 +919,22 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             return self.ekfac_representation is not None
         except AttributeError:
             return False
+
+    @property
+    def hessian_regularization(self):
+        return self._hessian_regularization
+
+    @hessian_regularization.setter
+    def hessian_regularization(self, value):
+        if self._hessian_regularization is None:
+            self._hessian_regularization = value
+        else:
+            raise ValueError(
+                "Hessian regularization can only be set once."
+                "To change the regularization value but retain the fitted representation, "
+                "create a new EkfacInfluence instance and pass ekfac_representation after "
+                "initialization."
+            )
 
     def _parse_active_layers(self) -> Dict[str, torch.nn.Module]:
         """
@@ -1165,10 +1181,15 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
         return self
 
-    def _solve_hvp_by_layer(self, rhs: torch.Tensor) -> Dict[str, torch.Tensor]:
+    @staticmethod
+    def _solve_hvp_by_layer(
+        rhs: torch.Tensor,
+        ekfac_representation: EkfacRepresentation,
+        hessian_regularization: float,
+    ) -> Dict[str, torch.Tensor]:
         hvp_layers = {}
         start_idx = 0
-        for layer_id, (_, evecs_a, evecs_g, diag) in self.ekfac_representation:
+        for layer_id, (_, evecs_a, evecs_g, diag) in ekfac_representation:
             end_idx = start_idx + diag.shape[0]
             rhs_layer = rhs[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
                 rhs.shape[0], evecs_g.shape[0], -1
@@ -1180,9 +1201,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 torch.einsum("ij,bjk->bik", evecs_g.t(), rhs_layer),
                 evecs_a,
             )
-            inv_diag = 1 / (
-                diag.reshape(*v_kfe.shape[1:]) + self.hessian_regularization
-            )
+            inv_diag = 1 / (diag.reshape(*v_kfe.shape[1:]) + hessian_regularization)
             inv_kfe = torch.einsum("bij,ij->bij", v_kfe, inv_diag)
             inv = torch.einsum(
                 "bij,jk->bik",
@@ -1199,13 +1218,30 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         x = rhs.clone()
         start_idx = 0
-        layer_hvp = self._solve_hvp_by_layer(rhs)
+        layer_hvp = self._solve_hvp_by_layer(
+            rhs, self.ekfac_representation, self.hessian_regularization
+        )
         for hvp in layer_hvp.values():
             end_idx = start_idx + hvp.shape[1]
             x[:, start_idx:end_idx] = hvp
             start_idx = end_idx
         x.detach_()
         return x
+
+    def _influences(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> torch.Tensor:
+        if self.hessian_regularization is None:
+            raise ValueError(
+                "Hessian regularization must be set for calculating influences."
+            )
+
+        return super()._influences(x_test, y_test, x, y, mode=mode)
 
     def influences_by_layer(
         self,
@@ -1218,6 +1254,11 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         if not self.is_fitted:
             raise ValueError(
                 "Instance must be fitted before calling influence methods on it"
+            )
+
+        if self.hessian_regularization is None:
+            raise ValueError(
+                "Hessian regularization must be set for calculating influences."
             )
 
         if x is None:
@@ -1257,8 +1298,15 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 "Instance must be fitted before calling influence methods on it"
             )
 
+        if self.hessian_regularization is None:
+            raise ValueError(
+                "Hessian regularization must be set for calculating influence factors."
+            )
+
         return self._solve_hvp_by_layer(
-            self._loss_grad(x.to(self.model_device), y.to(self.model_device))
+            self._loss_grad(x.to(self.model_device), y.to(self.model_device)),
+            self.ekfac_representation,
+            self.hessian_regularization,
         )
 
     def influences_from_factors_by_layer(
@@ -1276,9 +1324,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             influences = {}
             for layer_id, layer_z_test in z_test_factors.items():
                 end_idx = start_idx + layer_z_test.shape[1]
-                influences[layer_id] = (
-                    layer_z_test @ total_grad[:, start_idx:end_idx].T
-                ) * (layer_z_test.shape[1] / total_grad.shape[1])
+                influences[layer_id] = layer_z_test @ total_grad[:, start_idx:end_idx].T
                 start_idx = end_idx
             return influences
         elif mode == InfluenceMode.Perturbation:
@@ -1293,7 +1339,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                     "ia,j...a->ij...",
                     layer_z_test,
                     total_mixed_grad[:, start_idx:end_idx],
-                ) * (layer_z_test.shape[1] / total_mixed_grad.shape[1])
+                )
                 start_idx = end_idx
             return influences
         else:
@@ -1328,22 +1374,43 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     ) -> Dict[str, torch.Tensor]:
 
         grad = self._loss_grad(x, y)
-        fac = self._solve_hvp_by_layer(grad)
+        fac = self._solve_hvp_by_layer(
+            grad, self.ekfac_representation, self.hessian_regularization
+        )
 
         if mode == InfluenceMode.Up:
             values = {}
             start_idx = 0
             for layer_id, layer_fac in fac.items():
                 end_idx = start_idx + layer_fac.shape[1]
-                values[layer_id] = (layer_fac @ grad[:, start_idx:end_idx].T) * (
-                    layer_fac.shape[1] / grad.shape[1]
-                )
+                values[layer_id] = layer_fac @ grad[:, start_idx:end_idx].T
                 start_idx = end_idx
         elif mode == InfluenceMode.Perturbation:
             values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
         else:
             raise UnsupportedInfluenceModeException(mode)
         return values
+
+    def explore_hessian_regularization(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        regularization_values: List[float],
+    ) -> Dict[float, Dict[str, torch.Tensor]]:
+        grad = self._loss_grad(x, y)
+        influences_by_reg_value = {}
+        for reg_value in regularization_values:
+            reg_factors = self._solve_hvp_by_layer(
+                grad, self.ekfac_representation, reg_value
+            )
+            values = {}
+            start_idx = 0
+            for layer_id, layer_fac in reg_factors.items():
+                end_idx = start_idx + layer_fac.shape[1]
+                values[layer_id] = layer_fac @ grad[:, start_idx:end_idx].T
+                start_idx = end_idx
+            influences_by_reg_value[reg_value] = values
+        return influences_by_reg_value
 
     def to(self, device: torch.device):
         return EkfacInfluence(
