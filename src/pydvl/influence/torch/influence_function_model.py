@@ -1035,7 +1035,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(layer_input_hook))
             hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
-        for x, _ in tqdm(data, disable=not self.progress, desc="K-FAC blocks"):
+        for x, *_ in tqdm(
+            data, disable=not self.progress, desc="K-FAC blocks - batche progress"
+        ):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
@@ -1159,7 +1161,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(input_hook))
             hooks.append(module.register_full_backward_hook(grad_hook))
 
-        for x, _ in tqdm(data, disable=not self.progress, desc="Update Diagonal"):
+        for x, _ in tqdm(
+            data, disable=not self.progress, desc="Update Diagonal - batch progress"
+        ):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
