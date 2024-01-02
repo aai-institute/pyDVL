@@ -7,27 +7,13 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://pypi.org/project/pydvl/">
-        <img src="https://img.shields.io/pypi/v/pydvl.svg" alt="PyPI">
-    </a>
-    <a href="https://pypi.org/project/pydvl/">
-        <img src="https://img.shields.io/pypi/pyversions/pydvl.svg" alt="Version">
-    </a>
-    <a href="https://pydvl.org">
-        <img src="https://img.shields.io/badge/docs-All%20versions-009485" alt="documentation">
-    </a>
-    <a href="https://raw.githubusercontent.com/aai-institute/pyDVL/master/LICENSE">
-        <img alt="License" src="https://img.shields.io/pypi/l/pydvl">
-    </a>
-    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
-        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" >
-    </a>
-    <a href="https://codecov.io/gh/aai-institute/pyDVL">
-      <img src="https://codecov.io/gh/aai-institute/pyDVL/graph/badge.svg?token=VN7DNDE0FV"/>
-    </a>
-    <a href="https://zenodo.org/badge/latestdoi/354117916">
-        <img src="https://zenodo.org/badge/354117916.svg" alt="DOI">
-    </a>
+    <a href="https://pypi.org/project/pydvl/"><img src="https://img.shields.io/pypi/v/pydvl.svg" alt="PyPI"></a>
+    <a href="https://pypi.org/project/pydvl/"><img src="https://img.shields.io/pypi/pyversions/pydvl.svg" alt="Version"></a>
+    <a href="https://pydvl.org"><img src="https://img.shields.io/badge/docs-All%20versions-009485" alt="documentation"></a>
+    <a href="https://raw.githubusercontent.com/aai-institute/pyDVL/master/LICENSE"><img alt="License" src="https://img.shields.io/pypi/l/pydvl"></a>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml"><img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" ></a>
+    <a href="https://codecov.io/gh/aai-institute/pyDVL"><img src="https://codecov.io/gh/aai-institute/pyDVL/graph/badge.svg?token=VN7DNDE0FV"/></a>
+    <a href="https://zenodo.org/badge/latestdoi/354117916"><img src="https://zenodo.org/badge/354117916.svg" alt="DOI"></a>
 </p>
 
 **pyDVL** collects algorithms for **Data Valuation** and **Influence Function** computation.
