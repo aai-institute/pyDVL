@@ -216,7 +216,7 @@ def compute_generic_semivalues(
 
     from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
 
-    if isinstance(sampler, PermutationSampler) and not u.enable_cache:
+    if isinstance(sampler, PermutationSampler) and u.cache is None:
         log.warning(
             "PermutationSampler requires caching to be enabled or computation "
             "will be doubled wrt. a 'direct' implementation of permutation MC"

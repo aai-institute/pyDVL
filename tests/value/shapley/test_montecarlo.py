@@ -6,7 +6,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.parallel.config import ParallelConfig
-from pydvl.utils import Dataset, GroupedDataset, MemcachedConfig, Status, Utility
+from pydvl.utils import Dataset, GroupedDataset, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.utils.types import Seed
@@ -65,8 +65,8 @@ def test_analytic_montecarlo_shapley(
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
-        progress=False,
         seed=seed,
+        progress=True,
         **kwargs
     )
 
@@ -224,6 +224,7 @@ def test_linear_montecarlo_with_outlier(
     total_atol: float,
     fun,
     kwargs: dict,
+    cache_backend,
 ):
     """Tests whether valuation methods are able to detect an obvious outlier.
 
@@ -241,7 +242,7 @@ def test_linear_montecarlo_with_outlier(
         LinearRegression(),
         data=linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     values = compute_shapley_values(
         linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
@@ -266,12 +267,12 @@ def test_linear_montecarlo_with_outlier(
 def test_grouped_linear_montecarlo_shapley(
     linear_dataset,
     n_jobs,
-    memcache_client_config: "MemcachedClientConfig",
     num_groups: int,
     fun: ShapleyMode,
     scorer: Scorer,
     rtol: float,
     kwargs: dict,
+    cache_backend,
 ):
     """
     For permutation and truncated montecarlo, the rtol for each scorer is chosen
@@ -285,7 +286,7 @@ def test_grouped_linear_montecarlo_shapley(
         LinearRegression(),
         data=grouped_linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
 

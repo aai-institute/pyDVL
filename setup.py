@@ -12,7 +12,7 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.7.2.dev0",
+    version="0.8.1.dev0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
@@ -23,7 +23,13 @@ setup(
     tests_require=["pytest"],
     extras_require={
         "cupy": ["cupy-cuda11x>=12.1.0"],
-        "influence": ["torch>=2.0.0"],
+        "memcached": ["pymemcache"],
+        "influence": [
+            "torch>=2.0.0",
+            "dask>=2023.5.0",
+            "distributed>=2023.5.0",
+            "zarr>=2.16.1",
+        ],
         "ray": ["ray>=0.8"],
     },
     author="appliedAI Institute gGmbH",

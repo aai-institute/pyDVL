@@ -7,4 +7,4 @@ Use the table of contents to access the documentation for each module.
 The two main modules you will want to look at are [value][pydvl.value] and
 [influence][pydvl.influence].
 """
-__version__ = "0.7.2.dev0"
+__version__ = "0.8.1.dev0"

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import MemcachedConfig, Status, Utility
+from pydvl.utils import Status, Utility
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
@@ -125,6 +125,7 @@ def test_tmcs_linear_montecarlo_with_outlier(
     n_jobs,
     memcache_client_config,
     scorer: Scorer,
+    cache_backend,
     total_atol: float,
     fun,
     kwargs: dict,
@@ -145,7 +146,7 @@ def test_tmcs_linear_montecarlo_with_outlier(
         LinearRegression(),
         data=linear_dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        cache_backend=cache_backend,
     )
     values = compute_shapley_values(
         linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs

@@ -40,7 +40,10 @@ def test_knn_montecarlo_match(seed):
     )
 
     utility = Utility(
-        model, data=data, scorer=scorer, show_warnings=False, enable_cache=False
+        model,
+        data=data,
+        scorer=scorer,
+        show_warnings=False,
     )
     exact_values = combinatorial_exact_shapley(
         utility, progress=False, n_jobs=min(len(data), available_cpus())

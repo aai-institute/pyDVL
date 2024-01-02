@@ -7,9 +7,7 @@ def test_marker_only(i):
     assert False
 
 
-@pytest.fixture(
-    scope="function", params=[0, pytest.param(1, marks=pytest.mark.xfail), 2]
-)
+@pytest.fixture(scope="function", params=[0, pytest.param(1, marks=pytest.mark.xfail)])
 def data(request):
     yield request.param
 
