@@ -1036,7 +1036,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
         for x, *_ in tqdm(
-            data, disable=not self.progress, desc="K-FAC blocks - batche progress"
+            data, disable=not self.progress, desc="K-FAC blocks - batch progress"
         ):
             data_len += x.shape[0]
             pred_y = self.model(x)
