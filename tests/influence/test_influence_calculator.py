@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
 from pydvl.influence.base_influence_function_model import (
+    NotImplementedLayerRepresentationException,
     UnsupportedInfluenceModeException,
 )
 from pydvl.influence.influence_calculator import (
@@ -368,7 +369,7 @@ def test_dask_ekfac_influence(model_and_data, test_case):
     )
 
     if not are_active_layers_linear(model):
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(NotImplementedLayerRepresentationException):
             EkfacInfluence(model).fit(train_dataloader)
     elif isinstance(loss, nn.CrossEntropyLoss):
         ekfac_influence = EkfacInfluence(
