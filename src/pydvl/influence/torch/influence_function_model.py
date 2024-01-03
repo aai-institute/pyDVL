@@ -910,7 +910,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     ):
 
         super().__init__(model, torch.nn.functional.cross_entropy)
-        self._hessian_regularization = hessian_regularization
+        self.hessian_regularization = hessian_regularization
         self.active_layers = self._parse_active_layers()
         self.progress = progress
 
@@ -920,22 +920,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             return self.ekfac_representation is not None
         except AttributeError:
             return False
-
-    @property
-    def hessian_regularization(self):
-        return self._hessian_regularization
-
-    @hessian_regularization.setter
-    def hessian_regularization(self, value):
-        if self._hessian_regularization is None:
-            self._hessian_regularization = value
-        else:
-            raise ValueError(
-                "Hessian regularization can only be set once."
-                "To change the regularization value but retain the fitted representation, "
-                "create a new EkfacInfluence instance and pass ekfac_representation after "
-                "initialization."
-            )
 
     def _parse_active_layers(self) -> Dict[str, torch.nn.Module]:
         """
@@ -1233,21 +1217,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         x.detach_()
         return x
 
-    def _influences(
-        self,
-        x_test: torch.Tensor,
-        y_test: torch.Tensor,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
-        mode: InfluenceMode = InfluenceMode.Up,
-    ) -> torch.Tensor:
-        if self.hessian_regularization is None:
-            raise ValueError(
-                "Hessian regularization must be set for calculating influences."
-            )
-
-        return super()._influences(x_test, y_test, x, y, mode=mode)
-
     def influences_by_layer(
         self,
         x_test: torch.Tensor,
@@ -1259,11 +1228,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         if not self.is_fitted:
             raise ValueError(
                 "Instance must be fitted before calling influence methods on it"
-            )
-
-        if self.hessian_regularization is None:
-            raise ValueError(
-                "Hessian regularization must be set for calculating influences."
             )
 
         if x is None:
@@ -1301,11 +1265,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         if not self.is_fitted:
             raise ValueError(
                 "Instance must be fitted before calling influence methods on it"
-            )
-
-        if self.hessian_regularization is None:
-            raise ValueError(
-                "Hessian regularization must be set for calculating influence factors."
             )
 
         return self._solve_hvp_by_layer(
