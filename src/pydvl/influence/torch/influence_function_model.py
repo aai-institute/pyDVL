@@ -1196,6 +1196,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return x
 
     def to(self, device: torch.device):
-        return EkfacInfluence(
-            self.model.to(device), self.ekfac_representation.to(device)
+        ekfac_influence_device = EkfacInfluence(
+            self.model.to(device), self.hessian_regularization
         )
+        ekfac_influence_device.ekfac_representation = self.ekfac_representation.to(
+            device
+        )
+        return ekfac_influence_device
