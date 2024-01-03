@@ -484,12 +484,19 @@ class EkfacRepresentation:
             )
         )
 
-    def get_layer_evecs(self):
+    def get_layer_evecs(
+        self,
+    ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        """
+        It returns two dictionaries, one for the a eigenvectors and one for the g
+        eigenvectors, with the layer names as keys. The eigenvectors are in the same
+        order as the layers in the model.
+        """
         evecs_a_dict = {layer_name: evec_a for layer_name, (_, evec_a, _, _) in self}
         evecs_g_dict = {layer_name: evec_g for layer_name, (_, _, evec_g, _) in self}
         return evecs_a_dict, evecs_g_dict
 
-    def to(self, device: torch.device):
+    def to(self, device: torch.device) -> "EkfacRepresentation":
         return EkfacRepresentation(
             self.layer_names,
             [layer.to(device) for layer in self.layers_module],
@@ -502,6 +509,17 @@ class EkfacRepresentation:
 def empirical_cross_entropy_loss_fn(
     model_output: torch.Tensor, *args, **kwargs
 ) -> torch.Tensor:
+    """
+    Computes the empirical cross entropy loss of the model output. This is the
+    cross entropy loss of the model output without the labels. The function takes
+    all the usual arguments and keyword arguments of the cross entropy loss
+    function, so that it is compatible with the PyTorch cross entropy loss
+    function. However, it ignores everything except the first argument, which is
+    the model output.
+
+    Args:
+        model_output: The output of the model.
+    """
     probs_ = torch.softmax(model_output, dim=1)
     log_probs_ = torch.log(probs_)
     log_probs_ = torch.where(

@@ -36,6 +36,11 @@ class NotFittedException(ValueError):
         )
 
 
+class NotImplementedLayerRepresentationException(ValueError):
+    def __init__(self):
+        super().__init__(f"Layer representation not implemented for this module.")
+
+
 """Type variable for tensors, i.e. sequences of numbers"""
 TensorType = TypeVar("TensorType", bound=Collection)
 DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
