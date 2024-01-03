@@ -569,6 +569,14 @@ def test_influences_ekfac(
             x_test, y_test, x_train, y_train, mode=test_case.mode
         ).numpy()
 
+        ekfac_influences_by_layer = ekfac_influence.influences_by_layer(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+
+        accumulated_inf_by_layer = np.zeros_like(ekfac_influence_values)
+        for layer, infl in ekfac_influences_by_layer.items():
+            accumulated_inf_by_layer += infl.detach().numpy()
+
         ekfac_self_influence = ekfac_influence.influences(
             x_train, y_train, mode=test_case.mode
         ).numpy()
@@ -580,5 +588,6 @@ def test_influences_ekfac(
         ).numpy()
 
         assert np.allclose(ekfac_influence_values, influence_from_factors)
+        assert np.allclose(ekfac_influence_values, accumulated_inf_by_layer)
         check_influence_correlations(direct_influences, ekfac_influence_values)
         check_influence_correlations(direct_sym_influences, ekfac_self_influence)
