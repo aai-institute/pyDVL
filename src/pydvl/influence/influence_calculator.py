@@ -288,8 +288,8 @@ class DaskInfluenceCalculator:
             chunk_shape = (chunk_size, self.n_parameters)
             chunk_array = da.from_delayed(
                 delayed(func)(
-                    x_chunk.squeeze().tolist(),
-                    y_chunk.squeeze().tolist(),
+                    x_chunk.squeeze()[()],
+                    y_chunk.squeeze()[()],
                     self.influence_function_model,
                 ),
                 dtype=x.dtype,
@@ -400,10 +400,10 @@ class DaskInfluenceCalculator:
 
                 block_array = da.from_delayed(
                     delayed(func)(
-                        x_test_chunk.squeeze().tolist(),
-                        y_test_chunk.squeeze().tolist(),
-                        x_chunk.squeeze().tolist(),
-                        y_chunk.squeeze().tolist(),
+                        x_test_chunk.squeeze()[()],
+                        y_test_chunk.squeeze()[()],
+                        x_chunk.squeeze()[()],
+                        y_chunk.squeeze()[()],
                         self.influence_function_model,
                     ),
                     shape=block_shape,
@@ -506,9 +506,9 @@ class DaskInfluenceCalculator:
 
                 block_array = da.from_delayed(
                     delayed(func)(
-                        z_test_chunk.squeeze().tolist(),
-                        x_chunk.squeeze().tolist(),
-                        y_chunk.squeeze().tolist(),
+                        z_test_chunk.squeeze()[()],
+                        x_chunk.squeeze()[()],
+                        y_chunk.squeeze()[()],
                         self.influence_function_model,
                     ),
                     shape=block_shape,

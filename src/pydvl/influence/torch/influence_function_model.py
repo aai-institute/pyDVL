@@ -20,6 +20,7 @@ from pydvl.utils.progress import log_duration
 from ..base_influence_function_model import (
     InfluenceFunctionModel,
     InfluenceMode,
+    NotImplementedLayerRepresentationException,
     UnsupportedInfluenceModeException,
 )
 from .functional import (
@@ -884,7 +885,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
     r"""
-    Solves the linear system Hx = b, where H is the Hessian of a model with the empirical
+    Approximately solves the linear system Hx = b, where H is the Hessian of a model with the empirical
     categorical cross entropy as loss function and b is the given right-hand side vector.
     It employs the EK-FAC method [@george2018fast], which is based on the kronecker
     factorization of the Hessian first introduced in [@martens2015optimizing].
@@ -958,7 +959,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return active_layers
 
     @staticmethod
-    def init_layer_kfac_blocks(
+    def _init_layer_kfac_blocks(
         module: torch.nn.Module,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -972,13 +973,13 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             forward_x_layer = torch.zeros((sA, sA), device=module.weight.device)
             grad_y_layer = torch.zeros((sG, sG), device=module.weight.device)
         else:
-            raise NotImplementedError(
+            raise NotImplementedLayerRepresentationException(
                 f"Only Linear layers are supported, but found module {module} requiring grad."
             )
         return forward_x_layer, grad_y_layer
 
     @staticmethod
-    def get_layer_kfac_hooks(
+    def _get_layer_kfac_hooks(
         m_name: str,
         module: torch.nn.Module,
         forward_x: Dict[str, torch.Tensor],
@@ -1008,12 +1009,12 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 grad_y[m_name] += torch.mm(m_out.t(), m_out)
 
         else:
-            raise NotImplementedError(
+            raise NotImplementedLayerRepresentationException(
                 f"Only Linear layers are supported, but found module {module} requiring grad."
             )
         return input_hook, grad_hook
 
-    def get_kfac_blocks(
+    def _get_kfac_blocks(
         self,
         data: DataLoader,
     ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
@@ -1028,8 +1029,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         data_len = 0
 
         for m_name, module in self.active_layers.items():
-            forward_x[m_name], grad_y[m_name] = self.init_layer_kfac_blocks(module)
-            layer_input_hook, layer_grad_hook = self.get_layer_kfac_hooks(
+            forward_x[m_name], grad_y[m_name] = self._init_layer_kfac_blocks(module)
+            layer_input_hook, layer_grad_hook = self._get_layer_kfac_hooks(
                 m_name, module, forward_x, grad_y
             )
             hooks.append(module.register_forward_hook(layer_input_hook))
@@ -1058,7 +1059,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         It then creates an EkfacRepresentation object that stores the KFAC blocks for
         each layer, their eigenvalue decomposition and diagonal values.
         """
-        forward_x, grad_y = self.get_kfac_blocks(data)
+        forward_x, grad_y = self._get_kfac_blocks(data)
         layers_evecs_a = {}
         layers_evect_g = {}
         layers_diags = {}
@@ -1079,7 +1080,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return self
 
     @staticmethod
-    def init_layer_diag(module: torch.nn.Module) -> torch.Tensor:
+    def _init_layer_diag(module: torch.nn.Module) -> torch.Tensor:
         """
         Initialize the tensor that will store the updated diagonal values of the layer.
         """
@@ -1089,12 +1090,12 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             sA = module.in_features + int(with_bias)
             layer_diag = torch.zeros((sA * sG), device=module.weight.device)
         else:
-            raise NotImplementedError(
+            raise NotImplementedLayerRepresentationException(
                 f"Only Linear layers are supported, but found module {module} requiring grad."
             )
         return layer_diag
 
-    def get_layer_diag_hooks(
+    def _get_layer_diag_hooks(
         self,
         m_name: str,
         module: torch.nn.Module,
@@ -1129,7 +1130,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 ).view(-1)
 
         else:
-            raise NotImplementedError(
+            raise NotImplementedLayerRepresentationException(
                 f"Only Linear layers are supported, but found module {module} requiring grad."
             )
         return input_hook, grad_hook
@@ -1154,8 +1155,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         data_len = 0
 
         for m_name, module in self.active_layers.items():
-            diags[m_name] = self.init_layer_diag(module)
-            input_hook, grad_hook = self.get_layer_diag_hooks(
+            diags[m_name] = self._init_layer_diag(module)
+            input_hook, grad_hook = self._get_layer_diag_hooks(
                 m_name, module, last_x_kfe, diags
             )
             hooks.append(module.register_forward_hook(input_hook))
@@ -1417,6 +1418,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return influences_by_reg_value
 
     def to(self, device: torch.device):
-        return EkfacInfluence(
-            self.model.to(device), self.ekfac_representation.to(device)
-        )
+        self.model.to(device)
+        if self.is_fitted:
+            self.ekfac_representation.to(device)
+        return self

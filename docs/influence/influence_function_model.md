@@ -113,7 +113,7 @@ if_model = EkfacInfluence(
     hessian_regularization=0.0,
 )
 ```
-Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a ValueError.
+Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a NotImplementedLayerRepresentationException.
 
 A further improvement of the K-FAC method is the Eigenvalue Corrected K-FAC (EKFAC) method [@george2018fast], which allows to further re-fit the eigenvalues of the Hessian, thus providing a more accurate approximation. On top of the K-FAC method, the EKFAC method is implemented by simply calling the update_diag method from [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the EKFAC method to calculate the influence function of a model. 
 

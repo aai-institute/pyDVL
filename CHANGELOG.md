@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
+  for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
+- Implement new method: `EkfacInfluence`
+  [PR #451](https://github.com/aai-institute/pyDVL/issues/451)
+
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 
 ### Added

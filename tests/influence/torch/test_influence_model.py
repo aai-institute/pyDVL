@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from pydvl.influence.base_influence_function_model import NotFittedException
+from pydvl.influence.base_influence_function_model import (
+    NotFittedException,
+    NotImplementedLayerRepresentationException,
+)
 from pydvl.influence.torch.influence_function_model import (
     ArnoldiInfluence,
     CgInfluence,
@@ -557,7 +560,7 @@ def test_influences_ekfac(
         ekfac_influence.influence_factors(x_test, y_test)
 
     if not are_active_layers_linear:
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(NotImplementedLayerRepresentationException):
             ekfac_influence.fit(train_dataloader)
     elif isinstance(loss, nn.CrossEntropyLoss):
         ekfac_influence = ekfac_influence.fit(train_dataloader)
