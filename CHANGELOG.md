@@ -6,6 +6,8 @@
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
   for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
+- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
+  [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 
