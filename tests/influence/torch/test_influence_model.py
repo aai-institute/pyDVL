@@ -548,6 +548,7 @@ def test_influences_ekfac(
 
     ekfac_influence = EkfacInfluence(
         model,
+        update_diagonal=True,
         hessian_regularization=test_case.hessian_reg,
     )
 
@@ -564,7 +565,6 @@ def test_influences_ekfac(
             ekfac_influence.fit(train_dataloader)
     elif isinstance(loss, nn.CrossEntropyLoss):
         ekfac_influence = ekfac_influence.fit(train_dataloader)
-        ekfac_influence = ekfac_influence.update_diag(train_dataloader)
         ekfac_influence_values = ekfac_influence.influences(
             x_test, y_test, x_train, y_train, mode=test_case.mode
         ).numpy()
