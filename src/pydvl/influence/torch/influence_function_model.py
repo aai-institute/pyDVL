@@ -1153,7 +1153,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(input_hook))
             hooks.append(module.register_full_backward_hook(grad_hook))
 
-        for x, _ in tqdm(
+        for x, *_ in tqdm(
             data, disable=not self.progress, desc="Update Diagonal - batch progress"
         ):
             data_len += x.shape[0]
