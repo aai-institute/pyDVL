@@ -1138,7 +1138,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         """
         if not self.is_fitted:
             raise ValueError(
-                "EkfacInfluence must be fitted before updating the diagonal. "
+                "EkfacInfluence must be fitted before updating the diagonal."
             )
         diags = {}
         last_x_kfe: Dict[str, torch.Tensor] = {}
