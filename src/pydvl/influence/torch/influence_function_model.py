@@ -896,6 +896,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
     Args:
         model: Instance of [torch.nn.Module][torch.nn.Module].
+        update_diagonal: If True, the diagonal values in the ekfac representation are
+            refitted from the training data after calculating the KFAC blocks.
+            This provides a more accurate approximation of the Hessian, but it is
+            computationally more expensive.
         hessian_regularization: Regularization of the hessian.
         progress: If True, display progress bars.
     """
@@ -905,12 +909,14 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     def __init__(
         self,
         model: nn.Module,
+        update_diagonal: bool = False,
         hessian_regularization: Optional[float] = None,
         progress: bool = False,
     ):
 
         super().__init__(model, torch.nn.functional.cross_entropy)
         self.hessian_regularization = hessian_regularization
+        self.update_diagonal = update_diagonal
         self.active_layers = self._parse_active_layers()
         self.progress = progress
 
@@ -1061,6 +1067,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             layers_evect_g.values(),
             layers_diags.values(),
         )
+        if self.update_diagonal:
+            self._update_diag(data)
         return self
 
     @staticmethod
@@ -1119,7 +1127,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             )
         return input_hook, grad_hook
 
-    def update_diag(
+    def _update_diag(
         self,
         data: DataLoader,
     ) -> EkfacInfluence:
@@ -1130,8 +1138,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         """
         if not self.is_fitted:
             raise ValueError(
-                "EkfacInfluence must be fitted before calling update_diag on it. "
-                "Please call fit first."
+                "EkfacInfluence must be fitted before updating the diagonal. "
             )
         diags = {}
         last_x_kfe: Dict[str, torch.Tensor] = {}
