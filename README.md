@@ -318,7 +318,8 @@ We currently implement the following papers:
 - Schioppa, Andrea, Polina Zablotskaia, David Vilar, and Artem Sokolov. 
   [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
   In Proceedings of the AAAI-22. arXiv, 2021.
-
+- James Martens, Roger Grosse, [Optimizing Neural Networks with Kronecker-factored Approximate Curvature](https://arxiv.org/abs/1503.05671), International Conference on Machine Learning (ICML), 2015.
+- George, Thomas, César Laurent, Xavier Bouthillier, Nicolas Ballas, Pascal Vincent, [Fast Approximate Natural Gradient Descent in a Kronecker-factored Eigenbasis](https://arxiv.org/abs/1806.03884), Advances in Neural Information Processing Systems 31,2018.
   
 # License
 
