@@ -910,7 +910,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         update_diagonal: bool = False,
-        hessian_regularization: Optional[float] = None,
+        hessian_regularization: float = 0.0,
         progress: bool = False,
     ):
 
