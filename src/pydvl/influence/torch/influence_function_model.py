@@ -309,6 +309,16 @@ class TorchInfluenceFunctionModel(
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         pass
 
+    def to(self, device: torch.device):
+        self.model = self.model.to(device)
+        self._model_params = {
+            k: p.detach().to(device)
+            for k, p in self.model.named_parameters()
+            if p.requires_grad
+        }
+        self._model_device = device
+        return self
+
 
 class DirectInfluence(TorchInfluenceFunctionModel):
     r"""
@@ -407,15 +417,9 @@ class DirectInfluence(TorchInfluenceFunctionModel):
         ).T
 
     def to(self, device: torch.device):
-        self.hessian = self.hessian.to(device)
-        self.model = self.model.to(device)
-        self._model_device = device
-        self._model_params = {
-            k: p.detach().to(device)
-            for k, p in self.model.named_parameters()
-            if p.requires_grad
-        }
-        return self
+        if self.is_fitted:
+            self.hessian = self.hessian.to(device)
+        return super().to(device)
 
 
 class CgInfluence(TorchInfluenceFunctionModel):
@@ -541,16 +545,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
             )
             batch_cg[idx] = batch_result
         return batch_cg
-
-    def to(self, device: torch.device):
-        self.model = self.model.to(device)
-        self._model_params = {
-            k: p.detach().to(device)
-            for k, p in self.model.named_parameters()
-            if p.requires_grad
-        }
-        self._model_device = device
-        return self
 
     @staticmethod
     def _solve_cg(
@@ -878,9 +872,9 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         return result.t()
 
     def to(self, device: torch.device):
-        return ArnoldiInfluence(
-            self.model.to(device), self.loss, self.low_rank_representation.to(device)
-        )
+        if self.is_fitted:
+            self.low_rank_representation = self.low_rank_representation.to(device)
+        return super().to(device)
 
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
@@ -1480,7 +1474,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return influences_by_reg_value
 
     def to(self, device: torch.device):
-        self.model.to(device)
         if self.is_fitted:
             self.ekfac_representation.to(device)
-        return self
+        return super().to(device)
