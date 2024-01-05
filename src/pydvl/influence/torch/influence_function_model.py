@@ -1197,7 +1197,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return x
 
     def to(self, device: torch.device):
-        self.model.to(device)
         if self.is_fitted:
             self.ekfac_representation.to(device)
-        return self
+        return super().to(device)
