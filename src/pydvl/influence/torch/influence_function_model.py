@@ -954,9 +954,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             forward_x_layer = torch.zeros((sA, sA), device=module.weight.device)
             grad_y_layer = torch.zeros((sG, sG), device=module.weight.device)
         else:
-            raise NotImplementedLayerRepresentationException(
-                f"Only Linear layers are supported, but found module {module} requiring grad."
-            )
+            raise NotImplementedLayerRepresentationException(module_id=str(module))
         return forward_x_layer, grad_y_layer
 
     @staticmethod
@@ -990,9 +988,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 grad_y[m_name] += torch.mm(m_out.t(), m_out)
 
         else:
-            raise NotImplementedLayerRepresentationException(
-                f"Only Linear layers are supported, but found module {module} requiring grad."
-            )
+            raise NotImplementedLayerRepresentationException(module_id=str(module))
         return input_hook, grad_hook
 
     def _get_kfac_blocks(
@@ -1071,9 +1067,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             sA = module.in_features + int(with_bias)
             layer_diag = torch.zeros((sA * sG), device=module.weight.device)
         else:
-            raise NotImplementedLayerRepresentationException(
-                f"Only Linear layers are supported, but found module {module} requiring grad."
-            )
+            raise NotImplementedLayerRepresentationException(module_id=str(module))
         return layer_diag
 
     def _get_layer_diag_hooks(
@@ -1111,9 +1105,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 ).view(-1)
 
         else:
-            raise NotImplementedLayerRepresentationException(
-                f"Only Linear layers are supported, but found module {module} requiring grad."
-            )
+            raise NotImplementedLayerRepresentationException(module_id=str(module))
         return input_hook, grad_hook
 
     def _update_diag(

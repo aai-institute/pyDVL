@@ -37,7 +37,8 @@ class NotFittedException(ValueError):
 
 
 class NotImplementedLayerRepresentationException(ValueError):
-    def __init__(self, message: str):
+    def __init__(self, module_id: str):
+        message = f"Only Linear layers are supported, but found module {module_id} requiring grad."
         super().__init__(message)
 
 
