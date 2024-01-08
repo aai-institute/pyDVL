@@ -1,5 +1,6 @@
 import logging
 import math
+from dataclasses import dataclass
 from functools import partial
 from typing import (
     Collection,
@@ -453,3 +454,75 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
                 )
             )
         )
+
+
+@dataclass(frozen=True)
+class EkfacRepresentation:
+    r"""
+    Container class for the EKFAC representation of the Hessian.
+    It can be iterated over to get the layers names and their corresponding module,
+    eigenvectors and diagonal elements of the factorized Hessian matrix.
+
+    Args:
+        layer_names: Names of the layers.
+        layers_module: The layers.
+        evecs_a: The a eigenvectors of the ekfac representation.
+        evecs_g: The g eigenvectors of the ekfac representation.
+        diags: The diagonal elements of the factorized Hessian matrix.
+    """
+    layer_names: Iterable[str]
+    layers_module: Iterable[torch.nn.Module]
+    evecs_a: Iterable[torch.Tensor]
+    evecs_g: Iterable[torch.Tensor]
+    diags: Iterable[torch.Tensor]
+
+    def __iter__(self):
+        return iter(
+            zip(
+                self.layer_names,
+                zip(self.layers_module, self.evecs_a, self.evecs_g, self.diags),
+            )
+        )
+
+    def get_layer_evecs(
+        self,
+    ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        """
+        It returns two dictionaries, one for the a eigenvectors and one for the g
+        eigenvectors, with the layer names as keys. The eigenvectors are in the same
+        order as the layers in the model.
+        """
+        evecs_a_dict = {layer_name: evec_a for layer_name, (_, evec_a, _, _) in self}
+        evecs_g_dict = {layer_name: evec_g for layer_name, (_, _, evec_g, _) in self}
+        return evecs_a_dict, evecs_g_dict
+
+    def to(self, device: torch.device) -> "EkfacRepresentation":
+        return EkfacRepresentation(
+            self.layer_names,
+            [layer.to(device) for layer in self.layers_module],
+            [evec_a.to(device) for evec_a in self.evecs_a],
+            [evec_g.to(device) for evec_g in self.evecs_g],
+            [diag.to(device) for diag in self.diags],
+        )
+
+
+def empirical_cross_entropy_loss_fn(
+    model_output: torch.Tensor, *args, **kwargs
+) -> torch.Tensor:
+    """
+    Computes the empirical cross entropy loss of the model output. This is the
+    cross entropy loss of the model output without the labels. The function takes
+    all the usual arguments and keyword arguments of the cross entropy loss
+    function, so that it is compatible with the PyTorch cross entropy loss
+    function. However, it ignores everything except the first argument, which is
+    the model output.
+
+    Args:
+        model_output: The output of the model.
+    """
+    probs_ = torch.softmax(model_output, dim=1)
+    log_probs_ = torch.log(probs_)
+    log_probs_ = torch.where(
+        torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
+    )
+    return torch.sum(log_probs_ * probs_.detach() ** 0.5)

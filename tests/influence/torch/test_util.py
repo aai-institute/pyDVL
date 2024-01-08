@@ -7,6 +7,7 @@ import pytest
 torch = pytest.importorskip("torch")
 import torch.nn
 from numpy.typing import NDArray
+from scipy.stats import pearsonr, spearmanr
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -278,3 +279,21 @@ def test_torch_dataset_to_dask_array(
         torch_dataset_to_dask_array(
             tensor_data_set, chunk_size=chunk_size, total_size=total_size + 1
         )
+
+
+def check_influence_correlations(true_infl, approx_infl, threshold=0.95):
+    for axis in range(0, true_infl.ndim):
+        mean_true_infl = np.mean(true_infl, axis=axis)
+        mean_approx_infl = np.mean(approx_infl, axis=axis)
+        assert np.all(pearsonr(mean_true_infl, mean_approx_infl).statistic > threshold)
+        assert np.all(spearmanr(mean_true_infl, mean_approx_infl).statistic > threshold)
+
+
+def are_active_layers_linear(model):
+    for module in model.modules():
+        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
+            if not isinstance(module, torch.nn.Linear):
+                param_requires_grad = [p.requires_grad for p in module.parameters()]
+                if any(param_requires_grad):
+                    return False
+    return True
