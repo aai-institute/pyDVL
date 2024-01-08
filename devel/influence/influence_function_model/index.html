@@ -812,6 +812,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#eigenvalue-corrected-k-fac" class="md-nav__link">
+    Eigenvalue Corrected K-FAC
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2716,6 +2723,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#eigenvalue-corrected-k-fac" class="md-nav__link">
+    Eigenvalue Corrected K-FAC
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2803,7 +2817,7 @@ approximated by</p>
 the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding eigenvectors. See also
  (Schioppa et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
 <p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">ArnoldiInfluence</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">ArnoldiInfluence</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">ArnoldiInfluence</span><span class="p">(</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">loss</span><span class="p">,</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
@@ -2814,6 +2828,26 @@ the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding
 These implementations represent the calculation logic on in memory tensors. To scale up to large collection
 of data, we map these influence function models over these collections. For a detailed discussion see the
 documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p>
+<h3 id="eigenvalue-corrected-k-fac">Eigenvalue Corrected K-FAC<a class="headerlink" href="#eigenvalue-corrected-k-fac" title="Permanent link">&para;</a></h3>
+<p>K-FAC, short for Kronecker-Factored Approximate Curvature, is a method that approximates the Fisher information matrix <a href="https://en.wikipedia.org/wiki/Fisher_information">FIM</a> of a model. It is possible to show that for classification models with appropriate loss functions the FIM is equal to the Hessian of the model’s loss over the dataset. In this restricted but nonetheless important context K-FAC offers an efficient way to approximate the Hessian and hence the influence scores. 
+For more info and details refer to the original paper (Martens and Grosse, 2015)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>.</p>
+<p>The K-FAC method is implemented in the class <a href="pydvl/influence/torch/influence_function_model.py">EkfacInfluence</a>. The following code snippet shows how to use the K-FAC method to calculate the influence function of a model. Note that, in contrast to the other methods for influence function calculation, K-FAC does not require the loss function as an input. This is because the current implementation is only applicable to classification models with a cross entropy loss function. </p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">EkfacInfluence</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">EkfacInfluence</span><span class="p">(</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">)</span>
+</span></code></pre></div>
+Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a NotImplementedLayerRepresentationException.</p>
+<p>A further improvement of the K-FAC method is the Eigenvalue Corrected K-FAC (EKFAC) method (George et al., 2018)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>, which allows to further re-fit the eigenvalues of the Hessian, thus providing a more accurate approximation. On top of the K-FAC method, the EKFAC method is implemented by setting <code>update_diagonal=True</code> when initialising <a href="pydvl/influence/torch/influence_function_model.py">EkfacInfluence</a>. The following code snippet shows how to use the EKFAC method to calculate the influence function of a model. </p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">EkfacInfluence</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">EkfacInfluence</span><span class="p">(</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">update_diagonal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+</span></code></pre></div>
 <div class="footnote">
 <hr />
 <ol>
@@ -2823,6 +2857,12 @@ documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p
 <li id="fn:2">
 <p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2021. Scaling Up Influence Functions. Presented at the AAAI-22, arXiv. <a href="https://doi.org/10.48550/arXiv.2112.03052">https://doi.org/10.48550/arXiv.2112.03052</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
+<li id="fn:3">
+<p>Martens, J., Grosse, R., 2015. Optimizing neural networks with kronecker-factored approximate curvature, in: International Conference on Machine Learning. PMLR, pp. 2408–2417.&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>George, T., Laurent, C., Bouthillier, X., Ballas, N., Vincent, P., 2018. Fast approximate natural gradient descent in a kronecker factored eigenbasis. Advances in Neural Information Processing Systems 31.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
 </ol>
 </div>
 
@@ -2831,11 +2871,11 @@ documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-01-04</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-01-08</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-01-04</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-01-08</span>
       
     
   </small>
