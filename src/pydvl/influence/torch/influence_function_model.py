@@ -1392,7 +1392,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 fac = self.influence_factors_by_layer(x, y)
                 values = self.influences_from_factors_by_layer(
                     fac, x_test, y_test, mode=mode
-                ).T
+                )
         elif mode == InfluenceMode.Perturbation:
             fac = self.influence_factors_by_layer(x_test, y_test)
             values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
