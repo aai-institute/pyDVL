@@ -1,12 +1,14 @@
 import math
 import warnings
 from itertools import permutations
-from typing import Collection, List
+from typing import List
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
+from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.utils import Utility, powerset
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
 
@@ -18,16 +20,19 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
 
-    See :ref:`data valuation` for details.
+    See [Data valuation][computing-data-values] for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
-    simple use cases. Please refer to the :mod:`Monte Carlo
-    <pydvl.value.shapley.montecarlo>` approximations for practical applications.
+    simple use cases. Please refer to the [Monte Carlo
+    approximations][pydvl.value.shapley.montecarlo] for practical applications.
 
-    :param u: Utility object with model, data, and scoring function
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+    Args:
+        u: Utility object with model, data, and scoring function
+        progress: Whether to display progress bars for each job.
+
+    Returns:
+        Object with the data values.
     """
 
     n = len(u.data)
@@ -40,9 +45,9 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
         )
 
     values = np.zeros(n)
-    for p in maybe_progress(
+    for p in tqdm(
         permutations(u.data.indices),
-        progress,
+        disable=not progress,
         desc="Permutation",
         total=math.factorial(n),
     ):
@@ -59,9 +64,10 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: NDArray, u: Utility, progress: bool
+    indices: NDArray[np.int_], u: Utility, progress: bool
 ) -> NDArray:
-    """Helper function for :func:`combinatorial_exact_shapley`.
+    """Helper function for
+    [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
 
     Computes the marginal utilities for the set of indices passed and returns
     the value of the samples according to the exact combinatorial definition.
@@ -72,14 +78,14 @@ def _combinatorial_exact_shapley(
         subset: NDArray[np.int_] = np.setxor1d(
             u.data.indices, [i], assume_unique=True
         ).astype(np.int_)
-        for s in maybe_progress(
+        for s in tqdm(  # type: ignore
             powerset(subset),
-            progress,
+            disable=not progress,
             desc=f"Index {i}",
             total=2 ** (n - 1),
             position=0,
         ):
-            local_values[i] += (u({i}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+            local_values[i] += (u({i}.union(s)) - u(s)) / math.comb(n - 1, len(s))  # type: ignore
     return local_values / n
 
 
@@ -94,21 +100,24 @@ def combinatorial_exact_shapley(
 
     $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
 
-    See :ref:`data valuation` for details.
+    See [Data valuation][computing-data-values] for details.
 
-    .. note::
-       If the length of the training set is > n_jobs*20 this prints a warning
-       because the computation is very expensive. Used mostly for internal testing
-       and simple use cases. Please refer to the
-       :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
-       applications.
+    !!! Note
+        If the length of the training set is > n_jobs*20 this prints a warning
+        because the computation is very expensive. Used mostly for internal testing
+        and simple use cases. Please refer to the
+        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
+        applications.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_jobs: Number of parallel jobs to use
-    :param config: Object configuring parallel computation, with cluster address,
-        number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+    Args:
+        u: Utility object with model, data, and scoring function
+        n_jobs: Number of parallel jobs to use
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display progress bars for each job.
+
+    Returns:
+        Object with the data values.
     """
     # Arbitrary choice, will depend on time required, caching, etc.
     if len(u.data) // n_jobs > 20:

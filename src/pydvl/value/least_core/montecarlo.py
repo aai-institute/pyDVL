@@ -4,12 +4,11 @@ from typing import Iterable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
-from pydvl.utils.config import ParallelConfig
+from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import MapReduceJob
-from pydvl.utils.parallel.backend import effective_n_jobs
-from pydvl.utils.progress import maybe_progress
+from pydvl.utils.types import Seed
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.result import ValuationResult
@@ -30,6 +29,7 @@ def montecarlo_least_core(
     solver_options: Optional[dict] = None,
     options: Optional[dict] = None,
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Computes approximate Least Core values using a Monte Carlo approach.
 
@@ -48,19 +48,25 @@ def montecarlo_least_core(
     * $m$ is the number of subsets that will be sampled and whose utility will
       be computed and used to compute the data values.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of iterations to use
-    :param n_jobs: number of jobs across which to distribute the computation
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-        to be non-negative.
-    :param solver_options: Dictionary of options that will be used to select a solver
-        and to configure it. Refer to the following page for all possible options:
-        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
-    :param options: (Deprecated) Dictionary of solver options. Use solver_options instead.
-    :param progress: If True, shows a tqdm progress bar
-    :return: Object with the data values and the least core value.
+    Args:
+        u: Utility object with model, data, and scoring function
+        n_iterations: total number of iterations to use
+        n_jobs: number of jobs across which to distribute the computation
+        config: Object configuring parallel computation, with cluster
+            address, number of cpus, etc.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Dictionary of options that will be used to select a solver
+            and to configure it. Refer to [cvxpy's
+            documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)
+            for all possible options.
+        options: (Deprecated) Dictionary of solver options. Use solver_options
+            instead.
+        progress: If True, shows a tqdm progress bar
+        seed: Either an instance of a numpy random number generator or a seed for it.
+
+    Returns:
+        Object with the data values and the least core value.
     """
     # TODO: remove this before releasing version 0.7.0
     if options:
@@ -77,7 +83,7 @@ def montecarlo_least_core(
             solver_options.update(options)
 
     problem = mclc_prepare_problem(
-        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
+        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress, seed=seed
     )
     return lc_solve_problem(
         problem,
@@ -95,13 +101,16 @@ def mclc_prepare_problem(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> LeastCoreProblem:
-    """Prepares a linear problem by sampling subsets of the data.
-    Use this to separate the problem preparation from the solving with
-    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
-    parallel execution of multiple experiments.
+    """Prepares a linear problem by sampling subsets of the data. Use this to
+    separate the problem preparation from the solving with
+    [lc_solve_problem()][pydvl.value.least_core.common.lc_solve_problem]. Useful
+    for parallel execution of multiple experiments.
 
-    See :func:`montecarlo_least_core` for argument descriptions.
+    See
+    [montecarlo_least_core][pydvl.value.least_core.montecarlo.montecarlo_least_core]
+    for argument descriptions.
     """
     n = len(u.data)
 
@@ -131,31 +140,42 @@ def mclc_prepare_problem(
         config=config,
     )
 
-    return map_reduce_job()
+    return map_reduce_job(seed=seed)
 
 
 def _montecarlo_least_core(
-    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1
+    u: Utility,
+    n_iterations: int,
+    *,
+    progress: bool = False,
+    job_id: int = 1,
+    seed: Optional[Seed] = None,
 ) -> LeastCoreProblem:
-    """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
+    """Computes utility values and the Least Core upper bound matrix for a given
+    number of iterations.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of iterations to use
-    :param progress: If True, shows a tqdm progress bar
-    :param job_id: Integer id used to determine the position of the progress bar
-    :return:
+    Args:
+        u: Utility object with model, data, and scoring function
+        n_iterations: total number of iterations to use
+        progress: If True, shows a tqdm progress bar
+        job_id: Integer id used to determine the position of the progress bar
+        seed: Either an instance of a numpy random number generator or a seed for it.
+
+    Returns:
+        A solution
     """
     n = len(u.data)
 
     utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
-    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
+    rng = np.random.default_rng(seed)
+    power_set = random_powerset(u.data.indices, n_samples=n_iterations, seed=rng)
 
     A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
-        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
+        tqdm(power_set, disable=not progress, total=n_iterations, position=job_id)
     ):
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
@@ -167,7 +187,8 @@ def _montecarlo_least_core(
 
 def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
     """Combines the results from different parallel runs of
-    :func:`_montecarlo_least_core`"""
+    [_montecarlo_least_core()][pydvl.value.least_core.montecarlo._montecarlo_least_core]
+    """
     utility_values_list, A_lb_list = zip(*results)
     utility_values = np.concatenate(utility_values_list)
     A_lb = np.concatenate(A_lb_list)

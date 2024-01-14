@@ -4,13 +4,14 @@ from concurrent.futures import FIRST_COMPLETED, Future, wait
 
 from tqdm import tqdm
 
-from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, init_executor
+from pydvl.parallel import ParallelConfig, effective_n_jobs, init_executor
+from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
-__all__ = ["loo"]
+__all__ = ["compute_loo"]
 
 
-def loo(
+def compute_loo(
     u: Utility,
     *,
     n_jobs: int = 1,
@@ -21,14 +22,18 @@ def loo(
 
     $$v(i) = u(D) - u(D \setminus \{i\}) $$
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_jobs: Number of parallel jobs to use
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: If True, display a progress bar
-    :return: Object with the data values.
+    Args:
+        u: Utility object with model, data, and scoring function
+        progress: If True, display a progress bar
+        n_jobs: Number of parallel jobs to use
+        config: Object configuring parallel computation, with cluster
+            address, number of cpus, etc.
+        progress: If True, display a progress bar
 
-    .. versionadded:: 0.7.0
+    Returns:
+        Object with the data values.
+
+    !!! tip "New in version 0.7.0"
         Renamed from `naive_loo` and added parallel computation.
     """
 

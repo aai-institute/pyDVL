@@ -11,7 +11,7 @@ authors:
   - given-names: TransferLab team
     email: info+pydvl@appliedai.de
     affiliation: appliedAI Institute gGmbH
-repository-code: 'https://github.com/appliedAI-Initiative/pyDVL'
+repository-code: 'https://github.com/aai-institute/pyDVL'
 abstract: >-
   pyDVL is a library of stable implementations of algorithms
   for data valuation and influence function computation
@@ -27,5 +27,6 @@ keywords:
   - Banzhaf index
 license: LGPL-3.0
 commit: 0e929ae121820b0014bf245da1b21032186768cb
-version: v0.6.1
-date-released: '2023-04-13'
+version: v0.7.0
+doi: 10.5281/zenodo.8311583
+date-released: '2023-09-02'

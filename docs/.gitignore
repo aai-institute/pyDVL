@@ -1,6 +1,9 @@
-_build
+# Notebooks
 *.ipynb
 
 # Generated Documentation from Code
 pydvl/*
 !pydvl/index.rst
+
+# Changelog
+CHANGELOG.md

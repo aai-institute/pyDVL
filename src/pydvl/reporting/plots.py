@@ -1,14 +1,19 @@
-from typing import Any, List, Optional, OrderedDict, Sequence
+from functools import partial
+from typing import Any, List, Literal, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
+from deprecate import deprecated
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
-from scipy.stats import norm
+from scipy.stats import norm, t
+
+from pydvl.value import ValuationResult
 
 
+@deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
 def shaded_mean_std(
     data: np.ndarray,
     abscissa: Optional[Sequence[Any]] = None,
@@ -21,23 +26,29 @@ def shaded_mean_std(
     ax: Optional[Axes] = None,
     **kwargs,
 ) -> Axes:
-    """The usual mean +- x std deviations plot to aggregate runs of experiments.
+    r"""The usual mean \(\pm\) std deviation plot to aggregate runs of
+    experiments.
 
-    :param data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
-        data for each run.
-    :param abscissa: values for the x axis. Leave empty to use increasing
-        integers.
-    :param num_std: number of standard deviations to shade around the mean.
-    :param mean_color: color for the mean
-    :param shade_color: color for the shaded region
-    :param title:
-    :param xlabel:
-    :param ylabel:
-    :param ax: If passed, axes object into which to insert the figure. Otherwise,
-        a new figure is created and returned
-    :param kwargs: these are forwarded to the ax.plot() call for the mean.
+    !!! warning "Deprecation notice"
+        This function is bogus and will be removed in the future in favour of
+        properly computed confidence intervals.
 
-    :return: The axes used (or created)
+    Args:
+        data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
+            data for each run.
+        abscissa: values for the x-axis. Leave empty to use increasing integers.
+        num_std: number of standard deviations to shade around the mean.
+        mean_color: color for the mean
+        shade_color: color for the shaded region
+        title: Title text. To use mathematics, use LaTeX notation.
+        xlabel: Text for the horizontal axis.
+        ylabel: Text for the vertical axis
+        ax: If passed, axes object into which to insert the figure. Otherwise,
+            a new figure is created and returned
+        kwargs: these are forwarded to the ax.plot() call for the mean.
+
+    Returns:
+        The axes used (or created)
     """
     assert len(data.shape) == 2
     mean = data.mean(axis=0)
@@ -58,85 +69,140 @@ def shaded_mean_std(
     return ax
 
 
-def shapley_results(results: dict, filename: str = None):
+def plot_ci_array(
+    data: NDArray,
+    level: float,
+    type: Literal["normal", "t", "auto"] = "normal",
+    abscissa: Optional[Sequence[str]] = None,
+    mean_color: Optional[str] = "dodgerblue",
+    shade_color: Optional[str] = "lightblue",
+    ax: Optional[plt.Axes] = None,
+    **kwargs,
+) -> plt.Axes:
+    """Plot values and a confidence interval from a 2D array.
+
+    Supported intervals are based on the normal and the t distributions.
+
+    Args:
+        data: A 2D array with M different values for each of the N indices.
+        level: The confidence level.
+        type: The type of confidence interval to use.
+        abscissa: The values for the x-axis. Leave empty to use increasing
+            integers.
+        mean_color: The color of the mean line.
+        shade_color: The color of the confidence interval.
+        ax: If passed, axes object into which to insert the figure. Otherwise,
+            a new figure is created and the axes returned.
+        **kwargs: Additional arguments to pass to the plot function.
+
+    Returns:
+        The matplotlib axes.
     """
-    FIXME: change this to use dataframes
 
-    :param results: dict
-    :param filename: For plt.savefig(). Set to None to disable saving.
+    m, n = data.shape
 
-    Here's an example results dictionary::
+    means = np.mean(data, axis=0)
+    variances = np.var(data, axis=0, ddof=1)
 
-        results = {
-            "all_values": num_runs x num_points
-            "backward_scores": num_runs x num_points,
-            "backward_scores_reversed": num_runs x num_points,
-            "backward_random_scores": num_runs x num_points,
-            "forward_scores": num_runs x num_points,
-            "forward_scores_reversed": num_runs x num_points,
-            "forward_random_scores": num_runs x num_points,
-            "max_iterations": int,
-            "score_name" str,
-            "num_points": int
-        }
+    dummy = ValuationResult[np.int_, np.object_](
+        algorithm="dummy",
+        values=means,
+        variances=variances,
+        counts=np.ones_like(means, dtype=np.int_) * m,
+        indices=np.arange(n),
+        data_names=np.array(abscissa, dtype=str)
+        if abscissa is not None
+        else np.arange(n, dtype=str),
+    )
+
+    return plot_ci_values(
+        dummy,
+        level=level,
+        type=type,
+        mean_color=mean_color,
+        shade_color=shade_color,
+        ax=ax,
+        **kwargs,
+    )
+
+
+def plot_ci_values(
+    values: ValuationResult,
+    level: float,
+    type: Literal["normal", "t", "auto"] = "auto",
+    abscissa: Optional[Sequence[str]] = None,
+    mean_color: Optional[str] = "dodgerblue",
+    shade_color: Optional[str] = "lightblue",
+    ax: Optional[plt.Axes] = None,
+    **kwargs,
+):
+    """Plot values and a confidence interval.
+
+    Uses `values.data_names` for the x-axis.
+
+    Supported intervals are based on the normal and the t distributions.
+
+    Args:
+        values: The valuation result.
+        level: The confidence level.
+        type: The type of confidence interval to use. If "auto", uses "norm" if
+            the minimum number of updates for all indices is greater than 30,
+            otherwise uses "t".
+        abscissa: The values for the x-axis. Leave empty to use increasing
+            integers.
+        mean_color: The color of the mean line.
+        shade_color: The color of the confidence interval.
+        ax: If passed, axes object into which to insert the figure. Otherwise,
+            a new figure is created and the axes returned.
+        **kwargs: Additional arguments to pass to the plot function.
+
+    Returns:
+        The matplotlib axes.
     """
-    plt.figure(figsize=(16, 5))
-    num_runs = len(results["all_values"])
-    num_points = len(results["backward_scores"][0])
-    use_points = int(0.6 * num_points)
 
-    plt.subplot(1, 2, 1)
-    values = np.array(results["backward_scores"])[:, :use_points]
-    shaded_mean_std(values, color="b", label="By increasing shapley value")
+    ppfs = {
+        "normal": norm.ppf,
+        "t": partial(t.ppf, df=values.counts - 1),
+        "auto": norm.ppf
+        if np.min(values.counts) > 30
+        else partial(t.ppf, df=values.counts - 1),
+    }
 
-    values = np.array(results["backward_scores_reversed"])[:, :use_points]
-    shaded_mean_std(values, color="g", label="By decreasing shapley value")
+    try:
+        score = ppfs[type](1 - level / 2)
+    except KeyError:
+        raise ValueError(
+            f"Unknown confidence interval type requested: {type}."
+        ) from None
 
-    values = np.array(results["backward_random_scores"])[:, :use_points]
-    shaded_mean_std(values, color="r", linestyle="--", label="At random")
+    if abscissa is None:
+        abscissa = [str(i) for i, _ in enumerate(values)]
+    bound = score * values.stderr
 
-    plt.ylabel(f'Score ({results.get("score_name")})')
-    plt.xlabel("Points removed")
-    plt.title(
-        f"Effect of point removal. "
-        f'MonteCarlo with {results.get("max_iterations")} iterations '
-        f"over {num_runs} runs"
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    ax.fill_between(
+        abscissa,
+        values.values - bound,
+        values.values + bound,
+        alpha=0.3,
+        color=shade_color,
     )
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-
-    values = np.array(results["forward_scores"])[:, :use_points]
-    shaded_mean_std(values, color="b", label="By increasing shapley value")
-
-    values = np.array(results["forward_scores_reversed"])[:, :use_points]
-    shaded_mean_std(values, color="g", label="By decreasing shapley value")
-
-    values = np.array(results["forward_random_scores"])[:, :use_points]
-    shaded_mean_std(values, color="r", linestyle="--", label="At random")
-
-    plt.ylabel(f'Score ({results.get("score_name")})')
-    plt.xlabel("Points added")
-    plt.title(
-        f"Effect of point addition. "
-        f'MonteCarlo with {results["max_iterations"]} iterations '
-        f"over {num_runs} runs"
-    )
-    plt.legend()
-
-    if filename:
-        plt.savefig(filename, dpi=300)
+    ax.plot(abscissa, values.values, color=mean_color, **kwargs)
+    return ax
 
 
 def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     """Simple matrix plots with spearman correlation for each pair in vv.
 
-    :param vv: list of OrderedDicts with index: value. Spearman correlation
-        is computed for the keys.
-    :param num_values: Use only these many values from the data (from the start
-        of the OrderedDicts)
-    :param pvalue: correlation coefficients for which the p-value is below the
-        threshold `pvalue/len(vv)` will be discarded.
+    Args:
+        vv: list of OrderedDicts with index: value. Spearman correlation
+            is computed for the keys.
+        num_values: Use only these many values from the data (from the start
+            of the OrderedDicts)
+        pvalue: correlation coefficients for which the p-value is below the
+            threshold `pvalue/len(vv)` will be discarded.
     """
     r: np.ndarray = np.ndarray((len(vv), len(vv)))
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
@@ -170,22 +236,26 @@ def plot_shapley(
     df: pd.DataFrame,
     *,
     level: float = 0.05,
-    ax: plt.Axes = None,
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
+    ax: Optional[plt.Axes] = None,
+    title: Optional[str] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
 ) -> plt.Axes:
-    """Plots the shapley values, as returned from
-    :func:`~pydvl.value.shapley.common.compute_shapley_values`, with error bars
-    corresponding to an $\alpha$-level confidence interval.
+    r"""Plots the shapley values, as returned from
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values],
+    with error bars corresponding to an $\alpha$-level Normal confidence
+    interval.
 
-    :param df: dataframe with the shapley values
-    :param level: confidence level for the error bars
-    :param ax: axes to plot on or None if a new subplots should be created
-    :param title: string, title of the plot
-    :param xlabel: string, x label of the plot
-    :param ylabel: string, y label of the plot
-    :return: the axes created or used
+    Args:
+        df: dataframe with the shapley values
+        level: confidence level for the error bars
+        ax: axes to plot on or None if a new subplots should be created
+        title: string, title of the plot
+        xlabel: string, x label of the plot
+        ylabel: string, y label of the plot
+
+    Returns:
+        The axes created or used
     """
     if ax is None:
         _, ax = plt.subplots()
@@ -200,15 +270,36 @@ def plot_shapley(
     return ax
 
 
+def plot_influence_distribution(
+    influences: NDArray[np.float_], index: int, title_extra: str = ""
+) -> plt.Axes:
+    """Plots the histogram of the influence that all samples in the training set
+    have over a single sample index.
+
+    Args:
+       influences: array of influences (training samples x test samples)
+       index: Index of the test sample for which the influences
+            will be plotted.
+       title_extra: Additional text that will be appended to the title.
+    """
+    _, ax = plt.subplots()
+    ax.hist(influences[:, index], alpha=0.7)
+    ax.set_xlabel("Influence values")
+    ax.set_ylabel("Number of samples")
+    ax.set_title(f"Distribution of influences {title_extra}")
+    return ax
+
+
 def plot_influence_distribution_by_label(
     influences: NDArray[np.float_], labels: NDArray[np.float_], title_extra: str = ""
 ):
     """Plots the histogram of the influence that all samples in the training set
-     have over a single sample index, separated by labels.
+    have over a single sample index, separated by labels.
 
-    :param influences: array of influences (training samples x test samples)
-    :param labels: labels for the training set.
-    :param title_extra:
+    Args:
+       influences: array of influences (training samples x test samples)
+       labels: labels for the training set.
+       title_extra: Additional text that will be appended to the title.
     """
     _, ax = plt.subplots()
     unique_labels = np.unique(labels)
@@ -216,6 +307,6 @@ def plot_influence_distribution_by_label(
         ax.hist(influences[labels == label], label=label, alpha=0.7)
     ax.set_xlabel("Influence values")
     ax.set_ylabel("Number of samples")
-    ax.set_title(f"Distribution of influences " + title_extra)
+    ax.set_title(f"Distribution of influences {title_extra}")
     ax.legend()
     plt.show()

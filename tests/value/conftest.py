@@ -1,26 +1,26 @@
 import numpy as np
 import pytest
-import ray
 from numpy.typing import NDArray
-from ray.cluster_utils import Cluster
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.utils import Bunch
 
+from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
-from pydvl.utils.config import ParallelConfig
+from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
+from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
+from ..conftest import num_workers
 from . import polynomial
 
 
 @pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
-    from sklearn.utils import Bunch
-
-    x = np.arange(-1, 1, 0.05)
+    x = np.arange(-1, 1, 0.1)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
@@ -73,13 +73,12 @@ def dummy_utility(num_samples):
         score_range=(0, x.sum() / x.max()),
         catch_errors=False,
         show_warnings=True,
-        enable_cache=False,
     )
 
 
 @pytest.fixture(scope="function")
 def analytic_shapley(dummy_utility):
-    """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
+    r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
     m = float(max(dummy_utility.data.x_train))
     values = np.array([i / m for i in dummy_utility.data.indices])
@@ -95,7 +94,7 @@ def analytic_shapley(dummy_utility):
 
 @pytest.fixture(scope="function")
 def analytic_banzhaf(dummy_utility):
-    """Scores are i/n, so
+    r"""Scores are i/n, so
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
 
@@ -112,17 +111,38 @@ def analytic_banzhaf(dummy_utility):
 
 
 @pytest.fixture(scope="function")
-def linear_shapley(linear_dataset, scorer, n_jobs):
-    u = Utility(
-        LinearRegression(), data=linear_dataset, scorer=scorer, enable_cache=False
-    )
+def linear_shapley(cache, linear_dataset, scorer, n_jobs):
+    """This fixture makes use of the cache fixture to avoid recomputing
+    exact shapley values for each test run."""
+    args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
+    u_cache_key = f"linear_shapley_u_{args_hash}"
+    exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"
+    try:
+        u = cache.get(u_cache_key, None)
+        exact_values = cache.get(exact_values_cache_key, None)
+    except Exception:
+        cache.clear_cache(cache._cachedir)
+        raise
 
-    from pydvl.value.shapley.naive import combinatorial_exact_shapley
-
-    exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
+    if u is None:
+        u = Utility(
+            LinearRegression(),
+            data=linear_dataset,
+            scorer=scorer,
+        )
+        exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
+        cache.set(u_cache_key, u)
+        cache.set(exact_values_cache_key, exact_values)
     return u, exact_values
 
 
 @pytest.fixture(scope="module")
-def parallel_config(num_workers):
-    yield ParallelConfig(backend="joblib", n_cpus_local=num_workers, wait_timeout=0.1)
+def parallel_config():
+    yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
+
+
+@pytest.fixture()
+def cache_backend():
+    cache = InMemoryCacheBackend()
+    yield cache
+    cache.clear()

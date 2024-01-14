@@ -1,0 +1,220 @@
+site_name: "pyDVL"
+site_dir: "docs_build"
+site_url: "https://aai-institute.github.io/pyDVL/"
+repo_name: "aai-institute/pyDVL"
+repo_url: "https://github.com/aai-institute/pyDVL"
+copyright: "Copyright &copy; AppliedAI Institute gGmbH"
+remote_branch: gh-pages
+
+watch:
+  - src/pydvl
+  - notebooks
+
+hooks:
+  - build_scripts/copy_notebooks.py
+  - build_scripts/copy_changelog.py
+  - build_scripts/modify_binder_link.py
+
+plugins:
+  - autorefs
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+      skip_classes:
+        - custom-skip-class-name
+      auto_caption: true
+      caption_position: bottom
+  - macros
+  - mike:
+      canonical_version: stable
+  - search
+  - section-index
+  - alias:
+      use_relative_link: true
+      verbose: true
+  - gen-files:
+      scripts:
+        - build_scripts/generate_api_docs.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+      implicit_index: false
+      tab_length: 2
+  - mknotebooks:
+      execute: false
+      enable_default_jupyter_cell_styling: false
+      tag_remove_configs:
+        remove_cell_tags:
+          - hide
+        remove_input_tags:
+          - hide-input
+        remove_all_outputs_tags:
+          - hide-output
+      binder: true
+      binder_service_name: "gh"
+      binder_branch: "develop"
+  - mkdocstrings:
+      enable_inventory: true
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://numpy.org/doc/stable/objects.inv
+            - https://pandas.pydata.org/docs/objects.inv
+            - https://scikit-learn.org/stable/objects.inv
+            - https://pytorch.org/docs/stable/objects.inv
+            - https://pymemcache.readthedocs.io/en/latest/objects.inv
+            - https://joblib.readthedocs.io/en/stable/objects.inv
+            - https://docs.dask.org/en/latest/objects.inv
+            - https://distributed.dask.org/en/latest/objects.inv
+          paths: [ src ]  # search packages in the src folder
+          options:
+            inherited_members: true
+            docstring_style: google
+            docstring_section_style: spacy
+            line_length: 80
+            show_bases: true
+            members_order: source
+            show_submodules: false
+            show_signature_annotations: false
+            signature_crossrefs: true
+            merge_init_into_class: true
+            docstring_options:
+              ignore_init_summary: true
+  - bibtex:
+      bib_file: "docs/assets/pydvl.bib"
+      csl_file: "docs/assets/elsevier-harvard.csl"
+      cite_inline: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: iso_date
+      fallback_to_build_date: true
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/signet.svg
+  favicon: assets/signet.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - navigation.footer
+#    - content.tooltips  # insiders only
+#    - navigation.indexes
+    - navigation.instant
+    - navigation.path
+#    - navigation.sections
+#    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette: # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+  - css/extra.css
+  - css/neoteroi.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  transferlab:
+    website: https://transferlab.appliedai.de
+    data_valuation_review: https://transferlab.appliedai.de/reviews/data-valuation
+  copyright_link: https://appliedai-institute.de
+  version:
+    provider: mike
+    default: stable
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/aai-institute/pyDVL
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/pyDVL/
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/aai_transferlab
+    - icon: fontawesome/brands/linkedin
+      link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - footnotes
+  - markdown_captions
+  - md_in_html
+  - neoteroi.cards
+  - codehilite
+  - toc:
+      permalink: True
+      toc_depth: 3
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+      line_spans: __span
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      auto_append:
+        - docs_includes/abbreviations.md
+  - pymdownx.superfences
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - First steps: getting-started/first-steps.md
+  - Data Valuation:
+    - Introduction: value/index.md
+    - Notation: value/notation.md
+    - Shapley values: value/shapley.md
+    - Semi-values: value/semi-values.md
+    - The core: value/the-core.md
+    - Classwise Shapley: value/classwise-shapley.md
+    - Examples:
+      - Shapley values: examples/shapley_basic_spotify.ipynb
+      - KNN Shapley: examples/shapley_knn_flowers.ipynb
+      - Data utility learning: examples/shapley_utility_learning.ipynb
+      - Least Core: examples/least_core_basic.ipynb
+      - Data OOB: examples/data_oob.ipynb
+  - The Influence Function:
+    - Introduction: influence/index.md
+    - Influence Function Model: influence/influence_function_model.md
+    - Scaling Computation: influence/scaling_computation.md
+    - Examples:
+      - For CNNs: examples/influence_imagenet.ipynb
+      - For mislabeled data: examples/influence_synthetic.ipynb
+      - For outlier detection: examples/influence_wine.ipynb
+  - Code:
+    - Changelog: CHANGELOG.md
+    - API: api/pydvl/

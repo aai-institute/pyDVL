@@ -24,7 +24,7 @@ def test_stopping_criterion():
 
     StoppingCriterion.__abstractmethods__ = set()
     done = StoppingCriterion()
-    assert done.name == "StoppingCriterion"
+    assert str(done) == "StoppingCriterion"
     assert done.modify_result is True
 
 
@@ -193,6 +193,6 @@ def test_max_checks():
         assert not done(v)
 
     done = MaxChecks(5)
-    for _ in range(5):
+    for _ in range(4):
         assert not done(v)
     assert done(v)

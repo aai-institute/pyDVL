@@ -5,9 +5,11 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
+    random_powerset_label_min,
     random_subset_of_size,
     running_moments,
 )
+from pydvl.utils.types import Seed
 
 
 def test_powerset():
@@ -68,6 +70,57 @@ def test_random_powerset(n, max_subsets):
     )
 
 
+@pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
+def test_random_powerset_reproducible(n, max_subsets, seed):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_powerset`.
+    """
+    n_collisions = _count_random_powerset_generator_collisions(
+        n, max_subsets, seed, seed
+    )
+    assert n_collisions == max_subsets
+
+
+@pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
+def test_random_powerset_stochastic(n, max_subsets, seed, seed_alt, collision_tol):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_powerset`.
+    """
+    n_collisions = _count_random_powerset_generator_collisions(
+        n, max_subsets, seed, seed_alt
+    )
+    assert n_collisions / max_subsets < collision_tol
+
+
+def _count_random_powerset_generator_collisions(
+    n: int, max_subsets: int, seed: Seed, seed_alt: Seed
+):
+    """
+    Count the number of collisions between two generators of random subsets of a set
+    with `n` elements, each generating `max_subsets` subsets, using two different seeds.
+
+    Args:
+        n: number of elements in the set.
+        max_subsets: number of subsets to generate.
+        seed: Seed for the first generator.
+        seed_alt: Seed for the second generator.
+
+    Returns:
+        Number of collisions between the two generators.
+    """
+    s = np.arange(n)
+    parallel_subset_generators = zip(
+        random_powerset(s, n_samples=max_subsets, seed=seed),
+        random_powerset(s, n_samples=max_subsets, seed=seed_alt),
+    )
+    n_collisions = sum(
+        map(lambda t: set(t[0]) == set(t[1]), parallel_subset_generators)
+    )
+    return n_collisions
+
+
 @pytest.mark.parametrize(
     "n, size, exception",
     [(0, 0, None), (0, 1, ValueError), (10, 0, None), (10, 3, None), (1000, 40, None)],
@@ -81,6 +134,36 @@ def test_random_subset_of_size(n, size, exception):
         ss = random_subset_of_size(s, size=size)
         assert len(ss) == size
         assert np.all([x in s for x in ss])
+
+
+@pytest.mark.parametrize(
+    "n, size",
+    [(10, 3), (1000, 40)],
+)
+def test_random_subset_of_size_stochastic(n, size, seed, seed_alt):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_subset_of_size`.
+    """
+    s = np.arange(n)
+    subset_1 = random_subset_of_size(s, size=size, seed=seed)
+    subset_2 = random_subset_of_size(s, size=size, seed=seed_alt)
+    assert set(subset_1) != set(subset_2)
+
+
+@pytest.mark.parametrize(
+    "n, size",
+    [(10, 3), (1000, 40)],
+)
+def test_random_subset_of_size_stochastic(n, size, seed):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_subset_of_size`.
+    """
+    s = np.arange(n)
+    subset_1 = random_subset_of_size(s, size=size, seed=seed)
+    subset_2 = random_subset_of_size(s, size=size, seed=seed)
+    assert set(subset_1) == set(subset_2)
 
 
 @pytest.mark.parametrize(
@@ -107,6 +190,34 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             np.linalg.cholesky(mat)
         except np.linalg.LinAlgError:
             pytest.fail("Matrix is not positive definite")
+
+
+@pytest.mark.parametrize(
+    "n, cond",
+    [
+        (2, 10),
+        (7, 23),
+        (10, 2),
+    ],
+)
+def test_random_matrix_with_condition_number_reproducible(n, cond, seed):
+    mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
+    mat_2 = random_matrix_with_condition_number(n, cond, seed=seed)
+    assert np.all(mat_1 == mat_2)
+
+
+@pytest.mark.parametrize(
+    "n, cond",
+    [
+        (2, 10),
+        (7, 23),
+        (10, 2),
+    ],
+)
+def test_random_matrix_with_condition_number_stochastic(n, cond, seed, seed_alt):
+    mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
+    mat_2 = random_matrix_with_condition_number(n, cond, seed=seed_alt)
+    assert np.any(mat_1 != mat_2)
 
 
 def test_running_moments():
@@ -138,3 +249,27 @@ def test_running_moments():
         true_variances = [np.var(vv) for vv in values]
         assert np.allclose(means, true_means)
         assert np.allclose(variances, true_variances)
+
+
+@pytest.mark.parametrize(
+    "min_elements_per_label,num_elements_per_label,num_labels,check_num_samples",
+    [(0, 10, 3, 1000), (1, 10, 3, 1000), (2, 10, 3, 1000)],
+)
+def test_random_powerset_label_min(
+    min_elements_per_label: int,
+    num_elements_per_label: int,
+    num_labels: int,
+    check_num_samples: int,
+):
+    s = np.arange(num_labels * num_elements_per_label)
+    labels = np.arange(num_labels).repeat(num_elements_per_label)
+
+    for idx, subset in enumerate(
+        random_powerset_label_min(s, labels, min_elements_per_label)
+    ):
+        assert np.all(np.isin(subset, s))
+        for group in np.unique(labels):
+            assert np.sum(group == labels[subset]) >= min_elements_per_label
+
+        if idx == check_num_samples:
+            break

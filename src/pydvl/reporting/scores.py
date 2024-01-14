@@ -2,8 +2,9 @@ from typing import Dict, Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_removal_score"]
@@ -20,12 +21,15 @@ def compute_removal_score(
     r"""Fits model and computes score on the test set after incrementally removing
     a percentage of data points from the training set, based on their values.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param values: Data values of data instances in the training set.
-    :param percentages: Sequence of removal percentages.
-    :param remove_best: If True, removes data points in order of decreasing valuation.
-    :param progress: If True, display a progress bar.
-    :return: Dictionary that maps the percentages to their respective scores.
+    Args:
+        u: Utility object with model, data, and scoring function.
+        values: Data values of data instances in the training set.
+        percentages: Sequence of removal percentages.
+        remove_best: If True, removes data points in order of decreasing valuation.
+        progress: If True, display a progress bar.
+
+    Returns:
+        Dictionary that maps the percentages to their respective scores.
     """
     # Sanity checks
     if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
@@ -41,7 +45,7 @@ def compute_removal_score(
     # We sort in descending order if we want to remove the best values
     values.sort(reverse=remove_best)
 
-    for pct in maybe_progress(percentages, display=progress, desc="Removal Scores"):
+    for pct in tqdm(percentages, disable=not progress, desc="Removal Scores"):
         n_removal = int(pct * len(u.data))
         indices = values.indices[n_removal:]
         score = u(indices)
