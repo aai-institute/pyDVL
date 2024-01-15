@@ -47,7 +47,7 @@ class DummyGameDataset(Dataset):
     class.
 
     Args:
-        n_players: Number of players.
+        n_players: Number of players that participate in the game.
         description: Optional description of the dataset.
     """
 
@@ -108,6 +108,16 @@ class Game(ABC):
     Any Game subclass has to implement the abstract `_score` method
     to assign a score to each coalition/subset and at least
     one of `shapley_values`, `least_core_values`.
+
+    Args:
+        n_players: Number of players that participate in the game.
+        score_range: Minimum and maximum values of the `_score` method.
+        description: Optional string description of the dummy dataset that will be created.
+
+    Attributes:
+        n_players: Number of players that participate in the game.
+        data: Dummy dataset object.
+        u: Utility object with a dummy model and dataset.
     """
 
     def __init__(
@@ -160,6 +170,9 @@ class SymmetricVotingGame(Game):
     0, & \text{ otherwise}
     \end{array}\right.
     }$$
+
+    Args:
+        n_players: Number of players that participate in the game.
     """
 
     def __init__(self, n_players: int) -> None:
@@ -207,6 +220,9 @@ class AsymmetricVotingGame(Game):
     }$$
 
     where $w = [w_1,\dots, w_{51}]$ is a list of weights associated with each player.
+
+    Args:
+        n_players: Number of players that participate in the game.
     """
 
     def __init__(self, n_players: int = 51) -> None:
@@ -331,7 +347,7 @@ class ShoesGame(Game):
 
     Args:
         left: Number of players with a left shoe.
-        right: Number of player with a right shoe.
+        right: Number of players with a right shoe.
     """
 
     def __init__(self, left: int, right: int) -> None:
@@ -393,6 +409,9 @@ class AirportGame(Game):
     An airport game defined in
     (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
     Section 4.3
+
+    Args:
+        n_players: Number of players that participate in the game.
     """
 
     def __init__(self, n_players: int = 100) -> None:
@@ -454,16 +473,36 @@ class AirportGame(Game):
 
 
 class MinimumSpanningTreeGame(Game):
-    """Toy game that is used for testing and demonstration purposes.
+    r"""Toy game that is used for testing and demonstration purposes.
 
     A minimum spanning tree game defined in
-    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
+
+    Let $G = (N \cup \{0\},E)$ be a valued graph where $N = \{1,\dots,100\}$,
+    and the cost associated to an edge $(i, j)$ is:
+
+    $${
+    c_{ij} = \left\{\begin{array}{lll}
+    1, & \text{ if} & i = j + 1 \text{ or } i = j - 1 \\
+    & & \text{ or } (i = 1 \text{ and } j = 100) \text{ or } (i = 100 \text{ and } j = 1) \\
+    101, & \text{ if} & i = 0 \text{ or } j = 0 \\
+    \infty, & \text{ otherwise}
+    \end{array}\right.
+    }$$
+
+    A minimum spanning tree game $(N, c)$ is a cost game, where for a given coalition
+    $S \subset N$, $v(S)$ is the sum of the edge cost of the minimum spanning tree,
+    i.e. $v(S)$ = Minimum Spanning Tree of the graph $G|_{S\cup\{0\}}$,
+    which is the partial graph restricted to the players $S$ and the source node $0$.
+
+    Args:
+        n_players: Number of players that participate in the game.
     """
 
-    def __init__(self, n_players: int = 101) -> None:
-        if n_players != 101:
+    def __init__(self, n_players: int = 100) -> None:
+        if n_players != 100:
             raise ValueError(
-                f"{__class__.__name__} only supports n_players=101 but got {n_players=}."
+                f"{__class__.__name__} only supports n_players=100 but got {n_players=}."
             )
         description = (
             "A dummy dataset for the minimum spanning tree game in Castro et al. 2009"
@@ -518,8 +557,8 @@ class MinerGame(Game):
 
     $${
     v(S) = \left\{\begin{array}{lll}
-    \mid S \mid / 2 & \text{, if} & \mid S \mid \text{ is even} \\
-    ( \mid S \mid - 1)/2 & \text{, if} & \mid S \mid \text{ is odd}
+    \mid S \mid / 2, & \text{ if} & \mid S \mid \text{ is even} \\
+    ( \mid S \mid - 1)/2, & \text{ otherwise}
     \end{array}\right.
     }$$
 
