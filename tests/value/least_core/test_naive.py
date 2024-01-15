@@ -10,9 +10,9 @@ from tests.value import check_total_value, check_values
     [
         ("miner", {"n_players": 3}),
         ("miner", {"n_players": 4}),
-        ("gloves", {"left": 1, "right": 1}),
-        ("gloves", {"left": 2, "right": 1}),
-        ("gloves", {"left": 1, "right": 2}),
+        ("shoes", {"left": 1, "right": 1}),
+        ("shoes", {"left": 2, "right": 1}),
+        ("shoes", {"left": 1, "right": 2}),
     ],
     indirect=True,
 )

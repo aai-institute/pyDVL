@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
     "test_game, rtol, n_iterations",
     [
         (("miner", {"n_players": 8}), 0.1, 128),
-        (("gloves", {"left": 10, "right": 5}), 0.2, 10000),
+        (("shoes", {"left": 10, "right": 5}), 0.2, 10000),
     ],
     indirect=["test_game"],
 )

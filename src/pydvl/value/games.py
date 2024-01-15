@@ -1,6 +1,14 @@
 """
-This module provides several predefined games and their Shapley values, for
+This module provides several predefined games and, depending on the game,
+the corresponding Shapley values, Least Core values or both of them, for
 benchmarking purposes.
+
+## References
+
+[^1]: <a name="castro_polynomial_2009"></a>Castro, J., Gómez, D. and Tejada, J., 2009.
+    [Polynomial calculation of the Shapley value based on sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
+    Computers & Operations Research, 36(5), pp.1726-1730.
+
 """
 from __future__ import annotations
 
@@ -26,11 +34,23 @@ __all__ = [
     "AirportGame",
     "MinimumSpanningTreeGame",
     "MinerGame",
-    "GlovesGame",
 ]
 
 
 class DummyGameDataset(Dataset):
+    """Dummy game dataset.
+
+    Initializes a dummy game dataset with n_players and an optional
+    description.
+
+    This class is used internally inside the [Game][pydvl.value.games.Game]
+    class.
+
+    Args:
+        n_players: Number of players.
+        description: Optional description of the dataset.
+    """
+
     def __init__(self, n_players: int, description: Optional[str] = None) -> None:
         x = np.arange(0, n_players, 1).reshape(-1, 1)
         nil = np.zeros_like(x)
@@ -50,7 +70,7 @@ class DummyGameDataset(Dataset):
         """Returns the subsets of the train set instead of the test set.
 
         Args:
-            indices: Indices into the traing data.
+            indices: Indices into the training data.
 
         Returns:
             Subset of the train data.
@@ -63,7 +83,12 @@ class DummyGameDataset(Dataset):
 
 
 class DummyModel(SupervisedModel):
-    def __init__(self):
+    """Dummy model class.
+
+    A dummy supervised model used for testing purposes only.
+    """
+
+    def __init__(self) -> None:
         pass
 
     def fit(self, x: NDArray, y: NDArray):
@@ -122,11 +147,19 @@ class Game(ABC):
 class SymmetricVotingGame(Game):
     r"""Toy game that is used for testing and demonstration purposes.
 
-    A symmetric voting game defined in :footcite:t:`castro_polynomial_2009`
+    A symmetric voting game defined in
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
     Section 4.1
 
-    Under this model the utility of a coalition is 1 if its cardinality is
+    For this game the utility of a coalition is 1 if its cardinality is
     greater than num_samples/2, or 0 otherwise.
+
+    $${
+    v(S) = \left\{\begin{array}{ll}
+    1, & \text{ if} \quad \mid S \mid > \frac{N}{2} \\
+    0, & \text{ otherwise}
+    \end{array}\right.
+    }$$
     """
 
     def __init__(self, n_players: int) -> None:
@@ -157,10 +190,23 @@ class SymmetricVotingGame(Game):
 
 
 class AsymmetricVotingGame(Game):
-    """Toy game that is used for testing and demonstration purposes.
+    r"""Toy game that is used for testing and demonstration purposes.
 
-    An asymmetric voting game defined in :footcite:t:`castro_polynomial_2009`
+    An asymmetric voting game defined in
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
     Section 4.2.
+
+    For this game the player set is $N = \{1,\dots,51\}$ and
+    the utility of a coalition is given by:
+
+    $${
+    v(S) = \left\{\begin{array}{ll}
+    1, & \text{ if} \quad \sum\limits_{i \in S} w_i > \sum\limits_{j \in N}\frac{w_j}{2} \\
+    0, & \text{ otherwise}
+    \end{array}\right.
+    }$$
+
+    where $w = [w_1,\dots, w_{51}]$ is a list of weights associated with each player.
     """
 
     def __init__(self, n_players: int = 51) -> None:
@@ -268,24 +314,38 @@ class AsymmetricVotingGame(Game):
 class ShoesGame(Game):
     """Toy game that is used for testing and demonstration purposes.
 
-    A shoes game defined in :footcite:t:`castro_polynomial_2009`
+    An shoes game defined in
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
 
-    The utility of a coalition is the minimum of the number of left shoes or
-    right shoes in a coalition. A player is a left shoe iff its index is among
-    the first half, or a right shoe otherwise.
+    In this game, some players have a left shoe and others a right shoe.
+    Single shoes have a worth of zero while pairs have a worth of 1.
+
+    The payoff of a coalition $S$ is:
+
+    $${
+    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
+    }$$
+
+    Where $L$, respectively $R$, is the set of players with left shoes,
+    respectively right shoes.
+
+    Args:
+        left: Number of players with a left shoe.
+        right: Number of player with a right shoe.
     """
 
-    def __init__(self, n_players: int) -> None:
-        if n_players % 2 != 0:
-            raise ValueError("n_players must be an even number.")
+    def __init__(self, left: int, right: int) -> None:
+        self.left = left
+        self.right = right
+        n_players = self.left + self.right
         description = "Dummy data for the shoe game in Castro et al. 2009"
-        self.m = n_players // 2
-        super().__init__(n_players, score_range=(0, self.m), description=description)
+        max_score = n_players // 2
+        super().__init__(n_players, score_range=(0, max_score), description=description)
 
     def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        left_shoes = np.sum(X < self.m).item()
-        right_shoes = np.sum(X >= self.m).item()
-        return min(left_shoes, right_shoes)
+        left_sum = float(np.sum(np.asarray(X) < self.left))
+        right_sum = float(np.sum(np.asarray(X) >= self.left))
+        return min(left_sum, right_sum)
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
@@ -300,12 +360,40 @@ class ShoesGame(Game):
         )
         return result
 
+    @lru_cache
+    def least_core_values(self) -> ValuationResult:
+        if self.left == self.right:
+            subsidy = -0.5
+            values = np.array([0.5] * (self.left + self.right))
+        elif self.left < self.right:
+            subsidy = 0.0
+            values = np.array([1.0] * self.left + [0.0] * self.right)
+        else:
+            subsidy = 0.0
+            values = np.array([0.0] * self.left + [1.0] * self.right)
+
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_least_core",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=values,
+            subsidy=subsidy,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"
+
 
 class AirportGame(Game):
     """Toy game that is used for testing and demonstration purposes.
 
-    An airport game defined in :footcite:t:`castro_polynomial_2009`,
-    Section 4.3"""
+    An airport game defined in
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
+    Section 4.3
+    """
 
     def __init__(self, n_players: int = 100) -> None:
         if n_players != 100:
@@ -366,7 +454,11 @@ class AirportGame(Game):
 
 
 class MinimumSpanningTreeGame(Game):
-    """Toy game that is used for testing and demonstration purposes."""
+    """Toy game that is used for testing and demonstration purposes.
+
+    A minimum spanning tree game defined in
+    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>
+    """
 
     def __init__(self, n_players: int = 101) -> None:
         if n_players != 101:
@@ -483,67 +575,3 @@ class MinerGame(Game):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n={self.n_players})"
-
-
-class GlovesGame(Game):
-    r"""Toy game that is used for testing and demonstration purposes.
-
-    In this game, some players have a left glove and others a right glove.
-    Single gloves have a worth of zero while pairs have a worth of 1.
-
-    The payoff of a coalition $S$ is:
-
-    $${
-    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
-    }$$
-
-    Where $L$, respectively $R$, is the set of players with left gloves,
-    respectively right gloves.
-
-    Args:
-        left: Number of players with a left glove.
-        right: Number of player with a right glove.
-
-    """
-
-    def __init__(self, left: int, right: int):
-        description = "Dummy data for Gloves Game"
-        self.left = left
-        self.right = right
-        n_players = self.left + self.right
-        super().__init__(
-            n_players,
-            score_range=(0, min(self.left, self.right)),
-            description=description,
-        )
-
-    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        left_sum = float(np.sum(np.asarray(X) < self.left))
-        right_sum = float(np.sum(np.asarray(X) >= self.left))
-        return min(left_sum, right_sum)
-
-    @lru_cache
-    def least_core_values(self) -> ValuationResult:
-        if self.left == self.right:
-            subsidy = -0.5
-            values = np.array([0.5] * (self.left + self.right))
-        elif self.left < self.right:
-            subsidy = 0.0
-            values = np.array([1.0] * self.left + [0.0] * self.right)
-        else:
-            subsidy = 0.0
-            values = np.array([0.0] * self.left + [1.0] * self.right)
-
-        result: ValuationResult[np.int_, int] = ValuationResult(
-            algorithm="exact_least_core",
-            status=Status.Converged,
-            indices=self.data.indices,
-            values=values,
-            subsidy=subsidy,
-            variances=np.zeros_like(self.data.x_train),
-            counts=np.zeros_like(self.data.x_train),
-        )
-        return result
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"

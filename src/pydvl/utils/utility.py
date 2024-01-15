@@ -38,7 +38,7 @@ from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.score import Scorer
 from pydvl.utils.types import SupervisedModel
 
-__all__ = ["Utility", "DataUtilityLearning", "MinerGameUtility", "GlovesGameUtility"]
+__all__ = ["Utility", "DataUtilityLearning"]
 
 logger = logging.getLogger(__name__)
 
