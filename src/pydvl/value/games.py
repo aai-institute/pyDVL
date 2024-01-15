@@ -365,7 +365,27 @@ class ShoesGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        exact_values = np.ones_like(self.data.x_train) * 0.5
+        if self.left != self.right and (self.left > 4 or self.right > 4):
+            raise ValueError(
+                "This class only supports getting exact shapley values "
+                "for left <= 4 and right <= 4 or left == right"
+            )
+        precomputed_values = np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.5, 0.667, 0.75, 0.8],
+                [0.0, 0.167, 0.5, 0.65, 0.733],
+                [0.0, 0.083, 0.233, 0.5, 0.638],
+                [0.0, 0.050, 0.133, 0.271, 0.5],
+            ]
+        )
+        if self.left == self.right:
+            value_left = min(self.left, self.right) / 2
+            value_right = value_left
+        else:
+            value_left = precomputed_values[self.left, self.right]
+            value_right = precomputed_values[self.right, self.left]
+        exact_values = np.array([value_left] * self.left + [value_right] * self.right)
         result: ValuationResult[np.int_, int] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
@@ -380,19 +400,19 @@ class ShoesGame(Game):
     def least_core_values(self) -> ValuationResult:
         if self.left == self.right:
             subsidy = -0.5
-            values = np.array([0.5] * (self.left + self.right))
+            exact_values = np.array([0.5] * (self.left + self.right))
         elif self.left < self.right:
             subsidy = 0.0
-            values = np.array([1.0] * self.left + [0.0] * self.right)
+            exact_values = np.array([1.0] * self.left + [0.0] * self.right)
         else:
             subsidy = 0.0
-            values = np.array([0.0] * self.left + [1.0] * self.right)
+            exact_values = np.array([0.0] * self.left + [1.0] * self.right)
 
         result: ValuationResult[np.int_, int] = ValuationResult(
             algorithm="exact_least_core",
             status=Status.Converged,
             indices=self.data.indices,
-            values=values,
+            values=exact_values,
             subsidy=subsidy,
             variances=np.zeros_like(self.data.x_train),
             counts=np.zeros_like(self.data.x_train),
