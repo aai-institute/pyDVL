@@ -25,6 +25,8 @@ __all__ = [
     "ShoesGame",
     "AirportGame",
     "MinimumSpanningTreeGame",
+    "MinerGame",
+    "GlovesGame",
 ]
 
 
@@ -412,3 +414,136 @@ class MinimumSpanningTreeGame(Game):
             counts=np.zeros_like(self.data.x_train),
         )
         return result
+
+
+class MinerGame(Game):
+    r"""Toy game that is used for testing and demonstration purposes.
+
+    Consider a group of n miners, who have discovered large bars of gold.
+
+    If two miners can carry one piece of gold, then the payoff of a
+    coalition $S$ is:
+
+    $${
+    v(S) = \left\{\begin{array}{lll}
+    \mid S \mid / 2 & \text{, if} & \mid S \mid \text{ is even} \\
+    ( \mid S \mid - 1)/2 & \text{, if} & \mid S \mid \text{ is odd}
+    \end{array}\right.
+    }$$
+
+    If there are more than two miners and there is an even number of miners,
+    then the core consists of the single payoff where each miner gets 1/2.
+
+    If there is an odd number of miners, then the core is empty.
+
+    Taken from [Wikipedia](https://en.wikipedia.org/wiki/Core_(game_theory))
+
+    Args:
+        n_players: Number of miners that participate in the game.
+    """
+
+    def __init__(self, n_players: int) -> None:
+        if n_players <= 2:
+            raise ValueError(f"n_players, {n_players}, should be > 2")
+        description = "Dummy data for Miner Game taken from https://en.wikipedia.org/wiki/Core_(game_theory)"
+        super().__init__(
+            n_players,
+            score_range=(0, n_players // 2),
+            description=description,
+        )
+
+    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        n = len(X)
+        if n % 2 == 0:
+            return n / 2
+        else:
+            return (n - 1) / 2
+
+    @lru_cache()
+    def least_core_values(self) -> ValuationResult:
+        if self.n_players % 2 == 0:
+            values = np.array([0.5] * self.n_players)
+            subsidy = 0.0
+        else:
+            values = np.array(
+                [(self.n_players - 1) / (2 * self.n_players)] * self.n_players
+            )
+            subsidy = (self.n_players - 1) / (2 * self.n_players)
+
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_least_core",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=values,
+            subsidy=subsidy,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n={self.n_players})"
+
+
+class GlovesGame(Game):
+    r"""Toy game that is used for testing and demonstration purposes.
+
+    In this game, some players have a left glove and others a right glove.
+    Single gloves have a worth of zero while pairs have a worth of 1.
+
+    The payoff of a coalition $S$ is:
+
+    $${
+    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
+    }$$
+
+    Where $L$, respectively $R$, is the set of players with left gloves,
+    respectively right gloves.
+
+    Args:
+        left: Number of players with a left glove.
+        right: Number of player with a right glove.
+
+    """
+
+    def __init__(self, left: int, right: int):
+        description = "Dummy data for Gloves Game"
+        self.left = left
+        self.right = right
+        n_players = self.left + self.right
+        super().__init__(
+            n_players,
+            score_range=(0, min(self.left, self.right)),
+            description=description,
+        )
+
+    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        left_sum = float(np.sum(np.asarray(X) < self.left))
+        right_sum = float(np.sum(np.asarray(X) >= self.left))
+        return min(left_sum, right_sum)
+
+    @lru_cache
+    def least_core_values(self) -> ValuationResult:
+        if self.left == self.right:
+            subsidy = -0.5
+            values = np.array([0.5] * (self.left + self.right))
+        elif self.left < self.right:
+            subsidy = 0.0
+            values = np.array([1.0] * self.left + [0.0] * self.right)
+        else:
+            subsidy = 0.0
+            values = np.array([0.0] * self.left + [1.0] * self.right)
+
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_least_core",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=values,
+            subsidy=subsidy,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"

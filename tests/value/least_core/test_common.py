@@ -8,29 +8,30 @@ from .. import check_values
 
 
 @pytest.mark.parametrize(
-    "test_utility",
-    [("miner", {"n_miners": 5})],
+    "test_game",
+    [("miner", {"n_players": 5})],
     indirect=True,
 )
-def test_lc_solve_problems(test_utility, n_jobs, parallel_config):
+def test_lc_solve_problems(test_game, n_jobs, parallel_config):
     """Test solving LeastCoreProblems in parallel."""
 
-    u, exact_values = test_utility
     n_problems = n_jobs
-    problem = lc_prepare_problem(u)
+    problem = lc_prepare_problem(test_game.u)
     solutions = lc_solve_problems(
         [problem] * n_problems,
-        u,
+        test_game.u,
         algorithm="test_lc",
         n_jobs=n_jobs,
         config=parallel_config,
     )
     assert len(solutions) == n_problems
 
+    exact_values = test_game.least_core_values()
+
     for solution in solutions:
         assert solution.status == Status.Converged
         check_values(solution, exact_values, rtol=0.01)
 
-        check = lc_solve_problem(problem, u=u, algorithm="test_lc")
+        check = lc_solve_problem(problem, u=test_game.u, algorithm="test_lc")
         assert check.status == Status.Converged
         check_values(solution, check, rtol=0.01)

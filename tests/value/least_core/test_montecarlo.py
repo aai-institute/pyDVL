@@ -10,28 +10,27 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "test_utility, rtol, n_iterations",
+    "test_game, rtol, n_iterations",
     [
-        (("miner", {"n_miners": 8}), 0.1, 128),
+        (("miner", {"n_players": 8}), 0.1, 128),
         (("gloves", {"left": 10, "right": 5}), 0.2, 10000),
     ],
-    indirect=["test_utility"],
+    indirect=["test_game"],
 )
 @pytest.mark.parametrize("n_jobs", [1, -1])
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_montecarlo_least_core(
-    test_utility, rtol, n_iterations, n_jobs, non_negative_subsidy, seed
+    test_game, rtol, n_iterations, n_jobs, non_negative_subsidy, seed
 ):
-    u, exact_values = test_utility
-
     values = montecarlo_least_core(
-        u,
+        test_game.u,
         n_iterations=n_iterations,
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
         n_jobs=n_jobs,
         seed=seed,
     )
+    exact_values = test_game.least_core_values()
     if non_negative_subsidy:
         check_values(values, exact_values)
         # Sometimes the subsidy is negative but really close to zero
