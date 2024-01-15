@@ -5,7 +5,8 @@ benchmarking purposes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from functools import lru_cache
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 import scipy as sp
@@ -27,18 +28,36 @@ __all__ = [
 ]
 
 
-def _dummy_dataset(num_samples: int, description: Optional[str] = None) -> Dataset:
-    x = np.arange(0, num_samples, 1).reshape(-1, 1)
-    nil = np.zeros_like(x)
-    return Dataset(
-        x,
-        nil.copy(),
-        nil.copy(),
-        nil.copy(),
-        feature_names=["x"],
-        target_names=["y"],
-        description=description,
-    )
+class DummyGameDataset(Dataset):
+    def __init__(self, n_players: int, description: Optional[str] = None) -> None:
+        x = np.arange(0, n_players, 1).reshape(-1, 1)
+        nil = np.zeros_like(x)
+        super().__init__(
+            x,
+            nil.copy(),
+            nil.copy(),
+            nil.copy(),
+            feature_names=["x"],
+            target_names=["y"],
+            description=description,
+        )
+
+    def get_test_data(
+        self, indices: Optional[Iterable[int]] = None
+    ) -> Tuple[NDArray, NDArray]:
+        """Returns the subsets of the train set instead of the test set.
+
+        Args:
+            indices: Indices into the traing data.
+
+        Returns:
+            Subset of the train data.
+        """
+        if indices is None:
+            return self.x_train, self.y_train
+        x = self.x_train[indices]
+        y = self.y_train[indices]
+        return x, y
 
 
 class DummyModel(SupervisedModel):
@@ -49,7 +68,7 @@ class DummyModel(SupervisedModel):
         pass
 
     def predict(self, x: NDArray) -> NDArray:
-        return x
+        pass
 
     def score(self, x: NDArray, y: NDArray) -> float:
         # Dummy, will be overriden
@@ -60,14 +79,9 @@ class Game(ABC):
     """Base class for games
 
     Any Game subclass has to implement the abstract `_score` method
-    to assign a score to each coalition/subset.
-
-    It also has to define the `_shapley_values` and/or `_least_core_values`
-    attributes.
+    to assign a score to each coalition/subset and at least
+    one of `shapley_values`, `least_core_values`.
     """
-
-    _shapley_values: ValuationResult | None = None
-    _least_core_values: ValuationResult | None = None
 
     def __init__(
         self,
@@ -76,7 +90,7 @@ class Game(ABC):
         description: Optional[str] = None,
     ):
         self.n_players = n_players
-        self.data = _dummy_dataset(self.n_players, description)
+        self.data = DummyGameDataset(self.n_players, description)
         self.u = Utility(
             DummyModel(),
             self.data,
@@ -85,17 +99,15 @@ class Game(ABC):
             show_warnings=True,
         )
 
-    def get_shapley_values(self) -> ValuationResult:
-        if self._shapley_values is None:
-            raise ValueError(f"Shapley values not implemented for {__class__.__name__}")
-        return self._shapley_values
+    def shapley_values(self) -> ValuationResult:
+        raise NotImplementedError(
+            f"shapley_values method was not implemented for class {__class__.__name__}"
+        )
 
-    def get_least_core_values(self) -> ValuationResult:
-        if self._least_core_values is None:
-            raise ValueError(
-                f"Least core values not implemented for {__class__.__name__}"
-            )
-        return self._least_core_values
+    def least_core_values(self) -> ValuationResult:
+        raise NotImplementedError(
+            f"least_core_values method was not implemented for class {__class__.__name__}"
+        )
 
     @abstractmethod
     def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
@@ -125,17 +137,21 @@ class SymmetricVotingGame(Game):
             description=description,
         )
 
-        self._shapley_values: ValuationResult[np.int_, int] = ValuationResult(
+    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        return 1 if len(X) > len(self.data) // 2 else 0
+
+    @lru_cache
+    def shapley_values(self) -> ValuationResult:
+        exact_values = np.ones_like(self.data.x_train) / len(self.data.x_train)
+        result: ValuationResult[np.int_, int] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
-            values=np.ones_like(self.data.x_train) / len(self.data.x_train),
+            values=exact_values,
             variances=np.zeros_like(self.data.x_train),
             counts=np.zeros_like(self.data.x_train),
         )
-
-    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        return 1 if len(X) > len(self.data) // 2 else 0
+        return result
 
 
 class AsymmetricVotingGame(Game):
@@ -228,19 +244,23 @@ class AsymmetricVotingGame(Game):
             self.weight_table[r] = w
             exact_values[r] = v
 
+        self.exact_values = exact_values
         self.threshold = np.sum(self.weight_table) / 2
-
-        self._shapley_values: ValuationResult[np.int_, int] = ValuationResult(
-            algorithm="exact_shapley",
-            status=Status.Converged,
-            indices=self.data.indices,
-            values=exact_values,
-            variances=np.zeros_like(self.data.x_train),
-            counts=np.zeros_like(self.data.x_train),
-        )
 
     def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
         return 1 if np.sum(self.weight_table[X]) > self.threshold else 0
+
+    @lru_cache
+    def shapley_values(self) -> ValuationResult:
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_shapley",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=self.exact_values,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
 
 
 class ShoesGame(Game):
@@ -260,19 +280,23 @@ class ShoesGame(Game):
         self.m = n_players // 2
         super().__init__(n_players, score_range=(0, self.m), description=description)
 
-        self._shapley_values: ValuationResult[np.int_, int] = ValuationResult(
-            algorithm="exact_shapley",
-            status=Status.Converged,
-            indices=self.data.indices,
-            values=np.ones_like(self.data.x_train) * 0.5,
-            variances=np.zeros_like(self.data.x_train),
-            counts=np.zeros_like(self.data.x_train),
-        )
-
     def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
         left_shoes = np.sum(X < self.m).item()
         right_shoes = np.sum(X >= self.m).item()
         return min(left_shoes, right_shoes)
+
+    @lru_cache
+    def shapley_values(self) -> ValuationResult:
+        exact_values = np.ones_like(self.data.x_train) * 0.5
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_shapley",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=exact_values,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
 
 
 class AirportGame(Game):
@@ -320,18 +344,23 @@ class AirportGame(Game):
             score_table[r] = c
             exact_values[r] = v
 
+        self.exact_values = exact_values
         self.score_table = score_table
-        self._shapley_values: ValuationResult[np.int_, int] = ValuationResult(
-            algorithm="exact_shapley",
-            status=Status.Converged,
-            indices=self.data.indices,
-            values=exact_values,
-            variances=np.zeros_like(self.data.x_train),
-            counts=np.zeros_like(self.data.x_train),
-        )
 
     def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
         return max(self.score_table[X]) or 0.0
+
+    @lru_cache
+    def shapley_values(self) -> ValuationResult:
+        result: ValuationResult[np.int_, int] = ValuationResult(
+            algorithm="exact_shapley",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=self.exact_values,
+            variances=np.zeros_like(self.data.x_train),
+            counts=np.zeros_like(self.data.x_train),
+        )
+        return result
 
 
 class MinimumSpanningTreeGame(Game):
@@ -364,10 +393,17 @@ class MinimumSpanningTreeGame(Game):
                     graph[i, j] = np.inf
         assert np.all(graph == graph.T)
 
-        exact_values = 2 * np.ones_like(self.data.x_train)
-
         self.graph = graph
-        self._shapley_values: ValuationResult[np.int_, int] = ValuationResult(
+
+    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        partial_graph = sp.sparse.csr_array(self.graph[np.ix_(X, X)])
+        span_tree = sp.sparse.csgraph.minimum_spanning_tree(partial_graph)
+        return span_tree.sum() or 0
+
+    @lru_cache
+    def shapley_values(self) -> ValuationResult:
+        exact_values = 2 * np.ones_like(self.data.x_train)
+        result: ValuationResult[np.int_, int] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -375,8 +411,4 @@ class MinimumSpanningTreeGame(Game):
             variances=np.zeros_like(self.data.x_train),
             counts=np.zeros_like(self.data.x_train),
         )
-
-    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        partial_graph = sp.sparse.csr_array(self.graph[np.ix_(X, X)])
-        span_tree = sp.sparse.csgraph.minimum_spanning_tree(partial_graph)
-        return span_tree.sum() or 0
+        return result
