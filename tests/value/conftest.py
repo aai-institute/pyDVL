@@ -11,10 +11,33 @@ from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
+from pydvl.value.games import (
+    AsymmetricVotingGame,
+    Game,
+    MinerGame,
+    ShoesGame,
+    SymmetricVotingGame,
+)
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 from ..conftest import num_workers
 from . import polynomial
+
+
+@pytest.fixture(scope="module")
+def test_game(request) -> Game:
+    name, kwargs = request.param
+    if name == "miner":
+        game = MinerGame(n_players=kwargs["n_players"])
+    elif name == "shoes":
+        game = ShoesGame(left=kwargs["left"], right=kwargs["right"])
+    elif name == "symmetric-voting":
+        game = SymmetricVotingGame(n_players=kwargs["n_players"])
+    elif name == "asymmetric-voting":
+        game = AsymmetricVotingGame()
+    else:
+        raise ValueError(f"Unknown game '{name}'")
+    return game
 
 
 @pytest.fixture(scope="function")

@@ -15,55 +15,26 @@ from .. import check_total_value, check_values
 log = logging.getLogger(__name__)
 
 
-# noinspection PyTestParametrized
 @pytest.mark.parametrize(
-    "num_samples, fun, rtol, total_atol",
+    "test_game, rtol, total_atol",
     [
-        (12, combinatorial_exact_shapley, 0.01, 1e-5),
-        (6, permutation_exact_shapley, 0.01, 1e-5),
+        (("symmetric-voting", {"n_players": 4}), 0.1, 1e-5),
+        (("shoes", {"left": 1, "right": 1}), 0.1, 1e-5),
+        (("shoes", {"left": 2, "right": 1}), 0.1, 1e-5),
+        (("shoes", {"left": 1, "right": 2}), 0.1, 1e-5),
+        (("shoes", {"left": 2, "right": 4}), 0.1, 1e-5),
     ],
+    indirect=["test_game"],
 )
-def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_atol):
-    """Compares the combinatorial exact shapley and permutation exact shapley with
-    the analytic_shapley calculation for a dummy model.
-    """
-    u, exact_values = analytic_shapley
-    values_p = fun(u, progress=False)
-    check_total_value(u, values_p, atol=total_atol)
+@pytest.mark.parametrize(
+    "fun",
+    [combinatorial_exact_shapley, permutation_exact_shapley],
+)
+def test_games(fun, test_game, rtol, total_atol):
+    values_p = fun(test_game.u)
+    exact_values = test_game.shapley_values()
+    check_total_value(test_game.u, values_p, atol=total_atol)
     check_values(values_p, exact_values, rtol=rtol)
-
-
-@pytest.mark.parametrize(
-    "a, b, num_points, scorer",
-    [
-        (2, 0, 10, "r2"),
-        (2, 1, 10, "r2"),
-        (2, 1, 10, "neg_median_absolute_error"),
-        (2, 1, 10, "explained_variance"),
-    ],
-)
-def test_linear(
-    linear_dataset,
-    memcache_client_config,
-    scorer,
-    cache_backend,
-    rtol=0.01,
-    total_atol=1e-5,
-):
-    linear_utility = Utility(
-        LinearRegression(),
-        data=linear_dataset,
-        scorer=scorer,
-        cache_backend=cache_backend,
-    )
-
-    values_combinatorial = combinatorial_exact_shapley(linear_utility, progress=False)
-    check_total_value(linear_utility, values_combinatorial, atol=total_atol)
-
-    values_permutation = permutation_exact_shapley(linear_utility, progress=False)
-    check_total_value(linear_utility, values_permutation, atol=total_atol)
-
-    check_values(values_combinatorial, values_permutation, rtol=rtol)
 
 
 @pytest.mark.parametrize(
@@ -73,7 +44,6 @@ def test_linear(
 def test_grouped_linear(
     linear_dataset,
     num_groups,
-    memcache_client_config,
     scorer,
     cache_backend,
     rtol=0.01,
@@ -112,9 +82,7 @@ def test_grouped_linear(
         (2, 1, 20, "r2"),
     ],
 )
-def test_linear_with_outlier(
-    linear_dataset, memcache_client_config, scorer, cache_backend, total_atol=1e-5
-):
+def test_linear_with_outlier(linear_dataset, scorer, cache_backend, total_atol=1e-5):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
@@ -173,7 +141,6 @@ def test_polynomial(
 def test_polynomial_with_outlier(
     polynomial_dataset,
     polynomial_pipeline,
-    memcache_client_config,
     scorer,
     cache_backend,
     total_atol=1e-5,
