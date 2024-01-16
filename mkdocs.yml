@@ -215,6 +215,7 @@ nav:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
       - For outlier detection: examples/influence_wine.ipynb
+      - For sentiment analysis: examples/influence_sentiment_analysis.ipynb
   - Code:
     - Changelog: CHANGELOG.md
     - API: api/pydvl/

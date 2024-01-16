@@ -9,7 +9,9 @@
 - Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
   [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 - Implement new method: `EkfacInfluence`
-  [PR #451](https://github.com/aai-institute/pyDVL/issues/451)
+  [PR #476](https://github.com/aai-institute/pyDVL/pull/476)
+- New notebook to showcase ekfac for LLMs
+  [PR #483](https://github.com/aai-institute/pyDVL/pull/483)
 
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 

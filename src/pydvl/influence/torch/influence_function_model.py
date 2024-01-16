@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch import nn as nn
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from pydvl.utils.progress import log_duration
@@ -92,7 +92,7 @@ class TorchInfluenceFunctionModel(
         return flatten_dimensions(grads.values(), shape=shape)
 
     @log_duration
-    def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor):
+    def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         mixed_grads = create_per_sample_mixed_derivative_function(
             self.model, self.loss
         )(self.model_params, x, y)
@@ -192,7 +192,7 @@ class TorchInfluenceFunctionModel(
         x: torch.Tensor,
         y: torch.Tensor,
         mode: InfluenceMode = InfluenceMode.Up,
-    ):
+    ) -> torch.Tensor:
         if mode == InfluenceMode.Up:
             if x_test.shape[0] <= x.shape[0]:
                 factor = self.influence_factors(x_test, y_test)
@@ -895,6 +895,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             This provides a more accurate approximation of the Hessian, but it is
             computationally more expensive.
         hessian_regularization: Regularization of the hessian.
+        progress: If True, display progress bars.
     """
 
     ekfac_representation: EkfacRepresentation
@@ -904,12 +905,14 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         model: nn.Module,
         update_diagonal: bool = False,
         hessian_regularization: float = 0.0,
+        progress: bool = False,
     ):
 
         super().__init__(model, torch.nn.functional.cross_entropy)
         self.hessian_regularization = hessian_regularization
         self.update_diagonal = update_diagonal
         self.active_layers = self._parse_active_layers()
+        self.progress = progress
 
     @property
     def is_fitted(self):
@@ -975,7 +978,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             with_bias = module.bias is not None
 
             def input_hook(m, x, y):
-                x = x[0]
+                x = x[0].reshape(-1, module.in_features)
                 if with_bias:
                     x = torch.cat(
                         (x, torch.ones((x.shape[0], 1), device=module.weight.device)),
@@ -984,7 +987,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 forward_x[m_name] += torch.mm(x.t(), x)
 
             def grad_hook(m, m_grad, m_out):
-                m_out = m_out[0]
+                m_out = m_out[0].reshape(-1, module.out_features)
                 grad_y[m_name] += torch.mm(m_out.t(), m_out)
 
         else:
@@ -1013,7 +1016,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(layer_input_hook))
             hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
-        for x, _ in data:
+        for x, *_ in tqdm(
+            data, disable=not self.progress, desc="K-FAC blocks - batch progress"
+        ):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
@@ -1089,7 +1094,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             with_bias = module.bias is not None
 
             def input_hook(m, x, y):
-                x = x[0]
+                x = x[0].reshape(-1, module.in_features)
                 if with_bias:
                     x = torch.cat(
                         (x, torch.ones((x.shape[0], 1), device=module.weight.device)),
@@ -1098,7 +1103,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 last_x_kfe[m_name] = torch.mm(x, evecs_a[m_name])
 
             def grad_hook(m, m_grad, m_out):
-                m_out = m_out[0]
+                m_out = m_out[0].reshape(-1, module.out_features)
                 gy_kfe = torch.mm(m_out, evecs_g[m_name])
                 diags[m_name] += torch.mm(
                     gy_kfe.t() ** 2, last_x_kfe[m_name] ** 2
@@ -1134,7 +1139,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             hooks.append(module.register_forward_hook(input_hook))
             hooks.append(module.register_full_backward_hook(grad_hook))
 
-        for x, _ in data:
+        for x, *_ in tqdm(
+            data, disable=not self.progress, desc="Update Diagonal - batch progress"
+        ):
             data_len += x.shape[0]
             pred_y = self.model(x)
             loss = empirical_cross_entropy_loss_fn(pred_y)
@@ -1156,11 +1163,20 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
         return self
 
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        x = rhs.clone()
+    @staticmethod
+    def _solve_hvp_by_layer(
+        rhs: torch.Tensor,
+        ekfac_representation: EkfacRepresentation,
+        hessian_regularization: float,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Compute the Hessian Vector Product for each layer of the model, using the
+        provided ekfac representation and hessian regularization. It returns a
+        dictionary containing the Hessian Vector Product for each layer.
+        """
+        hvp_layers = {}
         start_idx = 0
-        for _, (_, evecs_a, evecs_g, diag) in self.ekfac_representation:
+        for layer_id, (_, evecs_a, evecs_g, diag) in ekfac_representation:
             end_idx = start_idx + diag.shape[0]
             rhs_layer = rhs[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
                 rhs.shape[0], evecs_g.shape[0], -1
@@ -1172,21 +1188,282 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 torch.einsum("ij,bjk->bik", evecs_g.t(), rhs_layer),
                 evecs_a,
             )
-            inv_diag = 1 / (
-                diag.reshape(*v_kfe.shape[1:]) + self.hessian_regularization
-            )
+            inv_diag = 1 / (diag.reshape(*v_kfe.shape[1:]) + hessian_regularization)
             inv_kfe = torch.einsum("bij,ij->bij", v_kfe, inv_diag)
             inv = torch.einsum(
                 "bij,jk->bik",
                 torch.einsum("ij,bjk->bik", evecs_g, inv_kfe),
                 evecs_a.t(),
             )
-            x[:, start_idx:end_idx] = torch.cat(
+            hvp_layers[layer_id] = torch.cat(
                 [inv[:, :, :-1].reshape(rhs.shape[0], -1), inv[:, :, -1]], dim=1
             )
             start_idx = end_idx
+        return hvp_layers
+
+    @log_duration
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        x = rhs.clone()
+        start_idx = 0
+        layer_hvp = self._solve_hvp_by_layer(
+            rhs, self.ekfac_representation, self.hessian_regularization
+        )
+        for hvp in layer_hvp.values():
+            end_idx = start_idx + hvp.shape[1]
+            x[:, start_idx:end_idx] = hvp
+            start_idx = end_idx
         x.detach_()
         return x
+
+    def influences_by_layer(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Compute the influence of the data on the test data for each layer of the model.
+
+        Args:
+            x_test: model input to use in the gradient computations of
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                    f_{\theta}(x_{\text{test}}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{\text{test}}$
+            y: optional label tensor to compute gradients
+            mode: enum value of [InfluenceType]
+                [pydvl.influence.base_influence_model.InfluenceType]
+
+        Returns:
+            A dictionary containing the influence of the data on the test data for each
+            layer of the model, with the layer name as key.
+        """
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
+
+        if x is None:
+
+            if y is not None:
+                raise ValueError(
+                    "Providing labels y, without providing model input x "
+                    "is not supported"
+                )
+
+            return self._symmetric_values_by_layer(
+                x_test.to(self.model_device),
+                y_test.to(self.model_device),
+                mode,
+            )
+
+        if y is None:
+            raise ValueError(
+                "Providing model input x without providing labels y is not supported"
+            )
+
+        return self._non_symmetric_values_by_layer(
+            x_test.to(self.model_device),
+            y_test.to(self.model_device),
+            x.to(self.model_device),
+            y.to(self.model_device),
+            mode,
+        )
+
+    def influence_factors_by_layer(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Computes the approximation of
+
+        \[H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x))\]
+
+        for each layer of the model separately.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            A dictionary containing the influence factors for each layer of the model,
+            with the layer name as key.
+        """
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
+
+        return self._solve_hvp_by_layer(
+            self._loss_grad(x.to(self.model_device), y.to(self.model_device)),
+            self.ekfac_representation,
+            self.hessian_regularization,
+        )
+
+    def influences_from_factors_by_layer(
+        self,
+        z_test_factors: Dict[str, torch.Tensor],
+        x: torch.Tensor,
+        y: torch.Tensor,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Computation of
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case for each layer of the model separately.
+        The gradients are meant to be per sample of the batch $(x, y)$.
+
+        Args:
+            z_test_factors: pre-computed tensor, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                    f_{\theta}(x_{\text{test}}))$
+             x: model input to use in the gradient computations
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
+             y: label tensor to compute gradients
+             mode: enum value of [InfluenceType]
+                [pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+            A dictionary containing the influence of the data on the test data for each
+            layer of the model, with the layer name as key.
+        """
+        if mode == InfluenceMode.Up:
+            total_grad = self._loss_grad(
+                x.to(self.model_device), y.to(self.model_device)
+            )
+            start_idx = 0
+            influences = {}
+            for layer_id, layer_z_test in z_test_factors.items():
+                end_idx = start_idx + layer_z_test.shape[1]
+                influences[layer_id] = layer_z_test @ total_grad[:, start_idx:end_idx].T
+                start_idx = end_idx
+            return influences
+        elif mode == InfluenceMode.Perturbation:
+            total_mixed_grad = self._flat_loss_mixed_grad(
+                x.to(self.model_device), y.to(self.model_device)
+            )
+            start_idx = 0
+            influences = {}
+            for layer_id, layer_z_test in z_test_factors.items():
+                end_idx = start_idx + layer_z_test.shape[1]
+                influences[layer_id] = torch.einsum(
+                    "ia,j...a->ij...",
+                    layer_z_test,
+                    total_mixed_grad[:, start_idx:end_idx],
+                )
+                start_idx = end_idx
+            return influences
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+
+    def _non_symmetric_values_by_layer(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Similar to _non_symmetric_values, but computes the influence for each layer
+        separately. Returns a dictionary containing the influence for each layer,
+        with the layer name as key.
+        """
+        if mode == InfluenceMode.Up:
+            if x_test.shape[0] <= x.shape[0]:
+                fac = self.influence_factors_by_layer(x_test, y_test)
+                values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+            else:
+                fac = self.influence_factors_by_layer(x, y)
+                values = self.influences_from_factors_by_layer(
+                    fac, x_test, y_test, mode=mode
+                )
+        elif mode == InfluenceMode.Perturbation:
+            fac = self.influence_factors_by_layer(x_test, y_test)
+            values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+        return values
+
+    def _symmetric_values_by_layer(
+        self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Similar to _symmetric_values, but computes the influence for each layer
+        separately. Returns a dictionary containing the influence for each layer,
+        with the layer name as key.
+        """
+        grad = self._loss_grad(x, y)
+        fac = self._solve_hvp_by_layer(
+            grad, self.ekfac_representation, self.hessian_regularization
+        )
+
+        if mode == InfluenceMode.Up:
+            values = {}
+            start_idx = 0
+            for layer_id, layer_fac in fac.items():
+                end_idx = start_idx + layer_fac.shape[1]
+                values[layer_id] = layer_fac @ grad[:, start_idx:end_idx].T
+                start_idx = end_idx
+        elif mode == InfluenceMode.Perturbation:
+            values = self.influences_from_factors_by_layer(fac, x, y, mode=mode)
+        else:
+            raise UnsupportedInfluenceModeException(mode)
+        return values
+
+    def explore_hessian_regularization(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        regularization_values: List[float],
+    ) -> Dict[float, Dict[str, torch.Tensor]]:
+        """
+        Efficiently computes the influence for input x and label y for each layer of the
+        model, for different values of the hessian regularization parameter. This is done
+        by computing the gradient of the loss function for the input x and label y only once
+        and then solving the Hessian Vector Product for each regularization value. This is
+        useful for finding the optimal regularization value and for exploring
+        how robust the influence values are to changes in the regularization value.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+            regularization_values: list of regularization values to use
+
+        Returns:
+            A dictionary containing with keys being the regularization values and values
+            being dictionaries containing the influences for each layer of the model,
+            with the layer name as key.
+        """
+        grad = self._loss_grad(x, y)
+        influences_by_reg_value = {}
+        for reg_value in regularization_values:
+            reg_factors = self._solve_hvp_by_layer(
+                grad, self.ekfac_representation, reg_value
+            )
+            values = {}
+            start_idx = 0
+            for layer_id, layer_fac in reg_factors.items():
+                end_idx = start_idx + layer_fac.shape[1]
+                values[layer_id] = layer_fac @ grad[:, start_idx:end_idx].T
+                start_idx = end_idx
+            influences_by_reg_value[reg_value] = values
+        return influences_by_reg_value
 
     def to(self, device: torch.device):
         if self.is_fitted:

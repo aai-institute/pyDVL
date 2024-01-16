@@ -255,6 +255,48 @@ class TrainingManager:
             return pkl.load(file)
 
 
+class ImdbDataset(torch.utils.data.Dataset):
+    """
+    A PyTorch Dataset that takes in an HuggingFace Dataset object and tokenizes it.
+    The objects returned by __getitem__ are PyTorch tensors, with x being a tuple of
+    (input_ids, attention_mask), ready to be fed into a model, and y being the label.
+    It also returns the original text, for printing and debugging purposes.
+    """
+
+    def __init__(self, dataset, tokenizer):
+        self.tokenizer = tokenizer
+        self.tokenized_ds = dataset.map(self.preprocess_function, batched=True)
+        self.encodings = self.tokenized_ds["input_ids"]
+        self.attn_mask = self.tokenized_ds["attention_mask"]
+        self.labels = self.tokenized_ds["label"]
+
+    def preprocess_function(self, examples):
+        return self.tokenizer(examples["text"], truncation=True, padding=True)
+
+    def __getitem__(self, idx):
+        x = torch.tensor([self.encodings[idx], self.attn_mask[idx]])
+        y = torch.tensor(self.labels[idx])
+        text = self.tokenized_ds[idx]["text"]
+        return x, y, text
+
+    def __len__(self):
+        return len(self.labels)
+
+
+class ModelLogitsWrapper(torch.nn.Module):
+    """
+    A wrapper around a PyTorch model that returns only the logits and not the loss or
+    the attention mask.
+    """
+
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, x):
+        return self.model(x[:, 0], x[:, 1]).logits
+
+
 def process_imgnet_io(
     df: pd.DataFrame, labels: dict
 ) -> Tuple[torch.Tensor, torch.Tensor]:
