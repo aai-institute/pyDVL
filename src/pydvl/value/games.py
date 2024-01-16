@@ -380,8 +380,9 @@ class ShoesGame(Game):
             ]
         )
         if self.left == self.right:
-            value_left = min(self.left, self.right) / 2
-            value_right = value_left
+            value_left = value_right = min(self.left, self.right) / (
+                self.left + self.right
+            )
         else:
             value_left = precomputed_values[self.left, self.right]
             value_right = precomputed_values[self.right, self.left]
