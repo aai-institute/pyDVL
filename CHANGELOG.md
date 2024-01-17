@@ -6,6 +6,8 @@
 
 - Implement new method: `EkfacInfluence`
   [PR #451](https://github.com/aai-institute/pyDVL/issues/451)
+- New notebook to showcase ekfac for LLMs
+  [PR #483](https://github.com/aai-institute/pyDVL/pull/483)
 - Implemented exact games in Castro et al. 2009 and 2017
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
