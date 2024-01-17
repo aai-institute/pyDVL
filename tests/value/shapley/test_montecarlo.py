@@ -32,8 +32,13 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "fun, rtol, atol, kwargs",
     [
-        (ShapleyMode.PermutationMontecarlo, 0.5, 1e-4, dict(done=MaxUpdates(60))),
-        (ShapleyMode.CombinatorialMontecarlo, 0.5, 1e-4, dict(done=MaxUpdates(2**6))),
+        (ShapleyMode.PermutationMontecarlo, 0.2, 1e-4, dict(done=MaxUpdates(500))),
+        (
+            ShapleyMode.CombinatorialMontecarlo,
+            0.2,
+            1e-4,
+            dict(done=MaxUpdates(2**10)),
+        ),
         (ShapleyMode.Owen, 0.2, 1e-4, dict(n_samples=5, max_q=200)),
         (ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=5, max_q=200)),
         # Because of the inaccuracy of GroupTesting, a high atol is required for the
