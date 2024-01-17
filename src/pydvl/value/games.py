@@ -91,10 +91,10 @@ class DummyModel(SupervisedModel):
     def __init__(self) -> None:
         pass
 
-    def fit(self, x: NDArray, y: NDArray):
+    def fit(self, x: NDArray, y: NDArray) -> None:
         pass
 
-    def predict(self, x: NDArray) -> NDArray:
+    def predict(self, x: NDArray) -> NDArray:  # type: ignore
         pass
 
     def score(self, x: NDArray, y: NDArray) -> float:
@@ -138,12 +138,12 @@ class Game(ABC):
 
     def shapley_values(self) -> ValuationResult:
         raise NotImplementedError(
-            f"shapley_values method was not implemented for class {__class__.__name__}"
+            f"shapley_values method was not implemented for class {self.__class__.__name__}"
         )
 
     def least_core_values(self) -> ValuationResult:
         raise NotImplementedError(
-            f"least_core_values method was not implemented for class {__class__.__name__}"
+            f"least_core_values method was not implemented for class {self.__class__.__name__}"
         )
 
     @abstractmethod
@@ -191,7 +191,7 @@ class SymmetricVotingGame(Game):
     @lru_cache
     def shapley_values(self) -> ValuationResult:
         exact_values = np.ones_like(self.data.x_train) / len(self.data.x_train)
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -228,7 +228,7 @@ class AsymmetricVotingGame(Game):
     def __init__(self, n_players: int = 51) -> None:
         if n_players != 51:
             raise ValueError(
-                f"{__class__.__name__} only supports n_players=51 but got {n_players=}."
+                f"{self.__class__.__name__} only supports n_players=51 but got {n_players=}."
             )
         description = "Dummy data for the asymmetric voting game in Castro et al. 2009"
         super().__init__(
@@ -316,7 +316,7 @@ class AsymmetricVotingGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -387,7 +387,7 @@ class ShoesGame(Game):
             value_left = precomputed_values[self.left, self.right]
             value_right = precomputed_values[self.right, self.left]
         exact_values = np.array([value_left] * self.left + [value_right] * self.right)
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -409,7 +409,7 @@ class ShoesGame(Game):
             subsidy = 0.0
             exact_values = np.array([0.0] * self.left + [1.0] * self.right)
 
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_least_core",
             status=Status.Converged,
             indices=self.data.indices,
@@ -438,7 +438,7 @@ class AirportGame(Game):
     def __init__(self, n_players: int = 100) -> None:
         if n_players != 100:
             raise ValueError(
-                f"{__class__.__name__} only supports n_players=100 but got {n_players=}."
+                f"{self.__class__.__name__} only supports n_players=100 but got {n_players=}."
             )
         description = "A dummy dataset for the airport game in Castro et al. 2009"
         super().__init__(n_players, score_range=(0, 100), description=description)
@@ -482,7 +482,7 @@ class AirportGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -523,7 +523,7 @@ class MinimumSpanningTreeGame(Game):
     def __init__(self, n_players: int = 100) -> None:
         if n_players != 100:
             raise ValueError(
-                f"{__class__.__name__} only supports n_players=100 but got {n_players=}."
+                f"{self.__class__.__name__} only supports n_players=100 but got {n_players=}."
             )
         description = (
             "A dummy dataset for the minimum spanning tree game in Castro et al. 2009"
@@ -557,7 +557,7 @@ class MinimumSpanningTreeGame(Game):
     @lru_cache
     def shapley_values(self) -> ValuationResult:
         exact_values = 2 * np.ones_like(self.data.x_train)
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -622,7 +622,7 @@ class MinerGame(Game):
             )
             subsidy = (self.n_players - 1) / (2 * self.n_players)
 
-        result: ValuationResult[np.int_, int] = ValuationResult(
+        result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_least_core",
             status=Status.Converged,
             indices=self.data.indices,
