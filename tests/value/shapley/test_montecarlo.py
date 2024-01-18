@@ -61,6 +61,20 @@ def test_games(
     kwargs: dict,
     seed,
 ):
+    """Tests values for all methods using a toy games.
+
+    For permutation, the rtol for each scorer is chosen
+    so that the number of samples selected is just above the (ε,δ) bound for ε =
+    rtol, δ=0.001 and the range corresponding to each score. This means that
+    roughly once every 1000/num_methods runs the test will fail.
+
+    FIXME:
+     - We don't have a bound for Owen.
+    NOTE:
+     - The variance in the combinatorial method is huge, so we need lots of
+       samples
+
+    """
     values = compute_shapley_values(
         test_game.u,
         mode=fun,
@@ -143,64 +157,6 @@ def test_hoeffding_bound_montecarlo(
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)
-
-
-# TODO: Delete this test now that we have `test_game` defined above?
-@pytest.mark.slow
-@pytest.mark.parametrize(
-    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 = 6 samples
-)
-@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.25)])
-@pytest.mark.parametrize(
-    "fun, kwargs",
-    [
-        # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(500))),
-        (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
-        (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
-        (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
-        pytest.param(
-            ShapleyMode.GroupTesting,
-            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
-            marks=pytest.mark.slow,
-        ),
-    ],
-)
-def test_linear_montecarlo_shapley(
-    linear_shapley,
-    n_jobs,
-    memcache_client_config,
-    scorer: Scorer,
-    rtol: float,
-    fun: ShapleyMode,
-    kwargs: dict,
-    seed: int,
-):
-    """Tests values for all methods using a linear dataset.
-
-    For permutation and truncated montecarlo, the rtol for each scorer is chosen
-    so that the number of samples selected is just above the (ε,δ) bound for ε =
-    rtol, δ=0.001 and the range corresponding to each score. This means that
-    roughly once every 1000/num_methods runs the test will fail.
-
-    FIXME:
-     - For permutation, we must increase the number of samples above that what
-       is done for truncated, this is probably due to the averaging done by the
-       latter to reduce variance
-     - We don't have a bound for Owen.
-    NOTE:
-     - The variance in the combinatorial method is huge, so we need lots of
-       samples
-
-    """
-    u, exact_values = linear_shapley
-
-    values = compute_shapley_values(
-        u, mode=fun, progress=False, n_jobs=n_jobs, seed=seed, **kwargs
-    )
-
-    check_values(values, exact_values, rtol=rtol)
-    check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
 
 
 @pytest.mark.slow
