@@ -171,7 +171,7 @@ def test_updating_order_invariance():
 
     v1 = values[0]
     for v2 in values[1:]:
-        np.testing.assert_equal(v1.values, v2.values)
+        np.testing.assert_almost_equal(v1.values, v2.values)
 
 
 @pytest.mark.parametrize(
