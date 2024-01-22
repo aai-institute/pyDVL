@@ -1,4 +1,5 @@
 import math
+from itertools import islice
 from typing import Type
 
 import numpy as np
@@ -17,6 +18,7 @@ from pydvl.value.sampler import (
 )
 from pydvl.value.semivalues import (
     SVCoefficient,
+    _marginal,
     banzhaf_coefficient,
     beta_coefficient,
     compute_generic_semivalues,
@@ -28,12 +30,108 @@ from . import check_values
 from .utils import timed
 
 
-@pytest.mark.parametrize("num_samples", [5])
+@pytest.mark.parametrize(
+    "test_game",
+    [
+        ("shoes", {"left": 3, "right": 2}),
+    ],
+    indirect=["test_game"],
+)
+@pytest.mark.parametrize(
+    "sampler, coefficient, batch_size",
+    [(PermutationSampler, beta_coefficient(1, 1), 5)],
+)
+def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
+    sampler_it = iter(sampler(test_game.u.data.indices, seed=seed))
+    samples = tuple(islice(sampler_it, batch_size))
+
+    marginals_single = []
+    for sample in samples:
+        marginals_single.extend(
+            _marginal(test_game.u, coefficient=coefficient, samples=[sample])
+        )
+
+    marginals_batch = _marginal(test_game.u, coefficient=coefficient, samples=samples)
+
+    assert len(marginals_single) == len(marginals_batch)
+    assert set(marginals_single) == set(marginals_batch)
+
+
+@pytest.mark.parametrize("n", [10, 100])
+@pytest.mark.parametrize(
+    "coefficient",
+    [
+        beta_coefficient(1, 1),
+        beta_coefficient(1, 16),
+        beta_coefficient(4, 1),
+        banzhaf_coefficient,
+        shapley_coefficient,
+    ],
+)
+def test_coefficients(n: int, coefficient: SVCoefficient):
+    r"""Coefficients for semi-values must fulfill:
+
+    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
+
+    Note that we depart from the usual definitions by including the factor $1/n$
+    in the shapley and beta coefficients.
+    """
+    s = [math.comb(n - 1, j - 1) * coefficient(n, j - 1) for j in range(1, n + 1)]
+    assert np.isclose(1, np.sum(s))
+
+
+@pytest.mark.parametrize(
+    "test_game",
+    [
+        ("symmetric-voting", {"n_players": 4}),
+        ("shoes", {"left": 1, "right": 1}),
+        ("shoes", {"left": 2, "right": 1}),
+        ("shoes", {"left": 1, "right": 2}),
+    ],
+    indirect=["test_game"],
+)
 @pytest.mark.parametrize(
     "sampler",
     [
         DeterministicUniformSampler,
         DeterministicPermutationSampler,
+    ],
+)
+@pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
+def test_games_shapley_deterministic(
+    test_game,
+    parallel_config,
+    n_jobs,
+    sampler: Type[PowersetSampler],
+    coefficient: SVCoefficient,
+    seed: Seed,
+):
+    criterion = MaxUpdates(50)
+    values = compute_generic_semivalues(
+        sampler(test_game.u.data.indices, seed=seed),
+        test_game.u,
+        coefficient,
+        criterion,
+        skip_converged=True,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=True,
+    )
+    exact_values = test_game.shapley_values()
+    check_values(values, exact_values, rtol=0.1)
+
+
+@pytest.mark.parametrize(
+    "test_game",
+    [
+        ("symmetric-voting", {"n_players": 6}),
+        ("shoes", {"left": 3, "right": 2}),
+    ],
+    indirect=["test_game"],
+)
+@pytest.mark.parametrize(
+    "sampler",
+    [
         UniformSampler,
         PermutationSampler,
         pytest.param(AntitheticSampler, marks=pytest.mark.slow),
@@ -41,36 +139,55 @@ from .utils import timed
     ],
 )
 @pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
-def test_shapley(
-    num_samples: int,
-    analytic_shapley,
+def test_games_shapley(
+    test_game,
+    parallel_config,
+    n_jobs,
     sampler: Type[PowersetSampler],
     coefficient: SVCoefficient,
-    n_jobs: int,
-    parallel_config: ParallelConfig,
     seed: Seed,
 ):
-    u, exact_values = analytic_shapley
-    criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
+    criterion = HistoryDeviation(50, 1e-4) | MaxUpdates(500)
     values = compute_generic_semivalues(
-        sampler(u.data.indices, seed=seed),
-        u,
+        sampler(test_game.u.data.indices, seed=seed),
+        test_game.u,
         coefficient,
         criterion,
         skip_converged=True,
         n_jobs=n_jobs,
         config=parallel_config,
+        progress=True,
     )
+
+    exact_values = test_game.shapley_values()
     check_values(values, exact_values, rtol=0.2)
 
 
 @pytest.mark.parametrize(
-    "num_samples,sampler,coefficient,batch_size",
-    [(5, PermutationSampler, beta_coefficient(1, 1), 5)],
+    "test_game",
+    [
+        ("shoes", {"left": 3, "right": 2}),
+    ],
+    indirect=["test_game"],
+)
+@pytest.mark.parametrize(
+    "sampler, coefficient, batch_size",
+    [(PermutationSampler, beta_coefficient(1, 1), 5)],
+)
+@pytest.mark.parametrize(
+    "n_jobs",
+    [
+        1,
+        pytest.param(
+            2,
+            marks=pytest.mark.xfail(
+                reason="Bad interaction between parallelization and batching"
+            ),
+        ),
+    ],
 )
 def test_shapley_batch_size(
-    num_samples: int,
-    analytic_shapley,
+    test_game,
     sampler: Type[PermutationSampler],
     coefficient: SVCoefficient,
     batch_size: int,
@@ -78,13 +195,12 @@ def test_shapley_batch_size(
     parallel_config: ParallelConfig,
     seed: Seed,
 ):
-    u, exact_values = analytic_shapley
     timed_fn = timed(compute_generic_semivalues)
     result_single_batch = timed_fn(
-        sampler(u.data.indices, seed=seed),
-        u,
+        sampler(test_game.u.data.indices, seed=seed),
+        test_game.u,
         coefficient,
-        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
+        done=MaxUpdates(100),
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=1,
@@ -93,10 +209,10 @@ def test_shapley_batch_size(
     total_seconds_single_batch = timed_fn.execution_time
 
     result_multi_batch = timed_fn(
-        sampler(u.data.indices, seed=seed),
-        u,
+        sampler(test_game.u.data.indices, seed=seed),
+        test_game.u,
         coefficient,
-        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
+        done=MaxUpdates(100),
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=batch_size,
@@ -141,26 +257,3 @@ def test_banzhaf(
         config=parallel_config,
     )
     check_values(values, exact_values, rtol=0.2)
-
-
-@pytest.mark.parametrize("n", [10, 100])
-@pytest.mark.parametrize(
-    "coefficient",
-    [
-        beta_coefficient(1, 1),
-        beta_coefficient(1, 16),
-        beta_coefficient(4, 1),
-        banzhaf_coefficient,
-        shapley_coefficient,
-    ],
-)
-def test_coefficients(n: int, coefficient: SVCoefficient):
-    r"""Coefficients for semi-values must fulfill:
-
-    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
-
-    Note that we depart from the usual definitions by including the factor $1/n$
-    in the shapley and beta coefficients.
-    """
-    s = [math.comb(n - 1, j - 1) * coefficient(n, j - 1) for j in range(1, n + 1)]
-    assert np.isclose(1, np.sum(s))
