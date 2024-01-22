@@ -42,6 +42,10 @@ from .utils import timed
     [(PermutationSampler, beta_coefficient(1, 1), 5)],
 )
 def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
+    # TODO: This test is probably not needed.
+    # Because I added it and then realized that it doesn't do much.
+    # The only difference between the two calls is that for the first one
+    # the loop is outside and the second one the loop is inside.
     sampler_it = iter(sampler(test_game.u.data.indices, seed=seed))
     samples = tuple(islice(sampler_it, batch_size))
 
