@@ -343,8 +343,12 @@ runs](#skipping-ci-runs)).
 3. We split the tests based on their duration into groups and run them in parallel.
   
    For that we use [pytest-split](https://jerry-git.github.io/pytest-split)
-   to first store the duration of all tests with `pytest --store-durations pytest --slow-tests`
+   to first store the duration of all tests with
+   `tox -e tests -- --store-durations --slow-tests`
    in a `.test_durations` file.
+   
+   Alternatively, we case use pytest directly
+   `pytest --store-durations --slow-tests`.
 
    > **Note** This does not have to be done each time a new test or test case
    > is added. For new tests and test cases pytes-split assumes
@@ -359,10 +363,13 @@ runs](#skipping-ci-runs)).
    Then we can have as many splits as we want:
 
    ```shell
-   pytest --splits 3 --group 1
-   pytest --splits 3 --group 2
-   pytest --splits 3 --group 3
+   tox -e tests -- --splits 3 --group 1
+   tox -e tests -- --splits 3 --group 2
+   tox -e tests -- --splits 3 --group 3
    ```
+   
+   Alternatively, we case use pytest directly
+   `pytest --splits 3 ---group 1`.
    
    Each one of these commands should be run in a separate shell/job
    to run the test groups in parallel and decrease the total runtime.
