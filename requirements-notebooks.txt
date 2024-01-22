@@ -1,5 +1,5 @@
 torch==2.0.1
 torchvision==0.15.2
 datasets==2.14.6
-pillow==10.0.1
+pillow==10.2.0
 transformers==4.35.0
