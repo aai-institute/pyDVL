@@ -273,14 +273,9 @@ def compute_generic_semivalues(
                     # Filter out samples for indices that have already converged
                     filtered_samples = samples
                     if skip_converged and np.count_nonzero(done.converged) > 0:
-                        # TODO: cloudpickle can't pickle this on python 3.8:
-                        # filtered_samples = filter(
-                        #     lambda t: not done.converged[t[0]], samples
-                        # )
+                        # TODO: cloudpickle can't pickle result of `filter` on python 3.8
                         filtered_samples = tuple(
-                            (idx, sample)
-                            for idx, sample in samples
-                            if not done.converged[idx]
+                            filter(lambda t: not done.converged[t[0]], samples)
                         )
 
                     if filtered_samples:
