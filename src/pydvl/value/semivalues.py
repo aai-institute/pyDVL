@@ -94,6 +94,7 @@ from enum import Enum
 from itertools import islice
 from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
 
+import numpy as np
 import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
@@ -271,7 +272,7 @@ def compute_generic_semivalues(
 
                     # Filter out samples for indices that have already converged
                     filtered_samples = samples
-                    if skip_converged and len(done.converged) > 0:
+                    if skip_converged and np.count_nonzero(done.converged) > 0:
                         # TODO: cloudpickle can't pickle this on python 3.8:
                         # filtered_samples = filter(
                         #     lambda t: not done.converged[t[0]], samples

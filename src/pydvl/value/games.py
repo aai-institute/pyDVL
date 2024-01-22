@@ -190,7 +190,7 @@ class SymmetricVotingGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        exact_values = np.ones_like(self.data.x_train) / len(self.data.x_train)
+        exact_values = np.ones(self.n_players) / self.n_players
         result: ValuationResult[np.int_, np.int_] = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
