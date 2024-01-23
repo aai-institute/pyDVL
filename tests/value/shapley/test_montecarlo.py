@@ -6,7 +6,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.parallel.config import ParallelConfig
-from pydvl.utils import Dataset, GroupedDataset, Status, Utility
+from pydvl.utils import GroupedDataset, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.utils.types import Seed
@@ -21,35 +21,38 @@ from ..utils import call_with_seeds
 log = logging.getLogger(__name__)
 
 
-# noinspection PyTestParametrized
 @pytest.mark.parametrize(
-    "num_samples, fun, rtol, atol, kwargs",
+    "test_game",
     [
-        (12, ShapleyMode.PermutationMontecarlo, 0.1, 1e-5, {"done": MaxUpdates(10)}),
-        # FIXME! it should be enough with 2**(len(data)-1) samples
+        ("symmetric-voting", {"n_players": 6}),
+        ("shoes", {"left": 3, "right": 4}),
+    ],
+    indirect=["test_game"],
+)
+@pytest.mark.parametrize(
+    "fun, rtol, atol, kwargs",
+    [
+        (ShapleyMode.PermutationMontecarlo, 0.2, 1e-4, dict(done=MaxUpdates(500))),
         (
-            8,
             ShapleyMode.CombinatorialMontecarlo,
             0.2,
             1e-4,
-            {"done": MaxUpdates(2**10)},
+            dict(done=MaxUpdates(2**10)),
         ),
-        (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
-        (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
+        (ShapleyMode.Owen, 0.2, 1e-4, dict(n_samples=5, max_q=200)),
+        (ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=5, max_q=200)),
+        # Because of the inaccuracy of GroupTesting, a high atol is required for the
+        # value 0, for which the rtol has no effect.
         (
-            3,
             ShapleyMode.GroupTesting,
             0.1,
-            # Because of the inaccuracy of GTS, a high atol is required for the
-            # value 0, for which the rtol has no effect.
             1e-2,
             dict(n_samples=int(4e4), epsilon=0.2, delta=0.01),
         ),
     ],
 )
-def test_analytic_montecarlo_shapley(
-    num_samples,
-    analytic_shapley,
+def test_games(
+    test_game,
     parallel_config,
     n_jobs,
     fun: ShapleyMode,
@@ -58,10 +61,22 @@ def test_analytic_montecarlo_shapley(
     kwargs: dict,
     seed,
 ):
-    u, exact_values = analytic_shapley
+    """Tests values for all methods using a toy games.
 
+    For permutation, the rtol for each scorer is chosen
+    so that the number of samples selected is just above the (ε,δ) bound for ε =
+    rtol, δ=0.001 and the range corresponding to each score. This means that
+    roughly once every 1000/num_methods runs the test will fail.
+
+    FIXME:
+     - We don't have a bound for Owen.
+    NOTE:
+     - The variance in the combinatorial method is huge, so we need lots of
+       samples
+
+    """
     values = compute_shapley_values(
-        u,
+        test_game.u,
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
@@ -70,29 +85,31 @@ def test_analytic_montecarlo_shapley(
         **kwargs
     )
 
+    exact_values = test_game.shapley_values()
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "num_samples, fun, kwargs",
+    "test_game",
+    [
+        ("symmetric-voting", {"n_players": 12}),
+    ],
+    indirect=["test_game"],
+)
+@pytest.mark.parametrize(
+    "fun, kwargs",
     [
         # TODO Add once issue #416 is closed.
-        # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
-        (
-            12,
-            ShapleyMode.CombinatorialMontecarlo,
-            {"done": MaxChecks(4)},
-        ),
-        (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
-        (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
-        (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
+        # (ShapleyMode.PermutationMontecarlo, dict(done=MaxChecks(1))),
+        (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxChecks(4))),
+        (ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
+        (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+        (ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
     ],
 )
-@pytest.mark.parametrize("num_points, num_features", [(12, 3)])
-def test_montecarlo_shapley_housing_dataset(
-    num_samples: int,
-    housing_dataset: Dataset,
+def test_seed(
+    test_game,
     parallel_config: ParallelConfig,
     n_jobs: int,
     fun: ShapleyMode,
@@ -102,11 +119,10 @@ def test_montecarlo_shapley_housing_dataset(
 ):
     values_1, values_2, values_3 = call_with_seeds(
         compute_shapley_values,
-        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
+        test_game.u,
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
-        progress=False,
         seeds=(seed, seed, seed_alt),
         **deepcopy(kwargs)
     )
@@ -141,62 +157,6 @@ def test_hoeffding_bound_montecarlo(
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)
-
-
-@pytest.mark.parametrize(
-    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 = 6 samples
-)
-@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.25)])
-@pytest.mark.parametrize(
-    "fun, kwargs",
-    [
-        # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(500))),
-        (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
-        (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
-        (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
-        pytest.param(
-            ShapleyMode.GroupTesting,
-            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
-            marks=pytest.mark.slow,
-        ),
-    ],
-)
-def test_linear_montecarlo_shapley(
-    linear_shapley,
-    n_jobs,
-    memcache_client_config,
-    scorer: Scorer,
-    rtol: float,
-    fun: ShapleyMode,
-    kwargs: dict,
-    seed: int,
-):
-    """Tests values for all methods using a linear dataset.
-
-    For permutation and truncated montecarlo, the rtol for each scorer is chosen
-    so that the number of samples selected is just above the (ε,δ) bound for ε =
-    rtol, δ=0.001 and the range corresponding to each score. This means that
-    roughly once every 1000/num_methods runs the test will fail.
-
-    FIXME:
-     - For permutation, we must increase the number of samples above that what
-       is done for truncated, this is probably due to the averaging done by the
-       latter to reduce variance
-     - We don't have a bound for Owen.
-    NOTE:
-     - The variance in the combinatorial method is huge, so we need lots of
-       samples
-
-    """
-    u, exact_values = linear_shapley
-
-    values = compute_shapley_values(
-        u, mode=fun, progress=False, n_jobs=n_jobs, seed=seed, **kwargs
-    )
-
-    check_values(values, exact_values, rtol=rtol)
-    check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
 
 
 @pytest.mark.slow

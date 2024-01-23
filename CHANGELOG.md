@@ -2,16 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+- Implement new method: `EkfacInfluence`
+  [PR #451](https://github.com/aai-institute/pyDVL/issues/451)
+- New notebook to showcase ekfac for LLMs
+  [PR #483](https://github.com/aai-institute/pyDVL/pull/483)
+- Implemented exact games in Castro et al. 2009 and 2017
+  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
+
 ### Fixed
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
   for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
 - Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
   [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
-- Implement new method: `EkfacInfluence`
-  [PR #476](https://github.com/aai-institute/pyDVL/pull/476)
-- New notebook to showcase ekfac for LLMs
-  [PR #483](https://github.com/aai-institute/pyDVL/pull/483)
+- Fixed bug with checking for converged values in semivalues
+  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 

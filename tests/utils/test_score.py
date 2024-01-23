@@ -1,5 +1,7 @@
 import numpy as np
+import sklearn
 from numpy.typing import NDArray
+from packaging import version
 
 from pydvl.utils.score import Scorer, compose_score, squashed_r2, squashed_variance
 
@@ -24,7 +26,13 @@ def test_scorer():
     """Tests the Scorer class."""
     scorer = Scorer("r2")
     assert str(scorer) == "r2"
-    assert repr(scorer) == "R2 (scorer=make_scorer(r2_score))"
+    if version.parse(sklearn.__version__) >= version.parse("1.4.0"):
+        assert (
+            repr(scorer)
+            == "R2 (scorer=make_scorer(r2_score, response_method='predict'))"
+        )
+    else:
+        assert repr(scorer) == "R2 (scorer=make_scorer(r2_score))"
 
     coef = np.array([1, 2])
     X = np.array([[1, 2], [3, 4]])
