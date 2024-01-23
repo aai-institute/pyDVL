@@ -27,7 +27,6 @@ def montecarlo_least_core(
     config: ParallelConfig = ParallelConfig(),
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
-    options: Optional[dict] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -68,20 +67,6 @@ def montecarlo_least_core(
     Returns:
         Object with the data values and the least core value.
     """
-    # TODO: remove this before releasing version 0.7.0
-    if options:
-        warnings.warn(
-            DeprecationWarning(
-                "Passing solver options as kwargs was deprecated in "
-                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
-                "instead."
-            )
-        )
-        if solver_options is None:
-            solver_options = options
-        else:
-            solver_options.update(options)
-
     problem = mclc_prepare_problem(
         u, n_iterations, n_jobs=n_jobs, config=config, progress=progress, seed=seed
     )
