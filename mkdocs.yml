@@ -6,6 +6,38 @@ repo_url: "https://github.com/aai-institute/pyDVL"
 copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 remote_branch: gh-pages
 
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - First steps: getting-started/first-steps.md
+  - Data Valuation:
+    - Introduction: value/index.md
+    - Notation: value/notation.md
+    - Shapley values: value/shapley.md
+    - Semi-values: value/semi-values.md
+    - The core: value/the-core.md
+    - Classwise Shapley: value/classwise-shapley.md
+    - Examples:
+      - Shapley values: examples/shapley_basic_spotify.ipynb
+      - KNN Shapley: examples/shapley_knn_flowers.ipynb
+      - Data utility learning: examples/shapley_utility_learning.ipynb
+      - Least Core: examples/least_core_basic.ipynb
+      - Data OOB: examples/data_oob.ipynb
+  - The Influence Function:
+    - Introduction: influence/index.md
+    - Influence Function Model: influence/influence_function_model.md
+    - Scaling Computation: influence/scaling_computation.md
+    - Examples:
+      - For CNNs: examples/influence_imagenet.ipynb
+      - For mislabeled data: examples/influence_synthetic.ipynb
+      - For outlier detection: examples/influence_wine.ipynb
+      - For sentiment analysis: examples/influence_sentiment_analysis.ipynb
+  - Code:
+    - API Reference: api/pydvl/
+    - Changelog: CHANGELOG.md
+    - Development Guidelines: CONTRIBUTING.md
+
 watch:
   - src/pydvl
   - notebooks
@@ -13,6 +45,7 @@ watch:
 hooks:
   - build_scripts/copy_notebooks.py
   - build_scripts/copy_changelog.py
+  - build_scripts/copy_contributing_guide.py
   - build_scripts/modify_binder_link.py
 
 plugins:
@@ -106,18 +139,26 @@ theme:
     - content.code.annotate
     - content.code.copy
     - navigation.footer
-#    - content.tooltips  # insiders only
+    - content.tooltips
 #    - navigation.indexes
     - navigation.instant
     - navigation.path
-#    - navigation.sections
+    - navigation.sections
 #    - navigation.tabs
     - navigation.top
     - navigation.tracking
     - search.suggest
     - search.highlight
     - toc.follow
-  palette: # Palette toggle for light mode
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: teal
@@ -130,11 +171,12 @@ theme:
       primary: teal
       toggle:
         icon: material/brightness-4
-        name: Switch to light mode
+        name: Switch to system preference
 
 extra_css:
   - css/extra.css
   - css/neoteroi.css
+  - css/grid-cards.css
 
 extra_javascript:
   - javascripts/mathjax.js
@@ -143,8 +185,8 @@ extra_javascript:
 
 extra:
   transferlab:
-    website: https://transferlab.appliedai.de
-    data_valuation_review: https://transferlab.appliedai.de/reviews/data-valuation
+    website: https://transferlab.ai/
+    data_valuation_review: https://transferlab.ai/reviews/data-valuation
   copyright_link: https://appliedai-institute.de
   version:
     provider: mike
@@ -174,8 +216,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       pygments_lang_class: true
@@ -188,34 +230,3 @@ markdown_extensions:
         - docs_includes/abbreviations.md
   - pymdownx.superfences
   - pymdownx.details
-
-nav:
-  - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - First steps: getting-started/first-steps.md
-  - Data Valuation:
-    - Introduction: value/index.md
-    - Notation: value/notation.md
-    - Shapley values: value/shapley.md
-    - Semi-values: value/semi-values.md
-    - The core: value/the-core.md
-    - Classwise Shapley: value/classwise-shapley.md
-    - Examples:
-      - Shapley values: examples/shapley_basic_spotify.ipynb
-      - KNN Shapley: examples/shapley_knn_flowers.ipynb
-      - Data utility learning: examples/shapley_utility_learning.ipynb
-      - Least Core: examples/least_core_basic.ipynb
-      - Data OOB: examples/data_oob.ipynb
-  - The Influence Function:
-    - Introduction: influence/index.md
-    - Influence Function Model: influence/influence_function_model.md
-    - Scaling Computation: influence/scaling_computation.md
-    - Examples:
-      - For CNNs: examples/influence_imagenet.ipynb
-      - For mislabeled data: examples/influence_synthetic.ipynb
-      - For outlier detection: examples/influence_wine.ipynb
-      - For sentiment analysis: examples/influence_sentiment_analysis.ipynb
-  - Code:
-    - Changelog: CHANGELOG.md
-    - API: api/pydvl/
