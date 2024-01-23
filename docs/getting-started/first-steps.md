@@ -1,11 +1,11 @@
 ---
-title: Getting Started
+title: First Steps
 alias: 
-  name: getting-started
-  text: Getting Started
+  name: first-steps
+  text: First Steps
 ---
 
-# Getting started
+# First Steps
 
 !!! Warning
     Make sure you have read [[installation]] before using the library. 
