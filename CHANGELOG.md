@@ -17,6 +17,8 @@
   for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
 - Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
   [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
+- Fixed bug with checking for converged values in semivalues
+  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 
