@@ -1,12 +1,18 @@
 ---
-title: Applications of valuation
+title: Applications of data valuation
 ---
 
-# Applications of valuation
+# Applications of data valuation
 
 Data valuation methods hold promise for improving various aspects
 of data engineering and machine learning workflows. When applied judiciously,
 these methods can enhance data quality, model performance, and cost-effectiveness.
+
+However, the results can be inconsistent. Values have a strong dependency
+on the training procedure and the performance metric used. For instance,
+accuracy is a poor metric for imbalanced sets and this has a stark effect
+on data values. Some models exhibit great variance in some regimes
+and this again has a detrimental effect on values.
 
 While still an evolving field with methods requiring careful use, data valuation can
 be applied across a wide range of data engineering tasks. For a comprehensive
@@ -69,16 +75,17 @@ for security applications.
 
 ## Data markets
 
-Data valuation techniques have potential applications in emerging data markets
-connecting data providers and consumers:
+Additionally, one of the motivating applications for the whole field is that of
+data markets: a marketplace where data owners can sell their data to interested
+parties. In this setting, data valuation can be key component to determine the
+price of data. Market pricing depends on the value addition for buyers
+(e.g. improved model performance) and costs/privacy concerns for sellers.
 
-- Market pricing depends on the value addition for buyers
-  (e.g. improved model performance) and costs/privacy concerns for sellers.
-- Game-theoretic valuation methods like Shapley values can help assign fair prices,
-  but have limitations around handling duplicates or adversarial data.
-- Approaches like LAVA[@just_lava_2023] and CRAIG are suited for markets where the buyer's model
-  is unknown, a common real-world constraint.
+Game-theoretic valuation methods like Shapley values can help assign fair prices,
+but have limitations around handling duplicates or adversarial data.
+Model-free methods like LAVA [@just_lava_2023] and CRAIG are
+particularly well suited for this, as they use the Wasserstein distance between
+a vendor's data and the buyer's to determine the value of the former. 
 
-Overall, valuation methods show promise for equitable pricing and curbing
-adversarial behavior in data markets. But more research is still needed
-on robust techniques suited for diverse real-world scenarios.
+However, this is a complex problem which can face practical banal problems like
+the fact that data owners may not wish to disclose their data for valuation.

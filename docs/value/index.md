@@ -83,33 +83,6 @@ among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.
 
 
-## Applications of data valuation
-
-Many applications are touted for data valuation, but the results can be
-inconsistent. Values have a strong dependency on the training procedure and the
-performance metric used. For instance, accuracy is a poor metric for imbalanced
-sets and this has a stark effect on data values. Some models exhibit great
-variance in some regimes and this again has a detrimental effect on values.
-
-Nevertheless, some of the most promising applications are:
-
-* Cleaning of corrupted data.
-* Pruning unnecessary or irrelevant data.
-* Repairing mislabeled data.
-* Guiding data acquisition and annotation (active learning).
-* Anomaly detection and model debugging and interpretation.
-
-Additionally, one of the motivating applications for the whole field is that of
-data markets: a marketplace where data owners can sell their data to interested
-parties. In this setting, data valuation can be key component to determine the
-price of data. Algorithm-agnostic methods like LAVA [@just_lava_2023] are
-particularly well suited for this, as they use the Wasserstein distance between
-a vendor's data and the buyer's to determine the value of the former. 
-
-However, this is a complex problem which can face practical banal problems like
-the fact that data owners may not wish to disclose their data for valuation.
-
-
 ## Computing data values
 
 Using pyDVL to compute data values is a simple process that can be broken down
