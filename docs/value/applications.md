@@ -44,7 +44,6 @@ Some of the useful applications include:
   of highly influential data can completely flip model conclusions.
   This reveals potential issues with the modeling approach, data collection process,
   or intrinsic difficulty of the problem that require further inspection.
-
   Robust models require many points removed before conclusions meaningfully shift.
   High sensitivity means conclusions heavily depend on small subsets of data,
   indicating deeper problems to resolve.
