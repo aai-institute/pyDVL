@@ -1,9 +1,11 @@
-/* Shadow */
+/* Shadow and Hover     */
 .grid.cards > ul > li {
     box-shadow: 0 2px 2px 0 rgb(0 0 0 / 14%), 0 3px 1px -2px rgb(0 0 0 / 20%), 0 1px 5px 0 rgb(0 0 0 / 12%);
 
     &:hover {
-        box-shadow: 0 2px 2px 0 rgb(0 0 0 / 24%), 0 3px 1px -2px rgb(0 0 0 / 30%), 0 1px 5px 0 rgb(0 0 0 / 22%);
+        transform: scale(1.05);
+        z-index: 999;
+        background-color: rgba(0, 0, 0, 0.05);
     }
 }
 
@@ -12,12 +14,9 @@
         box-shadow: 0 2px 2px 0 rgb(4 40 33 / 14%), 0 3px 1px -2px rgb(40 86 94 / 47%), 0 1px 5px 0 rgb(139 252 255 / 64%);
 
         &:hover {
-            box-shadow: 0 2px 2px 0 rgb(0 255 206 / 14%), 0 3px 1px -2px rgb(33 156 177 / 47%), 0 1px 5px 0 rgb(96 251 255 / 64%);
+            transform: scale(1.05);
+            z-index: 999;
+            background-color: rgba(139, 252, 255, 0.05);
         }
     }
-}
-
-/* Hover */
-.grid.cards > ul > li:hover p:first-child {
-    color: var(--md-accent-fg-color);
 }
