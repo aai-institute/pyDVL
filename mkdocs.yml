@@ -13,22 +13,24 @@ nav:
     - First steps: getting-started/first-steps.md
   - Data Valuation:
     - Introduction: value/index.md
+    - Applications: value/applications.md
     - Notation: value/notation.md
     - Shapley values: value/shapley.md
     - Semi-values: value/semi-values.md
-    - The core: value/the-core.md
+    - The Core: value/the-core.md
     - Classwise Shapley: value/classwise-shapley.md
-    - Examples:
-      - Shapley values: examples/shapley_basic_spotify.ipynb
-      - KNN Shapley: examples/shapley_knn_flowers.ipynb
-      - Data utility learning: examples/shapley_utility_learning.ipynb
-      - Least Core: examples/least_core_basic.ipynb
-      - Data OOB: examples/data_oob.ipynb
   - The Influence Function:
     - Introduction: influence/index.md
     - Influence Function Model: influence/influence_function_model.md
     - Scaling Computation: influence/scaling_computation.md
-    - Examples:
+  - Examples:
+    - Data Valuation:
+        - Shapley values: examples/shapley_basic_spotify.ipynb
+        - KNN Shapley: examples/shapley_knn_flowers.ipynb
+        - Data utility learning: examples/shapley_utility_learning.ipynb
+        - Least Core: examples/least_core_basic.ipynb
+        - Data OOB: examples/data_oob.ipynb
+    - Influence Function:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
       - For outlier detection: examples/influence_wine.ipynb
