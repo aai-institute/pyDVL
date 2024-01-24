@@ -59,8 +59,6 @@ def montecarlo_least_core(
             and to configure it. Refer to [cvxpy's
             documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)
             for all possible options.
-        options: (Deprecated) Dictionary of solver options. Use solver_options
-            instead.
         progress: If True, shows a tqdm progress bar
         seed: Either an instance of a numpy random number generator or a seed for it.
 

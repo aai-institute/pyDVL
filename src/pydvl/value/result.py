@@ -63,7 +63,6 @@ from typing import (
 )
 
 import numpy as np
-from deprecate import deprecated
 from numpy.typing import NDArray
 
 from pydvl.utils.dataset import Dataset
@@ -735,14 +734,6 @@ class ValuationResult(
         return cls(**options)  # type: ignore
 
     @classmethod
-    @deprecated(
-        target=True,
-        deprecated_in="0.6.0",
-        remove_in="0.8.0",
-        args_mapping=dict(indices=None, data_names=None, n_samples=None),
-        template_mgs="`%(source_name)s` is deprecated for generating zero-filled "
-        "results, use `ValuationResult.zeros()` instead.",
-    )
     def empty(
         cls,
         algorithm: str = "",
@@ -757,6 +748,10 @@ class ValuationResult(
 
         Args:
             algorithm: Name of the algorithm used to compute the values
+            indices: Optional sequence or array of indices.
+            data_names: Optional sequences or array of names for the data points.
+                Defaults to index numbers if not set.
+            n_samples: Number of valuation result entries.
 
         Returns:
             Object with the results.
