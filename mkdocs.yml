@@ -187,7 +187,6 @@ extra_javascript:
 extra:
   transferlab:
     website: https://transferlab.ai/
-    data_valuation_review: https://transferlab.ai/reviews/data-valuation
   copyright_link: https://appliedai-institute.de
   version:
     provider: mike

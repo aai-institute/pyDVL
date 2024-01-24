@@ -8,12 +8,10 @@ Data valuation methods hold promise for improving various aspects
 of data engineering and machine learning workflows. When applied judiciously,
 these methods can enhance data quality, model performance, and cost-effectiveness.
 
-While still an evolving field requiring careful use, data valuation has demonstrated
-utility across a range of data engineering tasks.
-
-For a more comprehensive overview of applications, along with concrete examples,
-please refer to the [Transferlab blog post]({{ transferlab.website }}blog/data-valuation-applications/)
-on this topic.
+While still an evolving field with methods requiring careful use, data valuation can
+be applied across a wide range of data engineering tasks. For a comprehensive
+overview, along with concrete examples, please refer to the [Transferlab blog
+post]({{ transferlab.website }}blog/data-valuation-applications/) on this topic.
 
 ## Data Engineering
 
@@ -52,6 +50,9 @@ Some of the useful applications include:
   indicating deeper problems to resolve.
 - Monitoring changes in data value during training provides insights into
   model convergence and overfitting.
+- Continual learning: in order to avoid forgetting when training on new data,
+  a subset of previously seen data is presented again. Data valuation helps
+  in the selection of highly influential samples.
 
 ## Attacks
 
