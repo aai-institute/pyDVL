@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.1 - 🆕 🏗  New method and noteboo, Games with exact shapley values, bug fixes and cleanup
 
 ### Added
 
