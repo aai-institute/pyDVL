@@ -11,7 +11,6 @@ import logging
 from typing import Optional, cast
 
 import numpy as np
-from deprecate import deprecated
 
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility, running_moments
@@ -24,7 +23,6 @@ __all__ = [
     "FixedTruncation",
     "BootstrapTruncation",
     "RelativeTruncation",
-    "truncated_montecarlo_shapley",
 ]
 
 
@@ -186,50 +184,3 @@ class BootstrapTruncation(TruncationPolicy):
     def reset(self, u: Optional[Utility] = None):
         self.count = 0
         self.variance = self.mean = 0
-
-
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.8.0",
-    args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
-)
-def truncated_montecarlo_shapley(
-    u: Utility,
-    *,
-    done: StoppingCriterion,
-    truncation: TruncationPolicy,
-    config: ParallelConfig = ParallelConfig(),
-    n_jobs: int = 1,
-    coordinator_update_period: int = 10,
-    worker_update_period: int = 5,
-) -> ValuationResult:
-    """
-    !!! Warning
-        This method is deprecated and only a wrapper for
-        [permutation_montecarlo_shapley][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
-
-    !!! Todo
-        Think of how to add Robin-Gelman or some other more principled stopping
-        criterion.
-
-    Args:
-        u: Utility object with model, data, and scoring function
-        done: Check on the results which decides when to stop sampling
-            permutations.
-        truncation: callable that decides whether to stop computing marginals
-            for a given permutation.
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
-        n_jobs: Number of permutation monte carlo jobs to run concurrently.
-    Returns:
-        Object with the data values.
-    """
-    from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley
-
-    return cast(
-        ValuationResult,
-        permutation_montecarlo_shapley(
-            u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
-        ),
-    )

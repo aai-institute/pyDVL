@@ -430,8 +430,3 @@ def test_empty(n):
     v2 = ValuationResult(values=np.arange(n))
     v += v2
     assert len(v2) == n
-
-
-def test_empty_deprecation():
-    with pytest.warns(DeprecationWarning):
-        v3 = ValuationResult.empty(indices=[1, 2, 3])

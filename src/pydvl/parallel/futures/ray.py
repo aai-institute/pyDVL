@@ -9,7 +9,6 @@ from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
 
 import ray
-from deprecate import deprecated
 
 from pydvl.parallel.config import ParallelConfig
 
@@ -44,12 +43,6 @@ class RayExecutor(Executor):
             any. See [CancellationPolicy][pydvl.parallel.backend.CancellationPolicy]
     """
 
-    @deprecated(
-        target=True,
-        deprecated_in="0.7.0",
-        remove_in="0.8.0",
-        args_mapping={"cancel_futures_on_exit": "cancel_futures"},
-    )
     def __init__(
         self,
         max_workers: Optional[int] = None,

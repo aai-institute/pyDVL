@@ -20,6 +20,12 @@
 - Fixed bug with checking for converged values in semivalues
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
+### Docs
+
+- Add applications of data valuation section, display examples more prominently,
+  make all sections visible in table of contents, use mkdocs material cards
+  in the home page [PR #492](https://github.com/aai-institute/pyDVL/pull/492)
+
 ## 0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
 
 ### Added

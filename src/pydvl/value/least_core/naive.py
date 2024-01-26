@@ -20,7 +20,6 @@ def exact_least_core(
     *,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
-    options: Optional[dict] = None,
     progress: bool = True,
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
@@ -46,14 +45,12 @@ def exact_least_core(
 
     Args:
         u: Utility object with model, data, and scoring function
-            non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         solver_options: Dictionary of options that will be used to select a solver
             and to configure it. Refer to the [cvxpy's
             documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)
             for all possible options.
-        options: (Deprecated) Dictionary of solver options. Use `solver_options`
-            instead.
         progress: If True, shows a tqdm progress bar
 
     Returns:
@@ -62,20 +59,6 @@ def exact_least_core(
     n = len(u.data)
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
-
-    # TODO: remove this before releasing version 0.7.0
-    if options:
-        warnings.warn(
-            DeprecationWarning(
-                "Passing solver options as kwargs was deprecated in "
-                "0.6.0, will "
-                "be removed in 0.7.0. `Use solver_options` instead."
-            )
-        )
-        if solver_options is None:
-            solver_options = options
-        else:
-            solver_options.update(options)
 
     problem = lc_prepare_problem(u, progress=progress)
     return lc_solve_problem(

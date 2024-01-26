@@ -47,6 +47,7 @@ def compute_least_core_values(
     mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
+    progress: bool = False,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Least Core values with any of the available
@@ -80,20 +81,6 @@ def compute_least_core_values(
 
     !!! tip "New in version 0.5.0"
     """
-    progress: bool = kwargs.pop("progress", False)
-
-    # TODO: remove this before releasing version 0.7.0
-    if kwargs:
-        warnings.warn(
-            DeprecationWarning(
-                "Passing solver options as kwargs was deprecated in 0.6.0, will "
-                "be removed in 0.7.0. `Use solver_options` instead."
-            )
-        )
-        if solver_options is None:
-            solver_options = kwargs
-        else:
-            solver_options.update(kwargs)
 
     if mode == LeastCoreMode.MonteCarlo:
         # TODO fix progress showing in remote case

@@ -125,7 +125,6 @@ from time import time
 from typing import Callable, Optional, Protocol, Type
 
 import numpy as np
-from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils import Status
@@ -135,7 +134,6 @@ __all__ = [
     "make_criterion",
     "AbsoluteStandardError",
     "StoppingCriterion",
-    "StandardError",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
@@ -242,16 +240,6 @@ class StoppingCriterion(abc.ABC):
             each data point.
         """
         return self._converged
-
-    @property
-    def name(self):
-        log = logging.getLogger(__name__)
-        # This string for the benefit of deprecation searches:
-        # remove_in="0.8.0"
-        log.warning(
-            "The `name` attribute of `StoppingCriterion` is deprecated and will be removed in 0.8.0. "
-        )
-        return getattr(self, "_name", type(self).__name__)
 
     def __str__(self):
         return type(self).__name__
@@ -387,12 +375,6 @@ class AbsoluteStandardError(StoppingCriterion):
 
     def __str__(self):
         return f"AbsoluteStandardError(threshold={self.threshold}, fraction={self.fraction}, burn_in={self.burn_in})"
-
-
-class StandardError(AbsoluteStandardError):
-    @deprecated(target=AbsoluteStandardError, deprecated_in="0.6.0", remove_in="0.8.0")
-    def __init__(self, *args, **kwargs):
-        void(*args, **kwargs)
 
 
 class MaxChecks(StoppingCriterion):
