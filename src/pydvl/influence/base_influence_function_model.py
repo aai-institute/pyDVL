@@ -36,6 +36,12 @@ class NotFittedException(ValueError):
         )
 
 
+class NotImplementedLayerRepresentationException(ValueError):
+    def __init__(self, module_id: str):
+        message = f"Only Linear layers are supported, but found module {module_id} requiring grad."
+        super().__init__(message)
+
+
 """Type variable for tensors, i.e. sequences of numbers"""
 TensorType = TypeVar("TensorType", bound=Collection)
 DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)

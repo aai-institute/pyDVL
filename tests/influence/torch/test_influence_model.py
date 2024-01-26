@@ -5,11 +5,15 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from pydvl.influence.base_influence_function_model import NotFittedException
+from pydvl.influence.base_influence_function_model import (
+    NotFittedException,
+    NotImplementedLayerRepresentationException,
+)
 from pydvl.influence.torch.influence_function_model import (
     ArnoldiInfluence,
     CgInfluence,
     DirectInfluence,
+    EkfacInfluence,
     LissaInfluence,
 )
 from tests.influence.torch.conftest import minimal_training
@@ -27,6 +31,10 @@ from tests.influence.conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,
     linear_model,
+)
+from tests.influence.torch.test_util import (
+    are_active_layers_linear,
+    check_influence_correlations,
 )
 
 # Mark the entire module
@@ -53,12 +61,27 @@ def create_conv1d_nn():
     return nn.Sequential(
         nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
         nn.Flatten(),
-        nn.Linear(6, 3),
+        nn.Linear(6, 2),
     )
 
 
 def create_simple_nn_regr():
     return nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+
+
+def create_conv1d_no_grad():
+    return nn.Sequential(
+        nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2).requires_grad_(False),
+        nn.Flatten(),
+        nn.Linear(6, 2),
+    )
+
+
+def create_simple_nn_no_grad():
+    return nn.Sequential(
+        nn.Linear(10, 10).requires_grad_(False),
+        nn.Linear(10, 5),
+    )
 
 
 class TestCase(NamedTuple):
@@ -114,7 +137,7 @@ class InfluenceTestCases:
         return TestCase(
             module_factory=create_conv1d_nn,
             input_dim=(5, 3),
-            output_dim=3,
+            output_dim=2,
             loss=nn.MSELoss(),
             mode=InfluenceMode.Up,
         )
@@ -123,7 +146,7 @@ class InfluenceTestCases:
         return TestCase(
             module_factory=create_conv1d_nn,
             input_dim=(5, 3),
-            output_dim=3,
+            output_dim=2,
             loss=nn.SmoothL1Loss(),
             mode=InfluenceMode.Perturbation,
         )
@@ -144,6 +167,26 @@ class InfluenceTestCases:
             output_dim=1,
             loss=nn.SmoothL1Loss(),
             mode=InfluenceMode.Perturbation,
+        )
+
+    def case_conv1d_no_grad_up(self) -> TestCase:
+        return TestCase(
+            module_factory=create_conv1d_no_grad,
+            input_dim=(5, 3),
+            output_dim=2,
+            loss=nn.CrossEntropyLoss(),
+            mode=InfluenceMode.Up,
+        )
+
+    def case_simple_nn_class_up(self) -> TestCase:
+        return TestCase(
+            module_factory=create_simple_nn_no_grad,
+            input_dim=(10,),
+            output_dim=5,
+            loss=nn.CrossEntropyLoss(),
+            mode=InfluenceMode.Up,
+            train_data_len=100,
+            test_data_len=30,
         )
 
 
@@ -169,9 +212,17 @@ def model_and_data(
     torch.Tensor,
 ]:
     x_train = torch.rand((test_case.train_data_len, *test_case.input_dim))
-    y_train = torch.rand((test_case.train_data_len, test_case.output_dim))
     x_test = torch.rand((test_case.test_data_len, *test_case.input_dim))
-    y_test = torch.rand((test_case.test_data_len, test_case.output_dim))
+    if isinstance(test_case.loss, nn.CrossEntropyLoss):
+        y_train = torch.randint(
+            0, test_case.output_dim, (test_case.train_data_len,), dtype=torch.long
+        )
+        y_test = torch.randint(
+            0, test_case.output_dim, (test_case.test_data_len,), dtype=torch.long
+        )
+    else:
+        y_train = torch.rand((test_case.train_data_len, test_case.output_dim))
+        y_test = torch.rand((test_case.test_data_len, test_case.output_dim))
 
     train_dataloader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
@@ -474,3 +525,69 @@ def test_influences_arnoldi(
         arnoldi_influence.influences(x_test, y_test, x=x_train, mode=test_case.mode)
     with pytest.raises(ValueError):
         arnoldi_influence.influences(x_test, y_test, y=y_train, mode=test_case.mode)
+
+
+def test_influences_ekfac(
+    test_case: TestCase,
+    model_and_data: Tuple[
+        torch.nn.Module,
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ],
+    direct_influences,
+    direct_sym_influences,
+):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+
+    ekfac_influence = EkfacInfluence(
+        model,
+        update_diagonal=True,
+        hessian_regularization=test_case.hessian_reg,
+    )
+
+    with pytest.raises(NotFittedException):
+        ekfac_influence.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+
+    with pytest.raises(NotFittedException):
+        ekfac_influence.influence_factors(x_test, y_test)
+
+    if not are_active_layers_linear:
+        with pytest.raises(NotImplementedLayerRepresentationException):
+            ekfac_influence.fit(train_dataloader)
+    elif isinstance(loss, nn.CrossEntropyLoss):
+        ekfac_influence = ekfac_influence.fit(train_dataloader)
+        ekfac_influence_values = ekfac_influence.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        ).numpy()
+
+        ekfac_influences_by_layer = ekfac_influence.influences_by_layer(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+
+        accumulated_inf_by_layer = np.zeros_like(ekfac_influence_values)
+        for layer, infl in ekfac_influences_by_layer.items():
+            accumulated_inf_by_layer += infl.detach().numpy()
+
+        ekfac_self_influence = ekfac_influence.influences(
+            x_train, y_train, mode=test_case.mode
+        ).numpy()
+
+        ekfac_factors = ekfac_influence.influence_factors(x_test, y_test)
+
+        influence_from_factors = ekfac_influence.influences_from_factors(
+            ekfac_factors, x_train, y_train, mode=test_case.mode
+        ).numpy()
+
+        assert np.allclose(ekfac_influence_values, influence_from_factors)
+        assert np.allclose(ekfac_influence_values, accumulated_inf_by_layer)
+        check_influence_correlations(direct_influences, ekfac_influence_values)
+        check_influence_correlations(direct_sym_influences, ekfac_self_influence)

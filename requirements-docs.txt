@@ -1,6 +1,6 @@
 mike
 markdown-captions
-mkdocs==1.5.2
+mkdocs==1.5.3
 mkdocstrings[python]>=0.18
 mkdocs-alias-plugin>=0.6.0
 mkdocs-autorefs
@@ -11,10 +11,9 @@ mkdocs-glightbox
 mknotebooks>=0.8.0
 pygments
 mkdocs-literate-nav
-mkdocs-material
+mkdocs-material>=9.5.0
 mkdocs-section-index
 mkdocs-macros-plugin
-neoteroi-mkdocs  # Needed for card grid on home page
 pypandoc; sys_platform == 'darwin'
 pypandoc_binary; sys_platform != 'darwin'
 GitPython

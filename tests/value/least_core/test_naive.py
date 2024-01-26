@@ -6,23 +6,23 @@ from tests.value import check_total_value, check_values
 
 
 @pytest.mark.parametrize(
-    "test_utility",
+    "test_game",
     [
-        ("miner", {"n_miners": 3}),
-        ("miner", {"n_miners": 4}),
-        ("gloves", {"left": 1, "right": 1}),
-        ("gloves", {"left": 2, "right": 1}),
-        ("gloves", {"left": 1, "right": 2}),
+        ("miner", {"n_players": 3}),
+        ("miner", {"n_players": 4}),
+        ("shoes", {"left": 1, "right": 1}),
+        ("shoes", {"left": 2, "right": 1}),
+        ("shoes", {"left": 1, "right": 2}),
     ],
     indirect=True,
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
-def test_naive_least_core(test_utility, non_negative_subsidy):
-    u, exact_values = test_utility
+def test_naive_least_core(test_game, non_negative_subsidy):
     values = exact_least_core(
-        u, non_negative_subsidy=non_negative_subsidy, progress=False
+        test_game.u, non_negative_subsidy=non_negative_subsidy, progress=False
     )
-    check_total_value(u, values)
+    check_total_value(test_game.u, values)
+    exact_values = test_game.least_core_values()
     if non_negative_subsidy:
         check_values(values, exact_values)
         # Sometimes the subsidy is negative but really close to zero

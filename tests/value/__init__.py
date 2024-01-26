@@ -19,7 +19,9 @@ def check_total_value(
     Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
     # We can use relative tolerances if we don't have the range of the scorer.
-    assert np.isclose(np.sum(values.values), total_utility, rtol=rtol, atol=atol)
+    np.testing.assert_allclose(
+        np.sum(values.values), total_utility, rtol=rtol, atol=atol
+    )
 
 
 def check_exact(
@@ -33,10 +35,14 @@ def check_exact(
     values.sort()
     exact_values.sort()
 
-    assert np.all(values.indices == exact_values.indices), "Ranks do not match"
-    assert np.allclose(
-        values.values, exact_values.values, rtol=rtol, atol=atol
-    ), "Values do not match"
+    np.testing.assert_equal(values.indices, exact_values.indices, "Ranks do not match")
+    np.testing.assert_allclose(
+        values.values,
+        exact_values.values,
+        rtol=rtol,
+        atol=atol,
+        err_msg="Values do not match",
+    )
 
 
 def check_values(
@@ -66,9 +72,9 @@ def check_values(
     values.sort()
     exact_values.sort()
 
-    assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
+    np.testing.assert_allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
     for name in extra_values_names:
-        assert np.isclose(
+        np.testing.assert_allclose(
             getattr(values, name), getattr(exact_values, name), rtol=rtol, atol=atol
         )
 

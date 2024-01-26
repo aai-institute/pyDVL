@@ -23,7 +23,7 @@ to make your life easier.
 
 Run the following to set up the pre-commit git hook to run before pushes:
 
-```shell script
+```shell
 pre-commit install --hook-type pre-push
 ```
 
@@ -32,7 +32,7 @@ pre-commit install --hook-type pre-push
 We strongly suggest using some form of virtual environment for working with the
 library. E.g. with venv:
 
-```shell script
+```shell
 python -m venv ./venv
 . venv/bin/activate  # `venv\Scripts\activate` in windows
 pip install -r requirements-dev.txt -r requirements-docs.txt
@@ -40,7 +40,7 @@ pip install -r requirements-dev.txt -r requirements-docs.txt
 
 With conda:
 
-```shell script
+```shell
 conda create -n pydvl python=3.8
 conda activate pydvl
 pip install -r requirements-dev.txt -r requirements-docs.txt
@@ -49,7 +49,7 @@ pip install -r requirements-dev.txt -r requirements-docs.txt
 A very convenient way of working with your library during development is to
 install it in editable mode into your environment by running
 
-```shell script
+```shell
 pip install -e .
 ```
 
@@ -58,7 +58,7 @@ suite) [pandoc](https://pandoc.org/) is required. Except for OSX, it should be i
 automatically as a dependency with `requirements-docs.txt`. Under OSX you can
 install pandoc (you'll need at least version 2.11) with:
 
-```shell script
+```shell
 brew install pandoc
 ```
 
@@ -152,11 +152,11 @@ Two important markers are:
 To test the notebooks separately, run (see [below](#notebooks) for details):
 
 ```shell
-tox -e tests -- notebooks/
+tox -e notebook-tests
 ```
 
 To create a package locally, run:
-```shell script
+```shell
 python setup.py sdist bdist_wheel
 ```
 
@@ -343,8 +343,12 @@ runs](#skipping-ci-runs)).
 3. We split the tests based on their duration into groups and run them in parallel.
   
    For that we use [pytest-split](https://jerry-git.github.io/pytest-split)
-   to first store the duration of all tests with `pytest --store-durations pytest --slow-tests`
+   to first store the duration of all tests with
+   `tox -e tests -- --store-durations --slow-tests`
    in a `.test_durations` file.
+   
+   Alternatively, we case use pytest directly
+   `pytest --store-durations --slow-tests`.
 
    > **Note** This does not have to be done each time a new test or test case
    > is added. For new tests and test cases pytes-split assumes
@@ -359,10 +363,13 @@ runs](#skipping-ci-runs)).
    Then we can have as many splits as we want:
 
    ```shell
-   pytest --splits 3 --group 1
-   pytest --splits 3 --group 2
-   pytest --splits 3 --group 3
+   tox -e tests -- --splits 3 --group 1
+   tox -e tests -- --splits 3 --group 2
+   tox -e tests -- --splits 3 --group 3
    ```
+   
+   Alternatively, we case use pytest directly
+   `pytest --splits 3 ---group 1`.
    
    Each one of these commands should be run in a separate shell/job
    to run the test groups in parallel and decrease the total runtime.
@@ -510,13 +517,13 @@ Then, a new release can be created using the script
 `bumpversion` automatically derive the next release version by bumping the patch
 part):
 
-```shell script
+```shell
 build_scripts/release-version.sh 0.1.6
 ```
 
 To find out how to use the script, pass the `-h` or `--help` flags:
 
-```shell script
+```shell
 build_scripts/release-version.sh --help
 ```
 
@@ -542,7 +549,7 @@ create a new release manually by following these steps:
 2. When ready to release: From the develop branch create the release branch and
    perform release activities (update changelog, news, ...). For your own
    convenience, define an env variable for the release version
-    ```shell script
+    ```shell
     export RELEASE_VERSION="vX.Y.Z"
     git checkout develop
     git branch release/${RELEASE_VERSION} && git checkout release/${RELEASE_VERSION}
@@ -553,7 +560,7 @@ create a new release manually by following these steps:
    (the `release` part is ignored but required by bumpversion :rolling_eyes:).
 4. Merge the release branch into `master`, tag the merge commit, and push back to the repo. 
    The CI pipeline publishes the package based on the tagged commit.
-    ```shell script
+    ```shell
     git checkout master
     git merge --no-ff release/${RELEASE_VERSION}
     git tag -a ${RELEASE_VERSION} -m"Release ${RELEASE_VERSION}"
@@ -564,7 +571,7 @@ create a new release manually by following these steps:
    always strictly more recent than the last published release version from 
    `master`.
 6. Merge the release branch into `develop`:
-    ```shell script
+    ```shell
     git checkout develop
     git merge --no-ff release/${RELEASE_VERSION}
     git push origin develop

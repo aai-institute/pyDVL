@@ -16,9 +16,9 @@ utility.
 
 Alternatively, employing another reformulation of the expression above as a sum
 over permutations, one has the implementation in
-[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley],
-or using an early stopping strategy to reduce computation
-[truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
+[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
+with the option to pass an early stopping strategy to reduce computation
+as done in Truncated MonteCarlo Shapley (TMCS).
 
 !!! info "Also see"
     It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
@@ -50,7 +50,6 @@ from functools import reduce
 from typing import Optional, Sequence, Union
 
 import numpy as np
-from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
@@ -125,14 +124,6 @@ def _permutation_montecarlo_one_step(
     return result
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.8.0",
-    args_mapping=dict(
-        coordinator_update_period=None, worker_update_period=None, progress=None
-    ),
-)
 def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,

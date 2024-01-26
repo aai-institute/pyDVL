@@ -34,7 +34,6 @@ def lc_solve_problem(
     algorithm: str,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
-    **options,
 ) -> ValuationResult:
     """Solves a linear problem as prepared by
     [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
@@ -54,20 +53,6 @@ def lc_solve_problem(
             f"values out of {problem.utility_values.size}",
             RuntimeWarning,
         )
-
-    # TODO: remove this before releasing version 0.7.0
-    if options:
-        warnings.warn(
-            DeprecationWarning(
-                "Passing solver options as kwargs was deprecated in "
-                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
-                "instead."
-            )
-        )
-        if solver_options is None:
-            solver_options = options
-        else:
-            solver_options.update(options)
 
     if solver_options is None:
         solver_options = {}
