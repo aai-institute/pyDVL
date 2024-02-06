@@ -692,7 +692,8 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         )
         for _ in tqdm(range(self.maxiter), disable=not self.progress, desc="Lissa"):
             x, y = next(iter(shuffled_training_data))
-            # grad_xy = model.grad(x, y, create_graph=True)
+            x = x.to(self.model_device)
+            y = y.to(self.model_device)
             reg_hvp = (
                 lambda v: b_hvp(model_params, x, y, v) + self.hessian_regularization * v
             )
