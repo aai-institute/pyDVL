@@ -265,8 +265,8 @@ def create_hvp_function(
             is the model's input and the second element is the target output.
         precompute_grad: If True, the full data gradient is precomputed and kept
             in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep an additional
-            parameter-sized vector in memory.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
         use_average: If True, the returned function uses batch-wise computation via
             [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function]
             and averages the results.
