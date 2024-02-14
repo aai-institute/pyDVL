@@ -14,6 +14,7 @@ from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.torch.functional import (
+    LowRankProductRepresentation,
     create_batch_loss_function,
     create_hvp_function,
     create_matrix_jacobian_product_function,
@@ -21,6 +22,7 @@ from pydvl.influence.torch.functional import (
     create_per_sample_mixed_derivative_function,
     hessian,
     hvp,
+    randomized_nystroem_approximation,
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
@@ -192,3 +194,47 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
         torch.as_tensor(test_derivative),
         flat_functorch_mixed_derivatives.transpose(2, 1),
     )
+
+
+@pytest.mark.torch
+def test_randomized_nystroem_approximation():
+    # Define a symmetric positive definite matrix A
+    A = torch.tensor([[3.0, 2.0], [2.0, 3.0]], dtype=torch.float32)
+
+    # Define the mat_vec function for matrix A
+    def mat_vec(v):
+        return A @ v
+
+    # Define a simple shift_func that adds a small constant to diagonal elements
+    def shift_func(v):
+        return torch.diag(torch.full((v.shape[0],), 0.1))
+
+    # Parameters
+    input_dim = 2
+    rank = 2
+    input_type = torch.float32
+    mat_vec_device = torch.device("cpu")
+
+    # Call the function under test
+    result = randomized_nystroem_approximation(
+        mat_vec=mat_vec,
+        input_dim=input_dim,
+        input_type=input_type,
+        rank=rank,
+        shift_func=shift_func,
+        mat_vec_device=mat_vec_device,
+    )
+
+    # Check if the result is an instance of LowRankProductRepresentation
+    assert isinstance(
+        result, LowRankProductRepresentation
+    ), "Result should be an instance of LowRankProductRepresentation"
+
+    # Reconstruct the approximation of A from the result
+    U, Sigma = result.projections, torch.diag(result.eigen_vals)
+    A_approx = U @ Sigma @ U.t()
+
+    # Verify that the approximation is close to the original A
+    assert torch.allclose(
+        A, A_approx, atol=1e-2
+    ), "The approximation should be close to the original matrix within a tolerance"

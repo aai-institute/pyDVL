@@ -828,3 +828,45 @@ def model_hessian_low_rank(
         device=device,
         eigen_computation_on_gpu=eigen_computation_on_gpu,
     )
+
+
+def randomized_nystroem_approximation(
+    mat_vec: Callable[[torch.Tensor], torch.Tensor],
+    input_dim: int,
+    input_type: torch.dtype,
+    rank: int,
+    shift_func: Callable[[torch.Tensor], torch.Tensor],
+    mat_vec_device: torch.device = torch.device("cpu"),
+) -> LowRankProductRepresentation:
+    r"""
+    Given a matrix vector product function (representing a symmetric positive definite
+    matrix \(A\) ), computes a random Nyström low rank approximation of
+    \(A\) in factored form, i.e.
+
+    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\Cross}(A \Omega)^T
+    = U \Sigma U^T\]
+
+    :param mat_vec: A callable representing the matrix vector product
+    :param input_dim: dimension of the input for the matrix vector product
+    :param input_type:
+    :param rank: rank of the approximation
+    :param shift_func:
+    :param mat_vec_device: device where the matrix vector product has to be executed
+    :return: object containing, \(U\) and \(\Sigma\)
+    """
+    random_sample_matrix = torch.randn(
+        input_dim, rank, device=mat_vec_device, dtype=input_type
+    )
+    random_sample_matrix, _ = torch.linalg.qr(random_sample_matrix)
+    sampled_mat_vec = torch.func.vmap(mat_vec)(random_sample_matrix)
+    shift = shift_func(sampled_mat_vec)
+    sampled_mat_vec += shift * random_sample_matrix
+    triangular_mat = torch.linalg.cholesky(random_sample_matrix.t() @ sampled_mat_vec)
+    svd_input = torch.linalg.solve_triangular(
+        triangular_mat, sampled_mat_vec, upper=False, left=False
+    )
+    left_singular_vecs, singular_vals, _ = torch.linalg.svd(svd_input)
+    singular_vals = torch.max(
+        torch.zeros_like(singular_vals), singular_vals**2 - shift
+    )
+    return LowRankProductRepresentation(singular_vals, left_singular_vecs)
