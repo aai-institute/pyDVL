@@ -835,7 +835,7 @@ def randomized_nystroem_approximation(
     input_dim: int,
     input_type: torch.dtype,
     rank: int,
-    shift_func: Callable[[torch.Tensor], torch.Tensor],
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
     mat_vec_device: torch.device = torch.device("cpu"),
 ) -> LowRankProductRepresentation:
     r"""
@@ -854,19 +854,35 @@ def randomized_nystroem_approximation(
     :param mat_vec_device: device where the matrix vector product has to be executed
     :return: object containing, \(U\) and \(\Sigma\)
     """
+
+    if shift_func is None:
+
+        def shift_func(x: torch.Tensor):
+            return (
+                torch.sqrt(torch.as_tensor(input_dim))
+                * torch.finfo(x.dtype).eps
+                * torch.linalg.norm(x)
+            )
+
     random_sample_matrix = torch.randn(
         input_dim, rank, device=mat_vec_device, dtype=input_type
     )
     random_sample_matrix, _ = torch.linalg.qr(random_sample_matrix)
-    sampled_mat_vec = torch.func.vmap(mat_vec)(random_sample_matrix)
-    shift = shift_func(sampled_mat_vec)
-    sampled_mat_vec += shift * random_sample_matrix
-    triangular_mat = torch.linalg.cholesky(random_sample_matrix.t() @ sampled_mat_vec)
-    svd_input = torch.linalg.solve_triangular(
-        triangular_mat, sampled_mat_vec, upper=False, left=False
+    sketch_mat = torch.func.vmap(mat_vec, in_dims=1)(random_sample_matrix).t()
+    shift = shift_func(sketch_mat)
+    sketch_mat += shift * random_sample_matrix
+
+    triangular_mat = torch.linalg.cholesky(
+        torch.matmul(random_sample_matrix.t(), sketch_mat)
     )
-    left_singular_vecs, singular_vals, _ = torch.linalg.svd(svd_input)
+
+    svd_input = torch.linalg.solve_triangular(
+        triangular_mat, sketch_mat, upper=False, left=False
+    )
+    left_singular_vecs, singular_vals, _ = torch.linalg.svd(
+        svd_input, full_matrices=False
+    )
     singular_vals = torch.max(
-        torch.zeros_like(singular_vals), singular_vals**2 - shift
+        torch.zeros_like(singular_vals), torch.square(singular_vals) - shift
     )
     return LowRankProductRepresentation(singular_vals, left_singular_vecs)

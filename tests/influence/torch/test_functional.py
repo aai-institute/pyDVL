@@ -199,19 +199,22 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
 @pytest.mark.torch
 def test_randomized_nystroem_approximation():
     # Define a symmetric positive definite matrix A
-    A = torch.tensor([[3.0, 2.0], [2.0, 3.0]], dtype=torch.float32)
+    v = torch.tensor([2.0, 3.0], dtype=torch.float32)
+
+    # Construct the low-rank matrix A as vv^T
+    A = v.unsqueeze(-1) @ v.unsqueeze(0)
 
     # Define the mat_vec function for matrix A
-    def mat_vec(v):
-        return A @ v
+    def mat_vec(x):
+        return A @ x
 
     # Define a simple shift_func that adds a small constant to diagonal elements
-    def shift_func(v):
-        return torch.diag(torch.full((v.shape[0],), 0.1))
+    def shift_func(x):
+        return torch.finfo(x.dtype).eps * torch.linalg.norm(x, ord="fro")
 
     # Parameters
     input_dim = 2
-    rank = 2
+    rank = 1
     input_type = torch.float32
     mat_vec_device = torch.device("cpu")
 
@@ -233,7 +236,6 @@ def test_randomized_nystroem_approximation():
     # Reconstruct the approximation of A from the result
     U, Sigma = result.projections, torch.diag(result.eigen_vals)
     A_approx = U @ Sigma @ U.t()
-
     # Verify that the approximation is close to the original A
     assert torch.allclose(
         A, A_approx, atol=1e-2
