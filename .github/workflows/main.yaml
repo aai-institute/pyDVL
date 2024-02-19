@@ -24,12 +24,12 @@ jobs:
     name: Lint code and check type hints
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup Python 3.8
       uses: ./.github/actions/python
       with:
         python_version: 3.8
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -43,17 +43,18 @@ jobs:
       run: |
         MYPY_VERSION=$(mypy --version | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
         echo "key=mypy-$MYPY_VERSION-${{ env.pythonLocation }}" >> $GITHUB_OUTPUT
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: .mypy_cache
         key: ${{ steps.generate-mypy-cache-key.outputs.key }}
     - name: Check Type Hints
       run: mypy src/
+
   docs:
     name: Build Docs
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup Python 3.8
@@ -66,6 +67,7 @@ jobs:
         pandoc-version: ${{ env.PANDOC_VERSION }}
     - name: Build Docs
       run: mkdocs build
+
   group-tests:
     strategy:
       fail-fast: false
@@ -79,6 +81,7 @@ jobs:
       group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
+
   notebook-tests:
     strategy:
       matrix:
@@ -88,6 +91,7 @@ jobs:
     with:
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
+
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
@@ -96,7 +100,7 @@ jobs:
     concurrency:
       group: publish
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python 3.8
         uses: ./.github/actions/python
         with:
