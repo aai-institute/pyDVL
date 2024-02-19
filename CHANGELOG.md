@@ -5,6 +5,7 @@
 ### Fixed
 
 - Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
+- Memory issue with `CgInfluence` and `ArnoldiInfluence`[PR #498](https://github.com/aai-institute/pyDVL/pull/498)
 
 ### Miscellaneous
 

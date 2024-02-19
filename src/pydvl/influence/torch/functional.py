@@ -265,8 +265,8 @@ def create_hvp_function(
             is the model's input and the second element is the target output.
         precompute_grad: If True, the full data gradient is precomputed and kept
             in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep an additional
-            parameter-sized vector in memory.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
         use_average: If True, the returned function uses batch-wise computation via
             [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function]
             and averages the results.
@@ -772,6 +772,7 @@ def model_hessian_low_rank(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
+    precompute_grad: bool = False,
 ) -> LowRankProductRepresentation:
     r"""
     Calculates a low-rank approximation of the Hessian matrix of the model's
@@ -807,6 +808,10 @@ def model_hessian_low_rank(
             small rank_estimate to fit your device's memory.
             If False, the eigen pair approximation is executed on the CPU by
             scipy wrapper to ARPACK.
+        precompute_grad: If True, the full data gradient is precomputed and kept
+            in memory, which can speed up the hessian vector product computation.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
 
     Returns:
         [LowRankProductRepresentation]
@@ -814,7 +819,9 @@ def model_hessian_low_rank(
             instance that contains the top (up until rank_estimate) eigenvalues
             and corresponding eigenvectors of the Hessian.
     """
-    raw_hvp = create_hvp_function(model, loss, training_data, use_average=True)
+    raw_hvp = create_hvp_function(
+        model, loss, training_data, use_average=True, precompute_grad=precompute_grad
+    )
     n_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
     device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(
