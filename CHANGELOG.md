@@ -7,7 +7,11 @@
 - Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
 - Memory issue with `CgInfluence` and `ArnoldiInfluence`[PR #498](https://github.com/aai-institute/pyDVL/pull/498)
 
-## 0.8.1 - 🆕 🏗  New method and noteboo, Games with exact shapley values, bug fixes and cleanup
+### Miscellaneous
+
+- Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
+
+## 0.8.1 - 🆕 🏗  New method and notebook, Games with exact shapley values, bug fixes and cleanup
 
 ### Added
 

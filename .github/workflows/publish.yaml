@@ -28,9 +28,9 @@ jobs:
     steps:
       - name: Checking out last commit in release
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checking out last commit for tag ${{ inputs.tag_name }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           ref: ${{ inputs.tag_name }}

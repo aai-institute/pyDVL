@@ -23,7 +23,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup Python ${{ inputs.python_version }}
@@ -31,7 +31,7 @@ jobs:
       with:
         python_version: ${{ inputs.python_version }}
     - name: Cache Tox Directory for Tests
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         key: tox-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox
@@ -40,7 +40,7 @@ jobs:
     - name: Test Group ${{ inputs.group_number }}
       run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
