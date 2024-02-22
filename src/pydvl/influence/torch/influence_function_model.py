@@ -441,6 +441,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
         atol: Absolute tolerance of result.
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
         progress: If True, display progress bars.
+        precompute_grad: If True, the full data gradient is precomputed and kept
+            in memory, which can speed up the hessian vector product computation.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
 
     """
 
@@ -454,8 +458,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
         atol: float = 1e-7,
         maxiter: Optional[int] = None,
         progress: bool = False,
+        precompute_grad: bool = False,
     ):
         super().__init__(model, loss)
+        self.precompute_grad = precompute_grad
         self.progress = progress
         self.maxiter = maxiter
         self.atol = atol
@@ -527,7 +533,12 @@ class CgInfluence(TorchInfluenceFunctionModel):
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 
-        hvp = create_hvp_function(self.model, self.loss, self.train_dataloader)
+        hvp = create_hvp_function(
+            self.model,
+            self.loss,
+            self.train_dataloader,
+            precompute_grad=self.precompute_grad,
+        )
 
         def reg_hvp(v: torch.Tensor):
             return hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
@@ -751,6 +762,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             is appropriate for device memory.
             If False, the eigen pair approximation is executed on the CPU by the scipy
             wrapper to ARPACK.
+        precompute_grad: If True, the full data gradient is precomputed and kept
+            in memory, which can speed up the hessian vector product computation.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
     """
     low_rank_representation: LowRankProductRepresentation
 
@@ -764,6 +779,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         tol: float = 1e-6,
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
+        precompute_grad: bool = False,
     ):
 
         super().__init__(model, loss)
@@ -773,6 +789,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         self.max_iter = max_iter
         self.krylov_dimension = krylov_dimension
         self.eigen_computation_on_gpu = eigen_computation_on_gpu
+        self.precompute_grad = precompute_grad
 
     @property
     def is_fitted(self):
@@ -806,6 +823,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             tol=self.tol,
             max_iter=self.max_iter,
             eigen_computation_on_gpu=self.eigen_computation_on_gpu,
+            precompute_grad=self.precompute_grad,
         )
         self.low_rank_representation = low_rank_representation.to(self.model_device)
         return self

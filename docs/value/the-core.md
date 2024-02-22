@@ -5,40 +5,35 @@ title: The Least Core for Data Valuation
 # Core values
 
 The Shapley values define a fair way to distribute payoffs amongst all
-participants when they form a grand coalition. But they do not consider
-the question of stability: under which conditions do all participants
-form the grand coalition? Would the participants be willing to form
-the grand coalition given how the payoffs are assigned,
-or would some of them prefer to form smaller coalitions?
+participants (training points) when they form a grand coalition (the model is
+trained on the whole dataset). But they do not consider the question of
+stability: under which conditions do all participants form the grand coalition?
+Are the payoffs distributed in such a way that prioritizes its formation?
 
-The Core is another approach to computing data values originating
-in cooperative game theory that attempts to ensure this stability.
-It is the set of feasible payoffs that cannot be improved upon
-by a coalition of the participants.
+The Core is another approach to computing data values originating in cooperative
+game theory that attempts to ensure stability in the sense that it provides the
+set of feasible payoffs that cannot be improved upon by a subcoalition. This can
+be interesting for some applications of data valuation because it yields values
+consistent with training on the whole dataset, avoiding the spurious selection
+of subsets.
 
 It satisfies the following 2 properties:
 
 - **Efficiency**:
-  The payoffs are distributed such that it is not possible
-  to make any participant better off
-  without making another one worse off.
-  $$\sum_{i\in D} v(i) = u(D)\,$$
+  The payoffs are distributed such that it is not possible to make any
+  participant better off without making another one worse off.
+  $\sum_{i \in D} v(i) = u(D).$
 
 - **Coalitional rationality**:
-  The sum of payoffs to the agents in any coalition S is at
-  least as large as the amount that these agents could earn by
-  forming a coalition on their own.
-  $$\sum_{i \in S} v(i) \geq u(S), \forall S \subset D\,$$
-
-The second property states that the sum of payoffs to the agents
-in any subcoalition $S$ is at least as large as the amount that
-these agents could earn by forming a coalition on their own.
+  The sum of payoffs to the agents in any coalition $S$ is at least as large as
+  the amount that these agents could earn by forming a coalition on their own.
+  $\sum_{i \in S} v(i) \geq u(S), \forall S \subset D.$
 
 ## Least Core values
 
-Unfortunately, for many cooperative games the Core may be empty.
-By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
-we are then able to find approximate payoffs:
+Unfortunately, for many cooperative games the Core may be empty. By relaxing the
+coalitional rationality property by a subsidy $e \gt 0$, we are then able to
+find approximate payoffs:
 
 $$
 \sum_{i\in S} v(i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
