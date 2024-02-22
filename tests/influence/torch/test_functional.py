@@ -196,37 +196,26 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
     )
 
 
+@pytest.mark.parametrize("dim,rank", [(2, 1), (10, 5), (20, 20)])
 @pytest.mark.torch
-def test_randomized_nystroem_approximation():
+def test_randomized_nystroem_approximation(dim: int, rank: int):
     # Define a symmetric positive definite matrix A
-    v = torch.tensor([2.0, 3.0], dtype=torch.float32)
+    v = torch.randn(dim, rank, dtype=torch.float32)
+    # v = torch.tensor([2.0, 3.0], dtype=torch.float32)
 
     # Construct the low-rank matrix A as vv^T
-    A = v.unsqueeze(-1) @ v.unsqueeze(0)
+    A = torch.matmul(v, v.t())
 
     # Define the mat_vec function for matrix A
     def mat_vec(x):
         return A @ x
 
-    # Define a simple shift_func that adds a small constant to diagonal elements
-    def shift_func(x):
-        return torch.finfo(x.dtype).eps * torch.linalg.norm(x, ord="fro")
-
     # Parameters
-    input_dim = 2
-    rank = 1
     input_type = torch.float32
     mat_vec_device = torch.device("cpu")
 
     # Call the function under test
-    result = randomized_nystroem_approximation(
-        mat_vec=mat_vec,
-        input_dim=input_dim,
-        input_type=input_type,
-        rank=rank,
-        shift_func=shift_func,
-        mat_vec_device=mat_vec_device,
-    )
+    result = randomized_nystroem_approximation(mat_vec, dim, rank, input_type)
 
     # Check if the result is an instance of LowRankProductRepresentation
     assert isinstance(
@@ -234,8 +223,8 @@ def test_randomized_nystroem_approximation():
     ), "Result should be an instance of LowRankProductRepresentation"
 
     # Reconstruct the approximation of A from the result
-    U, Sigma = result.projections, torch.diag(result.eigen_vals)
-    A_approx = U @ Sigma @ U.t()
+    U, Sigma = result.projections, result.eigen_vals
+    A_approx = torch.matmul(U, U.t() * Sigma.unsqueeze(-1))
     # Verify that the approximation is close to the original A
     assert torch.allclose(
         A, A_approx, atol=1e-2

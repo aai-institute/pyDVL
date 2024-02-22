@@ -18,6 +18,7 @@ from tqdm.auto import tqdm
 from pydvl.utils.progress import log_duration
 
 from ..base_influence_function_model import (
+    DataLoaderType,
     InfluenceFunctionModel,
     InfluenceMode,
     NotImplementedLayerRepresentationException,
@@ -32,6 +33,7 @@ from .functional import (
     create_per_sample_mixed_derivative_function,
     hessian,
     model_hessian_low_rank,
+    model_hessian_nystroem_approximation,
 )
 from .util import (
     EkfacRepresentation,
@@ -1470,3 +1472,51 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         if self.is_fitted:
             self.ekfac_representation.to(device)
         return super().to(device)
+
+
+class NystroemSketchInfluence(TorchInfluenceFunctionModel):
+
+    low_rank_representation: LowRankProductRepresentation
+
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        hessian_regularization: float,
+        rank: int,
+    ):
+        super().__init__(model, loss)
+        self.hessian_regularization = hessian_regularization
+        self.rank = rank
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        regularized_eigenvalues = (
+            self.low_rank_representation.eigen_vals + self.hessian_regularization
+        )
+
+        proj_rhs = self.low_rank_representation.projections.t() @ rhs.t()
+        result = self.low_rank_representation.projections @ (
+            torch.diag_embed(1.0 / regularized_eigenvalues) @ proj_rhs
+        )
+
+        if self.hessian_regularization > 0.0:
+            result += (
+                1
+                / self.hessian_regularization
+                * (rhs.t() - self.low_rank_representation.projections @ proj_rhs)
+            )
+
+        return result.t()
+
+    @property
+    def is_fitted(self):
+        try:
+            return self.low_rank_representation is not None
+        except AttributeError:
+            return False
+
+    def fit(self, data: DataLoader):
+        self.low_rank_representation = model_hessian_nystroem_approximation(
+            self.model, self.loss, data, self.rank
+        )
+        return self

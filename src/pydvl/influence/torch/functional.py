@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
@@ -831,10 +831,10 @@ def model_hessian_low_rank(
 
 
 def randomized_nystroem_approximation(
-    mat_vec: Callable[[torch.Tensor], torch.Tensor],
+    mat_mat_prod: Union[torch.Tensor, Callable[[torch.Tensor], torch.Tensor]],
     input_dim: int,
-    input_type: torch.dtype,
     rank: int,
+    input_type: torch.dtype,
     shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
     mat_vec_device: torch.device = torch.device("cpu"),
 ) -> LowRankProductRepresentation:
@@ -846,7 +846,7 @@ def randomized_nystroem_approximation(
     \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\Cross}(A \Omega)^T
     = U \Sigma U^T\]
 
-    :param mat_vec: A callable representing the matrix vector product
+    :param mat_mat_prod: A callable representing the matrix vector product
     :param input_dim: dimension of the input for the matrix vector product
     :param input_type:
     :param rank: rank of the approximation
@@ -864,11 +864,23 @@ def randomized_nystroem_approximation(
                 * torch.linalg.norm(x)
             )
 
+    _mat_mat_prod: Callable[[torch.Tensor], torch.Tensor]
+
+    if isinstance(mat_mat_prod, torch.Tensor):
+
+        def _mat_mat_prod(x: torch.Tensor):
+            return mat_mat_prod @ x
+
+    else:
+        _mat_mat_prod = mat_mat_prod
+
     random_sample_matrix = torch.randn(
         input_dim, rank, device=mat_vec_device, dtype=input_type
     )
     random_sample_matrix, _ = torch.linalg.qr(random_sample_matrix)
-    sketch_mat = torch.func.vmap(mat_vec, in_dims=1)(random_sample_matrix).t()
+
+    sketch_mat = _mat_mat_prod(random_sample_matrix)
+
     shift = shift_func(sketch_mat)
     sketch_mat += shift * random_sample_matrix
 
@@ -877,12 +889,48 @@ def randomized_nystroem_approximation(
     )
 
     svd_input = torch.linalg.solve_triangular(
-        triangular_mat, sketch_mat, upper=False, left=False
+        triangular_mat.t(), sketch_mat, upper=True, left=False
     )
     left_singular_vecs, singular_vals, _ = torch.linalg.svd(
         svd_input, full_matrices=False
     )
-    singular_vals = torch.max(
-        torch.zeros_like(singular_vals), torch.square(singular_vals) - shift
-    )
+    singular_vals = torch.clamp(singular_vals**2 - shift, min=0)
+
     return LowRankProductRepresentation(singular_vals, left_singular_vecs)
+
+
+def model_hessian_nystroem_approximation(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+    rank: int,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+) -> LowRankProductRepresentation:
+    """
+
+    :param model:
+    :param loss:
+    :param data_loader:
+    :param rank:
+    :param shift_func:
+    :return:
+    """
+
+    model_hvp = create_hvp_function(
+        model, loss, data_loader, precompute_grad=False, use_average=True
+    )
+    device = next((p.device for p in model.parameters()))
+    dtype = next((p.dtype for p in model.parameters()))
+    in_dim = sum((p.numel() for p in model.parameters() if p.requires_grad))
+
+    def model_hessian_mat_mat_prod(x: torch.Tensor):
+        return torch.func.vmap(model_hvp, in_dims=1, randomness="same")(x).t()
+
+    return randomized_nystroem_approximation(
+        model_hessian_mat_mat_prod,
+        in_dim,
+        rank,
+        dtype,
+        shift_func=shift_func,
+        mat_vec_device=device,
+    )
