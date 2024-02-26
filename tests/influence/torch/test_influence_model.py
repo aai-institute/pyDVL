@@ -459,7 +459,11 @@ def test_influences_nn(
     "influence_factory",
     [
         lambda model, loss, hessian_reg, rank: ArnoldiInfluence(
-            model, loss, hessian_regularization=hessian_reg, rank_estimate=rank
+            model,
+            loss,
+            hessian_regularization=hessian_reg,
+            rank_estimate=rank,
+            precompute_grad=True,
         ),
         lambda model, loss, hessian_reg, rank: NystroemSketchInfluence(
             model, loss, hessian_regularization=hessian_reg, rank=rank
