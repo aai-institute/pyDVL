@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Implement new method: `NystroemSketchInfluence` [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
+- Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
+
 ### Fixed
 
 - Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
