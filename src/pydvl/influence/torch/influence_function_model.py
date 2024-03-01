@@ -67,7 +67,14 @@ class TorchInfluenceFunctionModel(
         self._model_params = {
             k: p.detach() for k, p in self.model.named_parameters() if p.requires_grad
         }
+        self._model_dtype = next(
+            (p.dtype for p in model.parameters() if p.requires_grad)
+        )
         super().__init__()
+
+    @property
+    def model_dtype(self):
+        return self._model_dtype
 
     @property
     def n_parameters(self):
@@ -900,14 +907,17 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
     r"""
-    Approximately solves the linear system Hx = b, where H is the Hessian of a model with the empirical
-    categorical cross entropy as loss function and b is the given right-hand side vector.
-    It employs the EK-FAC method [@george2018fast], which is based on the kronecker
-    factorization of the Hessian first introduced in [@martens2015optimizing].
+    Approximately solves the linear system Hx = b, where H is the Hessian of a model
+    with the empirical categorical cross entropy as loss function and b is the given
+    right-hand side vector.
+    It employs the EK-FAC method, which is based on the kronecker
+    factorization of the Hessian.
+
     Contrary to the other influence function methods, this implementation can only
     be used for classification tasks with a cross entropy loss function. However, it
     is much faster than the other methods and can be used efficiently for very large
-    datasets and models. For more information, see [Eigenvalue Corrected K-FAC][ekfac].
+    datasets and models. For more information,
+    see [Eigenvalue Corrected K-FAC][eigenvalue-corrected-k-fac].
 
     Args:
         model: Instance of [torch.nn.Module][torch.nn.Module].
