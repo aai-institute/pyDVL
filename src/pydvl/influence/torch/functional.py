@@ -48,7 +48,10 @@ __all__ = [
     "create_per_sample_mixed_derivative_function",
     "model_hessian_low_rank",
     "LowRankProductRepresentation",
+    "randomized_nystroem_approximation",
+    "model_hessian_nystroem_approximation",
 ]
+
 
 logger = logging.getLogger(__name__)
 

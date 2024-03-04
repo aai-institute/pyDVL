@@ -17,6 +17,11 @@ from pydvl.influence.torch.influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
+from pydvl.influence.torch.pre_conditioner import (
+    JacobiPreConditioner,
+    NystroemPreConditioner,
+    PreConditioner,
+)
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
@@ -317,8 +322,18 @@ def direct_factors(
             ).fit(train_dataLoader),
             1e-4,
         ],
+        [
+            lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
+                model,
+                loss,
+                hessian_regularization=hessian_reg,
+                pre_conditioner=NystroemPreConditioner(10),
+                use_block_cg=True,
+            ).fit(train_dataLoader),
+            1e-4,
+        ],
     ],
-    ids=["cg", "lissa", "direct"],
+    ids=["cg", "lissa", "direct", "block-cg"],
 )
 def test_influence_linear_model(
     influence_factory: Callable,
@@ -394,9 +409,6 @@ def test_influence_linear_model(
 @parametrize(
     "influence_factory",
     [
-        lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
-            model, loss, hessian_regularization=hessian_reg
-        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
             model,
             loss,
@@ -405,9 +417,9 @@ def test_influence_linear_model(
             scale=10000,
         ).fit(train_dataLoader),
     ],
-    ids=["cg", "lissa"],
+    ids=["lissa"],
 )
-def test_influences_nn(
+def test_influences_lissa(
     test_case: TestCase,
     model_and_data: Tuple[
         torch.nn.Module,
@@ -618,3 +630,69 @@ def test_influences_ekfac(
         assert np.allclose(ekfac_influence_values, accumulated_inf_by_layer)
         check_influence_correlations(direct_influences, ekfac_influence_values)
         check_influence_correlations(direct_sym_influences, ekfac_self_influence)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize("use_block_cg", [True, False])
+@pytest.mark.parametrize(
+    "pre_conditioner",
+    [
+        JacobiPreConditioner(),
+        NystroemPreConditioner(rank=5),
+        None,
+    ],
+)
+def test_influences_cg(
+    test_case: TestCase,
+    model_and_data: Tuple[
+        torch.nn.Module,
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ],
+    direct_influences,
+    use_block_cg: bool,
+    pre_conditioner: PreConditioner,
+):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+    influence_model = CgInfluence(
+        model,
+        loss,
+        test_case.hessian_reg,
+        maxiter=5,
+        pre_conditioner=pre_conditioner,
+        use_block_cg=use_block_cg,
+    )
+    influence_model = influence_model.fit(train_dataloader)
+
+    approx_influences = influence_model.influences(
+        x_test, y_test, x_train, y_train, mode=test_case.mode
+    ).numpy()
+
+    assert not np.any(np.isnan(approx_influences))
+
+    assert np.allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+
+    if test_case.mode == InfluenceMode.Up:
+        assert approx_influences.shape == (
+            test_case.test_data_len,
+            test_case.train_data_len,
+        )
+
+    if test_case.mode == InfluenceMode.Perturbation:
+        assert approx_influences.shape == (
+            test_case.test_data_len,
+            test_case.train_data_len,
+            *test_case.input_dim,
+        )
+
+    # check that influences are not all constant
+    assert not np.all(approx_influences == approx_influences.item(0))
+
+    assert np.allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
