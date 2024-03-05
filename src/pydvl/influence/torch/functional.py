@@ -32,6 +32,7 @@ from typing import Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
+from torch._C import _LinAlgError
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
@@ -890,10 +891,20 @@ def randomized_nystroem_approximation(
 
     shift = shift_func(sketch_mat)
     sketch_mat += shift * random_sample_matrix
-
-    triangular_mat = torch.linalg.cholesky(
-        torch.matmul(random_sample_matrix.t(), sketch_mat)
-    )
+    cholesky_mat = torch.matmul(random_sample_matrix.t(), sketch_mat)
+    try:
+        triangular_mat = torch.linalg.cholesky(cholesky_mat)
+    except _LinAlgError as e:
+        logger.warning(
+            f"Encountered error in cholesky decomposition: {e}.\n "
+            f"Increasing shift by smallest eigenvalue and re-compute"
+        )
+        eigen_vals, eigen_vectors = torch.linalg.eigh(cholesky_mat)
+        shift += torch.abs(torch.min(eigen_vals))
+        eigen_vals += shift
+        triangular_mat = torch.linalg.cholesky(
+            torch.mm(eigen_vectors, torch.mm(torch.diag(eigen_vals), eigen_vectors.T))
+        )
 
     svd_input = torch.linalg.solve_triangular(
         triangular_mat.t(), sketch_mat, upper=True, left=False
