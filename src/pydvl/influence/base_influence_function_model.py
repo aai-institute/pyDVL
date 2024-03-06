@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Collection, Generic, Iterable, Optional, TypeVar
+from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
 
 
 class InfluenceMode(str, Enum):
@@ -28,10 +28,10 @@ class UnsupportedInfluenceModeException(ValueError):
 
 
 class NotFittedException(ValueError):
-    def __init__(self):
+    def __init__(self, object_type: Type):
         super().__init__(
-            f"Objects of type InfluenceFunctionModel must be fitted before calling "
-            f"influence methods. "
+            f"Objects of type {object_type} must be fitted before calling "
+            f"methods. "
             f"Call method fit with appropriate input."
         )
 
@@ -84,7 +84,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
     def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         if not self.is_fitted:
-            raise NotFittedException()
+            raise NotFittedException(type(self))
         return self._influence_factors(x, y)
 
     @abstractmethod
@@ -114,7 +114,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
         if not self.is_fitted:
-            raise NotFittedException()
+            raise NotFittedException(type(self))
         return self._influences(x_test, y_test, x, y, mode)
 
     @abstractmethod

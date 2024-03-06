@@ -28,10 +28,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
+from torch._C import _LinAlgError
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
@@ -408,7 +409,7 @@ def hessian(
 
     if use_hessian_avg:
         n_samples = 0
-        hessian = to_model_device(
+        hessian_mat = to_model_device(
             torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
         blf = create_batch_loss_function(model, loss)
@@ -420,11 +421,11 @@ def hessian(
 
         for x, y in iter(data_loader):
             n_samples += x.shape[0]
-            hessian += x.shape[0] * torch.func.hessian(flat_input_batch_loss_function)(
-                flat_params, to_model_device(x, model), to_model_device(y, model)
-            )
+            hessian_mat += x.shape[0] * torch.func.hessian(
+                flat_input_batch_loss_function
+            )(flat_params, to_model_device(x, model), to_model_device(y, model))
 
-        hessian /= n_samples
+        hessian_mat /= n_samples
     else:
 
         def flat_input_empirical_loss(p: torch.Tensor):
@@ -432,11 +433,11 @@ def hessian(
                 align_with_model(p, model)
             )
 
-        hessian = torch.func.jacrev(torch.func.jacrev(flat_input_empirical_loss))(
+        hessian_mat = torch.func.jacrev(torch.func.jacrev(flat_input_empirical_loss))(
             flat_params
         )
 
-    return hessian
+    return hessian_mat
 
 
 def create_per_sample_loss_function(
@@ -834,4 +835,120 @@ def model_hessian_low_rank(
         max_iter=max_iter,
         device=device,
         eigen_computation_on_gpu=eigen_computation_on_gpu,
+    )
+
+
+def randomized_nystroem_approximation(
+    mat_mat_prod: Union[torch.Tensor, Callable[[torch.Tensor], torch.Tensor]],
+    input_dim: int,
+    rank: int,
+    input_type: torch.dtype,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+    mat_vec_device: torch.device = torch.device("cpu"),
+) -> LowRankProductRepresentation:
+    r"""
+    Given a matrix vector product function (representing a symmetric positive definite
+    matrix \(A\) ), computes a random Nyström low rank approximation of
+    \(A\) in factored form, i.e.
+
+    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\Cross}(A \Omega)^T
+    = U \Sigma U^T\]
+
+    :param mat_mat_prod: A callable representing the matrix vector product
+    :param input_dim: dimension of the input for the matrix vector product
+    :param input_type:
+    :param rank: rank of the approximation
+    :param shift_func:
+    :param mat_vec_device: device where the matrix vector product has to be executed
+    :return: object containing, \(U\) and \(\Sigma\)
+    """
+
+    if shift_func is None:
+
+        def shift_func(x: torch.Tensor):
+            return (
+                torch.sqrt(torch.as_tensor(input_dim))
+                * torch.finfo(x.dtype).eps
+                * torch.linalg.norm(x)
+            )
+
+    _mat_mat_prod: Callable[[torch.Tensor], torch.Tensor]
+
+    if isinstance(mat_mat_prod, torch.Tensor):
+
+        def _mat_mat_prod(x: torch.Tensor):
+            return mat_mat_prod @ x
+
+    else:
+        _mat_mat_prod = mat_mat_prod
+
+    random_sample_matrix = torch.randn(
+        input_dim, rank, device=mat_vec_device, dtype=input_type
+    )
+    random_sample_matrix, _ = torch.linalg.qr(random_sample_matrix)
+
+    sketch_mat = _mat_mat_prod(random_sample_matrix)
+
+    shift = shift_func(sketch_mat)
+    sketch_mat += shift * random_sample_matrix
+    cholesky_mat = torch.matmul(random_sample_matrix.t(), sketch_mat)
+    try:
+        triangular_mat = torch.linalg.cholesky(cholesky_mat)
+    except _LinAlgError as e:
+        logger.warning(
+            f"Encountered error in cholesky decomposition: {e}.\n "
+            f"Increasing shift by smallest eigenvalue and re-compute"
+        )
+        eigen_vals, eigen_vectors = torch.linalg.eigh(cholesky_mat)
+        shift += torch.abs(torch.min(eigen_vals))
+        eigen_vals += shift
+        triangular_mat = torch.linalg.cholesky(
+            torch.mm(eigen_vectors, torch.mm(torch.diag(eigen_vals), eigen_vectors.T))
+        )
+
+    svd_input = torch.linalg.solve_triangular(
+        triangular_mat.t(), sketch_mat, upper=True, left=False
+    )
+    left_singular_vecs, singular_vals, _ = torch.linalg.svd(
+        svd_input, full_matrices=False
+    )
+    singular_vals = torch.clamp(singular_vals**2 - shift, min=0)
+
+    return LowRankProductRepresentation(singular_vals, left_singular_vecs)
+
+
+def model_hessian_nystroem_approximation(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+    rank: int,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+) -> LowRankProductRepresentation:
+    """
+
+    :param model:
+    :param loss:
+    :param data_loader:
+    :param rank:
+    :param shift_func:
+    :return:
+    """
+
+    model_hvp = create_hvp_function(
+        model, loss, data_loader, precompute_grad=False, use_average=True
+    )
+    device = next((p.device for p in model.parameters()))
+    dtype = next((p.dtype for p in model.parameters()))
+    in_dim = sum((p.numel() for p in model.parameters() if p.requires_grad))
+
+    def model_hessian_mat_mat_prod(x: torch.Tensor):
+        return torch.func.vmap(model_hvp, in_dims=1, randomness="same")(x).t()
+
+    return randomized_nystroem_approximation(
+        model_hessian_mat_mat_prod,
+        in_dim,
+        rank,
+        dtype,
+        shift_func=shift_func,
+        mat_vec_device=device,
     )

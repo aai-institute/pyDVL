@@ -95,9 +95,6 @@ if_model = ArnoldiInfluence(
     tol=1e-6,
 )
 ```
-These implementations represent the calculation logic on in memory tensors. To scale up to large collection
-of data, we map these influence function models over these collections. For a detailed discussion see the
-documentation page [Scaling Computation](scaling_computation.md).
 
 ### Eigenvalue Corrected K-FAC
 
@@ -126,3 +123,39 @@ if_model = EkfacInfluence(
 )
 if_model.fit(train_loader)
 ```
+
+### Nyström Sketch-and-Solve
+
+This approximation is based on a Nyström low-rank approximation of the form
+
+\begin{align*}
+H_{\text{nys}} &= (H\Omega)(\Omega^TH\Omega)^{+}(H\Omega)^T \\\
+&= U \Lambda U^T
+\end{align*}
+
+in combination with the [Sherman–Morrison–Woodbury formula](
+https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to calculate the
+action of its inverse:
+
+\begin{equation*} 
+(H_{\text{nys}} + \lambda I)^{-1}x = U(\Lambda+\lambda I)U^Tx +
+\frac{1}{\lambda}(I−UU^T)x,
+\end{equation*}
+
+see also [@hataya_nystrom_2023] and [@frangella_randomized_2021]. The essential parameter is the rank of the
+approximation.
+
+```python
+from pydvl.influence.torch import NystroemSketchInfluence
+if_model = NystroemSketchInfluence(
+    model,
+    loss,
+    rank=10,
+    hessian_regularization=0.0,
+)
+if_model.fit(train_loader)
+```
+
+These implementations represent the calculation logic on in memory tensors. To scale up to large collection
+of data, we map these influence function models over these collections. For a detailed discussion see the
+documentation page [Scaling Computation](scaling_computation.md).

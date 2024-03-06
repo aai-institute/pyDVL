@@ -4,4 +4,5 @@ from .influence_function_model import (
     DirectInfluence,
     EkfacInfluence,
     LissaInfluence,
+    NystroemSketchInfluence,
 )

@@ -15,6 +15,7 @@ from pydvl.influence.torch.influence_function_model import (
     DirectInfluence,
     EkfacInfluence,
     LissaInfluence,
+    NystroemSketchInfluence,
 )
 from tests.influence.torch.conftest import minimal_training
 
@@ -454,7 +455,23 @@ def test_influences_nn(
     assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
 
 
-def test_influences_arnoldi(
+@pytest.mark.parametrize(
+    "influence_factory",
+    [
+        lambda model, loss, hessian_reg, rank: ArnoldiInfluence(
+            model,
+            loss,
+            hessian_regularization=hessian_reg,
+            rank_estimate=rank,
+            precompute_grad=True,
+        ),
+        lambda model, loss, hessian_reg, rank: NystroemSketchInfluence(
+            model, loss, hessian_regularization=hessian_reg, rank=rank
+        ),
+    ],
+    ids=["arnoldi", "nystroem"],
+)
+def test_influences_low_rank(
     test_case: TestCase,
     model_and_data: Tuple[
         torch.nn.Module,
@@ -467,7 +484,10 @@ def test_influences_arnoldi(
     direct_influences,
     direct_sym_influences,
     direct_factors,
+    influence_factory,
 ):
+    atol = 1e-8
+    rtol = 1e-5
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
     num_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -476,55 +496,62 @@ def test_influences_arnoldi(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
 
-    arnoldi_influence = ArnoldiInfluence(
+    influence_func_model = influence_factory(
         model,
         loss,
-        hessian_regularization=test_case.hessian_reg,
-        rank_estimate=num_parameters - 1,
+        test_case.hessian_reg,
+        num_parameters - 1,
     )
 
     with pytest.raises(NotFittedException):
-        arnoldi_influence.influences(
+        influence_func_model.influences(
             x_test, y_test, x_train, y_train, mode=test_case.mode
         )
 
     with pytest.raises(NotFittedException):
-        arnoldi_influence.influence_factors(x_test, y_test)
+        influence_func_model.influence_factors(x_test, y_test)
 
-    arnoldi_influence = arnoldi_influence.fit(train_dataloader)
+    influence_func_model = influence_func_model.fit(train_dataloader)
 
-    low_rank_influence = arnoldi_influence.influences(
+    low_rank_influence = influence_func_model.influences(
         x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
 
-    sym_low_rank_influence = arnoldi_influence.influences(
+    sym_low_rank_influence = influence_func_model.influences(
         x_train, y_train, mode=test_case.mode
     ).numpy()
 
-    low_rank_factors = arnoldi_influence.influence_factors(x_test, y_test)
+    low_rank_factors = influence_func_model.influence_factors(x_test, y_test)
     assert np.allclose(
-        direct_factors, arnoldi_influence.influence_factors(x_train, y_train).numpy()
+        direct_factors,
+        influence_func_model.influence_factors(x_train, y_train).numpy(),
+        atol=atol,
+        rtol=rtol,
     )
 
     if test_case.mode is InfluenceMode.Up:
-        low_rank_influence_transpose = arnoldi_influence.influences(
+        low_rank_influence_transpose = influence_func_model.influences(
             x_train, y_train, x_test, y_test, mode=test_case.mode
         ).numpy()
         assert np.allclose(
             low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
         )
 
-    low_rank_values_from_factors = arnoldi_influence.influences_from_factors(
+    low_rank_values_from_factors = influence_func_model.influences_from_factors(
         low_rank_factors, x_train, y_train, mode=test_case.mode
     ).numpy()
-    assert np.allclose(direct_influences, low_rank_influence)
-    assert np.allclose(direct_sym_influences, sym_low_rank_influence)
-    assert np.allclose(low_rank_influence, low_rank_values_from_factors)
+    assert np.allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
+    assert np.allclose(
+        direct_sym_influences, sym_low_rank_influence, atol=atol, rtol=rtol
+    )
+    assert np.allclose(
+        low_rank_influence, low_rank_values_from_factors, atol=atol, rtol=rtol
+    )
 
     with pytest.raises(ValueError):
-        arnoldi_influence.influences(x_test, y_test, x=x_train, mode=test_case.mode)
+        influence_func_model.influences(x_test, y_test, x=x_train, mode=test_case.mode)
     with pytest.raises(ValueError):
-        arnoldi_influence.influences(x_test, y_test, y=y_train, mode=test_case.mode)
+        influence_func_model.influences(x_test, y_test, y=y_train, mode=test_case.mode)
 
 
 def test_influences_ekfac(

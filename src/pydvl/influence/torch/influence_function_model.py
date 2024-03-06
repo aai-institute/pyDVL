@@ -18,6 +18,7 @@ from tqdm.auto import tqdm
 from pydvl.utils.progress import log_duration
 
 from ..base_influence_function_model import (
+    DataLoaderType,
     InfluenceFunctionModel,
     InfluenceMode,
     NotImplementedLayerRepresentationException,
@@ -32,6 +33,7 @@ from .functional import (
     create_per_sample_mixed_derivative_function,
     hessian,
     model_hessian_low_rank,
+    model_hessian_nystroem_approximation,
 )
 from .util import (
     EkfacRepresentation,
@@ -65,7 +67,14 @@ class TorchInfluenceFunctionModel(
         self._model_params = {
             k: p.detach() for k, p in self.model.named_parameters() if p.requires_grad
         }
+        self._model_dtype = next(
+            (p.dtype for p in model.parameters() if p.requires_grad)
+        )
         super().__init__()
+
+    @property
+    def model_dtype(self):
+        return self._model_dtype
 
     @property
     def n_parameters(self):
@@ -111,14 +120,14 @@ class TorchInfluenceFunctionModel(
         Compute the approximation of
 
         \[
-        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
             \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
         \]
 
         for the case of up-weighting influence, resp.
 
         \[
-        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
         \]
 
@@ -126,12 +135,12 @@ class TorchInfluenceFunctionModel(
 
         Args:
             x_test: model input to use in the gradient computations
-                of $H^{-1}\nabla_{theta} \ell(y_{\text{test}},
+                of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
                     f_{\theta}(x_{\text{test}}))$
             y_test: label tensor to compute gradients
             x: optional model input to use in the gradient computations
-                $\nabla_{theta}\ell(y, f_{\theta}(x))$,
-                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
             mode: enum value of [InfluenceType]
@@ -841,13 +850,13 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             )
             left = mjp(self.model_params, x_test, y_test)
 
-            regularized_eigenvalues = (
+            inverse_regularized_eigenvalues = 1.0 / (
                 self.low_rank_representation.eigen_vals + self.hessian_regularization
             )
 
-            right = torch.diag_embed(1.0 / regularized_eigenvalues) @ mjp(
+            right = mjp(
                 self.model_params, x, y
-            )
+            ) * inverse_regularized_eigenvalues.unsqueeze(-1)
             values = torch.einsum("ij, ik -> jk", left, right)
         elif mode == InfluenceMode.Perturbation:
             factors = self.influence_factors(x_test, y_test)
@@ -864,10 +873,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             left = create_matrix_jacobian_product_function(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )(self.model_params, x, y)
-            regularized_eigenvalues = (
+            inverse_regularized_eigenvalues = 1.0 / (
                 self.low_rank_representation.eigen_vals + self.hessian_regularization
             )
-            right = torch.diag_embed(1.0 / regularized_eigenvalues) @ left
+            right = left * inverse_regularized_eigenvalues.unsqueeze(-1)
             values = torch.einsum("ij, ik -> jk", left, right)
         elif mode == InfluenceMode.Perturbation:
             factors = self.influence_factors(x, y)
@@ -879,13 +888,13 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
 
-        regularized_eigenvalues = (
+        inverse_regularized_eigenvalues = 1.0 / (
             self.low_rank_representation.eigen_vals + self.hessian_regularization
         )
 
+        projected_rhs = self.low_rank_representation.projections.t() @ rhs.t()
         result = self.low_rank_representation.projections @ (
-            torch.diag_embed(1.0 / regularized_eigenvalues)
-            @ (self.low_rank_representation.projections.t() @ rhs.t())
+            projected_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
         )
 
         return result.t()
@@ -898,14 +907,17 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
     r"""
-    Approximately solves the linear system Hx = b, where H is the Hessian of a model with the empirical
-    categorical cross entropy as loss function and b is the given right-hand side vector.
-    It employs the EK-FAC method [@george2018fast], which is based on the kronecker
-    factorization of the Hessian first introduced in [@martens2015optimizing].
+    Approximately solves the linear system Hx = b, where H is the Hessian of a model
+    with the empirical categorical cross entropy as loss function and b is the given
+    right-hand side vector.
+    It employs the EK-FAC method, which is based on the kronecker
+    factorization of the Hessian.
+
     Contrary to the other influence function methods, this implementation can only
     be used for classification tasks with a cross entropy loss function. However, it
     is much faster than the other methods and can be used efficiently for very large
-    datasets and models. For more information, see [Eigenvalue Corrected K-FAC][ekfac].
+    datasets and models. For more information,
+    see [Eigenvalue Corrected K-FAC][eigenvalue-corrected-k-fac].
 
     Args:
         model: Instance of [torch.nn.Module][torch.nn.Module].
@@ -1242,7 +1254,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         y: Optional[torch.Tensor] = None,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> Dict[str, torch.Tensor]:
-        """
+        r"""
         Compute the influence of the data on the test data for each layer of the model.
 
         Args:
@@ -1299,10 +1311,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
-        """
+        r"""
         Computes the approximation of
 
-        \[H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x))\]
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
 
         for each layer of the model separately.
 
@@ -1332,7 +1344,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         y: torch.Tensor,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> Dict[str, torch.Tensor]:
-        """
+        r"""
         Computation of
 
         \[ \langle z_{\text{test_factors}},
@@ -1488,3 +1500,80 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         if self.is_fitted:
             self.ekfac_representation.to(device)
         return super().to(device)
+
+
+class NystroemSketchInfluence(TorchInfluenceFunctionModel):
+    r"""
+    Given a model and training data, it uses a low-rank approximation of the Hessian
+    (derived via random projection Nyström approximation) in combination with
+    the [Sherman–Morrison–Woodbury formula](
+    https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to calculate the
+    inverse of the Hessian Vector Product. More concrete, it computes a low-rank
+    approximation
+
+    \begin{align*}
+        H_{\text{nys}} &= (H\Omega)(\Omega^TH\Omega)^{+}(H\Omega)^T \\\
+                       &= U \Lambda U^T
+    \end{align*}
+
+    in factorized form and approximates the action of the inverse Hessian via
+
+    \[ (H_{\text{nys}} + \lambda I)^{-1} = U(\Lambda+\lambda I)U^T +
+        \frac{1}{\lambda}(I−UU^T) \]
+
+    Args:
+        model: Instance of [torch.nn.Module][torch.nn.Module].
+            The Hessian will be calculated with respect to this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
+        hessian_regularization: regularization parameter added
+            to the Hessian-vector product for numerical stability
+        rank: rank of the low-rank approximation
+
+    """
+
+    low_rank_representation: LowRankProductRepresentation
+
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        hessian_regularization: float,
+        rank: int,
+    ):
+        super().__init__(model, loss)
+        self.hessian_regularization = hessian_regularization
+        self.rank = rank
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        regularized_eigenvalues = (
+            self.low_rank_representation.eigen_vals + self.hessian_regularization
+        )
+
+        proj_rhs = self.low_rank_representation.projections.t() @ rhs.t()
+        inverse_regularized_eigenvalues = 1.0 / regularized_eigenvalues
+        result = self.low_rank_representation.projections @ (
+            proj_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
+        )
+
+        if self.hessian_regularization > 0.0:
+            result += (
+                1.0
+                / self.hessian_regularization
+                * (rhs.t() - self.low_rank_representation.projections @ proj_rhs)
+            )
+
+        return result.t()
+
+    @property
+    def is_fitted(self):
+        try:
+            return self.low_rank_representation is not None
+        except AttributeError:
+            return False
+
+    def fit(self, data: DataLoader):
+        self.low_rank_representation = model_hessian_nystroem_approximation(
+            self.model, self.loss, data, self.rank
+        )
+        return self
