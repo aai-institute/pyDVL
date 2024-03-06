@@ -125,8 +125,8 @@ class TorchInfluenceFunctionModel(
         Compute the approximation of
 
         \[
-        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+        f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x))\rangle
         \]
 
         for the case of up-weighting influence, resp.

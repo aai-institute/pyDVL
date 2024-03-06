@@ -12,25 +12,31 @@ only requires the calculation of Hessian-vector products, making it a good
 choice for large datasets or models with many parameters. It is nevertheless
 much slower to converge than the direct inversion method and not as accurate.
 More info on the theory of conjugate gradient can be found on
-[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method). pyDVL also implements a stable block variant of the conjugate 
+gradient method.
 
 ```python
 from pydvl.influence.torch import CgInfluence
+from pydvl.influence.torch.pre_conditioner import NystroemPreConditioner
 
 if_model = CgInfluence(
     model,
     loss,
     hessian_regularization=0.0,
-    x0=None,
     rtol=1e-7,
     atol=1e-7,
     maxiter=None,
+    use_block_cg=True,
+    pre_conditioner=NystroemPreConditioner(rank=10)
 )
+if_model.fit(train_loader)
 ```
 
-The additional optional parameters `x0`, `rtol`, `atol`, and `maxiter` are
-respectively the initial guess for the solution, the relative
-tolerance, the absolute tolerance, and the maximum number of iterations.
+The additional optional parameters `rtol`, `atol`, `maxiter`, `use_block_cg` and 
+`pre_conditioner` are respectively, the relative
+tolerance, the absolute tolerance, the maximum number of iterations, 
+a flag indicating whether to use block variant of cg and an optional
+pre-conditioner.
 
 
 ### Linear time Stochastic Second-Order Approximation (LiSSA)
@@ -62,6 +68,7 @@ if_model = LissaInfluence(
    h0=None,
    rtol=1e-4,
 )
+if_model.fit(train_loader)
 ```
 
 with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
@@ -94,6 +101,7 @@ if_model = ArnoldiInfluence(
     rank_estimate=10,
     tol=1e-6,
 )
+if_model.fit(train_loader)
 ```
 
 ### Eigenvalue Corrected K-FAC
@@ -109,6 +117,7 @@ if_model = EkfacInfluence(
     model,
     hessian_regularization=0.0,
 )
+if_model.fit(train_loader)
 ```
 Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a NotImplementedLayerRepresentationException.
 

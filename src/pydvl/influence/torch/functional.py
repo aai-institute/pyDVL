@@ -172,8 +172,10 @@ def create_empirical_loss_function(
     on a given dataset. If we denote the model parameters with \( \theta \),
     the resulting function approximates:
 
-    \[ f(\theta) = \frac{1}{N}\sum_{i=1}^N
-        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)) \]
+    \[
+        f(\theta) = \frac{1}{N}\sum_{i=1}^N
+        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))
+    \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$
     with model parameters $\theta$, where $N$ is the number of all elements provided
@@ -854,16 +856,19 @@ def randomized_nystroem_approximation(
     matrix \(A\) ), computes a random Nyström low rank approximation of
     \(A\) in factored form, i.e.
 
-    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\Cross}(A \Omega)^T
+    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{+}(A \Omega)^T
     = U \Sigma U^T\]
 
-    :param mat_mat_prod: A callable representing the matrix vector product
-    :param input_dim: dimension of the input for the matrix vector product
-    :param input_type:
-    :param rank: rank of the approximation
-    :param shift_func:
-    :param mat_vec_device: device where the matrix vector product has to be executed
-    :return: object containing, \(U\) and \(\Sigma\)
+    Args:
+        mat_mat_prod: A callable representing the matrix vector product
+        input_dim: dimension of the input for the matrix vector product
+        input_type:
+        rank: rank of the approximation
+        shift_func:
+        mat_vec_device: device where the matrix vector product has to be executed
+
+    Returns:
+        object containing, \(U\) and \(\Sigma\)
     """
 
     if shift_func is None:
@@ -927,14 +932,23 @@ def model_hessian_nystroem_approximation(
     rank: int,
     shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
 ) -> LowRankProductRepresentation:
-    """
+    r"""
+    Given a model, loss and a data_loader, computes a random Nyström low rank approximation of
+    the corresponding Hessian matrix in factored form, i.e.
 
-    :param model:
-    :param loss:
-    :param data_loader:
-    :param rank:
-    :param shift_func:
-    :return:
+    \[ H_{\text{nys}} = (H \Omega)(\Omega^T H \Omega)^{+}(H \Omega)^T
+    = U \Sigma U^T\]
+
+    Args:
+        model: A PyTorch model instance. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss : A callable that computes the loss.
+        data_loader: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        rank: rank of the approximation
+
+    Returns:
+        object containing, \(U\) and \(\Sigma\)
     """
 
     model_hvp = create_hvp_function(

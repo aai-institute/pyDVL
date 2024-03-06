@@ -40,7 +40,7 @@ class JacobiPreConditioner(PreConditioner):
     r"""
     Pre-conditioner for improving the convergence of CG for systems of the form
 
-    \[ (A + \lambda \operatorname{I})x = \operatorname{rhs} \]
+    \[ ( A + \lambda \operatorname{I})x = \operatorname{rhs} \]
 
     The JacobiPreConditioner uses the diagonal information of the matrix $A$.
     The diagonal elements are not computed directly but estimated via Hutchinson's
