@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/signet.svg">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.10">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
     
     
       
@@ -738,6 +738,15 @@
   <a href="#eigenvalue-corrected-k-fac" class="md-nav__link">
     <span class="md-ellipsis">
       Eigenvalue Corrected K-FAC
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nystrom-sketch-and-solve" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nyström Sketch-and-Solve
     </span>
   </a>
   
@@ -3005,6 +3014,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nystrom-sketch-and-solve" class="md-nav__link">
+    <span class="md-ellipsis">
+      Nyström Sketch-and-Solve
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3091,7 +3109,7 @@ approximated by</p>
 <p>where <span class="arithmatex">\(D\)</span> is a diagonal matrix with the top (in absolute value) eigenvalues of
 the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding eigenvectors. See also
  (Schioppa et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">ArnoldiInfluence</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">ArnoldiInfluence</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">ArnoldiInfluence</span><span class="p">(</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">loss</span><span class="p">,</span>
@@ -3100,9 +3118,6 @@ the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
 </span></code></pre></div>
-These implementations represent the calculation logic on in memory tensors. To scale up to large collection
-of data, we map these influence function models over these collections. For a detailed discussion see the
-documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p>
 <h3 id="eigenvalue-corrected-k-fac">Eigenvalue Corrected K-FAC<a class="headerlink" href="#eigenvalue-corrected-k-fac" title="Permanent link">&para;</a></h3>
 <p>K-FAC, short for Kronecker-Factored Approximate Curvature, is a method that approximates the Fisher information matrix <a href="https://en.wikipedia.org/wiki/Fisher_information">FIM</a> of a model. It is possible to show that for classification models with appropriate loss functions the FIM is equal to the Hessian of the model’s loss over the dataset. In this restricted but nonetheless important context K-FAC offers an efficient way to approximate the Hessian and hence the influence scores. 
 For more info and details refer to the original paper (Martens and Grosse, 2015)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>.</p>
@@ -3123,6 +3138,32 @@ Upon initialization, the K-FAC method will parse the model and extract which lay
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">)</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="nystrom-sketch-and-solve">Nyström Sketch-and-Solve<a class="headerlink" href="#nystrom-sketch-and-solve" title="Permanent link">&para;</a></h3>
+<p>This approximation is based on a Nyström low-rank approximation of the form</p>
+<div class="arithmatex">\[\begin{align*}
+H_{\text{nys}} &amp;= (H\Omega)(\Omega^TH\Omega)^{+}(H\Omega)^T \\\
+&amp;= U \Lambda U^T
+\end{align*}\]</div>
+<p>in combination with the <a href="https://en.wikipedia.org/wiki/Woodbury_matrix_identity">Sherman–Morrison–Woodbury formula</a> to calculate the
+action of its inverse:</p>
+<div class="arithmatex">\[\begin{equation*} 
+(H_{\text{nys}} + \lambda I)^{-1}x = U(\Lambda+\lambda I)U^Tx +
+\frac{1}{\lambda}(I−UU^T)x,
+\end{equation*}\]</div>
+<p>see also (Hataya and Yamada, 2023)<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup> and (Frangella et al., 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. The essential parameter is the rank of the
+approximation.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">NystroemSketchInfluence</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">NystroemSketchInfluence</span><span class="p">(</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">loss</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">rank</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">)</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+</span></code></pre></div>
+<p>These implementations represent the calculation logic on in memory tensors. To scale up to large collection
+of data, we map these influence function models over these collections. For a detailed discussion see the
+documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p>
 <div class="footnote">
 <hr />
 <ol>
@@ -3137,6 +3178,12 @@ Upon initialization, the K-FAC method will parse the model and extract which lay
 </li>
 <li id="fn:4">
 <p>George, T., Laurent, C., Bouthillier, X., Ballas, N., Vincent, P., 2018. Fast approximate natural gradient descent in a kronecker factored eigenbasis. Advances in Neural Information Processing Systems 31.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>Hataya, R., Yamada, M., 2023. Nyström Method for Accurate and Scalable Implicit Differentiation, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. PMLR, pp. 4643–4654.&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Frangella, Z., Tropp, J.A., Udell, M., 2021. Randomized Nystr\"om Preconditioning. <a href="https://doi.org/10.48550/arXiv.2110.02820">https://doi.org/10.48550/arXiv.2110.02820</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -3162,7 +3209,7 @@ Upon initialization, the K-FAC method will parse the model and extract which lay
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-02-19</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-06</span>
   </span>
 
     
@@ -3172,7 +3219,7 @@ Upon initialization, the K-FAC method will parse the model and extract which lay
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-02-19</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-06</span>
   </span>
 
     
@@ -3323,7 +3370,7 @@ Upon initialization, the K-FAC method will parse the model and extract which lay
     <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "content.tooltips", "navigation.instant", "navigation.path", "navigation.sections", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       
