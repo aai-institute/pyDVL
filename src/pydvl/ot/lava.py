@@ -9,11 +9,12 @@ In: Published at ICRL 2023
 """
 
 import itertools
-from typing import List, Tuple
+from typing import List, Literal, Tuple
 
 import numpy as np
 import ot
 from numpy.typing import NDArray
+from ot.bregman import empirical_sinkhorn2
 from ot.gaussian import bures_wasserstein_distance
 
 from pydvl.utils.dataset import Dataset
@@ -31,9 +32,15 @@ class LAVA:
         dataset: The dataset containing training and test samples.
         regularization: Regularization parameter for sinkhorn iterations.
         lambda_: Weight parameter for label distances.
+        inner_ot_method: Name of method used to compute the inner (instance-wise)
+            OT problem. Must be one of 'gaussian' or 'exact'.
+            If set to 'gaussian', the label distributions
+            are approximated as Gaussians, and thus their distance is computed as
+            the Bures-Wasserstein distance. If set to 'exact', no approximation is
+            used, and their distance is computed as an exact Wasserstein problem.
 
     Examples:
-        >>> from pydvl.lava import LAVA
+        >>> from pydvl.ot.lava import LAVA
         >>> from pydvl.utils.dataset import Dataset
         >>> from sklearn.datasets import load_iris
         >>> dataset = Dataset.from_sklearn(load_iris())
@@ -43,11 +50,17 @@ class LAVA:
     """
 
     def __init__(
-        self, dataset: Dataset, *, regularization: float = 0.001, lambda_: float = 1.0
+        self,
+        dataset: Dataset,
+        *,
+        regularization: float = 0.1,
+        lambda_: float = 1.0,
+        inner_ot_method: Literal["exact", "gaussian"] = "exact",
     ) -> None:
         self.dataset = dataset
         self.regularization = regularization
         self.lambda_ = lambda_
+        self.inner_ot_method = inner_ot_method
 
     def compute_values(self) -> NDArray:
         """Compute calibrated gradients using Optimal Transport.
@@ -55,14 +68,14 @@ class LAVA:
         Returns:
             Array of dimensions `(n_train)` that contains the calibrated gradients.
         """
-        dual_solution = self._compute_ot_dual()
+        gamma, dual_solution = self._compute_ot_dual()
         calibrated_gradients = self._compute_calibrated_gradients(dual_solution)
-        return calibrated_gradients
+        return gamma, calibrated_gradients
 
     def _compute_calibrated_gradients(
         self, dual_solution: Tuple[NDArray, NDArray]
     ) -> NDArray:
-        """Compute calibrated gradients using the dual solution of Optimal Transport problem.
+        r"""Compute calibrated gradients using the dual solution of Optimal Transport problem.
 
         $$
         \frac{\partial OT(\mu_t, \mu_v )}{\partial \mu_t(z_i)}
@@ -77,30 +90,35 @@ class LAVA:
         """
         f1k = np.array(dual_solution[0])
         training_size = len(self.dataset.x_train)
-        calibrated_gradients = (1 + 1 / (training_size - 1)) * f1k - sum(f1k) / (
+        calibrated_gradients = (1 + 1 / (training_size - 1)) * f1k - f1k.sum() / (
             training_size - 1
         )
         return calibrated_gradients
 
     def _compute_ot_dual(self) -> Tuple[NDArray, NDArray]:
         """Compute the dual solution of the Optimal Transport problem."""
-        label_distances = self._compute_label_distances()
-        feature_distances = self._compute_feature_distances()
-        M = (
-            label_distances.shape[1] * self.dataset.y_train[..., np.newaxis]
-            + self.dataset.y_test[np.newaxis, ...]
-        )
-        label_cost = label_distances.ravel()[M.ravel()].reshape(
-            len(self.dataset.y_train), len(self.dataset.y_test)
-        )
-        ground_cost = feature_distances + self.lambda_ * label_cost
+        ground_cost = self._compute_ground_cost()
         a = ot.unif(len(self.dataset.x_train))
         b = ot.unif(len(self.dataset.x_test))
-        _, log = ot.sinkhorn(a, b, ground_cost, self.regularization, log=True)
+        gamma, log = ot.sinkhorn(
+            a,
+            b,
+            ground_cost,
+            self.regularization,
+            log=True,
+            verbose=True,
+            numItermax=10000,
+        )
         u, v = log["u"], log["v"]
-        return u, v
+        return gamma, (u, v)
 
-    def _compute_feature_distances(self, p: int = 2) -> NDArray:
+    def _compute_ground_cost(self) -> NDArray:
+        label_cost = self._compute_label_cost()
+        feature_cost = self._compute_feature_cost()
+        ground_cost = feature_cost + self.lambda_ * label_cost
+        return ground_cost
+
+    def _compute_feature_cost(self, p: int = 2) -> NDArray:
         """Compute distance between the features of the training and test sets.
 
         The first has dimensions `(n1, d1)` and the second has dimensions `(n2, d2)`.
@@ -123,7 +141,7 @@ class LAVA:
             raise ValueError(f"Unsupported p value {p}")
         return distance
 
-    def _compute_label_distances(self) -> NDArray:
+    def _compute_label_cost(self) -> NDArray:
         """Compute distances between classes in the training and test sets.
 
         The number of classes in the first set is `n_classes1` and the second is `n_classes2`.
@@ -131,6 +149,81 @@ class LAVA:
         Returns:
             An array with dimensions `(n_classes1, n_classes2)`
         """
+        if self.inner_ot_method == "exact":
+            (
+                D_train_train,
+                D_train_test,
+                D_test_test,
+            ) = self._compute_exact_label_distances()
+        else:
+            (
+                D_train_train,
+                D_train_test,
+                D_test_test,
+            ) = self._compute_gaussian_label_distances()
+
+        label_distances = np.concatenate(
+            [
+                np.concatenate([D_train_train, D_train_test], axis=1),
+                np.concatenate([D_train_test, D_test_test], axis=1),
+            ],
+            axis=0,
+        )
+
+        """
+        M = (
+            label_distances.shape[1] * self.dataset.y_train[..., np.newaxis]
+            + self.dataset.y_test[np.newaxis, ...]
+        )
+        label_cost = label_distances.ravel()[M.ravel()].reshape(
+            len(self.dataset.y_train), len(self.dataset.y_test)
+        )
+        """
+        indexing_array = (
+            D_train_test.shape[1] * self.dataset.y_train[..., np.newaxis]
+            + self.dataset.y_test[np.newaxis, ...]
+        )
+        label_cost = D_train_test.ravel()[indexing_array.ravel()].reshape(
+            len(self.dataset.y_train), len(self.dataset.y_test)
+        )
+
+        return label_cost
+
+    def _compute_exact_label_distances(self) -> Tuple[NDArray, NDArray, NDArray]:
+        c_train = np.sort(np.unique(self.dataset.y_train))
+        c_test = np.sort(np.unique(self.dataset.y_test))
+        n_train, n_test = len(c_train), len(c_test)
+
+        D_train_test = np.zeros((n_train, n_test))
+        for i, j in itertools.product(range(n_train), range(n_test)):
+            distance = empirical_sinkhorn2(
+                self.dataset.x_train[self.dataset.y_train == c_train[i]],
+                self.dataset.x_test[self.dataset.y_test == c_test[j]],
+                reg=0.1,
+            )
+            D_train_test[i, j] = distance
+
+        D_train_train = np.zeros((n_train, n_train))
+        for i, j in itertools.combinations(range(n_train), 2):
+            distance = empirical_sinkhorn2(
+                self.dataset.x_train[self.dataset.y_train == c_train[i]],
+                self.dataset.x_train[self.dataset.y_train == c_train[j]],
+                reg=0.1,
+            )
+            D_train_train[i, j] = D_train_train[j, i] = distance
+
+        D_test_test = np.zeros((n_test, n_test))
+        for i, j in itertools.combinations(range(n_train), 2):
+            distance = empirical_sinkhorn2(
+                self.dataset.x_test[self.dataset.y_test == c_test[i]],
+                self.dataset.x_test[self.dataset.y_test == c_test[j]],
+                reg=0.1,
+            )
+            D_test_test[i, j] = D_test_test[j, i] = distance
+
+        return D_train_train, D_train_test, D_test_test
+
+    def _compute_gaussian_label_distances(self) -> Tuple[NDArray, NDArray, NDArray]:
         means_train, covariances_train = self._compute_label_stats(
             self.dataset.x_train, self.dataset.y_train
         )
@@ -170,15 +263,7 @@ class LAVA:
             )
             D_test_test[i, j] = D_test_test[j, i] = distance
 
-        label_distances = np.concatenate(
-            [
-                np.concatenate([D_train_train, D_train_test], axis=1),
-                np.concatenate([D_train_test, D_test_test], axis=1),
-            ],
-            axis=0,
-        )
-
-        return label_distances
+        return D_train_train, D_train_test, D_test_test
 
     def _compute_label_stats(
         self,
