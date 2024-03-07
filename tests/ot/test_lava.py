@@ -70,6 +70,5 @@ def test_lava_flipped_labels(synthetic_dataset_flipped_labels):
     dataset, flip_mask = synthetic_dataset_flipped_labels
     lava = LAVA(dataset, inner_ot_method="gaussian")
     values = lava.compute_values()
-    breakpoint()
     # We make sure that values are not all the same
     assert np.any(~np.isclose(values, values[0]))
