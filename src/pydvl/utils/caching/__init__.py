@@ -88,7 +88,5 @@ from .memory import *
 
 try:
     from .memcached import *
-
-    PYMEMCACHE_INSTALLED = True
 except ModuleNotFoundError:
-    PYMEMCACHE_INSTALLED = False
+    pass
