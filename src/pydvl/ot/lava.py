@@ -9,13 +9,13 @@ In: Published at ICRL 2023
 """
 
 import itertools
-from typing import Callable, List, Literal, Tuple
+from typing import Callable, Literal, Tuple
 
 import numpy as np
 import ot
 from numpy.typing import NDArray
 from ot.bregman import empirical_sinkhorn2
-from ot.gaussian import bures_wasserstein_distance, empirical_bures_wasserstein_distance
+from ot.gaussian import empirical_bures_wasserstein_distance
 
 from pydvl.utils.dataset import Dataset
 
