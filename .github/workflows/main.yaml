@@ -85,7 +85,7 @@ jobs:
   notebook-tests:
     strategy:
       matrix:
-        python_version: ["3.8", "3.9", "3.10"]
+        python_version: ["3.8", "3.9", "3.10", "3.11"]
     name: Run Notebook tests -  Python ${{ matrix.python_version }}
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
