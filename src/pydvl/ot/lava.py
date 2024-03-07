@@ -9,13 +9,13 @@ In: Published at ICRL 2023
 """
 
 import itertools
-from typing import List, Literal, Tuple
+from typing import Callable, List, Literal, Tuple
 
 import numpy as np
 import ot
 from numpy.typing import NDArray
 from ot.bregman import empirical_sinkhorn2
-from ot.gaussian import bures_wasserstein_distance
+from ot.gaussian import bures_wasserstein_distance, empirical_bures_wasserstein_distance
 
 from pydvl.utils.dataset import Dataset
 
@@ -68,9 +68,9 @@ class LAVA:
         Returns:
             Array of dimensions `(n_train)` that contains the calibrated gradients.
         """
-        gamma, dual_solution = self._compute_ot_dual()
+        dual_solution = self._compute_ot_dual()
         calibrated_gradients = self._compute_calibrated_gradients(dual_solution)
-        return gamma, calibrated_gradients
+        return calibrated_gradients
 
     def _compute_calibrated_gradients(
         self, dual_solution: Tuple[NDArray, NDArray]
@@ -106,11 +106,11 @@ class LAVA:
             ground_cost,
             self.regularization,
             log=True,
-            verbose=True,
+            verbose=False,
             numItermax=10000,
         )
         u, v = log["u"], log["v"]
-        return gamma, (u, v)
+        return u, v
 
     def _compute_ground_cost(self) -> NDArray:
         label_cost = self._compute_label_cost()
@@ -118,7 +118,9 @@ class LAVA:
         ground_cost = feature_cost + self.lambda_ * label_cost
         return ground_cost
 
-    def _compute_feature_cost(self, p: int = 2) -> NDArray:
+    def _compute_feature_cost(
+        self, metric: Literal["euclidean", "sqeuclidean"] = "sqeuclidean"
+    ) -> NDArray:
         """Compute distance between the features of the training and test sets.
 
         The first has dimensions `(n1, d1)` and the second has dimensions `(n2, d2)`.
@@ -129,16 +131,7 @@ class LAVA:
         Returns:
              Array with dimensions `(n1, n2)`
         """
-        if p == 1:
-            distance = ot.dist(
-                self.dataset.x_train, self.dataset.x_test, metric="euclidean"
-            )
-        elif p == 2:
-            distance = ot.dist(
-                self.dataset.x_train, self.dataset.x_test, metric="sqeuclidean"
-            )
-        else:
-            raise ValueError(f"Unsupported p value {p}")
+        distance = ot.dist(self.dataset.x_train, self.dataset.x_test, metric=metric)
         return distance
 
     def _compute_label_cost(self) -> NDArray:
@@ -150,17 +143,17 @@ class LAVA:
             An array with dimensions `(n_classes1, n_classes2)`
         """
         if self.inner_ot_method == "exact":
-            (
-                D_train_train,
-                D_train_test,
-                D_test_test,
-            ) = self._compute_exact_label_distances()
+            ot_method = empirical_sinkhorn2
+            reg = 0.1
         else:
-            (
-                D_train_train,
-                D_train_test,
-                D_test_test,
-            ) = self._compute_gaussian_label_distances()
+            ot_method = empirical_bures_wasserstein_distance
+            reg = 0.1
+
+        (
+            D_train_train,
+            D_train_test,
+            D_test_test,
+        ) = self._compute_label_distances(ot_method, reg=reg)
 
         label_distances = np.concatenate(
             [
@@ -189,17 +182,19 @@ class LAVA:
 
         return label_cost
 
-    def _compute_exact_label_distances(self) -> Tuple[NDArray, NDArray, NDArray]:
+    def _compute_label_distances(
+        self, ot_method: Callable, reg: float = 0.1
+    ) -> Tuple[NDArray, NDArray, NDArray]:
         c_train = np.sort(np.unique(self.dataset.y_train))
         c_test = np.sort(np.unique(self.dataset.y_test))
         n_train, n_test = len(c_train), len(c_test)
 
         D_train_test = np.zeros((n_train, n_test))
         for i, j in itertools.product(range(n_train), range(n_test)):
-            distance = empirical_sinkhorn2(
+            distance = ot_method(
                 self.dataset.x_train[self.dataset.y_train == c_train[i]],
                 self.dataset.x_test[self.dataset.y_test == c_test[j]],
-                reg=0.1,
+                reg=reg,
             )
             D_train_test[i, j] = distance
 
@@ -208,7 +203,7 @@ class LAVA:
             distance = empirical_sinkhorn2(
                 self.dataset.x_train[self.dataset.y_train == c_train[i]],
                 self.dataset.x_train[self.dataset.y_train == c_train[j]],
-                reg=0.1,
+                reg=reg,
             )
             D_train_train[i, j] = D_train_train[j, i] = distance
 
@@ -217,76 +212,8 @@ class LAVA:
             distance = empirical_sinkhorn2(
                 self.dataset.x_test[self.dataset.y_test == c_test[i]],
                 self.dataset.x_test[self.dataset.y_test == c_test[j]],
-                reg=0.1,
+                reg=reg,
             )
             D_test_test[i, j] = D_test_test[j, i] = distance
 
         return D_train_train, D_train_test, D_test_test
-
-    def _compute_gaussian_label_distances(self) -> Tuple[NDArray, NDArray, NDArray]:
-        means_train, covariances_train = self._compute_label_stats(
-            self.dataset.x_train, self.dataset.y_train
-        )
-        means_test, covariances_test = self._compute_label_stats(
-            self.dataset.x_test, self.dataset.y_test
-        )
-
-        n_train, n_test = len(means_train), len(means_test)
-
-        D_train_test = np.zeros((n_train, n_test))
-        for i, j in itertools.product(range(n_train), range(n_test)):
-            distance = bures_wasserstein_distance(
-                means_train[i],
-                means_test[j],
-                covariances_train[i],
-                covariances_test[j],
-            )
-            D_train_test[i, j] = distance
-
-        D_train_train = np.zeros((n_train, n_train))
-        for i, j in itertools.combinations(range(n_train), 2):
-            distance = bures_wasserstein_distance(
-                means_train[i],
-                means_train[j],
-                covariances_train[i],
-                covariances_train[j],
-            )
-            D_train_train[i, j] = D_train_train[j, i] = distance
-
-        D_test_test = np.zeros((n_test, n_test))
-        for i, j in itertools.combinations(range(n_train), 2):
-            distance = bures_wasserstein_distance(
-                means_test[i],
-                means_test[j],
-                covariances_test[i],
-                covariances_test[j],
-            )
-            D_test_test[i, j] = D_test_test[j, i] = distance
-
-        return D_train_train, D_train_test, D_test_test
-
-    def _compute_label_stats(
-        self,
-        x: NDArray,
-        y: NDArray,
-    ) -> Tuple[List[NDArray], List[NDArray]]:
-        """Compute means and covariances for each class.
-
-        Args:
-            x: Input data.
-            y: Target labels.
-
-        Returns:
-            Means and covariances.
-        """
-        classes = np.sort(np.unique(y))
-        means = []
-        covariances = []
-        for i, c in enumerate(classes):
-            class_indices = np.where(y == c)
-            filtered_x = x[class_indices]
-            mean: NDArray = np.mean(filtered_x, axis=0).ravel()
-            cov = np.cov(filtered_x.T)
-            means.append(mean)
-            covariances.append(cov)
-        return means, covariances
