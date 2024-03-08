@@ -11,6 +11,9 @@
 
 - Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
 - Memory issue with `CgInfluence` and `ArnoldiInfluence`[PR #498](https://github.com/aai-institute/pyDVL/pull/498)
+- Raising specific error message with install instruction, when trying to load `pydvl.utils.cache.memcached`
+  without `pymemcache` installed. If `pymemcache` is available, all symbols from
+  `pydvl.utils.cache.memcached` are available through `pydvl.utils.cache`[PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
 
 ### Miscellaneous
 

@@ -87,4 +87,5 @@ that can be optionally installed:
     pip install pyDVL[memcached]
     ```
     
-    This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally.
+    This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally. 
+    Be aware, that you still have to start a memcached server manually.
