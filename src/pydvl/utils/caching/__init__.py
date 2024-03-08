@@ -84,5 +84,9 @@ functions distinct to the eyes of the cache. This can be avoided with the use of
 from .base import *
 from .config import *
 from .disk import *
-from .memcached import *
 from .memory import *
+
+try:
+    from .memcached import *
+except ModuleNotFoundError:
+    pass

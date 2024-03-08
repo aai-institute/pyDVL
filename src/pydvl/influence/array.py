@@ -8,10 +8,11 @@ using the Zarr library.
 """
 
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Generic, List, Optional, Tuple
+from typing import Callable, Generator, Generic, List, Optional, Tuple, Union
 
 import zarr
 from numpy.typing import NDArray
+from zarr.storage import StoreLike
 
 from .base_influence_function_model import TensorType
 
@@ -140,7 +141,7 @@ class LazyChunkSequence:
 
     def to_zarr(
         self,
-        path_or_url: str,
+        path_or_url: Union[str, StoreLike],
         converter: NumpyConverter,
         return_stored: bool = False,
         overwrite: bool = False,
@@ -153,6 +154,7 @@ class LazyChunkSequence:
 
         Args:
             path_or_url: The file path or URL where the Zarr array will be stored.
+                Also excepts instances of zarr stores.
             converter: A converter for transforming blocks into NumPy arrays
                 compatible with Zarr.
             return_stored: If True, the method returns the stored Zarr array; otherwise,
@@ -244,7 +246,7 @@ class NestedLazyChunkSequence:
 
     def to_zarr(
         self,
-        path_or_url: str,
+        path_or_url: Union[str, StoreLike],
         converter: NumpyConverter,
         return_stored: bool = False,
         overwrite: bool = False,
@@ -257,6 +259,7 @@ class NestedLazyChunkSequence:
 
         Args:
             path_or_url: The file path or URL where the Zarr array will be stored.
+                Also excepts instances of zarr stores.
             converter: A converter for transforming blocks into NumPy arrays
                 compatible with Zarr.
             return_stored: If True, the method returns the stored Zarr array;
