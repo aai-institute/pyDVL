@@ -18,6 +18,7 @@
 ### Miscellaneous
 
 - Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
+- Add Python Version 3.11 to supported versions [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
 
 ## 0.8.1 - 🆕 🏗  New method and notebook, Games with exact shapley values, bug fixes and cleanup
 
