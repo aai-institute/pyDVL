@@ -1,11 +1,10 @@
-import logging
-import shutil
 import uuid
 
 import dask.array as da
 import numpy as np
 import pytest
 import torch
+import zarr
 from distributed import Client
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
@@ -289,7 +288,7 @@ def test_thread_safety_violation_error(
         )
 
 
-def test_sequential_calculator(model_and_data, test_case):
+def test_sequential_calculator(model_and_data, test_case, mocker):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     train_dataloader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
@@ -310,13 +309,15 @@ def test_sequential_calculator(model_and_data, test_case):
     seq_factors = seq_factors_lazy_array.compute(aggregator=TorchCatAggregator())
 
     torch_factors = inf_model.influence_factors(x_test, y_test)
-    zarr_factors_path = str(uuid.uuid4())
+
+    zarr_factors_store = zarr.MemoryStore()
     seq_factors_from_zarr = seq_factors_lazy_array.to_zarr(
-        zarr_factors_path, TorchNumpyConverter(), return_stored=True
+        zarr_factors_store, TorchNumpyConverter(), return_stored=True
     )
+
     assert torch.allclose(seq_factors, torch_factors, atol=1e-6)
-    assert np.allclose(torch_factors.numpy(), seq_factors_from_zarr, atol=1e-6)
-    shutil.rmtree(zarr_factors_path)
+    assert np.allclose(seq_factors_from_zarr, torch_factors, atol=1e-6)
+    del zarr_factors_store
 
     torch_values_from_factors = inf_model.influences_from_factors(
         torch_factors, x_train, y_train, mode=test_case.mode
@@ -334,24 +335,25 @@ def test_sequential_calculator(model_and_data, test_case):
     seq_values_from_factors = seq_values_from_factors_lazy_array.compute(
         aggregator=NestedTorchCatAggregator()
     )
-    zarr_values_from_factors_path = str(uuid.uuid4())
+    zarr_values_from_factors_store = zarr.MemoryStore()
     seq_values_from_factors_from_zarr = seq_values_from_factors_lazy_array.to_zarr(
-        zarr_values_from_factors_path, TorchNumpyConverter(), return_stored=True
+        zarr_values_from_factors_store, TorchNumpyConverter(), return_stored=True
     )
 
     assert torch.allclose(seq_values_from_factors, torch_values_from_factors, atol=1e-6)
     assert np.allclose(
         seq_values_from_factors_from_zarr, torch_values_from_factors.numpy(), atol=1e-6
     )
-    shutil.rmtree(zarr_values_from_factors_path)
+    del zarr_values_from_factors_store
 
     seq_values_lazy_array = seq_calculator.influences(
         test_dataloader, train_dataloader, mode=test_case.mode
     )
     seq_values = seq_values_lazy_array.compute(aggregator=NestedTorchCatAggregator())
-    zarr_values_path = str(uuid.uuid4())
+
+    zarr_values_store = zarr.MemoryStore()
     seq_values_from_zarr = seq_values_lazy_array.to_zarr(
-        zarr_values_path, TorchNumpyConverter(), return_stored=True
+        zarr_values_store, TorchNumpyConverter(), return_stored=True
     )
 
     torch_values = inf_model.influences(
@@ -359,7 +361,7 @@ def test_sequential_calculator(model_and_data, test_case):
     )
     assert torch.allclose(seq_values, torch_values, atol=1e-6)
     assert np.allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)
-    shutil.rmtree(zarr_values_path)
+    del zarr_values_store
 
 
 @pytest.mark.torch

@@ -3,6 +3,7 @@ import pickle
 import tempfile
 from time import sleep, time
 from typing import Optional
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import numpy as np
 import pytest
@@ -154,9 +155,15 @@ def test_single_job(cache_backend):
 
 
 def test_without_pymemcache(mocker):
-    mocker.patch("pydvl.utils.caching.memcached.PYMEMCACHE_INSTALLED", False)
-    with pytest.raises(ModuleNotFoundError):
-        MemcachedCacheBackend()
+    import importlib
+    import sys
+
+    mocker.patch.dict("sys.modules", {"pymemcache": None})
+    with pytest.raises(ModuleNotFoundError) as err:
+        importlib.reload(sys.modules["pydvl.utils.caching.memcached"])
+
+    # error message should contain the extra install expression
+    assert "pyDVL[memcached]" in err.value.msg
 
 
 def test_memcached_failed_connection():
