@@ -6,6 +6,8 @@
 
 - Implement new method: `NystroemSketchInfluence` [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
 - Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
+- Implement a preconditioned block variant of conjugate gradient 
+  [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 
 ### Fixed
 
