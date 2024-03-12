@@ -3024,8 +3024,8 @@ v_\text{semi}(i) = \sum_{i=1}^n w(k)
 <p>the set <span class="arithmatex">\(D_{-i}^{(k)}\)</span> contains all subsets of <span class="arithmatex">\(D\)</span> of size <span class="arithmatex">\(k\)</span> that do not
 include sample <span class="arithmatex">\(x_i\)</span>, <span class="arithmatex">\(S_{+i}\)</span> is the set <span class="arithmatex">\(S\)</span> with <span class="arithmatex">\(x_i\)</span> added, and <span class="arithmatex">\(u\)</span> is the
 utility function.</p>
-<p>Two instances of this are <strong>Banzhaf indices</strong> (Wang and Jia, 2022)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>,
-and <strong>Beta Shapley</strong> (Kwon and Zou, 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>, with better numerical and
+<p>Two instances of this are <strong>Banzhaf indices</strong> [@wang_data_2022],
+and <strong>Beta Shapley</strong> (Kwon and Zou, 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">1</a></sup>, with better numerical and
 rank stability in certain situations.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -3047,7 +3047,7 @@ w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
 <p>where <span class="arithmatex">\(B\)</span> is the <a href="https://en.wikipedia.org/wiki/Beta_function">Beta function</a>,
 and <span class="arithmatex">\(\alpha\)</span> and <span class="arithmatex">\(\beta\)</span> are parameters that control the weighting of the
 subsets. Setting both to 1 recovers Shapley values, and setting <span class="arithmatex">\(\alpha = 1\)</span>,
-and <span class="arithmatex">\(\beta = 16\)</span> is reported in (Kwon and Zou, 2022)<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup> to be a good choice for some
+and <span class="arithmatex">\(\beta = 16\)</span> is reported in (Kwon and Zou, 2022)<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">1</a></sup> to be a good choice for some
 applications. Beta Shapley values are available in pyDVL through
 <a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_beta_shapley_semivalues">compute_beta_shapley_semivalues</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
@@ -3073,7 +3073,7 @@ constant:</p>
 any choice of weight function <span class="arithmatex">\(w\)</span>, one can always construct a utility with
 higher variance where <span class="arithmatex">\(w\)</span> is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.</p>
-<p>The authors of (Wang and Jia, 2022)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> show that Banzhaf indices are more robust to
+<p>The authors of [@wang_data_2022] show that Banzhaf indices are more robust to
 variance in the utility function than Shapley and Beta Shapley values. They are
 available in pyDVL through
 <a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_banzhaf_semivalues">compute_banzhaf_semivalues</a>:</p>
@@ -3112,7 +3112,7 @@ For instance, the following snippet is equivalent to the above:</p>
 <p>Allowing any coefficient can help when experimenting with models which are more
 sensitive to changes in training set size. However, Data Banzhaf indices are
 proven to be the most robust to variance in the utility function, in the sense
-of rank stability, across a range of models and datasets (Wang and Jia, 2022)<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. </p>
+of rank stability, across a range of models and datasets [@wang_data_2022]. </p>
 <div class="admonition warning">
 <p class="admonition-title">Careful with permutation sampling</p>
 <p>This generic implementation of semi-values allowing for any combination of
@@ -3134,11 +3134,8 @@ whenever not computing other semi-values.</p>
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:1">
-<p>Wang, J.T., Jia, R., 2022. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning [WWW Document]. <a href="https://doi.org/10.48550/arXiv.2205.15466">https://doi.org/10.48550/arXiv.2205.15466</a>&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
 <li id="fn:2">
-<p>Kwon, Y., Zou, J., 2022. <a href="http://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>Kwon, Y., Zou, J., 2022. <a href="https://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -3164,7 +3161,7 @@ whenever not computing other semi-values.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-12</span>
   </span>
 
     
@@ -3174,7 +3171,7 @@ whenever not computing other semi-values.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-12</span>
   </span>
 
     

@@ -3127,8 +3127,8 @@ we focus on game-theoretic concepts and refer to the main documentation on the
 <p>The main contenders in game-theoretic approaches are <a href="shapley.md]">Shapley
 values</a> (Ghorbani and Zou, 2019)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, (Kwon et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>,
  (Schoch et al., 2022)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>, their generalization to so-called
-<a href="semi-values/">semi-values</a> by (Kwon and Zou, 2022)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup> and (Wang and Jia, 2022)<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>,
-and <a href="the-core/">the Core</a> (Yan and Procaccia, 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. All of these are implemented
+<a href="semi-values/">semi-values</a> by (Kwon and Zou, 2022)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup> and [@wang_data_2022],
+and <a href="the-core/">the Core</a> (Yan and Procaccia, 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">5</a></sup>. All of these are implemented
 in pyDVL.</p>
 <p>In these methods, data points are considered players in a cooperative game 
 whose outcome is the performance of the model when trained on subsets 
@@ -3138,8 +3138,8 @@ the training set, so that an exact computation is <span class="arithmatex">\(\ma
 number of samples <span class="arithmatex">\(n\)</span>, with each iteration requiring a full re-fitting of the 
 model using a coalition as training set. Consequently, most methods involve 
 Monte Carlo approximations, and sometimes approximate utilities which are 
-faster to compute, e.g. proxy models (Wang et al., 2022)<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup> or constant-cost
-approximations like Neural Tangent Kernels (Wu et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+faster to compute, e.g. proxy models (Wang et al., 2022)<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">6</a></sup> or constant-cost
+approximations like Neural Tangent Kernels (Wu et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">7</a></sup>.</p>
 <p>The reasoning behind using game theory is that, in order to be useful, an
 assignment of value, dubbed <strong>valuation function</strong>, is usually required to
 fulfil certain requirements of consistency and "fairness". For instance, in some
@@ -3256,7 +3256,7 @@ when constructing the <code>Utility</code> object. The two following calls are e
 <p>Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
 from subsets to scores. This is the idea behind <strong>Data Utility Learning (<abbr title="Data Utility Learning">DUL</abbr>)</strong>
- (Wang et al., 2022)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">7</a></sup> and in pyDVL it's as simple as wrapping the
+ (Wang et al., 2022)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">6</a></sup> and in pyDVL it's as simple as wrapping the
 <code>Utility</code> inside <a class="autorefs autorefs-internal" href="../api/pydvl/utils/utility/#pydvl.utils.utility.DataUtilityLearning">DataUtilityLearning</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
@@ -3347,7 +3347,7 @@ can also introduce issues in the low-value regime.</p>
   configure the caching system to allow multiple evaluations of the utility for
   every index set. A moving average is computed and returned once the standard
   error is small, see [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
-  (Wang and Jia, 2022)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by relaxing one of the Shapley axioms
+  [@wang_data_2022] prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
   do in a utility-agnostic setting. This method, dubbed <em>Data Banzhaf</em>, is
@@ -3379,28 +3379,25 @@ can also introduce issues in the low-value regime.</p>
 <hr />
 <ol>
 <li id="fn:1">
-<p>Ghorbani, A., Zou, J., 2019. <a href="http://proceedings.mlr.press/v97/ghorbani19c.html">Data Shapley: Equitable Valuation of Data for Machine Learning</a>, in: Proceedings of the 36th International Conference on Machine Learning, PMLR. Presented at the International Conference on Machine Learning (ICML 2019), PMLR, pp. 2242–2251.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>Ghorbani, A., Zou, J., 2019. <a href="https://proceedings.mlr.press/v97/ghorbani19c.html">Data Shapley: Equitable Valuation of Data for Machine Learning</a>, in: Proceedings of the 36th International Conference on Machine Learning, PMLR. Presented at the International Conference on Machine Learning (ICML 2019), PMLR, pp. 2242–2251.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
-<p>Kwon, Y., Rivas, M.A., Zou, J., 2021. <a href="http://proceedings.mlr.press/v130/kwon21a.html">Efficient Computation and Analysis of Distributional Shapley Values</a>, in: Proceedings of the 24th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 793–801.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>Kwon, Y., Rivas, M.A., Zou, J., 2021. <a href="https://proceedings.mlr.press/v130/kwon21a.html">Efficient Computation and Analysis of Distributional Shapley Values</a>, in: Proceedings of the 24th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 793–801.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 <li id="fn:3">
 <p>Schoch, S., Xu, H., Ji, Y., 2022. <a href="https://openreview.net/forum?id=KTOcrOR5mQ9">CS-Shapley: <span class="nocase">Class-wise Shapley Values</span> for Data Valuation in Classification</a>, in: Proc. Of the Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS). Presented at the Advances in Neural Information Processing Systems (NeurIPS 2022).&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
 </li>
 <li id="fn:4">
-<p>Kwon, Y., Zou, J., 2022. <a href="http://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
-</li>
-<li id="fn:5">
-<p>Wang, J.T., Jia, R., 2022. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning [WWW Document]. <a href="https://doi.org/10.48550/arXiv.2205.15466">https://doi.org/10.48550/arXiv.2205.15466</a>&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+<p>Kwon, Y., Zou, J., 2022. <a href="https://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
 </li>
 <li id="fn:6">
-<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 5 in the text">&#8617;</a></p>
 </li>
 <li id="fn:7">
-<p>Wang, T., Yang, Y., Jia, R., 2022. Improving <span class="nocase">Cooperative Game Theory-based Data Valuation</span> via Data Utility Learning. Presented at the International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning, arXiv. <a href="https://doi.org/10.48550/arXiv.2107.06336">https://doi.org/10.48550/arXiv.2107.06336</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+<p>Wang, T., Yang, Y., Jia, R., 2022. Improving <span class="nocase">Cooperative Game Theory-based Data Valuation</span> via Data Utility Learning. Presented at the International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning, arXiv. <a href="https://doi.org/10.48550/arXiv.2107.06336">https://doi.org/10.48550/arXiv.2107.06336</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:7" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 <li id="fn:8">
-<p>Wu, Z., Shu, Y., Low, B.K.H., 2022. <a href="https://proceedings.mlr.press/v162/wu22j.html">DAVINZ: Data Valuation using Deep Neural Networks at Initialization</a>, in: Proceedings of the 39th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 24150–24176.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+<p>Wu, Z., Shu, Y., Low, B.K.H., 2022. <a href="https://proceedings.mlr.press/v162/wu22j.html">DAVINZ: Data Valuation using Deep Neural Networks at Initialization</a>, in: Proceedings of the 39th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 24150–24176.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -3426,7 +3423,7 @@ can also introduce issues in the low-value regime.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-12</span>
   </span>
 
     
@@ -3436,7 +3433,7 @@ can also introduce issues in the low-value regime.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-12</span>
   </span>
 
     
