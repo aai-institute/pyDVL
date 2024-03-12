@@ -11,9 +11,19 @@ method that does not require the explicit inversion of the Hessian. Instead, it
 only requires the calculation of Hessian-vector products, making it a good
 choice for large datasets or models with many parameters. It is nevertheless
 much slower to converge than the direct inversion method and not as accurate.
+
 More info on the theory of conjugate gradient can be found on
-[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method). pyDVL also implements a stable block variant of the conjugate 
-gradient method.
+[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method). 
+
+pyDVL also implements a stable block variant of the conjugate 
+gradient method, defined in [@ji_breakdownfree_2017], which solves several
+right hand sides simultaneously.
+
+Optionally, the user can provide a pre-conditioner to improve convergence, such as
+a [Jacobi pre-conditioner](
+https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner)
+or a Nyström approximation based pre-conditioner, 
+described in [@frangella_randomized_2023]. 
 
 ```python
 from pydvl.influence.torch import CgInfluence
