@@ -320,7 +320,9 @@ We currently implement the following papers:
   In Proceedings of the AAAI-22. arXiv, 2021.
 - James Martens, Roger Grosse, [Optimizing Neural Networks with Kronecker-factored Approximate Curvature](https://arxiv.org/abs/1503.05671), International Conference on Machine Learning (ICML), 2015.
 - George, Thomas, César Laurent, Xavier Bouthillier, Nicolas Ballas, Pascal Vincent, [Fast Approximate Natural Gradient Descent in a Kronecker-factored Eigenbasis](https://arxiv.org/abs/1806.03884), Advances in Neural Information Processing Systems 31,2018.
-- Hataya, Ryuichiro and Yamada, Makoto, [Nystrom Method for Accurate and Scalable Implicit Differentiation](https://proceedings.mlr.press/v206/hataya23a.html), Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, 2023
+- Hataya, Ryuichiro and Yamada, Makoto, [Nystrom Method for Accurate and Scalable Implicit Differentiation](https://proceedings.mlr.press/v206/hataya23a.html), Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, 2023.
+- Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine, [Randomized Nyström Preconditioning](https://epubs.siam.org/doi/abs/10.1137/21M1466244), SIAM Journal on Matrix Analysis and Applications, 2023.
+- Ji, Hao and Li, Yaohang, [A Breakdown-Free Block Conjugate Gradient Method](https://link.springer.com/10.1007/s10543-016-0631-z), BIT Numerical Mathematics, 2017 
 
 # License
 
