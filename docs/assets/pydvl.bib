@@ -47,18 +47,21 @@
   keywords = {notion}
 }
 
-@online{frangella_randomized_2021,
+@article{frangella_randomized_2023,
   title = {Randomized {{Nyström Preconditioning}}},
   author = {Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine},
-  date = {2021-12-17},
-  eprint = {2110.02820},
-  eprinttype = {arxiv},
-  eprintclass = {cs, math},
-  doi = {10.48550/arXiv.2110.02820},
-  url = {https://arxiv.org/abs/2110.02820},
-  urldate = {2023-06-04},
-  abstract = {This paper introduces the Nystr\textbackslash "om PCG algorithm for solving a symmetric positive-definite linear system. The algorithm applies the randomized Nystr\textbackslash "om method to form a low-rank approximation of the matrix, which leads to an efficient preconditioner that can be deployed with the conjugate gradient algorithm. Theoretical analysis shows that preconditioned system has constant condition number as soon as the rank of the approximation is comparable with the number of effective degrees of freedom in the matrix. The paper also develops adaptive methods that provably achieve similar performance without knowledge of the effective dimension. Numerical tests show that Nystr\textbackslash "om PCG can rapidly solve large linear systems that arise in data analysis problems, and it surpasses several competing methods from the literature.},
-  pubstate = {preprint}
+  date = {2023-06-30},
+  journaltitle = {SIAM Journal on Matrix Analysis and Applications},
+  shortjournal = {SIAM J. Matrix Anal. Appl.},
+  volume = {44},
+  number = {2},
+  pages = {718--752},
+  publisher = {{Society for Industrial and Applied Mathematics}},
+  issn = {0895-4798},
+  doi = {10.1137/21M1466244},
+  url = {https://epubs.siam.org/doi/abs/10.1137/21M1466244},
+  urldate = {2024-03-12},
+  abstract = {Randomized methods are becoming increasingly popular in numerical linear algebra. However, few attempts have been made to use them in developing preconditioners. Our interest lies in solving large-scale sparse symmetric positive definite linear systems of equations, where the system matrix is preordered to doubly bordered block diagonal form (for example, using a nested dissection ordering). We investigate the use of randomized methods to construct high-quality preconditioners. In particular, we propose a new and efficient approach that employs Nyström's method for computing low rank approximations to develop robust algebraic two-level preconditioners. Construction of the new preconditioners involves iteratively solving a smaller but denser symmetric positive definite Schur complement system with multiple right-hand sides. Numerical experiments on problems coming from a range of application areas demonstrate that this inner system can be solved cheaply using block conjugate gradients and that using a large convergence tolerance to limit the cost does not adversely affect the quality of the resulting Nyström--Schur two-level preconditioner.}
 }
 
 @inproceedings{george_fast_2018,
