@@ -99,7 +99,7 @@ if_model = ArnoldiInfluence(
 ### Eigenvalue Corrected K-FAC
 
 K-FAC, short for Kronecker-Factored Approximate Curvature, is a method that approximates the Fisher information matrix [FIM](https://en.wikipedia.org/wiki/Fisher_information) of a model. It is possible to show that for classification models with appropriate loss functions the FIM is equal to the Hessian of the model’s loss over the dataset. In this restricted but nonetheless important context K-FAC offers an efficient way to approximate the Hessian and hence the influence scores. 
-For more info and details refer to the original paper [@martens2015optimizing].
+For more info and details refer to the original paper [@martens_optimizing_2015].
 
 The K-FAC method is implemented in the class [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the K-FAC method to calculate the influence function of a model. Note that, in contrast to the other methods for influence function calculation, K-FAC does not require the loss function as an input. This is because the current implementation is only applicable to classification models with a cross entropy loss function. 
 
@@ -112,7 +112,7 @@ if_model = EkfacInfluence(
 ```
 Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a NotImplementedLayerRepresentationException.
 
-A further improvement of the K-FAC method is the Eigenvalue Corrected K-FAC (EKFAC) method [@george2018fast], which allows to further re-fit the eigenvalues of the Hessian, thus providing a more accurate approximation. On top of the K-FAC method, the EKFAC method is implemented by setting `update_diagonal=True` when initialising [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the EKFAC method to calculate the influence function of a model. 
+A further improvement of the K-FAC method is the Eigenvalue Corrected K-FAC (EKFAC) method [@george_fast_2018], which allows to further re-fit the eigenvalues of the Hessian, thus providing a more accurate approximation. On top of the K-FAC method, the EKFAC method is implemented by setting `update_diagonal=True` when initialising [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the EKFAC method to calculate the influence function of a model. 
 
 ```python
 from pydvl.influence.torch import EkfacInfluence
