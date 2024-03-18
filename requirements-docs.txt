@@ -17,3 +17,5 @@ mkdocs-macros-plugin
 pypandoc; sys_platform == 'darwin'
 pypandoc_binary; sys_platform != 'darwin'
 GitPython
+# Use for the binder link hook
+beautifulsoup4
