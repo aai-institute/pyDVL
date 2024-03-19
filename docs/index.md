@@ -11,6 +11,9 @@ distributed caching of results.
 If you're a first time user of pyDVL, we recommend you to go through the
 [[installation]] and [[first-steps]] guides in the Getting Started section.
 
+If you're looking for a list of implemented methods refer to the
+[[methods]] page.
+
 <div class="grid cards" markdown>
 
 -   :fontawesome-solid-toolbox:{ .lg .middle } __Installation__

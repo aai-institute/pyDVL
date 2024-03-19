@@ -8,6 +8,7 @@ remote_branch: gh-pages
 
 nav:
   - Home: index.md
+  - Methods: methods.md
   - Getting Started:
     - Installation: getting-started/installation.md
     - First steps: getting-started/first-steps.md
@@ -205,6 +206,7 @@ markdown_extensions:
   - abbr
   - admonition
   - attr_list
+  - def_list
   - footnotes
   - markdown_captions
   - md_in_html

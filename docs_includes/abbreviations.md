@@ -19,3 +19,6 @@
 *[SV]: Shapley Value
 *[TMCS]: Truncated Monte Carlo Shapley
 *[WAD]: Weighted Accuracy Drop
+*[OOB]: Out-of-Bag
+*[CG]: Conjugate Gradient
+*[EKFAC]: Eigenvalue-corrected Kronecker Factorization
