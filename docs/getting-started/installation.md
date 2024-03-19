@@ -76,7 +76,7 @@ that can be optionally installed:
     pip install pyDVL[ray]
     ```
 
-    see [[getting-started#ray]] for more details on how to use it.
+    see [[first-steps#ray]] for more details on how to use it.
 
 - `memcached`:
 
