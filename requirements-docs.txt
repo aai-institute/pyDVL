@@ -1,10 +1,10 @@
 mike
 markdown-captions
 mkdocs==1.5.3
-mkdocstrings[python]>=0.18
+mkdocstrings[python]>=0.24
 mkdocs-alias-plugin>=0.6.0
 mkdocs-autorefs
-mkdocs-bibtex
+mkdocs-bibtex>=2.14.1
 mkdocs-gen-files
 mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox
@@ -17,3 +17,5 @@ mkdocs-macros-plugin
 pypandoc; sys_platform == 'darwin'
 pypandoc_binary; sys_platform != 'darwin'
 GitPython
+# Use for the binder link hook
+beautifulsoup4
