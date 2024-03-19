@@ -110,7 +110,7 @@ from pydvl.value.sampler import (
     SampleT,
     StochasticSampler,
 )
-from pydvl.value.stopping import MaxUpdates, StoppingCriterion, RankStability
+from pydvl.value.stopping import MaxUpdates, RankStability, StoppingCriterion
 
 __all__ = [
     "compute_banzhaf_semivalues",

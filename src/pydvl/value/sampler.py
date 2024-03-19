@@ -318,6 +318,7 @@ class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     This sampler creates random subsets of the data.
     This sampler is used in :footcite:t:`wang_data_2022`.
     """
+
     def __iter__(self) -> Iterator[SampleT]:
         if len(self) == 0:
             return

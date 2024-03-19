@@ -140,7 +140,7 @@ __all__ = [
     "MinUpdates",
     "MaxTime",
     "HistoryDeviation",
-    "RankStability"
+    "RankStability",
 ]
 
 logger = logging.getLogger(__name__)
@@ -663,7 +663,7 @@ class RankStability(StoppingCriterion):
 
         corr = spearmanr(self._memory, r.values)[0]
         self._memory = r.values.copy()
-        self._completion = min(self.rtol / np.abs(corr-self._corr), 1.0)
+        self._completion = min(self.rtol / np.abs(corr - self._corr), 1.0)
         if np.isclose(corr, self._corr, rtol=self.rtol):
             self._converged = np.full(len(r), True)
             return Status.Converged
