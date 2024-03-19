@@ -312,17 +312,23 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class MSRSampler(PowersetSampler[T]):
-    def __iter__(self) -> Iterator[SampleType]:
+class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
+    """An iterator to perform MSR Monte Carlo sampling of subsets.
+
+    This sampler creates random subsets of the data.
+    This sampler is used in :footcite:t:`wang_data_2022`.
+    """
+    def __iter__(self) -> Iterator[SampleT]:
         if len(self) == 0:
             return
         while True:
-            subset = random_subset(self.indices)
+            subset = random_subset(self.indices, seed=self._rng)
             yield -1, subset
             self._n_samples += 1
 
-    def weight(self, subset: NDArray[T]) -> float:
-        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):

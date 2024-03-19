@@ -140,6 +140,7 @@ __all__ = [
     "MinUpdates",
     "MaxTime",
     "HistoryDeviation",
+    "RankStability"
 ]
 
 logger = logging.getLogger(__name__)
@@ -634,8 +635,15 @@ class RankStability(StoppingCriterion):
 
     When the change in rank correlation between two successive iterations is
     below a given threshold, the computation is terminated.
+    The criterion computes the Spearman correlation between two successive iterations.
+    The Spearman correlation uses the ordering indices of the given values and correlates them.
+    This means it focuses on the order of the elements instead of their exact values.
+    If the order stops changing (meaning the Banzhaf semivalues estimates converge), the criterion stops the algorithm.
 
     This criterion is used in :footcite:t:`wang_data_2022`.
+
+    Args:
+        rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
     """
 
     def __init__(self, rtol: float, modify_result: bool = True):
@@ -645,6 +653,7 @@ class RankStability(StoppingCriterion):
         self.rtol = rtol
         self._memory = None  # type: ignore
         self._corr = 0.0
+        self._completion = 0.0
 
     def _check(self, r: ValuationResult) -> Status:
         if self._memory is None:
@@ -654,8 +663,19 @@ class RankStability(StoppingCriterion):
 
         corr = spearmanr(self._memory, r.values)[0]
         self._memory = r.values.copy()
+        self._completion = min(self.rtol / np.abs(corr-self._corr), 1.0)
         if np.isclose(corr, self._corr, rtol=self.rtol):
             self._converged = np.full(len(r), True)
             return Status.Converged
         self._corr = corr
         return Status.Pending
+
+    def completion(self) -> float:
+        return self._completion
+
+    def reset(self):
+        self._memory = None  # type: ignore
+        self._corr = 0.0
+
+    def __str__(self):
+        return f"RankStability(rtol={self.rtol})"
