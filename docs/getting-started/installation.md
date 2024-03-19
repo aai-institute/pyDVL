@@ -33,7 +33,7 @@ pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
 [cvxpy](https://www.cvxpy.org/) for the Core methods,
 and [joblib](https://joblib.readthedocs.io/en/stable/)
 for parallelization locally. Additionally,the [Influence functions][pydvl.influence]
-module requires PyTorch (see [[installation#extras]]).
+module requires PyTorch (see [[installation#extras|Extras]]).
 
 ### Extras
 
@@ -76,7 +76,7 @@ that can be optionally installed:
     pip install pyDVL[ray]
     ```
 
-    see [[first-steps#ray]] for more details on how to use it.
+    see [[first-steps#ray|Ray Usage]] for more details on how to use it.
 
 - `memcached`:
 
