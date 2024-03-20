@@ -80,7 +80,6 @@ jobs:
       split_size: 4
       group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
-      free_disk_space: true
     needs: [code-quality]
 
   notebook-tests:
