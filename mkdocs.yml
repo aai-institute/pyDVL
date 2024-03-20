@@ -12,6 +12,7 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - First steps: getting-started/first-steps.md
+    - Advanced usage: getting-started/advanced-usage.md
   - Data Valuation:
     - Introduction: value/index.md
     - Applications: value/applications.md
