@@ -15,6 +15,11 @@ on:
         description: "Determines which Python version to use"
         type: string
         required: true
+      free_disk_space:
+        description: "If true, freeing disk before test run"
+        type: string
+        default: true
+        required: false
 
 env:
   PY_COLORS: 1
@@ -23,6 +28,12 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
+    - if: ${{ inputs.free_disk_space == true }}
+      name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        large-packages: false
+        docker-images: false
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
