@@ -653,6 +653,7 @@ def test_influences_cg(
         torch.Tensor,
     ],
     direct_influences,
+    direct_factors,
     use_block_cg: bool,
     pre_conditioner: PreConditioner,
 ):
@@ -696,3 +697,11 @@ def test_influences_cg(
     assert not np.all(approx_influences == approx_influences.item(0))
 
     assert np.allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+
+    # check that block variant returns the correct vector, if only one right hand side
+    # is provided
+    if use_block_cg:
+        single_influence = influence_model.influence_factors(
+            x_train[0].unsqueeze(0), y_train[0].unsqueeze(0)
+        ).numpy()
+        assert np.allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
