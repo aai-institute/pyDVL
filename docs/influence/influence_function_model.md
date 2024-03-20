@@ -1,7 +1,9 @@
 In almost every practical application it is not possible to construct, even less
-invert the complete Hessian in memory. pyDVL offers several implementations of the interface
-[InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel], which do not compute
-the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_function_model.DirectInfluence]).
+invert the complete Hessian in memory. pyDVL offers several implementations of 
+the interface [InfluenceFunctionModel
+][pydvl.influence.base_influence_function_model.InfluenceFunctionModel], 
+which do not compute the full Hessian (in contrast to [DirectInfluence
+][pydvl.influence.torch.influence_function_model.DirectInfluence]).
 
 
 ### Conjugate Gradient
@@ -13,16 +15,21 @@ choice for large datasets or models with many parameters. It is nevertheless
 much slower to converge than the direct inversion method and not as accurate.
 
 More info on the theory of conjugate gradient can be found on
-[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method). 
+[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method), or in
+text books such as [@trefethen_numerical_1997, Lecture 38].
 
 pyDVL also implements a stable block variant of the conjugate 
 gradient method, defined in [@ji_breakdownfree_2017], which solves several
 right hand sides simultaneously.
 
-Optionally, the user can provide a pre-conditioner to improve convergence, such as
-a [Jacobi pre-conditioner](
-https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner)
-or a Nyström approximation based pre-conditioner, 
+Optionally, the user can provide a pre-conditioner to improve convergence, such 
+as a [Jacobi pre-conditioner
+][pydvl.influence.torch.pre_conditioner.JacobiPreConditioner], which
+is a simple [diagonal pre-conditioner](
+https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner) 
+based on Hutchinson's diagonal estimator [@bekas_estimator_2007],
+or a [Nyström approximation based pre-conditioner
+][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner], 
 described in [@frangella_randomized_2023]. 
 
 ```python
@@ -116,10 +123,21 @@ if_model.fit(train_loader)
 
 ### Eigenvalue Corrected K-FAC
 
-K-FAC, short for Kronecker-Factored Approximate Curvature, is a method that approximates the Fisher information matrix [FIM](https://en.wikipedia.org/wiki/Fisher_information) of a model. It is possible to show that for classification models with appropriate loss functions the FIM is equal to the Hessian of the model’s loss over the dataset. In this restricted but nonetheless important context K-FAC offers an efficient way to approximate the Hessian and hence the influence scores. 
+K-FAC, short for Kronecker-Factored Approximate Curvature, is a method that 
+approximates the Fisher information matrix [FIM](https://en.wikipedia.org/wiki/Fisher_information) of a model. 
+It is possible to show that for classification models with appropriate loss 
+functions the FIM is equal to the Hessian of the model’s loss over the dataset. 
+In this restricted but nonetheless important context K-FAC offers an efficient 
+way to approximate the Hessian and hence the influence scores. 
 For more info and details refer to the original paper [@martens_optimizing_2015].
 
-The K-FAC method is implemented in the class [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the K-FAC method to calculate the influence function of a model. Note that, in contrast to the other methods for influence function calculation, K-FAC does not require the loss function as an input. This is because the current implementation is only applicable to classification models with a cross entropy loss function. 
+The K-FAC method is implemented in the class [EkfacInfluence
+][pydvl.influence.torch.influence_function_model.EkfacInfluence]. 
+The following code snippet shows how to use the K-FAC method to calculate the 
+influence function of a model. Note that, in contrast to the other methods for 
+influence function calculation, K-FAC does not require the loss function as an 
+input. This is because the current implementation is only applicable to 
+classification models with a cross entropy loss function. 
 
 ```python
 from pydvl.influence.torch import EkfacInfluence
@@ -129,9 +147,21 @@ if_model = EkfacInfluence(
 )
 if_model.fit(train_loader)
 ```
-Upon initialization, the K-FAC method will parse the model and extract which layers require grad and which do not. Then it will only calculate the influence scores for the layers that require grad. The current implementation of the K-FAC method is only available for linear layers, and therefore if the model contains non-linear layers that require gradient the K-FAC method will raise a NotImplementedLayerRepresentationException.
+Upon initialization, the K-FAC method will parse the model and extract which 
+layers require grad and which do not. Then it will only calculate the influence 
+scores for the layers that require grad. The current implementation of the 
+K-FAC method is only available for linear layers, and therefore if the model 
+contains non-linear layers that require gradient the K-FAC method will raise a 
+NotImplementedLayerRepresentationException.
 
-A further improvement of the K-FAC method is the Eigenvalue Corrected K-FAC (EKFAC) method [@george_fast_2018], which allows to further re-fit the eigenvalues of the Hessian, thus providing a more accurate approximation. On top of the K-FAC method, the EKFAC method is implemented by setting `update_diagonal=True` when initialising [EkfacInfluence](pydvl/influence/torch/influence_function_model.py). The following code snippet shows how to use the EKFAC method to calculate the influence function of a model. 
+A further improvement of the K-FAC method is the Eigenvalue Corrected 
+K-FAC (EKFAC) method [@george_fast_2018], which allows to further re-fit the 
+eigenvalues of the Hessian, thus providing a more accurate approximation. 
+On top of the K-FAC method, the EKFAC method is implemented by setting 
+`update_diagonal=True` when initialising [EkfacInfluence
+][pydvl.influence.torch.influence_function_model.EkfacInfluence]. 
+The following code snippet shows how to use the EKFAC method to calculate the 
+influence function of a model. 
 
 ```python
 from pydvl.influence.torch import EkfacInfluence
@@ -148,10 +178,12 @@ if_model.fit(train_loader)
 This approximation is based on a Nyström low-rank approximation of the form
 
 \begin{align*}
-H_{\text{nys}} &= (H\Omega)(\Omega^TH\Omega)^{+}(H\Omega)^T \\\
-&= U \Lambda U^T
+H_{\text{nys}} &= (H\Omega)(\Omega^TH\Omega)^{\dagger}(H\Omega)^T \\\
+&= U \Lambda U^T,
 \end{align*}
 
+where $(\cdot)^{\dagger}$ denotes the [Moore-Penrose inverse](
+https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_inverse),
 in combination with the [Sherman–Morrison–Woodbury formula](
 https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to calculate the
 action of its inverse:
@@ -161,8 +193,8 @@ action of its inverse:
 \frac{1}{\lambda}(I−UU^T)x,
 \end{equation*}
 
-see also [@hataya_nystrom_2023] and [@frangella_randomized_2021]. The essential parameter is the rank of the
-approximation.
+see also [@hataya_nystrom_2023] and [@frangella_randomized_2023]. The essential 
+parameter is the rank of the approximation.
 
 ```python
 from pydvl.influence.torch import NystroemSketchInfluence
@@ -175,6 +207,7 @@ if_model = NystroemSketchInfluence(
 if_model.fit(train_loader)
 ```
 
-These implementations represent the calculation logic on in memory tensors. To scale up to large collection
-of data, we map these influence function models over these collections. For a detailed discussion see the
+These implementations represent the calculation logic on in memory tensors. 
+To scale up to large collection of data, we map these influence function models 
+over these collections. For a detailed discussion see the
 documentation page [Scaling Computation](scaling_computation.md).
