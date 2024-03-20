@@ -18,7 +18,6 @@ from tqdm.auto import tqdm
 from pydvl.utils.progress import log_duration
 
 from ..base_influence_function_model import (
-    DataLoaderType,
     InfluenceFunctionModel,
     InfluenceMode,
     NotImplementedLayerRepresentationException,
@@ -35,11 +34,7 @@ from .functional import (
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
 )
-from .pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
-    PreConditioner,
-)
+from .pre_conditioner import PreConditioner
 from .util import (
     EkfacRepresentation,
     empirical_cross_entropy_loss_fn,
@@ -136,7 +131,9 @@ class TorchInfluenceFunctionModel(
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
         \]
 
-        for the perturbation type influence case.
+        for the perturbation type influence case. For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
             x_test: model input to use in the gradient computations
@@ -245,6 +242,9 @@ class TorchInfluenceFunctionModel(
         \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
 
         where the gradient is meant to be per sample of the batch $(x, y)$.
+        For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
             x: model input to use in the gradient computations
@@ -286,7 +286,9 @@ class TorchInfluenceFunctionModel(
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the perturbation type influence case. The gradient is meant to be per sample
-        of the batch $(x, y)$.
+        of the batch $(x, y)$. For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
              z_test_factors: pre-computed tensor, approximating
@@ -457,6 +459,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
             in memory, which can speed up the hessian vector product computation.
             Set this to False, if you can't afford to keep the full computation graph
             in memory.
+        pre_conditioner: Optional pre-conditioner to improve convergence of conjugate
+            gradient method
+        use_block_cg: If True, use block variant of conjugate gradient method, which
+            solves several right hand sides simultaneously
 
     """
 
@@ -569,9 +575,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 
-        if rhs.ndim == 1 or rhs.shape[0] == 1:
-            print("")
-
         if self.use_block_cg:
             return self._solve_pbcg(rhs)
 
@@ -590,7 +593,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
         stopping_val = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
 
         batch_cg = torch.zeros_like(rhs)
-        cg_fun = self._solve_cg if self.pre_conditioner is None else self._solve_pcg
 
         for idx, (bi, _tol) in enumerate(
             tqdm(
@@ -599,7 +601,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
                 desc="Conjugate gradient",
             )
         ):
-            batch_result = cg_fun(
+            batch_result = self._solve_pcg(
                 reg_hvp,
                 bi,
                 tol=_tol,
@@ -620,8 +622,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
         maxiter: Optional[int] = None,
     ):
 
-        assert self.pre_conditioner is not None
-
         if x0 is None:
             x0 = torch.clone(b)
         if maxiter is None:
@@ -629,18 +629,28 @@ class CgInfluence(TorchInfluenceFunctionModel):
 
         x = x0
 
-        r0 = (b - hvp(x)).squeeze()
-        p = z0 = self.pre_conditioner.solve(r0).squeeze()
+        r0 = b - hvp(x)
+
+        if self.pre_conditioner is not None:
+            p = z0 = self.pre_conditioner.solve(r0)
+        else:
+            p = z0 = r0
 
         for k in range(maxiter):
             if torch.norm(r0) < tol:
                 break
-            Ap = hvp(p).squeeze()
+            Ap = hvp(p)
             alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
             x += alpha * p
             r = r0 - alpha * Ap
-            z = self.pre_conditioner.solve(r)
+
+            if self.pre_conditioner is not None:
+                z = self.pre_conditioner.solve(r)
+            else:
+                z = r
+
             beta = torch.dot(r, z) / torch.dot(r0, z0)
+
             r0 = r
             p = z + beta * p
             z0 = z
@@ -657,6 +667,18 @@ class CgInfluence(TorchInfluenceFunctionModel):
             self.train_dataloader,
             precompute_grad=self.precompute_grad,
         )
+
+        # The block variant of conjugate gradient is known to suffer from breakdown,
+        # due to the possibility of rank deficiency of the iterates of the parameter
+        # matrix P^tAP, which destabilizes the direct solver.
+        # The paper `Randomized Nyström Preconditioning,
+        # Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine,
+        # SIAM J. Matrix Anal. Appl., 2023`
+        # proposes a simple orthogonalization pre-processing. However, we observed, that
+        # this stabilization only worked for double precision. We thus implement
+        # a different stabilization strategy described in
+        # `A breakdown-free block conjugate gradient method, Ji, Hao and Li, Yaohang,
+        # BIT Numerical Mathematics, 2017`
 
         def mat_mat(x: torch.Tensor):
             return torch.vmap(
@@ -676,6 +698,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
         y_norm = torch.linalg.norm(rhs, dim=1)
         tol = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
 
+        # In the case the parameter dimension is smaller than the number of right
+        # hand sides, we do not shrink the indices due to resulting wrong
+        # dimensionality of the svd decomposition. We consider this an edge case, which
+        # does not need optimization
         shrink_finished_indices = rhs.shape[0] <= rhs.shape[1]
 
         for k in range(maxiter):
@@ -696,6 +722,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
             if num_remaining_indices == 0:
                 break
 
+            # Reduce problem size by removing finished columns from the iteration
             if shrink_finished_indices:
                 active_indices = active_indices[non_finished_indices]
                 R = R[:, non_finished_indices]
@@ -711,56 +738,11 @@ class CgInfluence(TorchInfluenceFunctionModel):
             if Z_tmp.ndim == 1:
                 Z_tmp = Z_tmp.unsqueeze(-1)
 
+            # Orthogonalization search directions to stabilize the action of
+            # (P^tAP)^{-1}
             P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
 
         return X.T
-
-    @staticmethod
-    def _solve_cg(
-        hvp: Callable[[torch.Tensor], torch.Tensor],
-        b: torch.Tensor,
-        *,
-        tol: float,
-        x0: Optional[torch.Tensor] = None,
-        maxiter: Optional[int] = None,
-    ) -> torch.Tensor:
-        r"""
-        Conjugate gradient solver for the Hessian vector product.
-
-        Args:
-            hvp: A callable Hvp, operating with tensors of size N.
-            b: A vector or matrix, the right hand side of the equation \(Hx = b\).
-            x0: Initial guess for hvp.
-            rtol: Maximum relative tolerance of result.
-            atol: Absolute tolerance of result.
-            maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
-
-        Returns:
-            [torch.nn.Tensor][torch.nn.Tensor] representing the solution of \(Ax=b\).
-        """
-
-        if x0 is None:
-            x0 = torch.clone(b)
-        if maxiter is None:
-            maxiter = len(b) * 10
-
-        x = x0
-        p = r = (b - hvp(x)).squeeze()
-        gamma = torch.sum(torch.matmul(r, r))[()]
-
-        for k in range(maxiter):
-            if gamma < tol:
-                break
-            Ap = hvp(p).squeeze()
-            alpha = gamma / torch.sum(torch.matmul(p, Ap))[()]
-            x += alpha * p
-            r -= alpha * Ap
-            gamma_ = torch.sum(torch.matmul(r, r))[()]
-            beta = gamma_ / gamma
-            gamma = gamma_
-            p = r + beta * p
-
-        return x
 
 
 class LissaInfluence(TorchInfluenceFunctionModel):
