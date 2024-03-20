@@ -284,14 +284,14 @@ class TorchInfluenceFunctionModel(
         of the batch $(x, y)$.
 
         Args:
-             z_test_factors: pre-computed tensor, approximating
+            z_test_factors: pre-computed tensor, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceType]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceType]
                 [pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
@@ -1355,23 +1355,24 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         \[ \langle z_{\text{test_factors}},
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
-        for the perturbation type influence case for each layer of the model separately.
-        The gradients are meant to be per sample of the batch $(x, y)$.
+        for the perturbation type influence case for each layer of the model
+        separately. The gradients are meant to be per sample of the batch $(x,
+        y)$.
 
         Args:
             z_test_factors: pre-computed tensor, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceType]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceType]
                 [pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
-            A dictionary containing the influence of the data on the test data for each
-            layer of the model, with the layer name as key.
+            A dictionary containing the influence of the data on the test data
+            for each layer of the model, with the layer name as key.
         """
         if mode == InfluenceMode.Up:
             total_grad = self._loss_grad(
@@ -1411,9 +1412,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> Dict[str, torch.Tensor]:
         """
-        Similar to _non_symmetric_values, but computes the influence for each layer
-        separately. Returns a dictionary containing the influence for each layer,
-        with the layer name as key.
+        Similar to `_non_symmetric_values`, but computes the influence for each
+        layer separately. Returns a dictionary containing the influence for each
+        layer, with the layer name as key.
         """
         if mode == InfluenceMode.Up:
             if x_test.shape[0] <= x.shape[0]:
@@ -1435,7 +1436,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
     ) -> Dict[str, torch.Tensor]:
         """
-        Similar to _symmetric_values, but computes the influence for each layer
+        Similar to `_symmetric_values`, but computes the influence for each layer
         separately. Returns a dictionary containing the influence for each layer,
         with the layer name as key.
         """

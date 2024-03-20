@@ -174,7 +174,7 @@ def group_testing_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
-    **options,
+    **options: dict,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
     in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>.

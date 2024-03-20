@@ -4,7 +4,7 @@ from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
 
 
 class InfluenceMode(str, Enum):
-    r"""
+    """
     Enum representation for the types of influence.
 
     Attributes:
@@ -180,15 +180,15 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         of the batch $(x, y)$.
 
         Args:
-             z_test_factors: pre-computed array, approximating
+            z_test_factors: pre-computed array, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
                 f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceMode]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
                 [pydvl.influence.base_influence_modl.InfluenceMode]
 
         Returns:

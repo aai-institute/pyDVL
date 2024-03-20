@@ -328,10 +328,10 @@ class AsymmetricVotingGame(Game):
 
 
 class ShoesGame(Game):
-    """Toy game that is used for testing and demonstration purposes.
+    r"""Toy game that is used for testing and demonstration purposes.
 
-    An shoes game defined in
-    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
+    A shoes game defined in (Castro et al.,
+    2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
 
     In this game, some players have a left shoe and others a right shoe.
     Single shoes have a worth of zero while pairs have a worth of 1.
