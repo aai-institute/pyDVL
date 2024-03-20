@@ -118,22 +118,74 @@ The former works out of the box but for the latter you will need to install
 additional dependencies (see [[installation#extras]] )
 and to provide a running cluster (or run ray in local mode).
 
-As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
-cluster, so you will need to make sure that each worker has enough resources to
-handle the tasks it receives. A data valuation task using game-theoretic methods
-will typically make a copy of the whole model and dataset to each worker, even
-if the re-training only happens on a subset of the data. This means that you
-should make sure that each worker has enough memory to handle the whole dataset.
+!!! Note
+
+      As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
+      cluster, so you will need to make sure that each worker has enough resources to
+      handle the tasks it receives. A data valuation task using game-theoretic methods
+      will typically make a copy of the whole model and dataset to each worker, even
+      if the re-training only happens on a subset of the data. This means that you
+      should make sure that each worker has enough memory to handle the whole dataset.
+
+#### Joblib
+
+Please follow the instructions in Joblib's documentation
+for all possible configuration options that you can pass to the
+[parallel_config][joblib.parallel_config] function.
+
+To use the joblib parallel backend with the `loky` backend and verbosity set to `100`
+to compute exact shapley values you would use:
+
+```python
+import joblib
+from pydvl.parallel import ParallelConfig
+from pydvl.value.shapley import combinatorial_exact_shapley
+from pydvl.utils.utility import Utility
+
+config = ParallelConfig(backend="joblib") 
+# Utility details are omitted here for the sake of clarity
+u = Utility(...)
+
+with joblib.parallel_config(backend="loky", verbose=100):
+    combinatorial_exact_shapley(u, config=config)
+```
 
 #### Ray
 
 Please follow the instructions in Ray's documentation to set up a cluster.
 Once you have a running cluster, you can use it by passing the address
-of the head node to parallel methods via [ParallelConfig][pydvl.parallel.config.ParallelConfig].
+
+Before starting a computation, you should initialize ray by calling `ray.init()`
+with the appropriate parameters:
 
 For a local ray cluster you would use:
 
 ```python
-from pydvl.parallel.config import ParallelConfig
-config = ParallelConfig(backend="ray") 
+import ray
+
+ray.init()
+```
+
+Whereas for a remote ray cluster you would use:
+
+```python
+import ray
+
+address = "<Hypothetical Ray Cluster IP Address>"
+ray.init(address)
+```
+
+To use the ray parallel backend to compute exact shapley values you would use:
+
+```python
+import ray
+from pydvl.parallel import ParallelConfig
+from pydvl.value.shapley import combinatorial_exact_shapley
+from pydvl.utils.utility import Utility
+
+ray.init()
+config = ParallelConfig(backend="ray")
+# Utility details are omitted here for the sake of clarity
+u = Utility(...)
+combinatorial_exact_shapley(u, config=config)
 ```
