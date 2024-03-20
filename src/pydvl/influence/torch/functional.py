@@ -853,22 +853,31 @@ def randomized_nystroem_approximation(
 ) -> LowRankProductRepresentation:
     r"""
     Given a matrix vector product function (representing a symmetric positive definite
-    matrix \(A\) ), computes a random Nyström low rank approximation of
-    \(A\) in factored form, i.e.
+    matrix $A$ ), computes a random Nyström low rank approximation of
+    $A$ in factored form, i.e.
 
-    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{+}(A \Omega)^T
-    = U \Sigma U^T\]
+    $$ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\dagger}(A \Omega)^T
+    = U \Sigma U^T $$
+
+    where $\Omega$ is a standard normal random matrix.
 
     Args:
         mat_mat_prod: A callable representing the matrix vector product
         input_dim: dimension of the input for the matrix vector product
-        input_type:
+        input_type: data_type of inputs
         rank: rank of the approximation
-        shift_func:
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
         mat_vec_device: device where the matrix vector product has to be executed
 
     Returns:
-        object containing, \(U\) and \(\Sigma\)
+        object containing, $U$ and $\Sigma$
     """
 
     if shift_func is None:
@@ -936,8 +945,8 @@ def model_hessian_nystroem_approximation(
     Given a model, loss and a data_loader, computes a random Nyström low rank approximation of
     the corresponding Hessian matrix in factored form, i.e.
 
-    \[ H_{\text{nys}} = (H \Omega)(\Omega^T H \Omega)^{+}(H \Omega)^T
-    = U \Sigma U^T\]
+    $$ H_{\text{nys}} = (H \Omega)(\Omega^T H \Omega)^{+}(H \Omega)^T
+    = U \Sigma U^T $$
 
     Args:
         model: A PyTorch model instance. The Hessian will be calculated with respect to
@@ -946,9 +955,17 @@ def model_hessian_nystroem_approximation(
         data_loader: A DataLoader instance that provides the model's training data.
             Used in calculating the Hessian-vector products.
         rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
 
     Returns:
-        object containing, \(U\) and \(\Sigma\)
+        object containing, $U$ and $\Sigma$
     """
 
     model_hvp = create_hvp_function(
