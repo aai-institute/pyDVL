@@ -4,16 +4,23 @@
 
 ### Added
 
-- Implement new method: `NystroemSketchInfluence` [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
+- Implement new method: `NystroemSketchInfluence` 
+  [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
 - Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
+- Implement a preconditioned block variant of conjugate gradient 
+  [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 
 ### Fixed
 
-- Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
-- Memory issue with `CgInfluence` and `ArnoldiInfluence`[PR #498](https://github.com/aai-institute/pyDVL/pull/498)
-- Raising specific error message with install instruction, when trying to load `pydvl.utils.cache.memcached`
-  without `pymemcache` installed. If `pymemcache` is available, all symbols from
-  `pydvl.utils.cache.memcached` are available through `pydvl.utils.cache`[PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
+- Bug in `LissaInfluence`, when not using CPU device 
+  [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
+- Memory issue with `CgInfluence` and `ArnoldiInfluence`
+  [PR #498](https://github.com/aai-institute/pyDVL/pull/498)
+- Raising specific error message with install instruction, when trying to load 
+  `pydvl.utils.cache.memcached` without `pymemcache` installed. 
+  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached` 
+  are available through `pydvl.utils.cache`
+  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
 
 ### Miscellaneous
 
@@ -35,9 +42,10 @@
 ### Fixed
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
-  for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
-- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
-  [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
+  for single dimensional arrays 
+  [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
+- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` 
+  implementations [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 - Fixed bug with checking for converged values in semivalues
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
@@ -56,7 +64,8 @@
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
-- Sequential batch-wise computation and write to disk with `SequentialInfluenceCalculator` 
+- Sequential batch-wise computation and write to disk with 
+  `SequentialInfluenceCalculator` 
   [PR #377](https://github.com/aai-institute/pyDVL/issues/377)
 - Adapt notebooks to new influence abstractions
   [PR #430](https://github.com/aai-institute/pyDVL/issues/430)
