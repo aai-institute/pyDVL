@@ -139,8 +139,7 @@ class DaskInfluenceCalculator:
     !!! Warning
         Make sure to set `threads_per_worker=1`, when using the distributed scheduler
         for computing, if your implementation of
-        [InfluenceFunctionModel]
-        [pydvl.influence.base_influence_model.InfluenceFunctionModel]
+        [InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel]
         is not thread-safe.
         ```python
         client = Client(threads_per_worker=1)
@@ -155,8 +154,8 @@ class DaskInfluenceCalculator:
         from pydvl.influence import DaskInfluenceCalculator
         from pydvl.influence.torch import CgInfluence
         from pydvl.influence.torch.util import (
-        torch_dataset_to_dask_array,
-        TorchNumpyConverter,
+            torch_dataset_to_dask_array,
+            TorchNumpyConverter,
         )
         from distributed import Client
 
