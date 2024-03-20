@@ -11,8 +11,9 @@ mkdocs-glightbox
 mknotebooks>=0.8.0
 pygments
 mkdocs-literate-nav
-mkdocs-material>=9.5.0
-mkdocs-section-index
+mkdocs-material==9.5.14
+mkdocs-material[imaging]
+mkdocs-section-index==0.3.8
 mkdocs-macros-plugin
 pypandoc; sys_platform == 'darwin'
 pypandoc_binary; sys_platform != 'darwin'
