@@ -3743,7 +3743,7 @@ PyDVL allows to use several approximation methods for the action of the inverse 
      <ul>
       <li>
        Eigenvalue-corrected Kronecker Factorization (
-       <abbr title="Eigenvalue-corrected Kronecker Factorization">
+       <abbr title="Eigenvalue-corrected Kronecker-Factored Approximate Curvature">
         EKFAC
        </abbr>
        )
@@ -4121,7 +4121,7 @@ Spearman Correlation Nyström vs direct 0.9899740534549211
  <div class="inner_cell">
   <div class="text_cell_render border-box-sizing rendered_html">
    <h3 id="ekfac">
-    <abbr title="Eigenvalue-corrected Kronecker Factorization">
+    <abbr title="Eigenvalue-corrected Kronecker-Factored Approximate Curvature">
      EKFAC
     </abbr>
     <a class="headerlink" href="#ekfac" title="Permanent link">
@@ -4136,7 +4136,7 @@ Spearman Correlation Nyström vs direct 0.9899740534549211
   <div class="text_cell_render border-box-sizing rendered_html">
    <p>
     The
-    <abbr title="Eigenvalue-corrected Kronecker Factorization">
+    <abbr title="Eigenvalue-corrected Kronecker-Factored Approximate Curvature">
      EKFAC
     </abbr>
     method is a more recent technique that leverages the Kronecker product structure of the Hessian matrix to reduce the memory requirements. It is generally much faster than iterative methods like conjugate gradient and Arnoldi and it allows for an easier handling of memory. Therefore, it is the only technique that can scale to very large models (e.g. billions of parameters). Its accuracy is however much worse. Let's see how it performs on our example.
