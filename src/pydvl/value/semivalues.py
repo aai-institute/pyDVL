@@ -523,13 +523,14 @@ def compute_semivalues(
 
     - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode]:
       Shapley values.
-    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode]:
       Implements the Beta Shapley semi-value as introduced in
       (Kwon and Zou, 2022)<sup><a href="#kwon_beta_2022">1</a></sup>.
       Pass additional keyword arguments `alpha` and `beta` to set the
       parameters of the Beta distribution (both default to 1).
-    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
-      semi-value as introduced in (Wang and Jia, 2022)<sup><a href="#wang_data_2022">1</a></sup>.
+    - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
+      the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
+      href="#wang_data_2022">1</a></sup>.
 
     See [[data-valuation]] for an overview of valuation.
     - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
