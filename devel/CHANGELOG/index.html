@@ -1341,6 +1341,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/pydvl/influence/torch/pre_conditioner/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pre conditioner
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/pydvl/influence/torch/util/" class="md-nav__link">
         
   
@@ -3593,16 +3614,23 @@
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Implement new method: <code>NystroemSketchInfluence</code> <a href="https://github.com/aai-institute/pyDVL/pull/504">PR #504</a></li>
+<li>Implement new method: <code>NystroemSketchInfluence</code> 
+  <a href="https://github.com/aai-institute/pyDVL/pull/504">PR #504</a></li>
 <li>Add property <code>model_dtype</code> to instances of type <code>TorchInfluenceFunctionModel</code></li>
+<li>Implement a preconditioned block variant of conjugate gradient 
+  <a href="https://github.com/aai-institute/pyDVL/pull/507">PR #507</a></li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Bug in <code>LissaInfluence</code>, when not using CPU device <a href="https://github.com/aai-institute/pyDVL/pull/495">PR #495</a></li>
-<li>Memory issue with <code>CgInfluence</code> and <code>ArnoldiInfluence</code><a href="https://github.com/aai-institute/pyDVL/pull/498">PR #498</a></li>
-<li>Raising specific error message with install instruction, when trying to load <code>pydvl.utils.cache.memcached</code>
-  without <code>pymemcache</code> installed. If <code>pymemcache</code> is available, all symbols from
-  <code>pydvl.utils.cache.memcached</code> are available through <code>pydvl.utils.cache</code><a href="https://github.com/aai-institute/pyDVL/pull/509">PR #509</a>  </li>
+<li>Bug in <code>LissaInfluence</code>, when not using CPU device 
+  <a href="https://github.com/aai-institute/pyDVL/pull/495">PR #495</a></li>
+<li>Memory issue with <code>CgInfluence</code> and <code>ArnoldiInfluence</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/498">PR #498</a></li>
+<li>Raising specific error message with install instruction, when trying to load 
+  <code>pydvl.utils.cache.memcached</code> without <code>pymemcache</code> installed. 
+  If <code>pymemcache</code> is available, all symbols from <code>pydvl.utils.cache.memcached</code> 
+  are available through <code>pydvl.utils.cache</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/509">PR #509</a>  </li>
 </ul>
 <h3 id="miscellaneous">Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permanent link">&para;</a></h3>
 <ul>
@@ -3623,9 +3651,10 @@
 <h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Bug in using <code>DaskInfluenceCalcualator</code> with <code>TorchnumpyConverter</code>
-  for single dimensional arrays <a href="https://github.com/aai-institute/pyDVL/pull/485">PR #485</a></li>
-<li>Fix implementations of <code>to</code> methods of <code>TorchInfluenceFunctionModel</code> implementations
-  <a href="https://github.com/aai-institute/pyDVL/pull/487">PR #487</a></li>
+  for single dimensional arrays 
+  <a href="https://github.com/aai-institute/pyDVL/pull/485">PR #485</a></li>
+<li>Fix implementations of <code>to</code> methods of <code>TorchInfluenceFunctionModel</code> 
+  implementations <a href="https://github.com/aai-institute/pyDVL/pull/487">PR #487</a></li>
 <li>Fixed bug with checking for converged values in semivalues
   <a href="https://github.com/appliedAI-Initiative/pyDVL/pull/341">PR #341</a></li>
 </ul>
@@ -3643,7 +3672,8 @@
 <li>New influence function interface <code>InfluenceFunctionModel</code></li>
 <li>Data parallel computation with <code>DaskInfluenceCalculator</code>
   <a href="https://github.com/aai-institute/pyDVL/issues/26">PR #26</a></li>
-<li>Sequential batch-wise computation and write to disk with <code>SequentialInfluenceCalculator</code> 
+<li>Sequential batch-wise computation and write to disk with 
+  <code>SequentialInfluenceCalculator</code> 
   <a href="https://github.com/aai-institute/pyDVL/issues/377">PR #377</a></li>
 <li>Adapt notebooks to new influence abstractions
   <a href="https://github.com/aai-institute/pyDVL/issues/430">PR #430</a></li>
@@ -3964,7 +3994,7 @@ randomness.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-19</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-20</span>
   </span>
 
     

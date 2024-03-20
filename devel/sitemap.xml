@@ -61,6 +61,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/pre_conditioner/</loc>
+         <lastmod>2024-03-20</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/util/</loc>
          <lastmod>2024-03-20</lastmod>
          <changefreq>daily</changefreq>
