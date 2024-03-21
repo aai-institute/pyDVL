@@ -50,7 +50,7 @@ for the same input. This can be useful for stochastic functions with high varian
 the speed benefits of memoization.
 
 This behaviour can be activated with the option
-[allow_repeated_evaluations][pydvl.utils.caching.config.CachedFuncConfig]..
+[allow_repeated_evaluations][pydvl.utils.caching.config.CachedFuncConfig].
 
 # Cache reuse
 
