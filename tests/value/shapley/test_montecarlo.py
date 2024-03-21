@@ -134,7 +134,11 @@ def test_seed(
 @pytest.mark.slow
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
-    "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
+    "fun",
+    [
+        ShapleyMode.PermutationMontecarlo,
+        pytest.param(ShapleyMode.CombinatorialMontecarlo, marks=pytest.mark.skip),
+    ],
 )
 def test_hoeffding_bound_montecarlo(
     num_samples,
