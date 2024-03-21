@@ -1,4 +1,4 @@
-"""Caching of functions.
+"""This module provides caching of functions.
 
 PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.

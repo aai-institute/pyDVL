@@ -338,7 +338,10 @@ class DirectInfluence(TorchInfluenceFunctionModel):
     with \(H\) being the model hessian.
 
     Args:
-        model: instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
         hessian_regularization: Regularization of the hessian.
     """
 
@@ -441,10 +444,12 @@ class CgInfluence(TorchInfluenceFunctionModel):
     [Conjugate Gradient][conjugate-gradient].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Regularization of the hessian.
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         x0: Initial guess for hvp. If None, defaults to b.
         rtol: Maximum relative tolerance of result.
         atol: Absolute tolerance of result.
@@ -767,8 +772,12 @@ class LissaInfluence(TorchInfluenceFunctionModel):
     [linear-time-stochastic-second-order-approximation-lissa]
 
     Args:
-        model: instance of [torch.nn.Module][torch.nn.Module].
-        hessian_regularization: Regularization of the hessian.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         maxiter: Maximum number of iterations.
         dampen: Dampening factor, defaults to 0 for no dampening.
         scale: Scaling factor, defaults to 10.
@@ -883,8 +892,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     For more information, see [Arnoldi][arnoldi].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
-            The Hessian will be calculated with respect to this model's parameters.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
         hessian_regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
         rank_estimate: The number of eigenvalues and corresponding eigenvectors
@@ -911,8 +922,8 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
     def __init__(
         self,
-        model,
-        loss,
+        model: nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         hessian_regularization: float = 0.0,
         rank_estimate: int = 10,
         krylov_dimension: Optional[int] = None,
@@ -1049,7 +1060,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     see [Eigenvalue Corrected K-FAC][eigenvalue-corrected-k-fac].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         update_diagonal: If True, the diagonal values in the ekfac representation are
             refitted from the training data after calculating the KFAC blocks.
             This provides a more accurate approximation of the Hessian, but it is
@@ -1650,12 +1662,12 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
         \frac{1}{\lambda}(I−UU^T). \]
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
-            The Hessian will be calculated with respect to this model's parameters.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: regularization parameter added
-            to the Hessian-vector product for numerical stability
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         rank: rank of the low-rank approximation
 
     """
