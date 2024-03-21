@@ -12,7 +12,7 @@ and speed up some computations for data valuation.
 # Configuration
 
 Caching is disabled by default but can be enabled easily,
-see [Setting up the cache](#setting-up-the-cache).
+see [Setting up the cache][caching].
 When enabled, it will be added to any callable used to construct a
 [Utility][pydvl.utils.utility.Utility] (done with the wrap method of
 [CacheBackend][pydvl.utils.caching.base.CacheBackend]).
@@ -39,7 +39,7 @@ pyDVL supports 3 different caching backends:
   between processes across multiple machines.
 
   **Note** This specific backend requires optional dependencies.
-  See [[installation#extras]] for more information)
+  See [Extra dependencies][installation-extras] for more information)
 
 # Usage with stochastic functions
 

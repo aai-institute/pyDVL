@@ -532,9 +532,7 @@ def compute_semivalues(
       the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
       href="#wang_data_2022">1</a></sup>.
 
-    See [[data-valuation]] for an overview of valuation.
-    - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
-      the Banzhaf semi-value as introduced in [@wang_data_2022].
+    See [Data valuation][data-valuation] for an overview of valuation.
 
     Args:
         u: Utility object with model, data, and scoring function.

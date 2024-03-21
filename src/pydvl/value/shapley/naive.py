@@ -1,3 +1,16 @@
+r"""
+This module implements exact Shapley values using either the combinatorial or
+permutation definition.
+
+The exact computation of $n$ values takes $\mathcal{O}(2^n)$ evaluations of the
+utility and is therefore only possible for small datasets. For larger datasets,
+consider using any of the approximations, such as [Monte
+Carlo][pydvl.value.shapley.montecarlo], or proxy models like
+[kNN][pydvl.value.shapley.knn].
+
+See [Data valuation][data-valuation] for details.
+"""
+
 import math
 import warnings
 from itertools import permutations
@@ -18,9 +31,10 @@ __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     r"""Computes the exact Shapley value using the formulation with permutations:
 
-    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1}
+    \cup {i}) − u(\sigma_{i})].$$
 
-    See [Data valuation][computing-data-values] for details.
+    See [Data valuation][data-valuation] for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
@@ -98,16 +112,17 @@ def combinatorial_exact_shapley(
 ) -> ValuationResult:
     r"""Computes the exact Shapley value using the combinatorial definition.
 
-    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
+    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}}
+    \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
 
-    See [Data valuation][computing-data-values] for details.
+    See [Data valuation][data-valuation] for details.
 
     !!! Note
         If the length of the training set is > n_jobs*20 this prints a warning
-        because the computation is very expensive. Used mostly for internal testing
-        and simple use cases. Please refer to the
-        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
-        applications.
+        because the computation is very expensive. Used mostly for internal
+        testing and simple use cases. Please refer to the
+        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for
+        practical applications.
 
     Args:
         u: Utility object with model, data, and scoring function

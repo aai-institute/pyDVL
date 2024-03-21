@@ -10,7 +10,7 @@ computed with guarantees.
     of evaluations of the utility required). We recommend other Monte Carlo
     methods instead.
 
-You can read more [in the documentation][computing-data-values].
+You can read more [in the documentation][data-valuation].
 
 !!! tip "New in version 0.4.0"
 
