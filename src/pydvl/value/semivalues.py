@@ -232,7 +232,7 @@ class MSRFutureProcessor(FutureProcessor):
     def __call__(self, future_result: Tuple[List[IndexT], float]) -> Tuple[MarginalT]:
         """Computation of marginal utility using Maximum Sample Reuse.
 
-        This processor requires the Marginal Function to be set to RawUtility. 
+        This processor requires the Marginal Function to be set to RawUtility.
         Then, this processor computes marginals based on the utility value and the index set provided.
 
         The final formula that gives the Banzhaf semivalue using MSR is:
