@@ -11,7 +11,7 @@ improvements to the currently implemented methods and other ideas. Please open a
 ticket with yours.
 
 If you are interested in setting up a similar project, consider the template 
-[pymetrius](https://github.com/aai-institute/pymetrius).
+[pymetrius](https://github.com/appliedAI-Initiative/pymetrius).
 
 ## Local development
 
@@ -291,13 +291,13 @@ another markdown file with `[Some section][permanent-anchor-to-some-section]`.
 
 ### Using bibliography
 
-Bibliographic citations are managed with the plugins 
-[mkdocs-bibtex]() and [...][].
-To enter a citation first add the entry to `docs/pydvl.bib`. For team
-contributor this should be an export of the Zotero folder `software/pydvl` in
-the [TransferLab Zotero library](https://www.zotero.org/groups/2703043/transferlab/library).
-All other contributors just add the bibtex data, and a maintainer will add it to
-the group library upon merging.
+Bibliographic citations are managed with the plugin
+[mkdocs-bibtex](https://github.com/shyamd/mkdocs-bibtex/). To enter a citation
+first add the entry to `docs/pydvl.bib`. For team contributor this should be an
+export of the Zotero folder `software/pydvl` in the [TransferLab Zotero
+library](https://www.zotero.org/groups/2703043/transferlab/library). All other
+contributors just add the bibtex data, and a maintainer will add it to the group
+library upon merging.
 
 To add a citation inside a markdown file, use the notation `[@citekey]`. Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
@@ -540,7 +540,8 @@ readme). In order to do this, simply prefix the commit message with `[skip ci]`.
 The string can be anywhere, but adding it to the beginning of the commit message
 makes it more evident when looking at commits in a PR.
 
-Refer to the official [GitHub documentation](https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs) 
+Refer to the official [GitHub
+documentation](https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs) 
 for more information.
 
 ## Release processes
@@ -620,7 +621,7 @@ create a new release manually by following these steps:
     ```
 7. Delete the release branch if necessary: 
    `git branch -d release/${RELEASE_VERSION}`
-8. Create a Github
+8. Create a GitHub
    [release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release)
    for the created tag.
 9. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
@@ -650,8 +651,8 @@ a GitHub release.
 We use [bump2version](https://pypi.org/project/bump2version/) to bump
 the build part of the version number without commiting or tagging the change
 and then publish a package to TestPyPI from CI using Twine. The version
-has the github run number appended. 
+has the GitHub run number appended. 
 
-For more details refer to the
+For more details refer to the files
 [.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
-[.github/workflows/tox.yaml](.github/workflows/tox.yaml) files.
+[.github/workflows/tox.yaml](.github/workflows/tox.yaml).
