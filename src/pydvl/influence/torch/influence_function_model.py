@@ -498,7 +498,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
     def fit(self, data: DataLoader) -> CgInfluence:
         self.train_dataloader = data
         if self.pre_conditioner is not None:
-
             hvp = create_hvp_function(
                 self.model,
                 self.loss,
@@ -566,7 +565,6 @@ class CgInfluence(TorchInfluenceFunctionModel):
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 

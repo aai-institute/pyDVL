@@ -18,7 +18,7 @@ and this again has a detrimental effect on values. See
 [[data-valuation#problems-of-data-values|Problems of data values]] for more on
 this.
 
-Here we quicly enumerate the most common uses of data valuation. For a
+Here we quickly enumerate the most common uses of data valuation. For a
 comprehensive overview, along with concrete examples, please refer to the
 [Transferlab blog post]({{ transferlab.website }}blog/data-valuation-applications/)
 on this topic.

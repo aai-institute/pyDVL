@@ -10,7 +10,7 @@ nav:
   - Home: index.md
   - Methods: methods.md
   - Getting Started:
-    - getting-started/installation.md
+    - getting-started/index.md
     - First steps: getting-started/first-steps.md
     - Applications: getting-started/applications.md
   - Data Valuation:

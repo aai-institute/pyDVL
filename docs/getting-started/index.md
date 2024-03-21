@@ -1,11 +1,22 @@
 ---
 title: Getting Started
-alias: 
-    name: installation
-    text: Installing pyDVL
+alias:
+  name: getting-started
+  title: Getting Started
 ---
 
-# Installing pyDVL
+# Getting started
+
+If you want to jump straight in, [install pyDVL](#installation)
+and then check out [[examples|the examples]]. You will probably want to install
+with support for [influence function computation](#installation-influences).
+
+We have introductions to the ideas behind [[data-valuation|Data valuation]] and
+[[influence-function|Influence functions]], as well as a short overview of
+[common applications](applications).
+
+
+## Installing pyDVL { # installation }
 
 To install the latest release use:
 
@@ -37,14 +48,15 @@ Additionally,the [Influence functions][pydvl.influence] module requires PyTorch
 (see [Extras][installation-extras] below).
 
 
-### Extras { #installation-extras }
+## Extras { #installation-extras }
 
 pyDVL has a few [extra](https://peps.python.org/pep-0508/#extras) dependencies
 that can be optionally installed:
 
-### Influence functions
+### Influence functions { #installation-influences }
 
-To use all features of influence functions use:
+To use the module on influence functions, [pydvl.influence][pydvl.influence],
+run:
 
 ```shell
 pip install pyDVL[influence]
@@ -71,25 +83,25 @@ If you use a different version of CUDA, please install CuPy
 ### Ray
 
 If you want to use [Ray](https://www.ray.io/) to distribute data valuation
-workloads across nodes in a cluster (it can be used locally as well,
-but for this we recommend joblib instead) install pyDVL using:
+workloads across nodes in a cluster (it can be used locally as well, but for
+this we recommend joblib instead) install pyDVL using:
 
 ```shell
 pip install pyDVL[ray]
 ```
 
-see [the intro to parallelization][first-steps#parallelization]] for more
+see [the intro to parallelization][setting-up-parallelization] for more
 details on how to use it.
 
 ### Memcached
 
-If you want to use [Memcached](https://memcached.org/) for caching
-utility evaluations, use:
+If you want to use [Memcached](https://memcached.org/) for caching utility
+evaluations, use:
 
 ```shell
 pip install pyDVL[memcached]
 ```
 
-This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally. 
-Be aware that you still have to start a memcached server manually. See 
-[Setting up the Memcached cache][setting-up-memcached].
+This installs [pymemcache](https://github.com/pinterest/pymemcache)
+additionally. Be aware that you still have to start a memcached server manually.
+See [Setting up the Memcached cache](first-steps/#setting-up-memcached).
