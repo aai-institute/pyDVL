@@ -11,6 +11,7 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
+    Type,
     Union,
 )
 
@@ -249,7 +250,7 @@ def torch_dataset_to_dask_array(
     dataset: Dataset,
     chunk_size: int,
     total_size: Optional[int] = None,
-    resulting_dtype=np.float32,
+    resulting_dtype: Type[np.number] = np.float32,
 ) -> Tuple[da.Array, ...]:
     """
     Construct tuple of dask arrays from a PyTorch dataset, using dask.delayed
