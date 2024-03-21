@@ -329,7 +329,7 @@ class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
 
     @classmethod
     def weight(cls, n: int, subset_len: int) -> float:
-        return float(2 ** (n - 1)) if n > 0 else 1.0
+        return 1.0
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
@@ -470,4 +470,5 @@ StochasticSampler = Union[
     PermutationSampler[IndexT],
     AntitheticSampler[IndexT],
     RandomHierarchicalSampler[IndexT],
+    MSRSampler[IndexT],
 ]

@@ -90,9 +90,10 @@ from __future__ import annotations
 import logging
 import math
 import warnings
+from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import islice
-from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
+from typing import Any, Iterable, List, Optional, Protocol, Tuple, Type, cast
 
 import numpy as np
 import scipy as sp
@@ -114,6 +115,7 @@ from pydvl.value.stopping import MaxUpdates, RankStability, StoppingCriterion
 
 __all__ = [
     "compute_banzhaf_semivalues",
+    "compute_msr_banzhaf_semivalues",
     "compute_beta_shapley_semivalues",
     "compute_shapley_semivalues",
     "beta_coefficient",
@@ -144,28 +146,125 @@ class SVCoefficient(Protocol):
 MarginalT = Tuple[IndexT, float]
 
 
-def _marginal(
-    u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
-) -> Tuple[MarginalT, ...]:
-    """Computation of marginal utility. This is a helper function for
-    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+class MarginalFunction(ABC):
+    @abstractmethod
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        raise NotImplementedError
 
-    Args:
-        u: Utility object with model, data, and scoring function.
-        coefficient: The semivalue coefficient and sampler weight
-        samples: A collection of samples. Each sample is a tuple of index and subset of
-            indices to compute a marginal utility.
 
-    Returns:
-        A collection of marginals. Each marginal is a tuple with index and its marginal
-        utility.
-    """
-    n = len(u.data)
-    marginals: List[MarginalT] = []
-    for idx, s in samples:
-        marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
-        marginals.append((idx, marginal))
-    return tuple(marginals)
+class DefaultMarginal(MarginalFunction):
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        """Computation of marginal utility. This is a helper function for
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+
+        Args:
+            u: Utility object with model, data, and scoring function.
+            coefficient: The semivalue coefficient and sampler weight
+            samples: A collection of samples. Each sample is a tuple of index and subset of
+                indices to compute a marginal utility.
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its marginal
+            utility.
+        """
+        n = len(u.data)
+        marginals: List[MarginalT] = []
+        for idx, s in samples:
+            marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
+            marginals.append((idx, marginal))
+        return tuple(marginals)
+
+
+class RawUtility(MarginalFunction):
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        """Computation of marginal utility. This is a helper function for
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+
+        Args:
+            u: Utility object with model, data, and scoring function.
+            coefficient: The semivalue coefficient and sampler weight
+            samples: A collection of samples. Each sample is a tuple of index and subset of
+                indices to compute a marginal utility.
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its marginal
+            utility.
+        """
+        marginals: List[MarginalT] = []
+        for idx, s in samples:
+            marginals.append((s, u(s)))
+        return tuple(marginals)
+
+
+class FutureProcessor:
+    def __call__(self, future_result: Any) -> Any:
+        return future_result
+
+
+class MSRFutureProcessor(FutureProcessor):
+    def __init__(self, u: Utility):
+        self.n = len(u.data)
+        self.all_indices = u.data.indices.copy()
+        self.point_in_subset = np.zeros((self.n,))
+        self.positive_sums = np.zeros((self.n,))
+        self.negative_sums = np.zeros((self.n,))
+        self.total_evaluations = 0
+
+    def compute_values(self) -> np.ndarray:
+        points_not_in_subset = self.total_evaluations - self.point_in_subset
+        feasibility_map = np.logical_and(
+            self.point_in_subset > 0, points_not_in_subset > 0
+        )
+        values: np.ndarray = (
+            np.divide(1, self.point_in_subset, where=feasibility_map)
+            * self.positive_sums
+            + np.divide(1, points_not_in_subset, where=feasibility_map)
+            * self.negative_sums
+        )
+        return values
+
+    def __call__(self, future_result: Tuple[List[IndexT], float]) -> Tuple[MarginalT]:
+        """Computation of marginal utility using Maximum Sample Reuse.
+
+        This processor requires the Marginal Function to be set to RawUtility. 
+        Then, this processor computes marginals based on the utility value and the index set provided.
+
+        The final formula that gives the Banzhaf semivalue using MSR is:
+        $$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\ni i}} U(S)
+        - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+
+        Args:
+            future_result: Result of the parallel computing jobs comprised of
+                a list of indices that were used to evaluate the utility, and the evaluation result (metric).
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its marginal
+            utility.
+        """
+        log.debug("MSR Future Processor called")
+        marginals: List[MarginalT] = []
+        for s, evaluation in future_result:
+            previous_values = self.compute_values()
+            self.total_evaluations += 1
+            self.point_in_subset[s] += 1
+            self.positive_sums[s] += evaluation
+            not_s = np.setdiff1d(self.all_indices, s)
+            self.negative_sums[not_s] += evaluation
+            new_values = self.compute_values()
+            # Hack to work around the update mechanic that does not work out of the box for MSR
+            marginal_vals = (
+                self.total_evaluations * new_values
+                - (self.total_evaluations - 1) * previous_values
+            )
+            for data_index in range(self.n):
+                marginals.append((data_index, float(marginal_vals[data_index])))
+        return tuple(marginals)
 
 
 # @deprecated(
@@ -179,6 +278,8 @@ def compute_generic_semivalues(
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
+    marginal: MarginalFunction = DefaultMarginal(),
+    future_processor: FutureProcessor = FutureProcessor(),
     batch_size: int = 1,
     skip_converged: bool = False,
     n_jobs: int = 1,
@@ -259,8 +360,9 @@ def compute_generic_semivalues(
 
             completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
             for future in completed:
-                for idx, marginal in future.result():
-                    result.update(idx, marginal)
+                processed_future = future_processor(future.result())
+                for idx, marginal_val in processed_future:
+                    result.update(idx, marginal_val)
                     if done(result):
                         return result
 
@@ -282,7 +384,7 @@ def compute_generic_semivalues(
                     if filtered_samples:
                         pending.add(
                             executor.submit(
-                                _marginal,
+                                marginal,
                                 u=u,
                                 coefficient=correction,
                                 samples=filtered_samples,
@@ -466,8 +568,10 @@ def compute_msr_banzhaf_semivalues(
     return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
-        banzhaf_coefficient,
+        lambda n, k: 1.0,  # Coefficients not needed
         done,
+        marginal=RawUtility(),
+        future_processor=MSRFutureProcessor(u),
         batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,

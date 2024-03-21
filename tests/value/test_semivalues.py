@@ -17,6 +17,7 @@ from pydvl.value.sampler import (
     UniformSampler,
 )
 from pydvl.value.semivalues import (
+    MSRMarginal,
     SVCoefficient,
     _marginal,
     banzhaf_coefficient,
@@ -25,7 +26,7 @@ from pydvl.value.semivalues import (
     msr_banzhaf,
     shapley_coefficient,
 )
-from pydvl.value.stopping import HistoryDeviation, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxUpdates, RankStability
 
 from . import check_values
 from .utils import timed
@@ -63,10 +64,24 @@ def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
 
 
 @pytest.mark.parametrize("num_samples", [5])
-def test_msr_banzhaf(num_samples: int, analytic_banzhaf):
+def test_msr_banzhaf(
+    num_samples: int, analytic_banzhaf, parallel_config, n_jobs, seed: Seed
+):
     u, exact_values = analytic_banzhaf
-    values = msr_banzhaf(u, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300))
-    check_values(values, exact_values, rtol=0.15)
+    sampler = MSRSampler()
+    marginal = MSRMarginal()
+    values = compute_generic_semivalues(
+        sampler(u.data.indices, seed=seed),
+        u=u,
+        coefficient=coefficient,
+        marginal=marginal,
+        criterion=RankStability(rtol=0.1) | MaxUpdates(100),
+        skip_converged=False,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=True,
+    )
+    check_values(values, exact_values, rtol=0.1)
 
 
 @pytest.mark.parametrize("n", [10, 100])

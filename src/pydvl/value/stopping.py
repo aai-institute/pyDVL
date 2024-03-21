@@ -646,7 +646,9 @@ class RankStability(StoppingCriterion):
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
     """
 
-    def __init__(self, rtol: float, modify_result: bool = True):
+    def __init__(
+        self, rtol: float, modify_result: bool = True, min_iterations: int = 10
+    ):
         super().__init__(modify_result=modify_result)
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
@@ -654,8 +656,11 @@ class RankStability(StoppingCriterion):
         self._memory = None  # type: ignore
         self._corr = 0.0
         self._completion = 0.0
+        self._iterations = 0
+        self.min_iterations = min_iterations
 
     def _check(self, r: ValuationResult) -> Status:
+        self._iterations += 1
         if self._memory is None:
             self._memory = r.values.copy()
             self._converged = np.full(len(r), False)
@@ -664,8 +669,14 @@ class RankStability(StoppingCriterion):
         corr = spearmanr(self._memory, r.values)[0]
         self._memory = r.values.copy()
         self._completion = min(self.rtol / np.abs(corr - self._corr), 1.0)
-        if np.isclose(corr, self._corr, rtol=self.rtol):
+        if (
+            np.isclose(corr, self._corr, rtol=self.rtol)
+            and self._iterations > self.min_iterations
+        ):
             self._converged = np.full(len(r), True)
+            logger.debug(
+                f"RankStability has converged with {corr=} in iteration {self._iterations}"
+            )
             return Status.Converged
         self._corr = corr
         return Status.Pending
