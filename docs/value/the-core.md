@@ -54,7 +54,7 @@ $$
 
 This first algorithm is just a verbatim implementation of the definition.
 As such it returns as exact a value as the utility function allows
-(see what this means in Problems of Data Values][problems-of-data-values]).
+(see what this means in [Problems of Data Values][problems-of-data-values]).
 
 ```python
 from pydvl.value import compute_least_core_values
