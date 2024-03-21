@@ -227,7 +227,7 @@ def test_parallel_jobs(cache_backend, parallel_config):
 
     # Note that we typically do NOT want to ignore run_id
     cached_func_config = CachedFuncConfig(
-        ignore_args=["job_id", "run_id"],
+        ignore_args=["job_id", "run_id"], time_threshold=0
     )
     wrapped_foo = cache_backend.wrap(foo, config=cached_func_config)
 
