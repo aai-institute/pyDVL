@@ -7,9 +7,11 @@ alias:
 
 # Data valuation
 
-!!! Note
+!!! Info
     If you want to jump right into the steps to compute values, skip ahead
-    to [Computing data values](#computing-data-values).
+    to [[computing-data-values]]. If you want a quick list of applications, see
+    [[data-valuation-applications]]. For a list of all algorithms implemented in
+    pyDVL, see [[methods]].
 
 **Data valuation** is the task of assigning a number to each element of a
 training set which reflects its contribution to the final performance of some
@@ -35,7 +37,7 @@ function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the package [pydvl.value][pydvl.value] , with support from modules
+the package [[pydvl.value]], with support from modules
 [pydvl.utils.dataset][pydvl.utils.dataset]
 and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 
@@ -55,7 +57,7 @@ values](shapley.md]) [@ghorbani_data_2019], [@kwon_efficient_2021],
 [@schoch_csshapley_2022], their generalization to so-called
 [semi-values](semi-values.md) by [@kwon_beta_2022] and [@wang_data_2022],
 and [the Core](the-core.md) [@yan_if_2021]. All of these are implemented
-in pyDVL.
+in pyDVL. For a full list see [[methods]]
 
 In these methods, data points are considered players in a cooperative game 
 whose outcome is the performance of the model when trained on subsets 
@@ -83,7 +85,7 @@ among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.
 
 
-## Computing data values
+## Computing data values { #computing-data-values }
 
 Using pyDVL to compute data values is a simple process that can be broken down
 into three steps:
@@ -175,9 +177,9 @@ utility = Utility(model, dataset, "explained_variance")
 `Utility` will wrap the `fit()` method of the model to cache its results. This
 greatly reduces computation times of Monte Carlo methods. Because of how caching
 is implemented, it is important not to reuse `Utility` objects for different
-datasets. You can read more about [setting up the cache][setting-up-the-cache]
-in the installation guide and the documentation
-of the [caching][pydvl.utils.caching] module.
+datasets. You can read more about [setting up the cache][getting-started-cache] in the
+installation guide, and in the documentation of the
+[caching][pydvl.utils.caching] module.
 
 #### Using custom scorers
 
@@ -249,7 +251,7 @@ $$v_u(i) = u(D) − u(D_{-i}).$$
 For notational simplicity, we consider the valuation function as defined over
 the indices of the dataset $D$, and $i \in D$ is the index of the sample,
 $D_{-i}$ is the training set without the sample $x_i$, and $u$ is the utility
-function.
+function. See [the section on notation][notation-and-nomenclature] for more.
 
 For the purposes of data valuation, this is rarely useful beyond serving as a
 baseline for benchmarking. Although in some benchmarks it can perform
@@ -310,18 +312,18 @@ nature of every (non-trivial) ML problem can have an effect:
         can also introduce issues in the low-value regime.
 
 * **High variance utility**: Classical applications of game theoretic value
-  concepts operate with deterministic utilities, but in ML we use an evaluation
-  of the model on a validation set as a proxy for the true risk. Even if the
-  utility *is* bounded, if it has high variance then values will also have high
-  variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
-  configure the caching system to allow multiple evaluations of the utility for
-  every index set. A moving average is computed and returned once the standard
-  error is small, see [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
-  [@wang_data_2022] prove that by relaxing one of the Shapley axioms
-  and considering the general class of semi-values, of which Shapley is an
-  instance, one can prove that a choice of constant weights is the best one can
-  do in a utility-agnostic setting. This method, dubbed *Data Banzhaf*, is
-  available in pyDVL as
+  concepts operate with deterministic utilities, but in ML we use an evaluation of
+  the model on a validation set as a proxy for the true risk. Even if the utility
+  *is* bounded, if it has high variance then values will also have high variance,
+  as will their Monte Carlo estimates. One workaround in pyDVL is to configure the
+  caching system to allow multiple evaluations of the utility for every index set.
+  A moving average is computed and returned once the standard error is small, see
+  [CachedFuncConfig][pydvl.utils.caching.config.CachedFuncConfig].
+  [@wang_data_2022] prove that by relaxing one of the Shapley axioms and
+  considering the general class of semi-values, of which Shapley is an instance,
+  one can prove that a choice of constant weights is the best one can do in a
+  utility-agnostic setting. This method, dubbed *Data Banzhaf*, is available in
+  pyDVL as
   [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues].
 
 * **Data set size**: Computing exact Shapley values is NP-hard, and Monte Carlo
@@ -341,3 +343,32 @@ nature of every (non-trivial) ML problem can have an effect:
   but this would incur massive computational cost. As of v.0.7.0 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
+
+
+## Notation and nomenclature { #notation-and-nomenclature }
+
+!!! todo
+    Organize this section better and use its content consistently throughout the
+    documentation.
+
+The following notation is used throughout the documentation:
+
+Let $D = \{x_1, \ldots, x_n\}$ be a training set of $n$ samples.
+
+The utility function $u:\mathcal{D} \rightarrow \mathbb{R}$ maps subsets of $D$
+to real numbers. In pyDVL, we typically call this mapping a **score** for
+consistency with sklearn, and reserve the term **utility** for the triple of
+dataset $D$, model $f$ and score $u$, since they are used together to compute
+the value.
+
+The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is
+denoted as $v_u(x_i)$ or simply $v(i)$.
+
+For any $S \subseteq D$, we denote by $S_{-i}$ the set of samples in $D$
+excluding $x_i$, and $S_{+i}$ denotes the set $S$ with $x_i$ added.
+
+The marginal utility of adding sample $x_i$ to a subset $S$ is denoted as
+$\delta(i) := u(S_{+i}) - u(S)$.
+
+The set $D_{-i}^{(k)}$ contains all subsets of $D$ of size $k$ that do not
+include sample $x_i$.

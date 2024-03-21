@@ -13,9 +13,9 @@ To install the latest release use:
 pip install pyDVL
 ```
 
-See [[installation#extras]] for optional dependencies, in particular if you are
-interested in influence functions. You can also install the latest development
-version from [TestPyPI](https://test.pypi.org/project/pyDVL/):
+See [Extras][installation-extras] for optional dependencies, in particular if
+you are interested in influence functions. You can also install the latest
+development version from [TestPyPI](https://test.pypi.org/project/pyDVL/):
 
 ```shell
 pip install pyDVL --index-url https://test.pypi.org/simple/
@@ -31,10 +31,10 @@ python -c "import pydvl; print(pydvl.__version__)"
 
 pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
 [scikit-learn](https://scikit-learn.org/stable/), [scipy](https://scipy.org/),
-[cvxpy](https://www.cvxpy.org/) for the Core methods,
-and [joblib](https://joblib.readthedocs.io/en/stable/)
-for parallelization locally. Additionally,the [Influence functions][pydvl.influence]
-module requires PyTorch (see [[installation#extras]]).
+[cvxpy](https://www.cvxpy.org/) for the Core methods, and
+[joblib](https://joblib.readthedocs.io/en/stable/) for parallelization locally.
+Additionally,the [Influence functions][pydvl.influence] module requires PyTorch
+(see [Extras][installation-extras] below).
 
 
 ### Extras { #installation-extras }
@@ -78,7 +78,8 @@ but for this we recommend joblib instead) install pyDVL using:
 pip install pyDVL[ray]
 ```
 
-see [[first-steps#parallelization]] for more details on how to use it.
+see [the intro to parallelization][first-steps#parallelization]] for more
+details on how to use it.
 
 ### Memcached
 
@@ -91,4 +92,4 @@ pip install pyDVL[memcached]
 
 This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally. 
 Be aware that you still have to start a memcached server manually. See 
-[Setting up the Memcached cache](first-steps.md#setting-up-the-memcached-cache).
+[Setting up the Memcached cache][setting-up-memcached].

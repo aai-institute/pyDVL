@@ -83,7 +83,7 @@ pyDVL supports 3 different caching backends:
     Continue reading about the cache in the documentation
     for the [caching package][pydvl.utils.caching].
 
-#### Setting up the Memcached cache
+#### Setting up the Memcached cache { #setting-up-memcached }
 
 [Memcached](https://memcached.org/) is an in-memory key-value store accessible
 over the network. pyDVL can use it to cache the computation of the utility function
@@ -113,7 +113,7 @@ parallelization (within one machine) and supports using
 [Ray](https://ray.io) for distributed parallelization (across multiple machines).
 
 The former works out of the box but for the latter you will need to install
-additional dependencies (see [[installation-extras]] )
+additional dependencies (see [Extras][installation-extras] )
 and to provide a running cluster (or run ray in local mode).
 
 As of v0.8.1 pyDVL does not allow requesting resources per task sent to the
