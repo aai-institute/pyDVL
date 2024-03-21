@@ -46,7 +46,7 @@ and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
     [the difficulties using data values][problems-of-data-values].
 
 There are three main families of methods for data valuation: game-theoretic, 
-influence-based and intrinsic. As of v0.7.0 pyDVL supports the first two. Here,
+influence-based and intrinsic. As of v0.8.1 pyDVL supports the first two. Here,
 we focus on game-theoretic concepts and refer to the main documentation on the
 [influence funtion][the-influence-function] for the second.
 
@@ -340,7 +340,7 @@ nature of every (non-trivial) ML problem can have an effect:
   computation. But also, they will effortlessly interpolate small to medium
   datasets, leading to great variance in the evaluation of performance on the
   dedicated validation set. One mitigation for this problem is cross-validation,
-  but this would incur massive computational cost. As of v.0.7.0 there are no
+  but this would incur massive computational cost. As of v0.8.1 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
 
