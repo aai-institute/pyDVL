@@ -5,9 +5,10 @@ benchmarking purposes.
 
 ## References
 
-[^1]: <a name="castro_polynomial_2009"></a>Castro, J., Gómez, D. and Tejada, J., 2009.
-    [Polynomial calculation of the Shapley value based on sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
-    Computers & Operations Research, 36(5), pp.1726-1730.
+[^1]: <a name="castro_polynomial_2009"></a>Castro, J., Gómez, D. and Tejada,
+      J., 2009. [Polynomial calculation of the Shapley value based on
+      sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
+      Computers & Operations Research, 36(5), pp.1726-1730.
 
 """
 from __future__ import annotations

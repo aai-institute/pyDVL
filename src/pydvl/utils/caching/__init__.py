@@ -12,7 +12,7 @@ and speed up some computations for data valuation.
 # Configuration
 
 Caching is disabled by default but can be enabled easily,
-see [Setting up the cache][caching].
+see [Setting up the cache][getting-started-cache].
 When enabled, it will be added to any callable used to construct a
 [Utility][pydvl.utils.utility.Utility] (done with the wrap method of
 [CacheBackend][pydvl.utils.caching.base.CacheBackend]).

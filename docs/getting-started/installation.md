@@ -1,5 +1,5 @@
 ---
-title: Installing pyDVL
+title: Getting Started
 alias: 
     name: installation
     text: Installing pyDVL
@@ -13,8 +13,9 @@ To install the latest release use:
 pip install pyDVL
 ```
 
-You can also install the latest development version from
-[TestPyPI](https://test.pypi.org/project/pyDVL/):
+See [[installation#extras]] for optional dependencies, in particular if you are
+interested in influence functions. You can also install the latest development
+version from [TestPyPI](https://test.pypi.org/project/pyDVL/):
 
 ```shell
 pip install pyDVL --index-url https://test.pypi.org/simple/
@@ -35,57 +36,59 @@ and [joblib](https://joblib.readthedocs.io/en/stable/)
 for parallelization locally. Additionally,the [Influence functions][pydvl.influence]
 module requires PyTorch (see [[installation#extras]]).
 
-### Extras
+
+### Extras { #installation-extras }
 
 pyDVL has a few [extra](https://peps.python.org/pep-0508/#extras) dependencies
 that can be optionally installed:
 
-- `influence`:
+### Influence functions
 
-    To use all features of influence functions use instead:
-    
-    ```shell
-    pip install pyDVL[influence]
-    ```
-    
-    This includes a dependency on [PyTorch](https://pytorch.org/) (Version 2.0 and
-    above) and thus is left out by default.
+To use all features of influence functions use:
 
-- `cupy`:
+```shell
+pip install pyDVL[influence]
+```
 
-    In case that you have a supported version of CUDA installed (v11.2 to 11.8 as of
-    this writing), you can enable eigenvalue computations for low-rank approximations
-    with [CuPy](https://docs.cupy.dev/en/stable/index.html) on the GPU by using:
-    
-    ```shell
-    pip install pyDVL[cupy]
-    ```
-  
-    This installs [cupy-cuda11x](https://pypi.org/project/cupy-cuda11x/).
-    
-    If you use a different version of CUDA, please install CuPy
-    [manually](https://docs.cupy.dev/en/stable/install.html).
+This includes a dependency on [PyTorch](https://pytorch.org/) (Version 2.0 and
+above) and thus is left out by default.
 
-- `ray`:
+### CuPy
 
-    If you want to use [Ray](https://www.ray.io/) to distribute data valuation
-    workloads across nodes in a cluster (it can be used locally as well,
-    but for this we recommend joblib instead) install pyDVL using:
+In case that you have a supported version of CUDA installed (v11.2 to 11.8 as of
+this writing), you can enable eigenvalue computations for low-rank approximations
+with [CuPy](https://docs.cupy.dev/en/stable/index.html) on the GPU by using:
 
-    ```shell
-    pip install pyDVL[ray]
-    ```
+```shell
+pip install pyDVL[cupy]
+```
 
-    see [[getting-started#ray]] for more details on how to use it.
+This installs [cupy-cuda11x](https://pypi.org/project/cupy-cuda11x/).
 
-- `memcached`:
+If you use a different version of CUDA, please install CuPy
+[manually](https://docs.cupy.dev/en/stable/install.html).
 
-    If you want to use [Memcached](https://memcached.org/) for caching
-    utility evaluations, use:
-  
-    ```shell
-    pip install pyDVL[memcached]
-    ```
-    
-    This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally. 
-    Be aware, that you still have to start a memcached server manually.
+### Ray
+
+If you want to use [Ray](https://www.ray.io/) to distribute data valuation
+workloads across nodes in a cluster (it can be used locally as well,
+but for this we recommend joblib instead) install pyDVL using:
+
+```shell
+pip install pyDVL[ray]
+```
+
+see [[first-steps#parallelization]] for more details on how to use it.
+
+### Memcached
+
+If you want to use [Memcached](https://memcached.org/) for caching
+utility evaluations, use:
+
+```shell
+pip install pyDVL[memcached]
+```
+
+This installs [pymemcache](https://github.com/pinterest/pymemcache) additionally. 
+Be aware that you still have to start a memcached server manually. See 
+[Setting up the Memcached cache](first-steps.md#setting-up-the-memcached-cache).

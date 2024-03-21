@@ -260,36 +260,36 @@ def create_hvp_function(
             Hessian is to be computed.
         loss: A callable that takes the model's output and target as input and
             returns the scalar loss.
-        data_loader: A DataLoader instance that provides batches of data for calculating
-            the Hessian-vector product. Each batch from the DataLoader is assumed to
-            return a tuple where the first element
-            is the model's input and the second element is the target output.
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep the full computation graph
-            in memory.
-        use_average: If True, the returned function uses batch-wise computation via
-            [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function]
+        data_loader: A DataLoader instance that provides batches of data for
+            calculating the Hessian-vector product. Each batch from the
+            DataLoader is assumed to return a tuple where the first element is
+            the model's input and the second element is the target output.
+        precompute_grad: If `True`, the full data gradient is precomputed and
+            kept in memory, which can speed up the hessian vector product
+            computation. Set this to `False`, if you can't afford to keep the
+            full computation graph in memory.
+        use_average: If `True`, the returned function uses batch-wise
+            computation via
+            [a batch loss function][pydvl.influence.torch.functional.create_batch_loss_function]
             and averages the results.
-            If False, the function uses backpropagation on the full
-            [empirical_loss_function]
-            [pydvl.influence.torch.functional.empirical_loss_function],
-            which is more accurate than averaging the batch hessians,
-            but probably has a way higher memory usage.
+            If `False`, the function uses backpropagation on the full
+            [empirical loss function]
+            [pydvl.influence.torch.functional.create_empirical_loss_function],
+            which is more accurate than averaging the batch hessians, but
+            probably has a way higher memory usage.
         reverse_only: Whether to use only reverse-mode autodiff or
-            both forward- and reverse-mode autodiff.
-            Ignored if precompute_grad is True.
-        track_gradients: Whether to track gradients for the resulting tensor of the
-            hessian vector products.
+            both forward- and reverse-mode autodiff. Ignored if
+            `precompute_grad` is `True`.
+        track_gradients: Whether to track gradients for the resulting tensor of
+            the Hessian-vector products.
 
     Returns:
-        A function that takes a single argument, a vector, and returns the product of
-            the Hessian of the `loss` function with respect to the `model`'s parameters
-            and the input vector.
+        A function that takes a single argument, a vector, and returns the
+        product of the Hessian of the `loss` function with respect to the
+        `model`'s parameters and the input vector.
     """
 
     if precompute_grad:
-
         model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         if use_average:

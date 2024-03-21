@@ -40,7 +40,7 @@ Besides the dos and don'ts of data valuation itself, which are the subject of
 the examples and the documentation of each method, there are two main things to
 keep in mind when using pyDVL.
 
-### Caching
+### Caching { #getting-started-cache }
 
 PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.
@@ -68,12 +68,10 @@ pyDVL supports 3 different caching backends:
   a disk-based cache backend that uses pickled values written to and read from disk.  
   This is used to share cached values between processes in a single machine.
 - [MemcachedCacheBackend][pydvl.utils.caching.memcached.MemcachedCacheBackend]:
-  a [Memcached](https://memcached.org/)-based cache backend that uses pickled values written to
-  and read from a Memcached server. This is used to share cached values
-  between processes across multiple machines.
-
-  **Note** This specific backend requires optional dependencies.
-  See [[installation#extras]] for more information)
+  a [Memcached](https://memcached.org/)-based cache backend that uses pickled
+  values written to and read from a Memcached server. This is used to share
+  cached values between processes across multiple machines. Note that this
+  backend requires optional dependencies, see [Extras][installation-extras].
 
 !!! tip "When is the cache really necessary?"
     Crucially, semi-value computations with the
@@ -115,10 +113,10 @@ parallelization (within one machine) and supports using
 [Ray](https://ray.io) for distributed parallelization (across multiple machines).
 
 The former works out of the box but for the latter you will need to install
-additional dependencies (see [[installation#extras]] )
+additional dependencies (see [[installation-extras]] )
 and to provide a running cluster (or run ray in local mode).
 
-As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
+As of v0.8.1 pyDVL does not allow requesting resources per task sent to the
 cluster, so you will need to make sure that each worker has enough resources to
 handle the tasks it receives. A data valuation task using game-theoretic methods
 will typically make a copy of the whole model and dataset to each worker, even

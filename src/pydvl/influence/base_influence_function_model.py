@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
@@ -70,7 +71,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         """Override this, to expose the fitting status of the instance."""
 
     @abstractmethod
-    def fit(self, data: DataLoaderType):
+    def fit(self, data: DataLoaderType) -> InfluenceFunctionModel:
         """
         Override this method to fit the influence function model to training data,
         e.g. pre-compute hessian matrix or matrix decompositions
@@ -150,7 +151,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
                 if None, use $x=x_{test}$
             y: optional label tensor to compute gradients
             mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_modl.InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -189,7 +190,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
                 if None, use $x=x_{\text{test}}$
             y: label tensor to compute gradients
             mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_modl.InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch

@@ -141,8 +141,8 @@ of rank stability, across a range of models and datasets [@wang_data_2022].
     sampling that reuses the utility computation from the last iteration when
     iterating over a permutation. This doubles the computation requirements (and
     slightly increases variance) when using permutation sampling, unless [the
-    cache](getting-started/installation.md#setting-up-the-cache) is enabled.
-    In addition, as mentioned above,
+    cache is enabled][getting-started-cache]. In addition,
+    as mentioned above,
     [truncation policies][pydvl.value.shapley.truncated.TruncationPolicy] are
     not supported by this generic implementation (as of v0.7.0). For these
     reasons it is preferable to use
