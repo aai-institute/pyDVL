@@ -229,7 +229,7 @@ class MSRFutureProcessor(FutureProcessor):
         )
         return values
 
-    def __call__(self, future_result: Tuple[List[IndexT], float]) -> Tuple[MarginalT]:
+    def __call__(self, future_result: List[Tuple[List[IndexT], float]]) -> Tuple[MarginalT, ...]:
         """Computation of marginal utility using Maximum Sample Reuse.
 
         This processor requires the Marginal Function to be set to RawUtility.
