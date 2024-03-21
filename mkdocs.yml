@@ -8,11 +8,12 @@ remote_branch: gh-pages
 
 nav:
   - Home: index.md
-  - Methods: methods.md
   - Getting Started:
     - getting-started/index.md
     - First steps: getting-started/first-steps.md
     - Applications: getting-started/applications.md
+    - Benchmarking: getting-started/benchmarking.md
+    - Methods: getting-started/methods.md
   - Data Valuation:
     - value/index.md
     - Shapley values: value/shapley.md
