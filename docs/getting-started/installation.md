@@ -31,7 +31,7 @@ python -c "import pydvl; print(pydvl.__version__)"
 
 pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
 [scikit-learn](https://scikit-learn.org/stable/), [scipy](https://scipy.org/),
-[cvxpy](https://www.cvxpy.org/) for the Core methods, and
+[cvxpy](https://www.cvxpy.org/) for the core methods, and
 [joblib](https://joblib.readthedocs.io/en/stable/) for parallelization locally.
 Additionally,the [Influence functions][pydvl.influence] module requires PyTorch
 (see [Extras][installation-extras] below).

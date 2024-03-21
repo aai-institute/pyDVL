@@ -227,5 +227,5 @@ def test_randomized_nystroem_approximation(dim: int, rank: int):
     A_approx = torch.matmul(U, U.t() * Sigma.unsqueeze(-1))
     # Verify that the approximation is close to the original A
     assert torch.allclose(
-        A, A_approx, atol=1e-2
+        A, A_approx, atol=1e-5, rtol=1e-3
     ), "The approximation should be close to the original matrix within a tolerance"

@@ -6,3 +6,4 @@ from .influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
+from .pre_conditioner import JacobiPreConditioner, NystroemPreConditioner

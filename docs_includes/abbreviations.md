@@ -21,4 +21,5 @@
 *[WAD]: Weighted Accuracy Drop
 *[OOB]: Out-of-Bag
 *[CG]: Conjugate Gradient
-*[EKFAC]: Eigenvalue-corrected Kronecker Factorization
+*[K-FAC]: Kronecker-Factored Approximate Curvature
+*[EKFAC]: Eigenvalue-corrected Kronecker-Factored Approximate Curvature
