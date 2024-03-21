@@ -72,7 +72,12 @@ def cache_backend(request):
             yield cache_backend
             cache_backend.clear()
     elif backend == "memcached":
-        cache_backend = MemcachedCacheBackend()
+        try:
+            cache_backend = MemcachedCacheBackend()
+        except ConnectionRefusedError as e:
+            raise RuntimeError(
+                f"Could not connected to Memcached server. original error message: {str(e)}"
+            )
         yield cache_backend
         cache_backend.clear()
     else:
