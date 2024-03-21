@@ -3,13 +3,13 @@ import pickle
 import tempfile
 from time import sleep, time
 from typing import Optional
-from unittest.mock import MagicMock, PropertyMock, patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
 from pydvl.parallel import MapReduceJob
+from pydvl.parallel.config import ParallelConfig
 from pydvl.utils.caching import (
     CachedFunc,
     CachedFuncConfig,
@@ -19,7 +19,14 @@ from pydvl.utils.caching import (
 )
 from pydvl.utils.types import Seed
 
+from ..conftest import num_workers
+
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="module")
+def parallel_config():
+    return ParallelConfig(backend="joblib", n_cpus_local=num_workers())
 
 
 def foo(indices: NDArray[np.int_], *args, **kwargs) -> float:
@@ -212,8 +219,6 @@ def test_cache_ignore_args(cache_backend):
 def test_parallel_jobs(cache_backend, parallel_config):
     if not isinstance(cache_backend, MemcachedCacheBackend):
         pytest.skip("Only running this test with MemcachedCacheBackend")
-    if parallel_config.backend != "joblib":
-        pytest.skip("We don't have to test this with all parallel backends")
 
     # Note that we typically do NOT want to ignore run_id
     cached_func_config = CachedFuncConfig(
@@ -303,9 +308,6 @@ def test_faster_with_repeated_training(cache_backend, worker_id: str):
 def test_parallel_repeated_training(
     cache_backend, n, atol, n_jobs, n_runs, parallel_config
 ):
-    if parallel_config.backend != "joblib":
-        pytest.skip("We don't have to test this with all parallel backends")
-
     def map_func(indices: NDArray[np.int_], seed: Optional[Seed] = None) -> float:
         return np.sum(indices).item() + np.random.normal(scale=1)
 
