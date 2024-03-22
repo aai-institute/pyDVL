@@ -4,18 +4,19 @@ title: The Least Core for Data Valuation
 
 # Core values
 
-The Shapley values define a fair way to distribute payoffs amongst all
-participants (training points) when they form a grand coalition (the model is
-trained on the whole dataset). But they do not consider the question of
-stability: under which conditions do all participants form the grand coalition?
-Are the payoffs distributed in such a way that prioritizes its formation?
+Shapley values define a fair way to distribute payoffs amongst all participants
+(training points) when they form a grand coalition, i.e. when the model is
+trained on the whole dataset. But they do not consider the question of
+stability: under which conditions do all participants in a game form the grand
+coalition? Are the payoffs distributed in such a way that prioritizes its
+formation?
 
-The Core is another approach to computing data values originating in cooperative
-game theory that attempts to ensure stability in the sense that it provides the
-set of feasible payoffs that cannot be improved upon by a subcoalition. This can
-be interesting for some applications of data valuation because it yields values
-consistent with training on the whole dataset, avoiding the spurious selection
-of subsets.
+The Core is another solution concept in cooperative game theory that attempts to
+ensure stability in the sense that it provides the set of feasible payoffs that
+cannot be improved upon by a sub-coalition. This can be interesting for some
+applications of data valuation because it yields values consistent with training
+on the whole dataset, avoiding the spurious selection of subsets. It was first
+introduced in this field by [@yan_if_2021].
 
 It satisfies the following 2 properties:
 
@@ -39,8 +40,8 @@ $$
 \sum_{i\in S} v(i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
 ,$$
 
-The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
-utility $u$ is computed by solving the following Linear Program:
+The Least Core (LC) values $\{v\}$ for utility $u$ are computed by solving the
+following linear program:
 
 $$
 \begin{array}{lll}
@@ -49,6 +50,12 @@ $$
 & \sum_{i\in S} v(i) + e \geq u(S) &, \forall S \subset D, S \neq \emptyset  \\
 \end{array}
 $$
+
+Note that solving this program yields a _set of solutions_ $\{v_j:N \rightarrow
+\mathbb{R}\}$, whereas the Shapley value is a single function $v$. In order to
+obtain a single valuation to use, one breaks ties by solving a quadratic program
+to select the $v$ in the LC with the smallest $\ell_2$ norm. This is called the
+_egalitarian least core_.
 
 ## Exact Least Core
 

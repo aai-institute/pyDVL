@@ -281,6 +281,26 @@ There are a number of factors that affect how useful values can be for your
 project. In particular, regression can be especially tricky, but the particular
 nature of every (non-trivial) ML problem can have an effect:
 
+* **Variance of the utility**: Classical applications of game theoretic value
+  concepts operate with deterministic utilities, as do many of the bounds in the
+  literature. But in ML we use an evaluation of the model on a validation set as a
+  proxy for the true risk. Even if the utility is bounded, its variance will
+  affect final values, and even more so any Monte Carlo estimates.
+  Several works have tried to cope with variance. [@wang_data_2022] prove that by
+  relaxing one of the Shapley axioms and considering the general class of
+  semi-values, of which Shapley is an instance, one can prove that a choice of
+  constant weights is the best one can do in a utility-agnostic setting. This
+  method, dubbed *Data Banzhaf*, is available in pyDVL as
+  [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues].
+
+    ??? tip "Averaging repeated utility evaluations"
+        One workaround in pyDVL is to configure the caching system to allow multiple
+        evaluations of the utility for every index set. A moving average is 
+        computed and returned once the standard error is small, see
+        [CachedFuncConfig][pydvl.utils.caching.config.CachedFuncConfig]. Note
+        however that in practice, the likelihood of cache hits is low, so one
+        would have to force recomputation manually somehow.
+
 * **Unbounded utility**: Choosing a scorer for a classifier is simple: accuracy
   or some F-score provides a bounded number with a clear interpretation. However,
   in regression problems most scores, like $R^2$, are not bounded because
@@ -311,21 +331,6 @@ nature of every (non-trivial) ML problem can have an effect:
         These squashed scores can prove useful in regression problems, but they
         can also introduce issues in the low-value regime.
 
-* **High variance utility**: Classical applications of game theoretic value
-  concepts operate with deterministic utilities, but in ML we use an evaluation of
-  the model on a validation set as a proxy for the true risk. Even if the utility
-  *is* bounded, if it has high variance then values will also have high variance,
-  as will their Monte Carlo estimates. One workaround in pyDVL is to configure the
-  caching system to allow multiple evaluations of the utility for every index set.
-  A moving average is computed and returned once the standard error is small, see
-  [CachedFuncConfig][pydvl.utils.caching.config.CachedFuncConfig].
-  [@wang_data_2022] prove that by relaxing one of the Shapley axioms and
-  considering the general class of semi-values, of which Shapley is an instance,
-  one can prove that a choice of constant weights is the best one can do in a
-  utility-agnostic setting. This method, dubbed *Data Banzhaf*, is available in
-  pyDVL as
-  [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues].
-
 * **Data set size**: Computing exact Shapley values is NP-hard, and Monte Carlo
   approximations can converge slowly. Massive datasets are thus impractical, at
   least with [game-theoretical methods][game-theoretical-methods]. A workaround
@@ -334,6 +339,11 @@ nature of every (non-trivial) ML problem can have an effect:
   worked-out [example here](../examples/shapley_basic_spotify). Some algorithms
   also provide different sampling strategies to reduce the variance, but due to a
   no-free-lunch-type theorem, no single strategy can be optimal for all utilities.
+  Finally, model specific methods like
+  [kNN-Shapley][pydvl.value.shapley.knn.knn_shapley] [@jia_efficient_2019a], or
+  altogether different and typically faster approaches like
+  [Data-OOB][pydvl.value.oob.compute_data_oob] [@kwon_dataoob_2023] can also be
+  used. 
 
 * **Model size**: Since every evaluation of the utility entails retraining the
   whole model on a subset of the data, large models require great amounts of
