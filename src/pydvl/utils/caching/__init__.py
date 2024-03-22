@@ -38,8 +38,10 @@ pyDVL supports 3 different caching backends:
   and read from a Memcached server. This is used to share cached values
   between processes across multiple machines.
 
-  **Note** This specific backend requires optional dependencies.
-  See [Extra dependencies][installation-extras] for more information)
+    !!! Info
+        This specific backend requires optional dependencies not installed by
+        default. See [Extra dependencies][installation-extras] for more
+        information.
 
 # Usage with stochastic functions
 
