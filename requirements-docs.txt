@@ -10,8 +10,7 @@ mkdocs-gen-files
 mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox==0.3.7
 mkdocs-literate-nav
-mkdocs-material==9.5.14
-mkdocs-material[imaging]
+mkdocs-material[imaging]==9.5.14
 mkdocs-section-index==0.3.8
 mkdocs-macros-plugin
 mknotebooks==0.8.0
