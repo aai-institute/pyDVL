@@ -15,8 +15,7 @@ The Core is another solution concept in cooperative game theory that attempts to
 ensure stability in the sense that it provides the set of feasible payoffs that
 cannot be improved upon by a sub-coalition. This can be interesting for some
 applications of data valuation because it yields values consistent with training
-on the whole dataset, avoiding the spurious selection of subsets. It was first
-introduced in this field by [@yan_if_2021].
+on the whole dataset, avoiding the spurious selection of subsets.
 
 It satisfies the following 2 properties:
 
@@ -29,6 +28,9 @@ It satisfies the following 2 properties:
   The sum of payoffs to the agents in any coalition $S$ is at least as large as
   the amount that these agents could earn by forming a coalition on their own.
   $\sum_{i \in S} v(i) \geq u(S), \forall S \subset D.$
+
+The Core was first introduced into data valuation by [@yan_if_2021], in the
+following form.
 
 ## Least Core values
 
@@ -59,9 +61,12 @@ _egalitarian least core_.
 
 ## Exact Least Core
 
-This first algorithm is just a verbatim implementation of the definition.
-As such it returns as exact a value as the utility function allows
-(see what this means in [Problems of Data Values][problems-of-data-values]).
+This first algorithm is just a verbatim implementation of the definition, in
+[compute_least_core_values][pydvl.value.least_core.compute_least_core_values].
+It computes all constraints for the linear problem by evaluating the utility on
+every subset of the training data, and returns as exact a value as the utility
+function allows (see what this means in [Problems of Data
+Values][problems-of-data-values]).
 
 ```python
 from pydvl.value import compute_least_core_values
@@ -74,18 +79,20 @@ values = compute_least_core_values(utility, mode="exact")
 Because the number of subsets $S \subseteq D \setminus \{i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
-The simplest approximation consists in using a fraction of all subsets for the
-constraints. [@yan_if_2021] show that a quantity of order
-$\mathcal{O}((n - \log \Delta ) / \delta^2)$ is enough to obtain a so-called
-$\delta$-*approximate least core* with high probability. I.e. the following
-property holds with probability $1-\Delta$ over the choice of subsets:
+The simplest on consists in using a fraction of all subsets for the constraints.
+[@yan_if_2021] show that a quantity of order $\mathcal{O}((n - \log \Delta ) /
+\delta^2)$ is enough to obtain a so-called $\delta$-*approximate least core*
+with high probability. I.e. the following property holds with probability
+$1-\Delta$ over the choice of subsets:
 
 $$
 \mathbb{P}_{S\sim D}\left[\sum_{i\in S} v(i) + e^{*} \geq u(S)\right]
 \geq 1 - \delta,
 $$
 
-where $e^{*}$ is the optimal least core subsidy.
+where $e^{*}$ is the optimal least core subsidy. This approximation is
+also implemented in
+[compute_least_core_values][pydvl.value.least_core.compute_least_core_values]:
 
 ```python
 from pydvl.value import compute_least_core_values
