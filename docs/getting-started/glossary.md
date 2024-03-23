@@ -4,6 +4,9 @@ This glossary is meant to provide only brief explanations of each term, helping
 to clarify the concepts and techniques used in the library. For more detailed
 information, please refer to the relevant literature or resources.
 
+!!! warning
+    This glossary is still a work in progress. Pull requests are welcome!
+
 Terms in data valuation and influence functions:
 
 ### Class-wise Shapley
@@ -147,8 +150,7 @@ Introduced by [@schoch_csshapley_2022].
 
 ---
 
-Other terms that might be useful:
-
+## Other terms
 
 ### Coefficient of Variation
 
