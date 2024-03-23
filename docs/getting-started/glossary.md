@@ -19,6 +19,14 @@ research is needed to confirm this.
 Introduced by [@schoch_csshapley_2022].
 [Implementation][pydvl.value.shapley.classwise.compute_classwise_shapley_values].
 
+### Conjugate Gradient
+
+CG is an algorithm for solving linear systems with a symmetric and
+positive-definite coefficient matrix. For Influence Functions, it is used to
+approximate the [iHVP][inverse-hessian-vector-product].
+[Implementation (torch)][pydvl.influence.torch.influence_function_model.CgInfluence].
+
+
 ### Data Utility Learning
 
 Data Utility Learning is a method that uses an ML model to learn the utility
@@ -31,19 +39,12 @@ Introduced by [@wang_improving_2022].
 
 ### Eigenvalue-corrected Kronecker-Factored Approximate Curvature
 
-EKFAC builds on K-FAC by correcting for the approximation errors in the
-eigenvalues of the blocks of the Kronecker-factored approximate curvature
-matrix. This correction aims to refine the accuracy of natural gradient
-approximations, thus potentially offering better training efficiency and
-stability in neural networks.
+EKFAC builds on [K-FAC][kronecker-factored-approximate-curvature] by correcting
+for the approximation errors in the eigenvalues of the blocks of the
+Kronecker-factored approximate curvature matrix. This correction aims to refine
+the accuracy of natural gradient approximations, thus potentially offering
+better training efficiency and stability in neural networks.
 [Implementation (torch)][pydvl.influence.torch.influence_function_model.EkfacInfluence].
-
-### Kronecker-Factored Approximate Curvature
-
-K-FAC is an optimization technique that approximates the Fisher Information
-matrix's inverse efficiently. It uses the Kronecker product to factor the
-matrix, significantly speeding up the computation of natural gradient updates
-and potentially improving training efficiency.
 
 ### Group Testing
 
@@ -61,11 +62,18 @@ particular data point affects the model's prediction.
 Introduced into data valuation by [@koh_understanding_2017].
 [[influence-function|Documentation]].
 
-### inverse Hessian-vector product
+### Inverse Hessian-vector product
 
-iHVP involves calculating the product of the inverse Hessian matrix of a
-function and a vector, which is essential in optimization and in computing
-influence functions efficiently.
+iHVP is the operation of calculating the product of the inverse Hessian matrix
+of a function and a vector, without explicitly constructing nor inverting the
+full Hessian matrix first. This is essential for influence function computation.
+
+### Kronecker-Factored Approximate Curvature
+
+K-FAC is an optimization technique that approximates the Fisher Information
+matrix's inverse efficiently. It uses the Kronecker product to factor the
+matrix, significantly speeding up the computation of natural gradient updates
+and potentially improving training efficiency.
 
 ### Least Core
 
@@ -116,7 +124,7 @@ Introduced into data valuation by [@ghorbani_data_2019].
 A task in data valuation where the quality of a valuation method is measured
 through the impact of incrementally removing data points on the model's
 performance, where the points are removed in order of their value. See
-[[benchmarks]].
+[Benchmarking tasks][benchmarking-tasks].
 
 
 ### Shapley Value
@@ -126,7 +134,7 @@ to players based on their contribution to the total payoff. In data valuation,
 players are data points. The method assigns a value to each data point based
 on a weighted average of its marginal contributions to the model's performance 
 when trained on each subset of the training set. This requires
-$\mathcal{O}(2^{n-1})$ evaluations of the model, which is infeasible for even
+$\mathcal{O}(2^{n-1})$ re-trainings of the model, which is infeasible for even
 trivial data set sizes, so one resorts to approximations like TMCS.
 Introduced into data valuation by [@ghorbani_data_2019].
 [Implementation][pydvl.value.shapley.naive].
@@ -159,12 +167,6 @@ around the mean, expressed as a percentage. It's used to compare the degree of
 variation from one data series to another, even if the means are drastically
 different.
 
-### Conjugate Gradient
-
-CG is an algorithm for solving linear systems with a symmetric and
-positive-definite coefficient matrix. In machine learning, it's typically used
-for efficiently finding the minima of convex functions, when the direct
-computation of the Hessian is computationally expensive or impractical.
 
 ### Constraint Satisfaction Problem
 
