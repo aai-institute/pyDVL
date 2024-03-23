@@ -53,7 +53,6 @@ from pydvl.value.shapley import combinatorial_exact_shapley
 from pydvl.utils.utility import Utility
 
 config = ParallelConfig(backend="joblib") 
-# Utility details are omitted here for the sake of brevity
 u = Utility(...)
 
 with joblib.parallel_config(backend="loky", verbose=100):
@@ -63,18 +62,19 @@ with joblib.parallel_config(backend="loky", verbose=100):
 #### Ray
 
 Please follow the instructions in Ray's documentation to
-[set up a cluster](https://docs.ray.io/en/latest/cluster/key-concepts.html).
-Once you have a running cluster, you can use it by passing the address
+[set up a remote cluster](https://docs.ray.io/en/latest/cluster/key-concepts.html).
+You could alternatively use a local cluster and in that case you don't have to set
+anything up.
 
 Before starting a computation, you should initialize ray by calling 
 [`ray.init`][ray.init] with the appropriate parameters:
 
-For a local ray cluster you would use:
+To set up and start a local ray cluster with 4 CPUs you would use:
 
 ```python
 import ray
 
-ray.init()
+ray.init(num_cpus=4)
 ```
 
 Whereas for a remote ray cluster you would use:
@@ -96,7 +96,6 @@ from pydvl.utils.utility import Utility
 
 ray.init()
 config = ParallelConfig(backend="ray")
-# Utility details are omitted here for the sake of brevity
 u = Utility(...)
 combinatorial_exact_shapley(u, config=config)
 ```
@@ -112,12 +111,9 @@ to scale out the computation.
 import torch
 from pydvl.influence import DaskInfluenceCalculator
 from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.util import (
-    TorchNumpyConverter,
-)
+from pydvl.influence.torch.util import TorchNumpyConverter
 from distributed import Client
 
-# We omit the details of CgInfluence for the sake of brevity
 infl_model = CgInfluence(...)
 
 client = Client(n_workers=4, threads_per_worker=1)
@@ -126,7 +122,6 @@ infl_calc = DaskInfluenceCalculator(
     TorchNumpyConverter(device=torch.device("cpu")),
     client
 )
-# We omit the details of the computation for the sake of brevity
 # da_influences is a dask.array.Array
 da_influences = infl_calc.influences(...)
 

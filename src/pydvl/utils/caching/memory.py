@@ -18,7 +18,7 @@ class InMemoryCacheBackend(CacheBackend):
     Attributes:
         cached_values: Dictionary used to store cached values.
 
-    Exampl:
+    Example:
         Basic usage:
         ```pycon
         >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
