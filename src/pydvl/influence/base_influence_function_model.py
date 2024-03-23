@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
 
 
 class InfluenceMode(str, Enum):
-    r"""
+    """
     Enum representation for the types of influence.
 
     Attributes:
@@ -70,7 +72,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         """Override this, to expose the fitting status of the instance."""
 
     @abstractmethod
-    def fit(self, data: DataLoaderType):
+    def fit(self, data: DataLoaderType) -> InfluenceFunctionModel:
         """
         Override this method to fit the influence function model to training data,
         e.g. pre-compute hessian matrix or matrix decompositions
@@ -150,7 +152,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
                 if None, use $x=x_{test}$
             y: optional label tensor to compute gradients
             mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_modl.InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -180,16 +182,16 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         of the batch $(x, y)$.
 
         Args:
-             z_test_factors: pre-computed array, approximating
+            z_test_factors: pre-computed array, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
                 f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_modl.InfluenceMode]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch

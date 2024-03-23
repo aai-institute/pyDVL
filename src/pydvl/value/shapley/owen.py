@@ -25,6 +25,13 @@ __all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
 
 
 class OwenAlgorithm(Enum):
+    """Choices for the Owen sampling method.
+
+    Attributes:
+        Standard: Use q ∈ [0, 1]
+        Antithetic: Use q ∈ [0, 0.5] and correlated samples
+    """
+
     Standard = "standard"
     Antithetic = "antithetic"
 

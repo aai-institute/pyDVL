@@ -8,7 +8,7 @@ alias:
 # First Steps
 
 !!! Warning
-    Make sure you have read [[installation]] before using the library. 
+    Make sure you have read [[getting-started#installation]] before using the library. 
     In particular read about which extra dependencies you may need.
 
 ## Main concepts
@@ -20,14 +20,14 @@ should be enough to get you started.
 
 * [[data-valuation]] for key objects and usage patterns for Shapley value
   computation and related methods.
-* [[influence-values]] for instructions on how to compute influence functions.
+* [[influence-function]] for instructions on how to compute influence functions.
 
 ## Running the examples
 
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
-- In the examples under [[data-valuation]] and [[influence-values]].
+- In the examples under [[data-valuation]] and [[influence-function]].
 - Using [binder](https://mybinder.org/) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will
@@ -40,7 +40,7 @@ Besides the dos and don'ts of data valuation itself, which are the subject of
 the examples and the documentation of each method, there are two main things to
 keep in mind when using pyDVL.
 
-### Caching
+### Caching { #getting-started-cache }
 
 PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.
@@ -68,12 +68,10 @@ pyDVL supports 3 different caching backends:
   a disk-based cache backend that uses pickled values written to and read from disk.  
   This is used to share cached values between processes in a single machine.
 - [MemcachedCacheBackend][pydvl.utils.caching.memcached.MemcachedCacheBackend]:
-  a [Memcached](https://memcached.org/)-based cache backend that uses pickled values written to
-  and read from a Memcached server. This is used to share cached values
-  between processes across multiple machines.
-
-  **Note** This specific backend requires optional dependencies.
-  See [[installation#extras]] for more information)
+  a [Memcached](https://memcached.org/)-based cache backend that uses pickled
+  values written to and read from a Memcached server. This is used to share
+  cached values between processes across multiple machines. Note that this
+  backend requires optional dependencies, see [Extras][installation-extras].
 
 !!! tip "When is the cache really necessary?"
     Crucially, semi-value computations with the
@@ -85,7 +83,7 @@ pyDVL supports 3 different caching backends:
     Continue reading about the cache in the documentation
     for the [caching package][pydvl.utils.caching].
 
-#### Setting up the Memcached cache
+#### Setting up the Memcached cache { #setting-up-memcached }
 
 [Memcached](https://memcached.org/) is an in-memory key-value store accessible
 over the network. pyDVL can use it to cache the computation of the utility function
@@ -108,17 +106,17 @@ To run memcached inside a container in daemon mode instead, use:
 docker container run -d --rm -p 11211:11211 memcached:latest
 ```
 
-### Parallelization
+### Parallelization { #setting-up-parallelization }
 
 pyDVL uses [joblib](https://joblib.readthedocs.io/en/latest/) for local
 parallelization (within one machine) and supports using
 [Ray](https://ray.io) for distributed parallelization (across multiple machines).
 
 The former works out of the box but for the latter you will need to install
-additional dependencies (see [[installation#extras]] )
+additional dependencies (see [Extras][installation-extras] )
 and to provide a running cluster (or run ray in local mode).
 
-As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
+As of v0.8.1 pyDVL does not allow requesting resources per task sent to the
 cluster, so you will need to make sure that each worker has enough resources to
 handle the tasks it receives. A data valuation task using game-theoretic methods
 will typically make a copy of the whole model and dataset to each worker, even

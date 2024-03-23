@@ -82,7 +82,7 @@ $ pip install pyDVL[influence]
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://pydvl.org/stable/getting-started/installation/) in the
+](https://pydvl.org/stable/getting-started/#installation) in the
 documentation.
 
 # Usage
