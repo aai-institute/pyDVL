@@ -224,7 +224,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.datasets import load_iris
 
 dataset = Dataset.from_sklearn(load_iris())
-u = Utility(LogisticRegression(), dataset, enable_cache=False)
+u = Utility(LogisticRegression(), dataset)
 training_budget = 3
 wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
 

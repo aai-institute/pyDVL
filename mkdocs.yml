@@ -74,7 +74,6 @@ plugins:
       canonical_version: stable
   - section-index
   - alias:
-      use_relative_link: true
       verbose: true
   - gen-files:
       scripts:

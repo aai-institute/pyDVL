@@ -30,7 +30,7 @@ and to provide a running cluster (or run ray in local mode).
 
 !!! info
 
-    As of v0.8.1 pyDVL does not allow requesting resources per task sent to the
+    As of v0.9.0 pyDVL does not allow requesting resources per task sent to the
     cluster, so you will need to make sure that each worker has enough resources to
     handle the tasks it receives. A data valuation task using game-theoretic methods
     will typically make a copy of the whole model and dataset to each worker, even
@@ -165,10 +165,10 @@ pyDVL supports 3 different caching backends:
   and read from a Memcached server. This is used to share cached values
   between processes across multiple machines.
 
-!!! info "Memcached extras"
+    ??? info "Memcached extras"
 
-    The Memcached backend requires optional dependencies.
-    See [Extras][installation-extras] for more information.
+         The Memcached backend requires optional dependencies.
+         See [Extras][installation-extras] for more information.
 
 As an example, here's how one would use the disk-based cached backend
 with a utility:
