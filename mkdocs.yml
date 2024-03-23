@@ -110,6 +110,7 @@ plugins:
             - https://joblib.readthedocs.io/en/stable/objects.inv
             - https://docs.dask.org/en/latest/objects.inv
             - https://distributed.dask.org/en/latest/objects.inv
+            - https://docs.ray.io/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             heading_level: 1
