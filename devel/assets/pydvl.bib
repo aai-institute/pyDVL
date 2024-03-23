@@ -13,6 +13,21 @@
   langid = {english}
 }
 
+@inproceedings{bae_if_2022,
+  title = {If {{Influence Functions}} Are the {{Answer}}, {{Then What}} Is the {{Question}}?},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Bae, Juhan and Ng, Nathan and Lo, Alston and Ghassemi, Marzyeh and Grosse, Roger B.},
+  date = {2022-12-06},
+  volume = {35},
+  pages = {17953--17967},
+  location = {New Orleans, LA, USA},
+  url = {https://proceedings.neurips.cc/paper_files/paper/2022/hash/7234e0c36fdbcb23e7bd56b68838999b-Abstract-Conference.html},
+  urldate = {2023-11-27},
+  abstract = {Influence functions efficiently estimate the effect of removing a single training data point on a model's learned parameters. While influence estimates align well with leave-one-out retraining for linear models, recent works have shown this alignment is often poor in neural networks. In this work, we investigate the specific factors that cause this discrepancy by decomposing it into five separate terms. We study the contributions of each term on a variety of architectures and datasets and how they vary with factors such as network width and training time. While practical influence function estimates may be a poor match to leave-one-out retraining for nonlinear networks, we show that they are often a good approximation to a different object we term the proximal Bregman response function (PBRF). Since the PBRF can still be used to answer many of the questions motivating influence functions, such as identifying influential or mislabeled examples, our results suggest that current algorithms for influence function estimation give more informative results than previous error analyses would suggest.},
+  eventtitle = {{{NeurIPS}} 2022},
+  langid = {english}
+}
+
 @article{bekas_estimator_2007,
   title = {An Estimator for the Diagonal of a Matrix},
   author = {Bekas, C. and Kokiopoulou, E. and Saad, Y.},
@@ -32,7 +47,7 @@
 
 @article{benmerzoug_re_2023,
   title = {[{{Re}}] {{If}} You like {{Shapley}}, Then You'll Love the Core},
-  author = {Benmerzoug, Anes and Delgado, Miguel de Benito},
+  author = {Benmerzoug, Anes and de Benito Delgado, Miguel},
   date = {2023-07-31},
   journaltitle = {ReScience C},
   volume = {9},
@@ -43,6 +58,20 @@
   urldate = {2023-08-27},
   abstract = {We investigate the results of [1] in the field of data valuation. We repeat their experiments and conclude that the (Monte Carlo) Least Core is sensitive to important characteristics of the ML problem of interest, making it difficult to apply.},
   keywords = {notion}
+}
+
+@unpublished{broderick_automatic_2021,
+  title = {An {{Automatic Finite-Sample Robustness Metric}}: {{When Can Dropping}} a {{Little Data Make}} a {{Big Difference}}?},
+  shorttitle = {An {{Automatic Finite-Sample Robustness Metric}}},
+  author = {Broderick, Tamara and Giordano, Ryan and Meager, Rachael},
+  date = {2021-11-03},
+  eprint = {2011.14999},
+  eprinttype = {arxiv},
+  url = {https://arxiv.org/abs/2011.14999},
+  abstract = {We propose a method to assess the sensitivity of econometric analyses to the removal of a small fraction of the data. Manually checking the influence of all possible small subsets is computationally infeasible, so we provide an approximation to find the most influential subset. Our metric, the "Approximate Maximum Influence Perturbation," is automatically computable for common methods including (but not limited to) OLS, IV, MLE, GMM, and variational Bayes. We provide finite-sample error bounds on approximation performance. At minimal extra cost, we provide an exact finite-sample lower bound on sensitivity. We find that sensitivity is driven by a signal-to-noise ratio in the inference problem, is not reflected in standard errors, does not disappear asymptotically, and is not due to misspecification. While some empirical applications are robust, results of several economics papers can be overturned by removing less than 1\% of the sample.},
+  langid = {english},
+  keywords = {notion},
+  annotation = {video: https://youtu.be/w8OX0lK1CKo}
 }
 
 @article{castro_polynomial_2009,
@@ -230,6 +259,19 @@
   keywords = {notion}
 }
 
+@inproceedings{kong_resolving_2022,
+  title = {Resolving {{Training Biases}} via {{Influence-based Data Relabeling}}},
+  author = {Kong, Shuming and Shen, Yanyan and Huang, Linpeng},
+  date = {2022},
+  url = {https://openreview.net/forum?id=EskfH0bwNVn},
+  urldate = {2022-05-03},
+  abstract = {The performance of supervised learning methods easily suffers from the training bias issue caused by train-test distribution mismatch or label noise. Influence function is a  technique that...},
+  eventtitle = {International {{Conference}} on {{Learning Representations}} ({{ICLR}} 2022)},
+  langid = {english},
+  keywords = {notion},
+  annotation = {video:https://iclr.cc/virtual/2022/oral/6492}
+}
+
 @inproceedings{kwon_beta_2022,
   title = {Beta {{Shapley}}: A {{Unified}} and {{Noise-reduced Data Valuation Framework}} for {{Machine Learning}}},
   shorttitle = {Beta {{Shapley}}},
@@ -280,6 +322,21 @@
   urldate = {2021-04-23},
   abstract = {Distributional data Shapley value (DShapley) has recently been proposed as a principled framework to quantify the contribution of individual datum in machine learning. DShapley develops the founda...},
   eventtitle = {International {{Conference}} on {{Artificial Intelligence}} and {{Statistics}}},
+  langid = {english}
+}
+
+@inproceedings{li_achieving_2022,
+  title = {Achieving {{Fairness}} at {{No Utility Cost}} via {{Data Reweighing}} with {{Influence}}},
+  booktitle = {Proceedings of the 39th {{International Conference}} on {{Machine Learning}}},
+  author = {Li, Peizhao and Liu, Hongfu},
+  date = {2022-06-28},
+  pages = {12917--12930},
+  publisher = {PMLR},
+  issn = {2640-3498},
+  url = {https://proceedings.mlr.press/v162/li22p.html},
+  urldate = {2024-03-20},
+  abstract = {With the fast development of algorithmic governance, fairness has become a compulsory property for machine learning models to suppress unintentional discrimination. In this paper, we focus on the pre-processing aspect for achieving fairness, and propose a data reweighing approach that only adjusts the weight for samples in the training phase. Different from most previous reweighing methods which usually assign a uniform weight for each (sub)group, we granularly model the influence of each training sample with regard to fairness-related quantity and predictive utility, and compute individual weights based on influence under the constraints from both fairness and utility. Experimental results reveal that previous methods achieve fairness at a non-negligible cost of utility, while as a significant advantage, our approach can empirically release the tradeoff and obtain cost-free fairness for equal opportunity. We demonstrate the cost-free fairness through vanilla classifiers and standard training processes, compared to baseline methods on multiple real-world tabular datasets. Code available at https://github.com/brandeis-machine-learning/influence-fairness.},
+  eventtitle = {International {{Conference}} on {{Machine Learning}}},
   langid = {english}
 }
 
