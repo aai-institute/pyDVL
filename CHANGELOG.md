@@ -4,6 +4,10 @@
 
 ### Added
 
+- Many improvements to the documentation: fixes, links, text, example gallery
+  and more. [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
+- Glossary of data valuation terms in the docs.
+  [PR #537](https://github.com/aai-institute/pyDVL/pull/537
 - Implement new method: `NystroemSketchInfluence` 
   [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
 - Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
@@ -24,8 +28,6 @@
 
 ### Changed
 
-- Improvements to documentation: fixes, links, text, example gallery and more
-  [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
 - Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
 - Add Python Version 3.11 to supported versions [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
 - Documentation improvements and cleanup [PR #521](https://github.com/aai-institute/pyDVL/pull/521) [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
