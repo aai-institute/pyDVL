@@ -1,7 +1,7 @@
 """
 This module provides functionality for calculating influences for large amount of data.
 The computation is based on a chunk computation model in the form of an instance of
-[InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel],
+[InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel],
 which is mapped over collection of chunks.
 """
 
@@ -101,7 +101,7 @@ class DaskInfluenceCalculator:
     Dask for distributed computing and parallel processing. It requires an influence
     computation model of type
     [InfluenceFunctionModel]
-    [pydvl.influence.base_influence_model.InfluenceFunctionModel],
+    [pydvl.influence.base_influence_function_model.InfluenceFunctionModel],
     which defines how influences are computed on a chunk of data.
     Essentially, this class functions by mapping the influence
     function model across the various chunks of a [dask.array.Array][dask.array.Array]
@@ -110,7 +110,7 @@ class DaskInfluenceCalculator:
     Args:
         influence_function_model: instance of type
             [InfluenceFunctionModel]
-            [pydvl.influence.base_influence_model.InfluenceFunctionModel], that
+            [pydvl.influence.base_influence_function_model.InfluenceFunctionModel], that
             specifies the computation logic for influence on data chunks. It's a pivotal
             part of the calculator, determining how influence is computed and applied
             across the data array.
@@ -139,7 +139,8 @@ class DaskInfluenceCalculator:
     !!! Warning
         Make sure to set `threads_per_worker=1`, when using the distributed scheduler
         for computing, if your implementation of
-        [InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel]
+        [InfluenceFunctionModel]
+        [pydvl.influence.base_influence_function_model.InfluenceFunctionModel]
         is not thread-safe.
         ```python
         client = Client(threads_per_worker=1)
@@ -331,8 +332,8 @@ class DaskInfluenceCalculator:
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             [dask.array.Array][dask.array.Array] representing the element-wise scalar
@@ -456,8 +457,8 @@ class DaskInfluenceCalculator:
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.twice_differentiable.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
           [dask.array.Array][dask.array.Array] representing the element-wise scalar
@@ -546,13 +547,13 @@ class SequentialInfluenceCalculator:
     or distributed processing is not required or not feasible.
     The core functionality of this class is to apply a specified influence computation
     model, of type [InfluenceFunctionModel]
-    [pydvl.influence.base_influence_model.InfluenceFunctionModel], to batches of data
+    [pydvl.influence.base_influence_function_model.InfluenceFunctionModel], to batches of data
     one at a time.
 
     Args:
         influence_function_model: An instance of type
                 [InfluenceFunctionModel]
-                [pydvl.influence.base_influence_model.InfluenceFunctionModel], that
+                [pydvl.influence.base_influence_function_model.InfluenceFunctionModel], that
                 specifies the computation logic for influence on data chunks.
 
     Example:
@@ -627,7 +628,6 @@ class SequentialInfluenceCalculator:
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         mode: InfluenceMode,
     ) -> Generator[Generator[TensorType, None, None], None, None]:
-
         for x_test, y_test in iter(test_data_iterable):
             yield (
                 self.influence_function_model.influences(x_test, y_test, x, y, mode)
@@ -663,8 +663,8 @@ class SequentialInfluenceCalculator:
             train_data_iterable: An iterable that returns tuples of tensors.
                 Each tuple consists of a pair of tensors (x, y), representing input data
                 and corresponding targets.
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             A lazy data structure representing the chunks of the resulting tensor
@@ -685,7 +685,6 @@ class SequentialInfluenceCalculator:
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         mode: InfluenceMode,
     ):
-
         for z_test_factor in iter(z_test_factors):
             if isinstance(z_test_factor, list) or isinstance(z_test_factor, tuple):
                 z_test_factor = z_test_factor[0]
@@ -723,8 +722,8 @@ class SequentialInfluenceCalculator:
             train_data_iterable: An iterable that returns tuples of tensors.
                 Each tuple consists of a pair of tensors (x, y), representing input data
                 and corresponding targets.
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.twice_differentiable.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
           A lazy data structure representing the chunks of the resulting tensor

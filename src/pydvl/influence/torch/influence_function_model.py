@@ -18,7 +18,6 @@ from tqdm.auto import tqdm
 from pydvl.utils.progress import log_duration
 
 from ..base_influence_function_model import (
-    DataLoaderType,
     InfluenceFunctionModel,
     InfluenceMode,
     NotImplementedLayerRepresentationException,
@@ -35,6 +34,7 @@ from .functional import (
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
 )
+from .pre_conditioner import PreConditioner
 from .util import (
     EkfacRepresentation,
     empirical_cross_entropy_loss_fn,
@@ -120,8 +120,8 @@ class TorchInfluenceFunctionModel(
         Compute the approximation of
 
         \[
-        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+        f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x))\rangle
         \]
 
         for the case of up-weighting influence, resp.
@@ -131,7 +131,9 @@ class TorchInfluenceFunctionModel(
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
         \]
 
-        for the perturbation type influence case.
+        for the perturbation type influence case. For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
             x_test: model input to use in the gradient computations
@@ -143,8 +145,8 @@ class TorchInfluenceFunctionModel(
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -161,14 +163,12 @@ class TorchInfluenceFunctionModel(
         y: Optional[torch.Tensor] = None,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> torch.Tensor:
-
         if not self.is_fitted:
             raise ValueError(
                 "Instance must be fitted before calling influence methods on it"
             )
 
         if x is None:
-
             if y is not None:
                 raise ValueError(
                     "Providing labels y, without providing model input x "
@@ -221,7 +221,6 @@ class TorchInfluenceFunctionModel(
     def _symmetric_values(
         self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
     ) -> torch.Tensor:
-
         grad = self._loss_grad(x, y)
         fac = self._solve_hvp(grad)
 
@@ -240,6 +239,9 @@ class TorchInfluenceFunctionModel(
         \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
 
         where the gradient is meant to be per sample of the batch $(x, y)$.
+        For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
             x: model input to use in the gradient computations
@@ -252,7 +254,6 @@ class TorchInfluenceFunctionModel(
         return super().influence_factors(x, y)
 
     def _influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-
         if not self.is_fitted:
             raise ValueError(
                 "Instance must be fitted before calling influence methods on it"
@@ -281,18 +282,20 @@ class TorchInfluenceFunctionModel(
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the perturbation type influence case. The gradient is meant to be per sample
-        of the batch $(x, y)$.
+        of the batch $(x, y)$. For all input tensors it is assumed,
+        that the first dimension is the batch dimension (in case, you want to provide
+        a single sample z, call z.unsqueeze(0) if no batch dimension is present).
 
         Args:
-             z_test_factors: pre-computed tensor, approximating
+            z_test_factors: pre-computed tensor, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceType]
-                [pydvl.influence.twice_differentiable.InfluenceType]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -335,7 +338,10 @@ class DirectInfluence(TorchInfluenceFunctionModel):
     with \(H\) being the model hessian.
 
     Args:
-        model: instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
         hessian_regularization: Regularization of the hessian.
     """
 
@@ -359,14 +365,13 @@ class DirectInfluence(TorchInfluenceFunctionModel):
 
     def fit(self, data: DataLoader) -> DirectInfluence:
         """
-        Compute the hessian matrix based on a provided dataloader
+        Compute the hessian matrix based on a provided dataloader.
 
         Args:
-            data: Instance of [torch.utils.data.Dataloader]
-                [torch.utils.data.Dataloader]
+            data: The data to compute the Hessian with.
 
         Returns:
-            The fitted instance
+            The fitted instance.
         """
         self.hessian = hessian(self.model, self.loss, data)
         return self
@@ -406,12 +411,12 @@ class DirectInfluence(TorchInfluenceFunctionModel):
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
-            [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise
-                scalar products for the provided batch.
+            A tensor representing the element-wise scalar products for the
+                provided batch.
 
         """
         return super().influences(x_test, y_test, x, y, mode=mode)
@@ -439,10 +444,12 @@ class CgInfluence(TorchInfluenceFunctionModel):
     [Conjugate Gradient][conjugate-gradient].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Regularization of the hessian.
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         x0: Initial guess for hvp. If None, defaults to b.
         rtol: Maximum relative tolerance of result.
         atol: Absolute tolerance of result.
@@ -452,6 +459,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
             in memory, which can speed up the hessian vector product computation.
             Set this to False, if you can't afford to keep the full computation graph
             in memory.
+        pre_conditioner: Optional pre-conditioner to improve convergence of conjugate
+            gradient method
+        use_block_cg: If True, use block variant of conjugate gradient method, which
+            solves several right hand sides simultaneously
 
     """
 
@@ -466,8 +477,12 @@ class CgInfluence(TorchInfluenceFunctionModel):
         maxiter: Optional[int] = None,
         progress: bool = False,
         precompute_grad: bool = False,
+        pre_conditioner: Optional[PreConditioner] = None,
+        use_block_cg: bool = False,
     ):
         super().__init__(model, loss)
+        self.use_block_cg = use_block_cg
+        self.pre_conditioner = pre_conditioner
         self.precompute_grad = precompute_grad
         self.progress = progress
         self.maxiter = maxiter
@@ -487,6 +502,24 @@ class CgInfluence(TorchInfluenceFunctionModel):
 
     def fit(self, data: DataLoader) -> CgInfluence:
         self.train_dataloader = data
+        if self.pre_conditioner is not None:
+            hvp = create_hvp_function(
+                self.model,
+                self.loss,
+                self.train_dataloader,
+                precompute_grad=self.precompute_grad,
+            )
+
+            def model_hessian_mat_mat_prod(x: torch.Tensor):
+                return torch.func.vmap(hvp, in_dims=1, randomness="same")(x).t()
+
+            self.pre_conditioner.fit(
+                model_hessian_mat_mat_prod,
+                self.n_parameters,
+                self.model_dtype,
+                self.model_device,
+                self.hessian_regularization,
+            )
         return self
 
     @log_duration
@@ -499,7 +532,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> torch.Tensor:
         r"""
-        Compute approximation of
+        Compute an approximation of
 
         \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
             f_{\theta}(x_{\text{test}})),
@@ -511,9 +544,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
             f_{\theta}(x_{\text{test}})),
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
-        for the perturbation type influence case. The approximate action of $H^{-1}$
-        is achieved via the [conjugate gradient method]
-        (https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+        for the case of perturbation-type influence. The approximate action of
+        $H^{-1}$ is achieved via the [conjugate gradient
+        method](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
 
         Args:
             x_test: model input to use in the gradient computations of
@@ -525,12 +558,12 @@ class CgInfluence(TorchInfluenceFunctionModel):
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
-            [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise
-                scalar products for the provided batch.
+            A tensor representing the element-wise scalar products for the
+                provided batch.
 
         """
         return super().influences(x_test, y_test, x, y, mode=mode)
@@ -539,6 +572,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
+
+        if self.use_block_cg:
+            return self._solve_pbcg(rhs)
 
         hvp = create_hvp_function(
             self.model,
@@ -550,30 +586,37 @@ class CgInfluence(TorchInfluenceFunctionModel):
         def reg_hvp(v: torch.Tensor):
             return hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
 
+        y_norm = torch.linalg.norm(rhs, dim=0)
+
+        stopping_val = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
+
         batch_cg = torch.zeros_like(rhs)
 
-        for idx, bi in enumerate(
-            tqdm(rhs, disable=not self.progress, desc="Conjugate gradient")
+        for idx, (bi, _tol) in enumerate(
+            tqdm(
+                zip(rhs, stopping_val),
+                disable=not self.progress,
+                desc="Conjugate gradient",
+            )
         ):
-            batch_result = self._solve_cg(
+            batch_result = self._solve_pcg(
                 reg_hvp,
                 bi,
+                tol=_tol,
                 x0=self.x0,
-                rtol=self.rtol,
-                atol=self.atol,
                 maxiter=self.maxiter,
             )
             batch_cg[idx] = batch_result
+
         return batch_cg
 
-    @staticmethod
-    def _solve_cg(
+    def _solve_pcg(
+        self,
         hvp: Callable[[torch.Tensor], torch.Tensor],
         b: torch.Tensor,
         *,
+        tol: float,
         x0: Optional[torch.Tensor] = None,
-        rtol: float = 1e-7,
-        atol: float = 1e-7,
         maxiter: Optional[int] = None,
     ) -> torch.Tensor:
         r"""
@@ -588,7 +631,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
             maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
 
         Returns:
-            [torch.nn.Tensor][torch.nn.Tensor] representing the solution of \(Ax=b\).
+            A tensor with the solution of \(Ax=b\).
         """
 
         if x0 is None:
@@ -596,26 +639,122 @@ class CgInfluence(TorchInfluenceFunctionModel):
         if maxiter is None:
             maxiter = len(b) * 10
 
-        y_norm = torch.sum(torch.matmul(b, b)).item()
-        stopping_val = max([rtol**2 * y_norm, atol**2])
-
         x = x0
-        p = r = (b - hvp(x)).squeeze()
-        gamma = torch.sum(torch.matmul(r, r)).item()
+
+        r0 = b - hvp(x)
+
+        if self.pre_conditioner is not None:
+            p = z0 = self.pre_conditioner.solve(r0)
+        else:
+            p = z0 = r0
 
         for k in range(maxiter):
-            if gamma < stopping_val:
+            if torch.norm(r0) < tol:
                 break
-            Ap = hvp(p).squeeze()
-            alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
+            Ap = hvp(p)
+            alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
             x += alpha * p
-            r -= alpha * Ap
-            gamma_ = torch.sum(torch.matmul(r, r)).item()
-            beta = gamma_ / gamma
-            gamma = gamma_
-            p = r + beta * p
+            r = r0 - alpha * Ap
+
+            if self.pre_conditioner is not None:
+                z = self.pre_conditioner.solve(r)
+            else:
+                z = r
+
+            beta = torch.dot(r, z) / torch.dot(r0, z0)
+
+            r0 = r
+            p = z + beta * p
+            z0 = z
 
         return x
+
+    def _solve_pbcg(
+        self,
+        rhs: torch.Tensor,
+    ):
+        hvp = create_hvp_function(
+            self.model,
+            self.loss,
+            self.train_dataloader,
+            precompute_grad=self.precompute_grad,
+        )
+
+        # The block variant of conjugate gradient is known to suffer from breakdown,
+        # due to the possibility of rank deficiency of the iterates of the parameter
+        # matrix P^tAP, which destabilizes the direct solver.
+        # The paper `Randomized Nyström Preconditioning,
+        # Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine,
+        # SIAM J. Matrix Anal. Appl., 2023`
+        # proposes a simple orthogonalization pre-processing. However, we observed, that
+        # this stabilization only worked for double precision. We thus implement
+        # a different stabilization strategy described in
+        # `A breakdown-free block conjugate gradient method, Ji, Hao and Li, Yaohang,
+        # BIT Numerical Mathematics, 2017`
+
+        def mat_mat(x: torch.Tensor):
+            return torch.vmap(
+                lambda u: hvp(u) + self.hessian_regularization * u,
+                in_dims=1,
+                randomness="same",
+            )(x)
+
+        X = torch.clone(rhs.T)
+
+        R = (rhs - mat_mat(X)).T
+        Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
+        P, _, _ = torch.linalg.svd(Z, full_matrices=False)
+        active_indices = torch.as_tensor(list(range(X.shape[-1])), dtype=torch.long)
+
+        maxiter = self.maxiter if self.maxiter is not None else len(rhs) * 10
+        y_norm = torch.linalg.norm(rhs, dim=1)
+        tol = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
+
+        # In the case the parameter dimension is smaller than the number of right
+        # hand sides, we do not shrink the indices due to resulting wrong
+        # dimensionality of the svd decomposition. We consider this an edge case, which
+        # does not need optimization
+        shrink_finished_indices = rhs.shape[0] <= rhs.shape[1]
+
+        for k in range(maxiter):
+            Q = mat_mat(P).T
+            p_t_ap = P.T @ Q
+            alpha = torch.linalg.solve(p_t_ap, P.T @ R)
+            X[:, active_indices] += P @ alpha
+            R -= Q @ alpha
+
+            B = torch.linalg.norm(R, dim=0)
+            non_finished_indices = torch.nonzero(B > tol)
+            num_remaining_indices = non_finished_indices.numel()
+            non_finished_indices = non_finished_indices.squeeze()
+
+            if num_remaining_indices == 1:
+                non_finished_indices = non_finished_indices.unsqueeze(-1)
+
+            if num_remaining_indices == 0:
+                break
+
+            # Reduce problem size by removing finished columns from the iteration
+            if shrink_finished_indices:
+                active_indices = active_indices[non_finished_indices]
+                R = R[:, non_finished_indices]
+                P = P[:, non_finished_indices]
+                Q = Q[:, non_finished_indices]
+                p_t_ap = p_t_ap[:, non_finished_indices][non_finished_indices, :]
+                tol = tol[non_finished_indices]
+
+            Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
+            beta = -torch.linalg.solve(p_t_ap, Q.T @ Z)
+            Z_tmp = Z + P @ beta
+
+            if Z_tmp.ndim == 1:
+                Z_tmp = Z_tmp.unsqueeze(-1)
+
+            # Orthogonalization search directions to stabilize the action of
+            # (P^tAP)^{-1}
+            P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
+
+        return X.T
 
 
 class LissaInfluence(TorchInfluenceFunctionModel):
@@ -633,8 +772,12 @@ class LissaInfluence(TorchInfluenceFunctionModel):
     [linear-time-stochastic-second-order-approximation-lissa]
 
     Args:
-        model: instance of [torch.nn.Module][torch.nn.Module].
-        hessian_regularization: Regularization of the hessian.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         maxiter: Maximum number of iterations.
         dampen: Dampening factor, defaults to 0 for no dampening.
         scale: Scaling factor, defaults to 10.
@@ -679,7 +822,6 @@ class LissaInfluence(TorchInfluenceFunctionModel):
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-
         h_estimate = self.h0 if self.h0 is not None else torch.clone(rhs)
 
         shuffled_training_data = DataLoader(
@@ -750,8 +892,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     For more information, see [Arnoldi][arnoldi].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
-            The Hessian will be calculated with respect to this model's parameters.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss: A callable that takes the model's output and target as input and returns
+              the scalar loss.
         hessian_regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
         rank_estimate: The number of eigenvalues and corresponding eigenvectors
@@ -778,8 +922,8 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
     def __init__(
         self,
-        model,
-        loss,
+        model: nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         hessian_regularization: float = 0.0,
         rank_estimate: int = 10,
         krylov_dimension: Optional[int] = None,
@@ -788,7 +932,6 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         eigen_computation_on_gpu: bool = False,
         precompute_grad: bool = False,
     ):
-
         super().__init__(model, loss)
         self.hessian_regularization = hessian_regularization
         self.rank_estimate = rank_estimate
@@ -814,10 +957,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         of the Hessian defined by the provided data loader.
 
         Args:
-            data: Instance of [torch.utils.data.Dataloader][torch.utils.data.Dataloader]
+            data: The data to compute the Hessian with.
 
         Returns:
-            The fitted instance
+            The fitted instance.
 
         """
         low_rank_representation = model_hessian_low_rank(
@@ -843,7 +986,6 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         y: torch.Tensor,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> torch.Tensor:
-
         if mode == InfluenceMode.Up:
             mjp = create_matrix_jacobian_product_function(
                 self.model, self.loss, self.low_rank_representation.projections.T
@@ -868,7 +1010,6 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     def _symmetric_values(
         self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
     ) -> torch.Tensor:
-
         if mode == InfluenceMode.Up:
             left = create_matrix_jacobian_product_function(
                 self.model, self.loss, self.low_rank_representation.projections.T
@@ -887,7 +1028,6 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-
         inverse_regularized_eigenvalues = 1.0 / (
             self.low_rank_representation.eigen_vals + self.hessian_regularization
         )
@@ -920,7 +1060,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
     see [Eigenvalue Corrected K-FAC][eigenvalue-corrected-k-fac].
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         update_diagonal: If True, the diagonal values in the ekfac representation are
             refitted from the training data after calculating the KFAC blocks.
             This provides a more accurate approximation of the Hessian, but it is
@@ -938,7 +1079,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         hessian_regularization: float = 0.0,
         progress: bool = False,
     ):
-
         super().__init__(model, torch.nn.functional.cross_entropy)
         self.hessian_regularization = hessian_regularization
         self.update_diagonal = update_diagonal
@@ -1267,8 +1407,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceType]
-                [pydvl.influence.base_influence_model.InfluenceType]
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
             A dictionary containing the influence of the data on the test data for each
@@ -1280,7 +1420,6 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             )
 
         if x is None:
-
             if y is not None:
                 raise ValueError(
                     "Providing labels y, without providing model input x "
@@ -1355,23 +1494,24 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         \[ \langle z_{\text{test_factors}},
             \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
-        for the perturbation type influence case for each layer of the model separately.
-        The gradients are meant to be per sample of the batch $(x, y)$.
+        for the perturbation type influence case for each layer of the model
+        separately. The gradients are meant to be per sample of the batch $(x,
+        y)$.
 
         Args:
             z_test_factors: pre-computed tensor, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-             x: model input to use in the gradient computations
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
                 $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
-             y: label tensor to compute gradients
-             mode: enum value of [InfluenceType]
-                [pydvl.influence.twice_differentiable.InfluenceType]
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
 
         Returns:
-            A dictionary containing the influence of the data on the test data for each
-            layer of the model, with the layer name as key.
+            A dictionary containing the influence of the data on the test data
+            for each layer of the model, with the layer name as key.
         """
         if mode == InfluenceMode.Up:
             total_grad = self._loss_grad(
@@ -1411,9 +1551,9 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> Dict[str, torch.Tensor]:
         """
-        Similar to _non_symmetric_values, but computes the influence for each layer
-        separately. Returns a dictionary containing the influence for each layer,
-        with the layer name as key.
+        Similar to `_non_symmetric_values`, but computes the influence for each
+        layer separately. Returns a dictionary containing the influence for each
+        layer, with the layer name as key.
         """
         if mode == InfluenceMode.Up:
             if x_test.shape[0] <= x.shape[0]:
@@ -1435,7 +1575,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
     ) -> Dict[str, torch.Tensor]:
         """
-        Similar to _symmetric_values, but computes the influence for each layer
+        Similar to `_symmetric_values`, but computes the influence for each layer
         separately. Returns a dictionary containing the influence for each layer,
         with the layer name as key.
         """
@@ -1506,10 +1646,10 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
     r"""
     Given a model and training data, it uses a low-rank approximation of the Hessian
     (derived via random projection Nyström approximation) in combination with
-    the [Sherman–Morrison–Woodbury formula](
-    https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to calculate the
-    inverse of the Hessian Vector Product. More concrete, it computes a low-rank
-    approximation
+    the [Sherman–Morrison–Woodbury
+    formula](https://en.wikipedia.org/wiki/Woodbury_matrix_identity) to
+    calculate the inverse of the Hessian Vector Product. More concrete, it
+    computes a low-rank approximation
 
     \begin{align*}
         H_{\text{nys}} &= (H\Omega)(\Omega^TH\Omega)^{+}(H\Omega)^T \\\
@@ -1519,15 +1659,15 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
     in factorized form and approximates the action of the inverse Hessian via
 
     \[ (H_{\text{nys}} + \lambda I)^{-1} = U(\Lambda+\lambda I)U^T +
-        \frac{1}{\lambda}(I−UU^T) \]
+        \frac{1}{\lambda}(I−UU^T). \]
 
     Args:
-        model: Instance of [torch.nn.Module][torch.nn.Module].
-            The Hessian will be calculated with respect to this model's parameters.
+        model: A PyTorch model. The Hessian will be calculated with respect to
+            this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: regularization parameter added
-            to the Hessian-vector product for numerical stability
+        hessian_regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
         rank: rank of the low-rank approximation
 
     """

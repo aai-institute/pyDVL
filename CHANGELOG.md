@@ -4,19 +4,28 @@
 
 ### Added
 
-- Implement new method: `NystroemSketchInfluence` [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
+- Implement new method: `NystroemSketchInfluence` 
+  [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
 - Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
+- Implement a preconditioned block variant of conjugate gradient 
+  [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 
 ### Fixed
 
-- Bug in `LissaInfluence`, when not using CPU device [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
-- Memory issue with `CgInfluence` and `ArnoldiInfluence`[PR #498](https://github.com/aai-institute/pyDVL/pull/498)
-- Raising specific error message with install instruction, when trying to load `pydvl.utils.cache.memcached`
-  without `pymemcache` installed. If `pymemcache` is available, all symbols from
-  `pydvl.utils.cache.memcached` are available through `pydvl.utils.cache`[PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
+- Bug in `LissaInfluence`, when not using CPU device 
+  [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
+- Memory issue with `CgInfluence` and `ArnoldiInfluence`
+  [PR #498](https://github.com/aai-institute/pyDVL/pull/498)
+- Raising specific error message with install instruction, when trying to load 
+  `pydvl.utils.cache.memcached` without `pymemcache` installed. 
+  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached` 
+  are available through `pydvl.utils.cache`
+  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
 
-### Miscellaneous
+### Changed
 
+- Improvements to documentation: fixes, links, text, example gallery and more
+  [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
 - Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
 - Add Python Version 3.11 to supported versions [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
 - Documentation improvements and cleanup [PR #521](https://github.com/aai-institute/pyDVL/pull/521) [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
@@ -35,13 +44,14 @@
 ### Fixed
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
-  for single dimensional arrays [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
-- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` implementations
-  [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
+  for single dimensional arrays 
+  [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
+- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` 
+  implementations [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 - Fixed bug with checking for converged values in semivalues
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
-### Docs
+### Changed
 
 - Add applications of data valuation section, display examples more prominently,
   make all sections visible in table of contents, use mkdocs material cards
@@ -56,7 +66,8 @@
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
-- Sequential batch-wise computation and write to disk with `SequentialInfluenceCalculator` 
+- Sequential batch-wise computation and write to disk with 
+  `SequentialInfluenceCalculator` 
   [PR #377](https://github.com/aai-institute/pyDVL/issues/377)
 - Adapt notebooks to new influence abstractions
   [PR #430](https://github.com/aai-institute/pyDVL/issues/430)
@@ -96,6 +107,11 @@
 - Faster semi-value computation with per-index check of stopping criteria (optional)
   [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
 
+### Fixed
+
+- Fix initialization of `data_names` in `ValuationResult.zeros()`
+  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
+
 ### Changed
 
 - No longer using docker within tests to start a memcached server
@@ -106,12 +122,6 @@
   [PR #436](https://github.com/aai-institute/pyDVL/pull/436)
 - Refactoring of parallel module. Old imports will stop working in v0.9.0
   [PR #421](https://github.com/aai-institute/pyDVL/pull/421)
-
-### Fixed
-
-- Fix initialization of `data_names` in `ValuationResult.zeros()`
-  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
-
 
 ## 0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
 

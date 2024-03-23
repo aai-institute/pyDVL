@@ -75,10 +75,14 @@ You can also install the latest development version from
 pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
-pyDVL has also extra dependencies for certain functionalities (e.g. influence functions).
+pyDVL has also extra dependencies for certain functionalities, 
+e.g. for using influence functions run
+```shell
+$ pip install pyDVL[influence]
+```
 
 For more instructions and information refer to [Installing pyDVL
-](https://pydvl.org/stable/getting-started/installation/) in the
+](https://pydvl.org/stable/getting-started/#installation) in the
 documentation.
 
 # Usage

@@ -61,5 +61,5 @@ We currently implement the following methods:
 - [**EKFAC Influence**][pydvl.influence.torch.EkfacInfluence]
   [@george_fast_2018;@martens_optimizing_2015].
 
-- [**Nyström Influence**][pydvl.influence.torch.NystroemSketchInfluence]
-  [@hataya_nystrom_2023].
+- [**Nyström Influence**][pydvl.influence.torch.NystroemSketchInfluence], based
+  on the ideas in [@hataya_nystrom_2023] for bi-level optimization.

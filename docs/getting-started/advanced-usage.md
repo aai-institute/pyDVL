@@ -11,7 +11,7 @@ Besides the dos and don'ts of data valuation itself, which are the subject of
 the examples and the documentation of each method, there are two main things to
 keep in mind when using pyDVL namely Parallelization and Caching.
 
-## Parallelization
+## Parallelization { #setting-up-parallelization }
 
 pyDVL uses parallelization to scale and speed up computations. It does so
 using one of Dask, Ray or Joblib. The first is used in
@@ -25,12 +25,12 @@ parallelization (within one machine) and supports using
 [Ray](https://ray.io) for distributed parallelization (across multiple machines).
 
 The former works out of the box but for the latter you will need to install
-additional dependencies (see [[installation#extras|Extras]] )
+additional dependencies (see [Extras][installation-extras])
 and to provide a running cluster (or run ray in local mode).
 
-!!! note
+!!! info
 
-    As of v0.7.0 pyDVL does not allow requesting resources per task sent to the
+    As of v0.8.1 pyDVL does not allow requesting resources per task sent to the
     cluster, so you will need to make sure that each worker has enough resources to
     handle the tasks it receives. A data valuation task using game-theoretic methods
     will typically make a copy of the whole model and dataset to each worker, even
@@ -62,11 +62,12 @@ with joblib.parallel_config(backend="loky", verbose=100):
 
 #### Ray
 
-Please follow the instructions in Ray's documentation to set up a cluster.
+Please follow the instructions in Ray's documentation to
+[set up a cluster](https://docs.ray.io/en/latest/cluster/key-concepts.html).
 Once you have a running cluster, you can use it by passing the address
 
-Before starting a computation, you should initialize ray by calling `ray.init()`
-with the appropriate parameters:
+Before starting a computation, you should initialize ray by calling 
+[`ray.init`][ray.init] with the appropriate parameters:
 
 For a local ray cluster you would use:
 
@@ -133,10 +134,10 @@ da_influences = infl_calc.influences(...)
 da_influences.to_zarr("path/or/url")
 ```
 
-Refer to the documentation of the [DaskInfluenceCalculator][pydvl.influence.influence_calculator.DaskInfluenceCalculator]
-for more details.
+Refer to the documentation of the [DaskInfluenceCalculator]
+[pydvl.influence.influence_calculator.DaskInfluenceCalculator] for more details.
 
-## Caching
+## Caching { #getting-started-cache }
 
 PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.
@@ -169,10 +170,10 @@ pyDVL supports 3 different caching backends:
   and read from a Memcached server. This is used to share cached values
   between processes across multiple machines.
 
-!!! note "Memcached extras"
-  
+!!! info "Memcached extras"
+
     The Memcached backend requires optional dependencies.
-    See [[installation#extras|Extras]] for more information.
+    See [Extras][installation-extras] for more information.
 
 As an example, here's how one would use the disk-based cached backend
 with a utility:
@@ -197,7 +198,7 @@ Please refer to the documentation and examples of each backend class for more de
     Continue reading about the cache in the documentation
     for the [caching package][pydvl.utils.caching].
 
-### Setting up the Memcached cache
+### Setting up the Memcached cache { #setting-up-memcached }
 
 [Memcached](https://memcached.org/) is an in-memory key-value store accessible
 over the network. pyDVL can use it to cache the computation of the utility function

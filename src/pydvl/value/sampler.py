@@ -86,7 +86,7 @@ Sequence.register(np.ndarray)
 
 
 class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
-    """Samplers are custom iterables over subsets of indices.
+    r"""Samplers are custom iterables over subsets of indices.
 
     Calling ``iter()`` on a sampler returns an iterator over tuples of the form
     $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
