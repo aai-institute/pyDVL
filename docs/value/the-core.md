@@ -79,7 +79,7 @@ values = compute_least_core_values(utility, mode="exact")
 Because the number of subsets $S \subseteq D \setminus \{i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
-The simplest on consists in using a fraction of all subsets for the constraints.
+The simplest one consists in using a fraction of all subsets for the constraints.
 [@yan_if_2021] show that a quantity of order $\mathcal{O}((n - \log \Delta ) /
 \delta^2)$ is enough to obtain a so-called $\delta$-*approximate least core*
 with high probability. I.e. the following property holds with probability
