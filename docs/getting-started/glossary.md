@@ -9,6 +9,25 @@ information, please refer to the relevant literature or resources.
 
 Terms in data valuation and influence functions:
 
+### Arnoldi Method
+
+The Arnoldi method approximately computes eigenvalue, eigenvector pairs of
+a symmetric matrix. For influence functions, it is used to approximate
+the [iHVP][inverse-hessian-vector-product].
+
+Introduced by [@schioppa_scaling_2021] in the context of influence functions.
+[Implementation (torch)
+][pydvl.influence.torch.influence_function_model.ArnoldiInfluence].
+[Documentation (torch)][arnoldi].
+
+### Block Conjugate Gradient
+
+A blocked version of [CG][conjugate-gradient], which solves several linear
+systems simultaneously. For Influence Functions, it is used to
+approximate the [iHVP][inverse-hessian-vector-product].
+[Implementation (torch)][pydvl.influence.torch.influence_function_model.CgInfluence].
+[Documentation (torch)][cg]
+
 ### Class-wise Shapley
 
 Class-wise Shapley is a Shapley valuation method which introduces a utility
@@ -18,14 +37,16 @@ to. It is estimated to be particularly useful in imbalanced datasets, but more
 research is needed to confirm this.
 Introduced by [@schoch_csshapley_2022].
 [Implementation][pydvl.value.shapley.classwise.compute_classwise_shapley_values].
+[Documentation][class-wise-shapley].
 
 ### Conjugate Gradient
 
 CG is an algorithm for solving linear systems with a symmetric and
 positive-definite coefficient matrix. For Influence Functions, it is used to
 approximate the [iHVP][inverse-hessian-vector-product].
-[Implementation (torch)][pydvl.influence.torch.influence_function_model.CgInfluence].
-
+[Implementation (torch)
+][pydvl.influence.torch.influence_function_model.CgInfluence].
+[Documentation (torch)][cg]
 
 ### Data Utility Learning
 
@@ -44,7 +65,10 @@ for the approximation errors in the eigenvalues of the blocks of the
 Kronecker-factored approximate curvature matrix. This correction aims to refine
 the accuracy of natural gradient approximations, thus potentially offering
 better training efficiency and stability in neural networks.
-[Implementation (torch)][pydvl.influence.torch.influence_function_model.EkfacInfluence].
+[Implementation (torch)
+][pydvl.influence.torch.influence_function_model.EkfacInfluence].
+[Documentation (torch)][eigenvalue-corrected-k-fac].
+
 
 ### Group Testing
 
@@ -91,8 +115,13 @@ Introduced as data valuation method by [@yan_if_2021].
 LiSSA is an efficient algorithm for approximating the inverse Hessian-vector
 product, enabling faster computations in large-scale machine learning
 problems, particularly for second-order optimization.
+For Influence Functions, it is used to
+approximate the [iHVP][inverse-hessian-vector-product].
 Introduced by [@agarwal_secondorder_2017].
-[Implementation (torch)][pydvl.influence.torch.influence_function_model.LissaInfluence].
+[Implementation (torch)
+][pydvl.influence.torch.influence_function_model.LissaInfluence].
+[Documentation (torch)
+][linear-time-stochastic-second-order-approximation-lissa].
 
 ### Leave-One-Out
 
@@ -119,6 +148,21 @@ Introduced into data valuation by [@ghorbani_data_2019].
 [Implementation][pydvl.value.shapley.montecarlo].
 [[data-valuation|Documentation]].
 
+### Nyström Low-Rank Approximation
+
+The Nyström approximation computes a low-rank approximation to a symmetric
+positive-definite matrix via random projections. For influence functions, 
+it is used to approximate the [iHVP][inverse-hessian-vector-product].
+Introduced as sketch and solve algorithm in [@hataya_nystrom_2023], and as
+preconditioner for [PCG][preconditioned-conjugate-gradient] in
+[@frangella_randomized_2023].
+[Implementation Sketch-and-Solve (torch)
+][pydvl.influence.torch.influence_function_model.NystroemSketchInfluence].
+[Documentation Sketch-and-Solve (torch)][nystrom-sketch-and-solve].
+[Implementation Preconditioner (torch)
+][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner].
+
+
 ### Point removal task
 
 A task in data valuation where the quality of a valuation method is measured
@@ -126,6 +170,26 @@ through the impact of incrementally removing data points on the model's
 performance, where the points are removed in order of their value. See
 [Benchmarking tasks][benchmarking-tasks].
 
+### Preconditioned Block Conjugate Gradient
+
+A blocked version of [PCG][preconditioned-conjugate-gradient], which solves 
+several linear systems simultaneously. For Influence Functions, it is used to
+approximate the [iHVP][inverse-hessian-vector-product].
+[Implementation CG (torch)
+][pydvl.influence.torch.influence_function_model.CgInfluence]
+[Implementation Preconditioner (torch)][pydvl.influence.torch.pre_conditioner]
+[Documentation (torch)][cg]
+
+### Preconditioned Conjugate Gradient
+
+A preconditioned version of [CG][conjugate-gradient] for improved
+convergence, depending on the characteristics of the matrix and the
+preconditioner. For Influence Functions, it is used to
+approximate the [iHVP][inverse-hessian-vector-product].
+[Implementation CG (torch)
+][pydvl.influence.torch.influence_function_model.CgInfluence]
+[Implementation Preconditioner (torch)][pydvl.influence.torch.pre_conditioner]
+[Documentation (torch)][cg]
 
 ### Shapley Value
 
