@@ -32,7 +32,7 @@ pyDVL focuses on model-dependent methods.
         width="70%"
         align="center"
         style="display: block; margin-left: auto; margin-right: auto;"
-        src="https://raw.githubusercontent.com/aai-institute/pyDVL/develop/docs/value/img/mclc-best-removal-10k-natural.svg"
+        src="https://pydvl.org/devel/value/img/mclc-best-removal-10k-natural.svg"
         alt="best sample removal"
     />
     <p align="center" style="text-align:center;">
@@ -51,7 +51,7 @@ of training samples over individual test points.
         width="70%"
         align="center"
         style="display: block; margin-left: auto; margin-right: auto;"
-        src="https://raw.githubusercontent.com/aai-institute/pyDVL/develop/docs/assets/influence_functions_example.png"
+        src="https://pydvl.org/devel/examples/img/influence_functions_example.png"
         alt="best sample removal"
     />
     <p align="center" style="text-align:center;">
