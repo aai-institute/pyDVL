@@ -255,6 +255,10 @@ API documentation and examples from notebooks are built with
 Notebooks are an integral part of the documentation as well, please read
 [the section on notebooks](#notebooks) above.
 
+If you want to build the documentation locally, please make sure you followed
+the instructions in the section 
+[Setting up your environment](#setting-up-your-environment).
+
 Use the following command to build the documentation the same way it is
 done in CI:
 
@@ -272,6 +276,18 @@ mkdocs serve
 This will rebuild the documentation on changes to `.md` files inside `docs`,
 notebooks and python files.
 
+It is possible, that the cairo lib file is not properly linked, when installed
+via homebrew on OSX. In this case you might encounter an error like this
+```shell
+OSError: no library called "cairo-2" was found
+no library called "cairo" was found
+no library called "libcairo-2" was found
+```
+when calling `mkdocs build` or `mkdocs serve`. This can be resolved via setting
+the environment variable `DYLD_FALLBACK_LIBRARY_PATH`:
+```shell
+export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/opt/homebrew/lib
+```
 
 ### Adding new pages
 
