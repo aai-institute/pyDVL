@@ -1,3 +1,5 @@
+*[AM]: Arnoldi Method
+*[BCG]: Block Conjugate Gradient
 *[CG]: Conjugate Gradient
 *[CSP]: Constraint Satisfaction Problem
 *[CV]: Coefficient of Variation
@@ -17,8 +19,11 @@
 *[MLRC]: Machine Learning Reproducibility Challenge
 *[ML]: Machine Learning
 *[MSE]: Mean Squared Error
+*[NLRA]: Nyström Low-Rank Approximation
 *[OOB]: Out-of-Bag
 *[PCA]: Principal Component Analysis
+*[PBCG]: Preconditioned Block Conjugate Gradient
+*[PCG]: Preconditioned Conjugate Gradient
 *[ROC]: Receiver Operating Characteristic
 *[SV]: Shapley Value
 *[TMCS]: Truncated Monte Carlo Shapley
