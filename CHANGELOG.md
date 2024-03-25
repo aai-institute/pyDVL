@@ -24,8 +24,9 @@
 
 ### Changed
 
-- Improvements to documentation: fixes, links, text, example gallery and more
-  [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
+- Improvements to documentation: fixes, links, text, example gallery, LFS and
+  more. [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
+  [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
 - Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
 - Add Python Version 3.11 to supported versions [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
 - Documentation improvements and cleanup [PR #521](https://github.com/aai-institute/pyDVL/pull/521) [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
