@@ -25,8 +25,9 @@ Introduced by [@schioppa_scaling_2021] in the context of influence functions.
 A blocked version of [CG][conjugate-gradient], which solves several linear
 systems simultaneously. For Influence Functions, it is used to
 approximate the [iHVP][inverse-hessian-vector-product].
-[Implementation (torch)][pydvl.influence.torch.influence_function_model.CgInfluence].
-[Documentation (torch)][cg]
+[Implementation (torch)
+][pydvl.influence.torch.influence_function_model.CgInfluence].
+[Documentation (torch)][cg].
 
 ### Class-wise Shapley
 
@@ -46,7 +47,7 @@ positive-definite coefficient matrix. For Influence Functions, it is used to
 approximate the [iHVP][inverse-hessian-vector-product].
 [Implementation (torch)
 ][pydvl.influence.torch.influence_function_model.CgInfluence].
-[Documentation (torch)][cg]
+[Documentation (torch)][cg].
 
 ### Data Utility Learning
 
@@ -57,6 +58,7 @@ model is quickly amortized by avoiding costly re-evaluations of the original
 utility.
 Introduced by [@wang_improving_2022].
 [Implementation][pydvl.utils.utility.DataUtilityLearning].
+[Documentation][creating-a-utility].
 
 ### Eigenvalue-corrected Kronecker-Factored Approximate Curvature
 
@@ -77,6 +79,7 @@ items efficiently, by testing groups rather than individuals to quickly narrow
 down the search for items with specific properties.
 Introduced into data valuation by [@jia_efficient_2019a].
 [Implementation][pydvl.value.shapley.gt.group_testing_shapley].
+[Documentation][group-testing].
 
 ### Influence Function
 
@@ -109,6 +112,7 @@ determined by the evaluations of the utility function on every subset of the
 training data.
 Introduced as data valuation method by [@yan_if_2021].
 [Implementation][pydvl.value.least_core.compute_least_core_values].
+[Documentation][least-core-values].
 
 ### Linear-time Stochastic Second-order Algorithm
 
@@ -130,6 +134,7 @@ impact of removing individual data points on the model's performance. The
 value of a training point is defined as the marginal change in the model's
 performance when that point is removed from the training set.
 [Implementation][pydvl.value.loo.loo.compute_loo].
+[Documentation][leave-one-out-values].
 
 ### Monte Carlo Least Core
 
@@ -137,6 +142,7 @@ MCLC is a variation of the Least Core that uses a reduced amount of
 constraints, sampled randomly from the powerset of the training data.
 Introduced by [@yan_if_2021].
 [Implementation][pydvl.value.least_core.compute_least_core_values].
+[Documentation][monte-carlo-least-core].
 
 ### Monte Carlo Shapley
 
@@ -146,7 +152,7 @@ at the cost of accuracy, but this loss is typically irrelevant for downstream
 applications in ML.
 Introduced into data valuation by [@ghorbani_data_2019].
 [Implementation][pydvl.value.shapley.montecarlo].
-[[data-valuation|Documentation]].
+[Documentation][monte-carlo-combinatorial-shapley].
 
 ### Nyström Low-Rank Approximation
 
@@ -202,7 +208,7 @@ $\mathcal{O}(2^{n-1})$ re-trainings of the model, which is infeasible for even
 trivial data set sizes, so one resorts to approximations like TMCS.
 Introduced into data valuation by [@ghorbani_data_2019].
 [Implementation][pydvl.value.shapley.naive].
-[[data-valuation|Documentation]].
+[Documentation][shapley-value].
 
 ### Truncated Monte Carlo Shapley
 
@@ -211,7 +217,7 @@ truncated version of the Monte Carlo method, reducing computation time while
 maintaining accuracy in large datasets.
 Introduced by [@ghorbani_data_2019].
 [Implementation][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
-[[data-valuation|Documentation]].
+[Documentation][permutation-shapley].
 
 ### Weighted Accuracy Drop
 
