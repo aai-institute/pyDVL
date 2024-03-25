@@ -54,9 +54,18 @@ pip install -e .
 ```
 
 In order to build the documentation locally (which is done as part of the tox
-suite) [pandoc](https://pandoc.org/) is required. Except for OSX, it should be installed
-automatically as a dependency with `requirements-docs.txt`. Under OSX you can
-install pandoc (you'll need at least version 2.11) with:
+suite) you need to install additional non-python dependencies. 
+Using homebrew on OSX you can use
+
+```shell
+brew install cairo freetype libffi libjpeg libpng zlib
+```
+for this. For instructions on Linux and Windows, see the 
+[documentation of mkdocs-material](https://squidfunk.github.io/mkdocs-material/plugins/requirements/image-processing/#cairo-graphics).
+In addition, [pandoc](https://pandoc.org/) is required. Except for OSX, 
+it should be installed automatically as a dependency with 
+`requirements-docs.txt`. Under OSX you can install pandoc 
+(you'll need at least version 2.11) with:
 
 ```shell
 brew install pandoc
