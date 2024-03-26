@@ -592,6 +592,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../../getting-started/glossary/" class="md-nav__link">
         
   
@@ -2145,27 +2166,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/parallel/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Parallel
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../utils/progress/" class="md-nav__link">
         
   
@@ -2283,7 +2283,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_10" >
         
           
           
@@ -2299,14 +2299,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_4_10" id="__nav_6_1_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4_10">
             <span class="md-nav__icon md-icon"></span>
             Caching
           </label>
@@ -3280,6 +3280,15 @@
       <p>Class used to wrap ray to make it transparent to algorithms.</p>
 <p>It shouldn't be initialized directly. You should instead call
 <a class="autorefs autorefs-internal" href="../../backend/#pydvl.parallel.backend.init_parallel_backend">init_parallel_backend()</a>.</p>
+<details class="example">
+<summary>Example</summary>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">ray</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">pydvl.parallel</span> <span class="kn">import</span> <span class="n">init_parallel_backend</span><span class="p">,</span> <span class="n">ParallelConfig</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">parallel_backend</span> <span class="o">=</span> <span class="n">init_parallel_backend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></code></pre></div>
+</details>
 
 
 
@@ -3311,27 +3320,23 @@ with cluster address, number of cpus, etc.</p>
 
                 <details class="quote">
                   <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="s2">&quot;logging_level&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">logging_level</span> <span class="ow">or</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="p">}</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;address&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;num_cpus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="c1"># Register ray joblib backend</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">register_ray</span><span class="p">()</span>
+                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="s2">&quot;Starting from v0.9.0, ray is no longer automatically initialized. &quot;</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="s2">&quot;Please use `ray.init()` with the desired configuration &quot;</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>            <span class="s2">&quot;before using this class.&quot;</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="p">)</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="c1"># Register ray joblib backend</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="n">register_ray</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
                 </details>
 
@@ -3432,31 +3437,31 @@ with cluster address, number of cpus, etc.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-76">76</a></span>
 <span class="normal"><a href="#__codelineno-0-77">77</a></span>
 <span class="normal"><a href="#__codelineno-0-78">78</a></span>
 <span class="normal"><a href="#__codelineno-0-79">79</a></span>
 <span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a ray remote.</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        fun: the function to wrap</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        kwargs: keyword arguments to pass to @ray.remote</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">        The `.remote` method of the ray `RemoteFunction`.</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a ray remote.</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        fun: the function to wrap</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        kwargs: keyword arguments to pass to @ray.remote</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        The `.remote` method of the ray `RemoteFunction`.</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>

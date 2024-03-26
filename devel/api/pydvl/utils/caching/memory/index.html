@@ -592,6 +592,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../../getting-started/glossary/" class="md-nav__link">
         
   
@@ -2079,27 +2100,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../parallel/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Parallel
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../progress/" class="md-nav__link">
         
   
@@ -2219,7 +2219,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_10" checked>
         
           
           
@@ -2235,14 +2235,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_4_10" id="__nav_6_1_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_1_4_10">
             <span class="md-nav__icon md-icon"></span>
             Caching
           </label>
@@ -3381,8 +3381,10 @@ This allows sharing evaluations across threads in a single process.</p>
         </tr>
     </tbody>
   </table>
-      <details class="examples">
-<summary>Examples</summary>
+
+<details class="example" open>
+  <summary>Example</summary>
+  <p>Basic usage:
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.caching.memory</span> <span class="kn">import</span> <span class="n">InMemoryCacheBackend</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span> <span class="o">=</span> <span class="n">InMemoryCacheBackend</span><span class="p">()</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
@@ -3390,7 +3392,8 @@ This allows sharing evaluations across threads in a single process.</p>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="go">42</span>
-</span></code></pre></div>
+</span></code></pre></div></p>
+<p>Callable wrapping:
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.caching.memory</span> <span class="kn">import</span> <span class="n">InMemoryCacheBackend</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span> <span class="o">=</span> <span class="n">InMemoryCacheBackend</span><span class="p">()</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cache_backend</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
@@ -3411,18 +3414,17 @@ This allows sharing evaluations across threads in a single process.</p>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="go">1</span>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_foo</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="go">1</span>
-</span></code></pre></div>
+</span></code></pre></div></p>
 </details>
-
                 <details class="quote">
                   <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
-                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the in-memory cache backend.&quot;&quot;&quot;</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the in-memory cache backend.&quot;&quot;&quot;</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 </span></code></pre></div></td></tr></table></div>
                 </details>
 
@@ -3645,9 +3647,7 @@ This allows sharing evaluations across threads in a single process.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-63">63</a></span>
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
 <span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span>
@@ -3659,21 +3659,23 @@ This allows sharing evaluations across threads in a single process.</p>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span>
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a value from the cache.</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        key: Cache key.</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        Cached value or None if not found.</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">misses</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">return</span> <span class="n">value</span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a value from the cache.</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        key: Cache key.</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        Cached value or None if not found.</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">hits</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">misses</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">return</span> <span class="n">value</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -3740,23 +3742,23 @@ This allows sharing evaluations across threads in a single process.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-79">79</a></span>
 <span class="normal"><a href="#__codelineno-0-80">80</a></span>
 <span class="normal"><a href="#__codelineno-0-81">81</a></span>
 <span class="normal"><a href="#__codelineno-0-82">82</a></span>
 <span class="normal"><a href="#__codelineno-0-83">83</a></span>
 <span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set a value in the cache.</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        key: Cache key.</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        value: Value to cache.</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sets</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Set a value in the cache.</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        key: Cache key.</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        value: Value to cache.</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sets</span> <span class="o">+=</span> <span class="mi">1</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -3782,13 +3784,13 @@ This allows sharing evaluations across threads in a single process.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span>
-<span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Deletes cache dictionary and recreates it.&quot;&quot;&quot;</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span> <span class="o">=</span> <span class="p">{}</span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Deletes cache dictionary and recreates it.&quot;&quot;&quot;</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span>
+</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">cached_values</span> <span class="o">=</span> <span class="p">{}</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -3814,11 +3816,11 @@ This allows sharing evaluations across threads in a single process.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/utils/caching/memory.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-92">92</a></span>
-<span class="normal"><a href="#__codelineno-0-93">93</a></span>
-<span class="normal"><a href="#__codelineno-0-94">94</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="k">def</span> <span class="nf">combine_hashes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Join cache key components.&quot;&quot;&quot;</span>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="k">def</span> <span class="nf">combine_hashes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Join cache key components.&quot;&quot;&quot;</span>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>

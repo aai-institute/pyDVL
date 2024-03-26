@@ -592,6 +592,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../getting-started/glossary/" class="md-nav__link">
         
   
@@ -2079,27 +2100,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../parallel/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Parallel
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../progress/" class="md-nav__link">
         
   
@@ -2323,7 +2323,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_10" >
         
           
           
@@ -2339,14 +2339,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_4_10" id="__nav_6_1_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4_10">
             <span class="md-nav__icon md-icon"></span>
             Caching
           </label>
@@ -3338,7 +3338,7 @@ computation of values. Please see the documentation on
 data and scoring function (the latter being what one usually understands
 under <em>utility</em> in the general definition of Shapley value).
 It is automatically cached across machines when the
-<a class="autorefs autorefs-internal" href="../../../../getting-started/first-steps/#getting-started-cache">cache is configured</a> and it is enabled upon construction.</p>
+<a class="autorefs autorefs-internal" href="../../../../getting-started/advanced-usage/#getting-started-cache">cache is configured</a> and it is enabled upon construction.</p>
 <p><a class="autorefs autorefs-internal" href="#pydvl.utils.utility.DataUtilityLearning">DataUtilityLearning</a> adds support
 for learning the scoring function to avoid repeated re-training
 of the model to compute the score.</p>
@@ -3411,7 +3411,7 @@ if it is a Sci-Kit Learn model, otherwise a copy is created using
 <p>Since evaluating the scoring function requires retraining the model and that
 can be time-consuming, this class wraps it and caches the results of each
 execution. Caching is available both locally and across nodes, but must
-always be enabled for your project first, see <a class="autorefs autorefs-internal" href="../../../../getting-started/first-steps/#getting-started-cache">the documentation</a>
+always be enabled for your project first, see <a class="autorefs autorefs-internal" href="../../../../getting-started/advanced-usage/#getting-started-cache">the documentation</a>
 and the <a class="autorefs autorefs-internal" href="../caching/#pydvl.utils.caching">module documentation</a>.</p>
 
 

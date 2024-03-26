@@ -151,11 +151,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://pydvl.org/stable/api/pydvl/utils/parallel/</loc>
-         <lastmod>2024-03-26</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/progress/</loc>
          <lastmod>2024-03-26</lastmod>
          <changefreq>daily</changefreq>
@@ -382,6 +377,11 @@
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/</loc>
+         <lastmod>2024-03-26</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://pydvl.org/stable/getting-started/advanced-usage/</loc>
          <lastmod>2024-03-26</lastmod>
          <changefreq>daily</changefreq>
     </url>

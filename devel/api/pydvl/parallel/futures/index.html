@@ -592,6 +592,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../getting-started/glossary/" class="md-nav__link">
         
   
@@ -2081,27 +2102,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/parallel/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Parallel
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../utils/progress/" class="md-nav__link">
         
   
@@ -2219,7 +2219,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_10" >
         
           
           
@@ -2235,14 +2235,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_4_10" id="__nav_6_1_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4_10">
             <span class="md-nav__icon md-icon"></span>
             Caching
           </label>
@@ -3268,7 +3268,7 @@ with cluster address, number of cpus, etc.</p>
   </table>
       <details class="examples">
 <summary>Examples</summary>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.parallel</span> <span class="kn">import</span> <span class="n">init_executor</span><span class="p">,</span> <span class="n">ParallelConfig</span>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.parallel.futures</span> <span class="kn">import</span> <span class="n">init_executor</span><span class="p">,</span> <span class="n">ParallelConfig</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">with</span> <span class="n">init_executor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
@@ -3339,7 +3339,7 @@ with cluster address, number of cpus, etc.</p>
 </span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>
 </span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    ??? Examples</span>
 </span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">        ``` python</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        from pydvl.parallel import init_executor, ParallelConfig</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        from pydvl.parallel.futures import init_executor, ParallelConfig</span>
 </span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>
 </span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">        config = ParallelConfig(backend=&quot;ray&quot;)</span>
 </span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">        with init_executor(max_workers=1, config=config) as executor:</span>

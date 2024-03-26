@@ -592,6 +592,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Advanced usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../../getting-started/glossary/" class="md-nav__link">
         
   
@@ -2145,27 +2166,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/parallel/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Parallel
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../utils/progress/" class="md-nav__link">
         
   
@@ -2283,7 +2283,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_10" >
         
           
           
@@ -2299,14 +2299,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_4_10" id="__nav_6_1_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4_10">
             <span class="md-nav__icon md-icon"></span>
             Caching
           </label>
@@ -3280,6 +3280,22 @@
       <p>Class used to wrap joblib to make it transparent to algorithms.</p>
 <p>It shouldn't be initialized directly. You should instead call
 <a class="autorefs autorefs-internal" href="../../backend/#pydvl.parallel.backend.init_parallel_backend">init_parallel_backend()</a>.</p>
+<details class="example">
+<summary>Example</summary>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.parallel</span> <span class="kn">import</span> <span class="n">init_paralle_backend</span><span class="p">,</span> <span class="n">ParallelConfig</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;joblib&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">parallel_backend</span> <span class="o">=</span> <span class="n">init_parallel_backend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></code></pre></div>
+</details>
+<details class="example">
+<summary>Example</summary>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span> <span class="nn">joblib</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">pydvl.parallel</span> <span class="kn">import</span> <span class="n">init_paralle_backend</span><span class="p">,</span> <span class="n">ParallelConfig</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">with</span> <span class="n">joblib</span><span class="o">.</span><span class="n">parallel_config</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;joblib&quot;</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">parallel_backend</span> <span class="o">=</span> <span class="n">init_parallel_backend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></code></pre></div>
+</details>
 
 
 
@@ -3311,15 +3327,13 @@ with cluster address, number of cpus, etc.</p>
 
                 <details class="quote">
                   <summary>Source code in <code>src/pydvl/parallel/backends/joblib.py</code></summary>
-                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="s2">&quot;logging_level&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">,</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="s2">&quot;n_jobs&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span><span class="p">,</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="p">}</span>
+                  <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="s2">&quot;n_jobs&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span><span class="p">,</span>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
                 </details>
 
@@ -3406,25 +3420,25 @@ with cluster address, number of cpus, etc.</p>
 
           <details class="quote">
             <summary>Source code in <code>src/pydvl/parallel/backends/joblib.py</code></summary>
-            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a joblib delayed.</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        fun: the function to wrap</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        The delayed function.</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">return</span> <span class="n">delayed</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a joblib delayed.</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">        fun: the function to wrap</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        The delayed function.</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="k">return</span> <span class="n">delayed</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
