@@ -60,14 +60,9 @@ pip install -e .
 ```
 
 In order to build the documentation locally (which is done as part of the tox
-suite) you need to install additional non-python dependencies. 
-Using homebrew on OSX you can use
+suite) you need to install additional non-python dependencies as described in
+the [documentation of mkdocs-material](https://squidfunk.github.io/mkdocs-material/plugins/requirements/image-processing/#cairo-graphics).
 
-```shell
-brew install cairo freetype libffi libjpeg libpng zlib
-```
-for this. For instructions on Linux and Windows, see the 
-[documentation of mkdocs-material](https://squidfunk.github.io/mkdocs-material/plugins/requirements/image-processing/#cairo-graphics).
 In addition, [pandoc](https://pandoc.org/) is required. Except for OSX, 
 it should be installed automatically as a dependency with 
 `requirements-docs.txt`. Under OSX you can install pandoc 
@@ -282,8 +277,8 @@ mkdocs serve
 This will rebuild the documentation on changes to `.md` files inside `docs`,
 notebooks and python files.
 
-It is possible, that the cairo lib file is not properly linked, when installed
-via homebrew on OSX. In this case you might encounter an error like this
+On OSX, it is possible that the cairo lib file is not properly linked when installed
+via homebrew. In this case you might encounter an error like this
 ```shell
 OSError: no library called "cairo-2" was found
 no library called "cairo" was found
