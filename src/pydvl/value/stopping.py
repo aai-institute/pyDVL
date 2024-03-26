@@ -668,7 +668,7 @@ class RankStability(StoppingCriterion):
 
         corr = spearmanr(self._memory, r.values)[0]
         self._memory = r.values.copy()
-        self._completion = min(self.rtol / np.abs(corr - self._corr), 1.0)
+        self._update_completion(corr)
         if (
             np.isclose(corr, self._corr, rtol=self.rtol)
             and self._iterations > self.min_iterations
@@ -678,8 +678,17 @@ class RankStability(StoppingCriterion):
                 f"RankStability has converged with {corr=} in iteration {self._iterations}"
             )
             return Status.Converged
-        self._corr = corr
+        self._corr = np.nan_to_num(corr, 0.0)
         return Status.Pending
+
+    def _update_completion(self, corr: float) -> None:
+        if np.isnan(corr):
+            self._completion = 0.0
+        elif not np.isclose(corr, self._corr, rtol=self.rtol):
+            self._completion = corr
+            # self.rtol / np.abs(corr - self._corr) might be another option
+        else:
+            self._completion = 1.0
 
     def completion(self) -> float:
         return self._completion

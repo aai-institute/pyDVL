@@ -222,9 +222,19 @@ class MSRFutureProcessor(FutureProcessor):
             self.point_in_subset > 0, points_not_in_subset > 0
         )
         values: np.ndarray = (
-            np.divide(1, self.point_in_subset, where=feasibility_map)
+            np.divide(
+                1,
+                self.point_in_subset,
+                out=np.zeros_like(self.point_in_subset),
+                where=feasibility_map,
+            )
             * self.positive_sums
-            + np.divide(1, points_not_in_subset, where=feasibility_map)
+            - np.divide(
+                1,
+                points_not_in_subset,
+                out=np.zeros_like(self.point_in_subset),
+                where=feasibility_map,
+            )
             * self.negative_sums
         )
         return values
@@ -249,7 +259,6 @@ class MSRFutureProcessor(FutureProcessor):
             A collection of marginals. Each marginal is a tuple with index and its marginal
             utility.
         """
-        log.debug("MSR Future Processor called")
         marginals: List[MarginalT] = []
         for s, evaluation in future_result:
             previous_values = self.compute_values()
@@ -365,8 +374,8 @@ def compute_generic_semivalues(
                 processed_future = future_processor(future.result())
                 for idx, marginal_val in processed_future:
                     result.update(idx, marginal_val)
-                    if done(result):
-                        return result
+                if done(result):
+                    return result
 
             # Ensure that we always have n_submitted_jobs running
             try:
