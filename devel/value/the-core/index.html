@@ -585,6 +585,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/glossary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3242,8 +3263,7 @@ formation?</p>
 ensure stability in the sense that it provides the set of feasible payoffs that
 cannot be improved upon by a sub-coalition. This can be interesting for some
 applications of data valuation because it yields values consistent with training
-on the whole dataset, avoiding the spurious selection of subsets. It was first
-introduced in this field by (Yan and Procaccia, 2021)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+on the whole dataset, avoiding the spurious selection of subsets.</p>
 <p>It satisfies the following 2 properties:</p>
 <ul>
 <li>
@@ -3259,6 +3279,8 @@ introduced in this field by (Yan and Procaccia, 2021)<sup id="fnref:1"><a class=
   <span class="arithmatex">\(\sum_{i \in S} v(i) \geq u(S), \forall S \subset D.\)</span></p>
 </li>
 </ul>
+<p>The Core was first introduced into data valuation by (Yan and Procaccia, 2021)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, in the
+following form.</p>
 <h2 id="least-core-values">Least Core values<a class="headerlink" href="#least-core-values" title="Permanent link">&para;</a></h2>
 <p>Unfortunately, for many cooperative games the Core may be empty. By relaxing the
 coalitional rationality property by a subsidy <span class="arithmatex">\(e \gt 0\)</span>, we are then able to
@@ -3281,9 +3303,12 @@ obtain a single valuation to use, one breaks ties by solving a quadratic program
 to select the <span class="arithmatex">\(v\)</span> in the <abbr title="Least Core">LC</abbr> with the smallest <span class="arithmatex">\(\ell_2\)</span> norm. This is called the
 <em>egalitarian least core</em>.</p>
 <h2 id="exact-least-core">Exact Least Core<a class="headerlink" href="#exact-least-core" title="Permanent link">&para;</a></h2>
-<p>This first algorithm is just a verbatim implementation of the definition.
-As such it returns as exact a value as the utility function allows
-(see what this means in <a class="autorefs autorefs-internal" href="../#problems-of-data-values">Problems of Data Values</a>).</p>
+<p>This first algorithm is just a verbatim implementation of the definition, in
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/#pydvl.value.least_core.compute_least_core_values">compute_least_core_values</a>.
+It computes all constraints for the linear problem by evaluating the utility on
+every subset of the training data, and returns as exact a value as the utility
+function allows (see what this means in <a class="autorefs autorefs-internal" href="../#problems-of-data-values">Problems of Data
+Values</a>).</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;exact&quot;</span><span class="p">)</span>
@@ -3291,16 +3316,18 @@ As such it returns as exact a value as the utility function allows
 <h2 id="monte-carlo-least-core">Monte Carlo Least Core<a class="headerlink" href="#monte-carlo-least-core" title="Permanent link">&para;</a></h2>
 <p>Because the number of subsets <span class="arithmatex">\(S \subseteq D \setminus \{i\}\)</span> is
 <span class="arithmatex">\(2^{ | D | - 1 }\)</span>, one typically must resort to approximations.</p>
-<p>The simplest approximation consists in using a fraction of all subsets for the
-constraints. (Yan and Procaccia, 2021)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> show that a quantity of order
-<span class="arithmatex">\(\mathcal{O}((n - \log \Delta ) / \delta^2)\)</span> is enough to obtain a so-called
-<span class="arithmatex">\(\delta\)</span>-<em>approximate least core</em> with high probability. I.e. the following
-property holds with probability <span class="arithmatex">\(1-\Delta\)</span> over the choice of subsets:</p>
+<p>The simplest one consists in using a fraction of all subsets for the constraints.
+ (Yan and Procaccia, 2021)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> show that a quantity of order <span class="arithmatex">\(\mathcal{O}((n - \log \Delta ) /
+\delta^2)\)</span> is enough to obtain a so-called <span class="arithmatex">\(\delta\)</span>-<em>approximate least core</em>
+with high probability. I.e. the following property holds with probability
+<span class="arithmatex">\(1-\Delta\)</span> over the choice of subsets:</p>
 <div class="arithmatex">\[
 \mathbb{P}_{S\sim D}\left[\sum_{i\in S} v(i) + e^{*} \geq u(S)\right]
 \geq 1 - \delta,
 \]</div>
-<p>where <span class="arithmatex">\(e^{*}\)</span> is the optimal least core subsidy.</p>
+<p>where <span class="arithmatex">\(e^{*}\)</span> is the optimal least core subsidy. This approximation is
+also implemented in
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/#pydvl.value.least_core.compute_least_core_values">compute_least_core_values</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
@@ -3379,7 +3406,7 @@ model design.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-24</span>
   </span>
 
     

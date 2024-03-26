@@ -583,6 +583,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/glossary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3636,27 +3657,30 @@ to make your life easier.</p>
 <p>Run the following to set up the pre-commit git hook to run before pushes:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pre-commit<span class="w"> </span>install<span class="w"> </span>--hook-type<span class="w"> </span>pre-push
 </span></code></pre></div>
+<p>Additionally, we use Git LFS for some files like images. Install with</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>lfs<span class="w"> </span>install
+</span></code></pre></div>
 <h2 id="setting-up-your-environment">Setting up your environment<a class="headerlink" href="#setting-up-your-environment" title="Permanent link">&para;</a></h2>
 <p>We strongly suggest using some form of virtual environment for working with the
 library. E.g. with venv:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>./venv
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>.<span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># `venv\Scripts\activate` in windows</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt<span class="w"> </span>-r<span class="w"> </span>requirements-docs.txt
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>./venv
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>.<span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># `venv\Scripts\activate` in windows</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt<span class="w"> </span>-r<span class="w"> </span>requirements-docs.txt
 </span></code></pre></div>
 <p>With conda:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>pydvl<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>pydvl
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt<span class="w"> </span>-r<span class="w"> </span>requirements-docs.txt
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>pydvl<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>pydvl
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt<span class="w"> </span>-r<span class="w"> </span>requirements-docs.txt
 </span></code></pre></div>
 <p>A very convenient way of working with your library during development is to
 install it in editable mode into your environment by running</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </span></code></pre></div>
 <p>In order to build the documentation locally (which is done as part of the tox
 suite) <a href="https://pandoc.org/">pandoc</a> is required. Except for OSX, it should be installed
 automatically as a dependency with <code>requirements-docs.txt</code>. Under OSX you can
 install pandoc (you'll need at least version 2.11) with:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>brew<span class="w"> </span>install<span class="w"> </span>pandoc
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>brew<span class="w"> </span>install<span class="w"> </span>pandoc
 </span></code></pre></div>
 <p>Remember to mark all autogenerated directories as excluded in your IDE. In
 particular <code>docs_build</code> and <code>.tox</code> should be marked as excluded to avoid
@@ -3679,7 +3703,7 @@ requires ray for the parallelization and Memcached for caching. Please install
 both before running the tests. We run <a href="#ci">tests in CI</a> as well.</p>
 <p>It is possible to pass optional command line arguments to pytest, for example to
 run only certain tests using patterns (<code>-k</code>) or marker (<code>-m</code>).</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>&lt;optional<span class="w"> </span>arguments&gt;
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>&lt;optional<span class="w"> </span>arguments&gt;
 </span></code></pre></div>
 <p>There are a few important arguments:</p>
 <ul>
@@ -3689,7 +3713,7 @@ run only certain tests using patterns (<code>-k</code>) or marker (<code>-m</cod
 <p><a href="https://www.memcached.org/">Memcached</a> is needed for testing
   caching as well as speeding certain methods (e.g. Permutation Shapley).</p>
 <p>To start memcached locally in the background with Docker use:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>pydvl-memcache<span class="w"> </span>-p<span class="w"> </span><span class="m">11211</span>:11211<span class="w"> </span>-d<span class="w"> </span>memcached
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>pydvl-memcache<span class="w"> </span>-p<span class="w"> </span><span class="m">11211</span>:11211<span class="w"> </span>-d<span class="w"> </span>memcached
 </span></code></pre></div>
 <ul>
 <li><code>-n</code> sets the number of parallel workers for 
@@ -3722,14 +3746,14 @@ of all available markers.</p>
 <li><code>pytest.mark.torch</code> which is used to mark tests that require PyTorch.</li>
 </ul>
 <p>To test modules that rely on PyTorch, use:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;torch&quot;</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;torch&quot;</span>
 </span></code></pre></div>
 <h3 id="other-things">Other Things<a class="headerlink" href="#other-things" title="Permanent link">&para;</a></h3>
 <p>To test the notebooks separately, run (see <a href="#notebooks">below</a> for details):</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>notebook-tests
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>notebook-tests
 </span></code></pre></div>
 <p>To create a package locally, run:
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>setup.py<span class="w"> </span>sdist<span class="w"> </span>bdist_wheel
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>setup.py<span class="w"> </span>sdist<span class="w"> </span>bdist_wheel
 </span></code></pre></div></p>
 <h2 id="notebooks">Notebooks<a class="headerlink" href="#notebooks" title="Permanent link">&para;</a></h2>
 <p>We use notebooks both as documentation (copied over to <code>docs/examples</code>) and as
@@ -3737,9 +3761,9 @@ integration tests. All notebooks in the <code>notebooks</code> directory are exe
 during the test run. Because run times are typically too long for large
 datasets, you must check for the <code>CI</code> environment variable to work
 with smaller ones. For example, you can select a subset of the data:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># In CI we only use a subset of the training set</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CI&#39;</span><span class="p">):</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">training_data</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># In CI we only use a subset of the training set</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CI&#39;</span><span class="p">):</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">training_data</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 </span></code></pre></div>
 <p>This switching should happen in a separate notebook cell tagged with
 <code>hide</code> to hide the cell's input and output when rendering it as part of
@@ -3758,20 +3782,20 @@ cells which are then hidden in the documentation.</p>
 <p>In order to do this, cells are marked with tags understood by the mkdocs
 plugin <a href="https://github.com/danielfrg/mkdocs-jupyter#readme"><code>mkdocs-jupyter</code></a>,
 namely adding the following to the metadata of the relevant cells:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="s">&quot;hide&quot;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p p-Indicator">]</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="s">&quot;hide&quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 <p>To hide the cell's input and output.</p>
 <p>Or:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="s">&quot;hide-input&quot;</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p p-Indicator">]</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="s">&quot;hide-input&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 <p>To only hide the input and</p>
-<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="s">&quot;hide-output&quot;</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p p-Indicator">]</span>
+<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="s">&quot;hide-output&quot;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 for hiding the output only.</p>
 <p>It is important to leave a warning at the top of the document to avoid confusion.
@@ -3780,9 +3804,9 @@ Examples for hidden imports and plots are available in the notebooks, e.g. in
 <h3 id="plots-in-notebooks">Plots in Notebooks<a class="headerlink" href="#plots-in-notebooks" title="Permanent link">&para;</a></h3>
 <p>If you add a plot to a notebook, which should also render nicely in browser
 dark mode, add the tag <em>invertible-output</em>, i.e.</p>
-<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="s">&quot;invertible-output&quot;</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p p-Indicator">]</span>
+<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="s">&quot;tags&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="s">&quot;invertible-output&quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 This applies a simple CSS-filter to the output image of the cell.</p>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
@@ -3794,11 +3818,11 @@ This applies a simple CSS-filter to the output image of the cell.</p>
 <a href="#notebooks">the section on notebooks</a> above.</p>
 <p>Use the following command to build the documentation the same way it is
 done in CI:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>mkdocs<span class="w"> </span>build
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>mkdocs<span class="w"> </span>build
 </span></code></pre></div>
 <p>Locally, you can use this command instead to continuously rebuild documentation
 on changes to the <code>docs</code> and <code>src</code> folder:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>This will rebuild the documentation on changes to <code>.md</code> files inside <code>docs</code>,
 notebooks and python files.</p>
@@ -3814,7 +3838,7 @@ configuration.</p>
 across pages with e.g. <code>[a link][to-something]</code>. Anchors are autogenerated
 from section titles, and are not guaranteed to be unique. In order to ensure
 that a link will remain valid, add a custom anchor to the section title:</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="gu">## Some section { #permanent-anchor-to-some-section }</span>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="gu">## Some section { #permanent-anchor-to-some-section }</span>
 </span></code></pre></div>
 <p>(note the space after the opening brace). You can then refer to it within
 another markdown file with <code>[Some section][permanent-anchor-to-some-section]</code>.</p>
@@ -3830,40 +3854,40 @@ library upon merging.</p>
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
 example, in <code>pydvl.value.shapley.montecarlo</code> we have:</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>&quot;&quot;&quot;
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>Module docstring...
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="gu">## References</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>[<span class="nl">^1</span>]: <span class="na">&lt;a name=&quot;ghorbani_data_2019&quot;&gt;&lt;/a&gt;Ghorbani, A., Zou, J., 2019.</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    [<span class="nt">Data Shapley: Equitable Valuation of Data for Machine</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="nt">    Learning</span>](<span class="na">https://proceedings.mlr.press/v97/ghorbani19c.html</span>).
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>    In: Proceedings of the 36th International Conference on Machine Learning,
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>    PMLR, pp. 2242–2251.
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>&quot;&quot;&quot;
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>&quot;&quot;&quot;
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>Module docstring...
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="gu">## References</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>[<span class="nl">^1</span>]: <span class="na">&lt;a name=&quot;ghorbani_data_2019&quot;&gt;&lt;/a&gt;Ghorbani, A., Zou, J., 2019.</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    [<span class="nt">Data Shapley: Equitable Valuation of Data for Machine</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="nt">    Learning</span>](<span class="na">https://proceedings.mlr.press/v97/ghorbani19c.html</span>).
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    In: Proceedings of the 36th International Conference on Machine Learning,
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    PMLR, pp. 2242–2251.
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>&quot;&quot;&quot;
 </span></code></pre></div>
 <p>and then later in the file, inside a function's docstring:</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>    This function implements (Ghorbani and Zou, 2019)&lt;sup&gt;&lt;a 
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    href=&quot;#ghorbani_data_2019&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>    This function implements (Ghorbani and Zou, 2019)&lt;sup&gt;&lt;a 
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    href=&quot;#ghorbani_data_2019&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;
 </span></code></pre></div>
 <h3 id="writing-mathematics">Writing mathematics<a class="headerlink" href="#writing-mathematics" title="Permanent link">&para;</a></h3>
 <p>Use LaTeX delimiters <code>$</code> and <code>$$</code> for inline and displayed mathematics
 respectively.</p>
 <p><strong>Warning: backslashes must be escaped in docstrings!</strong> (although there are
 exceptions). For simplicity, declare the string as "raw" with the prefix <code>r</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># This will work</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Computes </span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="sd">    $${ f(x) = \frac{1}{x^2} }$$</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1"># This throws an obscure error</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot; Computes </span>
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="sd">    $$\frac{1}{x^2}$$</span>
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># This will work</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Computes </span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="sd">    $${ f(x) = \frac{1}{x^2} }$$</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="c1"># This throws an obscure error</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot; Computes </span>
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="sd">    $$\frac{1}{x^2}$$</span>
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Note how there is no space after the dollar signs. This is important! You can
 use braces for legibility like in the first example.</p>
@@ -3871,7 +3895,7 @@ use braces for legibility like in the first example.</p>
 <p>We keep the abbreviations used in the documentation inside the
 <a href="docs_includes%2Fabbreviations.md">docs_include/abbreviations.md</a> file.</p>
 <p>The syntax for abbreviations is:</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>*[ABBR]: Abbreviation
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>*[ABBR]: Abbreviation
 </span></code></pre></div>
 <h2 id="ci">CI<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
 <p>We use workflows to:</p>
@@ -3909,9 +3933,9 @@ the duration information with <code>--store-durations</code> to ensure
 that the splitting is in balance.</p>
 </blockquote>
 <p>Then we can have as many splits as we want:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">1</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">2</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">3</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">1</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">2</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>tox<span class="w"> </span>-e<span class="w"> </span>tests<span class="w"> </span>--<span class="w"> </span>--splits<span class="w"> </span><span class="m">3</span><span class="w"> </span>--group<span class="w"> </span><span class="m">3</span>
 </span></code></pre></div>
 <p>Alternatively, we case use pytest directly
    <code>pytest --splits 3 ---group 1</code>.</p>
@@ -3930,7 +3954,7 @@ The <a href="https://docs.github.com/en/actions/learn-github-actions/variables#d
 and <a href="https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems">filesystem</a>
 are all configured to match what GitHub provides.</p>
 <p>You can install it manually using:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/nektos/act/master/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span>--<span class="w"> </span>-d<span class="w"> </span>-b<span class="w"> </span>~/bin<span class="w"> </span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/nektos/act/master/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span>--<span class="w"> </span>-d<span class="w"> </span>-b<span class="w"> </span>~/bin<span class="w"> </span>
 </span></code></pre></div>
 <p>And then simply add it to your PATH variable: <code>PATH=~/bin:$PATH</code></p>
 <p>Refer to its official
@@ -3941,42 +3965,42 @@ for more installation options.</p>
 use the <code>-W</code> flag to specify a specific workflow file to run, or you can rely
 on the job id to be unique (but then you'll see warnings for the workflows
 without that job id).</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Run only the main tests for python 3.8 after a push event (implicit) </span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>act<span class="w"> </span>-W<span class="w"> </span>.github/workflows/run-tests-workflow.yaml<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">    </span>-j<span class="w"> </span>run-tests<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">    </span>--input<span class="w"> </span><span class="nv">tests_to_run</span><span class="o">=</span>base<span class="se">\</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">    </span>--input<span class="w"> </span><span class="nv">python_version</span><span class="o">=</span><span class="m">3</span>.8
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Run only the main tests for python 3.8 after a push event (implicit) </span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>act<span class="w"> </span>-W<span class="w"> </span>.github/workflows/run-tests-workflow.yaml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span>-j<span class="w"> </span>run-tests<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">    </span>--input<span class="w"> </span><span class="nv">tests_to_run</span><span class="o">=</span>base<span class="se">\</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">    </span>--input<span class="w"> </span><span class="nv">python_version</span><span class="o">=</span><span class="m">3</span>.8
 </span></code></pre></div>
 <p>Other common flags are: </p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># List all actions for all events:</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>act<span class="w"> </span>-l
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># List the actions for a specific event:</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>act<span class="w"> </span>workflow_dispatch<span class="w"> </span>-l
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># List the actions for a specific job:</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-l
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>
-</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="c1"># Run the default (`push`) event:</span>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>act
-</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="c1"># Run a specific event:</span>
-</span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a>act<span class="w"> </span>pull_request
-</span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a>
-</span><span id="__span-25-16"><a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a><span class="c1"># Run a specific job:</span>
-</span><span id="__span-25-17"><a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a>act<span class="w"> </span>-j<span class="w"> </span>lint
-</span><span id="__span-25-18"><a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a>
-</span><span id="__span-25-19"><a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a><span class="c1"># Collect artifacts to the /tmp/artifacts folder:</span>
-</span><span id="__span-25-20"><a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a>act<span class="w"> </span>--artifact-server-path<span class="w"> </span>/tmp/artifacts
-</span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a>
-</span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a><span class="c1"># Run a job in a specific workflow (useful if you have duplicate job names)</span>
-</span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-W<span class="w"> </span>.github/workflows/tox.yml
-</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a>
-</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="c1"># Run in dry-run mode:</span>
-</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a>act<span class="w"> </span>-n
-</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a>
-</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="c1"># Enable verbose-logging (can be used with any of the above commands)</span>
-</span><span id="__span-25-29"><a id="__codelineno-25-29" name="__codelineno-25-29" href="#__codelineno-25-29"></a>act<span class="w"> </span>-v
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># List all actions for all events:</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>act<span class="w"> </span>-l
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># List the actions for a specific event:</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>act<span class="w"> </span>workflow_dispatch<span class="w"> </span>-l
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="c1"># List the actions for a specific job:</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-l
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="c1"># Run the default (`push`) event:</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>act
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="c1"># Run a specific event:</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>act<span class="w"> </span>pull_request
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a><span class="c1"># Run a specific job:</span>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>act<span class="w"> </span>-j<span class="w"> </span>lint
+</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a>
+</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19" href="#__codelineno-26-19"></a><span class="c1"># Collect artifacts to the /tmp/artifacts folder:</span>
+</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20" href="#__codelineno-26-20"></a>act<span class="w"> </span>--artifact-server-path<span class="w"> </span>/tmp/artifacts
+</span><span id="__span-26-21"><a id="__codelineno-26-21" name="__codelineno-26-21" href="#__codelineno-26-21"></a>
+</span><span id="__span-26-22"><a id="__codelineno-26-22" name="__codelineno-26-22" href="#__codelineno-26-22"></a><span class="c1"># Run a job in a specific workflow (useful if you have duplicate job names)</span>
+</span><span id="__span-26-23"><a id="__codelineno-26-23" name="__codelineno-26-23" href="#__codelineno-26-23"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-W<span class="w"> </span>.github/workflows/tox.yml
+</span><span id="__span-26-24"><a id="__codelineno-26-24" name="__codelineno-26-24" href="#__codelineno-26-24"></a>
+</span><span id="__span-26-25"><a id="__codelineno-26-25" name="__codelineno-26-25" href="#__codelineno-26-25"></a><span class="c1"># Run in dry-run mode:</span>
+</span><span id="__span-26-26"><a id="__codelineno-26-26" name="__codelineno-26-26" href="#__codelineno-26-26"></a>act<span class="w"> </span>-n
+</span><span id="__span-26-27"><a id="__codelineno-26-27" name="__codelineno-26-27" href="#__codelineno-26-27"></a>
+</span><span id="__span-26-28"><a id="__codelineno-26-28" name="__codelineno-26-28" href="#__codelineno-26-28"></a><span class="c1"># Enable verbose-logging (can be used with any of the above commands)</span>
+</span><span id="__span-26-29"><a id="__codelineno-26-29" name="__codelineno-26-29" href="#__codelineno-26-29"></a>act<span class="w"> </span>-v
 </span></code></pre></div>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <p>To run the <code>publish</code> job (the most difficult one to test)
@@ -3984,12 +4008,12 @@ you would simply use:</p>
 <ul>
 <li>When triggered by a release:</li>
 </ul>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>act<span class="w"> </span>release<span class="w"> </span>-j<span class="w"> </span>publish<span class="w"> </span>--eventpath<span class="w"> </span>events.json
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>act<span class="w"> </span>release<span class="w"> </span>-j<span class="w"> </span>publish<span class="w"> </span>--eventpath<span class="w"> </span>events.json
 </span></code></pre></div>
 <p>With <code>events.json</code> containing:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="p">{</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">  </span><span class="nt">&quot;act&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="p">{</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">  </span><span class="nt">&quot;act&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>This will use your current branch. If you want to test a specific branch
   you have to use the <code>workflow_dispatch</code> event (see below).</p>
@@ -3997,15 +4021,15 @@ you would simply use:</p>
 <li>To instead run it as if it had been manually triggered (i.e. <code>workflow_dispatch</code>)
   you would instead use:</li>
 </ul>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>act<span class="w"> </span>workflow_dispatch<span class="w"> </span>-j<span class="w"> </span>publish<span class="w"> </span>--eventpath<span class="w"> </span>events.json
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>act<span class="w"> </span>workflow_dispatch<span class="w"> </span>-j<span class="w"> </span>publish<span class="w"> </span>--eventpath<span class="w"> </span>events.json
 </span></code></pre></div>
 <p>With <code>events.json</code> containing:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="p">{</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="nt">&quot;act&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">    </span><span class="nt">&quot;tag_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;v0.6.0&quot;</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="p">{</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nt">&quot;act&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">    </span><span class="nt">&quot;tag_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;v0.6.0&quot;</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="skipping-ci-runs">Skipping CI runs<a class="headerlink" href="#skipping-ci-runs" title="Permanent link">&para;</a></h3>
 <p>One sometimes would like to skip CI for certain commits (e.g. updating the
@@ -4028,10 +4052,10 @@ satisfied:</p>
 <code>build_scripts/release-version.sh</code> (leave out the version parameter to have
 <code>bumpversion</code> automatically derive the next release version by bumping the patch
 part):</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>build_scripts/release-version.sh<span class="w"> </span><span class="m">0</span>.1.6
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>build_scripts/release-version.sh<span class="w"> </span><span class="m">0</span>.1.6
 </span></code></pre></div>
 <p>To find out how to use the script, pass the <code>-h</code> or <code>--help</code> flags:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>build_scripts/release-version.sh<span class="w"> </span>--help
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>build_scripts/release-version.sh<span class="w"> </span>--help
 </span></code></pre></div>
 <p>If running in interactive mode (without <code>-y|--yes</code>), the script will output a
 summary of pending changes and ask for confirmation before executing the
@@ -4052,9 +4076,9 @@ create a new release manually by following these steps:</p>
 <li>When ready to release: From the develop branch create the release branch and
    perform release activities (update changelog, news, ...). For your own
    convenience, define an env variable for the release version
-    <div class="language-shell highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">RELEASE_VERSION</span><span class="o">=</span><span class="s2">&quot;vX.Y.Z&quot;</span>
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>git<span class="w"> </span>checkout<span class="w"> </span>develop
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>git<span class="w"> </span>branch<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
+    <div class="language-shell highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">RELEASE_VERSION</span><span class="o">=</span><span class="s2">&quot;vX.Y.Z&quot;</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>git<span class="w"> </span>checkout<span class="w"> </span>develop
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>git<span class="w"> </span>branch<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
 </span></code></pre></div></li>
 <li>Run <code>bumpversion --commit release</code> if the release is only a patch release,
    otherwise the full version can be specified using 
@@ -4062,19 +4086,19 @@ create a new release manually by following these steps:</p>
    (the <code>release</code> part is ignored but required by bumpversion <img alt="🙄" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f644.svg" title=":rolling_eyes:" />).</li>
 <li>Merge the release branch into <code>master</code>, tag the merge commit, and push back to the repo. 
    The CI pipeline publishes the package based on the tagged commit.
-    <div class="language-shell highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>git<span class="w"> </span>checkout<span class="w"> </span>master
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
-</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="w"> </span>-m<span class="s2">&quot;Release </span><span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>git<span class="w"> </span>push<span class="w"> </span>--follow-tags<span class="w"> </span>origin<span class="w"> </span>master
+    <div class="language-shell highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>git<span class="w"> </span>checkout<span class="w"> </span>master
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="w"> </span>-m<span class="s2">&quot;Release </span><span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>git<span class="w"> </span>push<span class="w"> </span>--follow-tags<span class="w"> </span>origin<span class="w"> </span>master
 </span></code></pre></div></li>
 <li>Switch back to the release branch <code>release/vX.Y.Z</code> and pre-bump the version:
    <code>bumpversion --commit patch</code>. This ensures that <code>develop</code> pre-releases are
    always strictly more recent than the last published release version from 
    <code>master</code>.</li>
 <li>Merge the release branch into <code>develop</code>:
-    <div class="language-shell highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>git<span class="w"> </span>checkout<span class="w"> </span>develop
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>develop
+    <div class="language-shell highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>git<span class="w"> </span>checkout<span class="w"> </span>develop
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>release/<span class="si">${</span><span class="nv">RELEASE_VERSION</span><span class="si">}</span>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>develop
 </span></code></pre></div></li>
 <li>Delete the release branch if necessary: 
    <code>git branch -d release/${RELEASE_VERSION}</code></li>
@@ -4087,10 +4111,10 @@ create a new release manually by following these steps:</p>
 <h3 id="ci-and-requirements-for-publishing">CI and requirements for publishing<a class="headerlink" href="#ci-and-requirements-for-publishing" title="Permanent link">&para;</a></h3>
 <p>In order to publish new versions of the package from the development branch,
 the CI pipeline requires the following secret variables set up:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>TEST_PYPI_USERNAME
-</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>TEST_PYPI_PASSWORD
-</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>PYPI_USERNAME
-</span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>PYPI_PASSWORD
+<div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>TEST_PYPI_USERNAME
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>TEST_PYPI_PASSWORD
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>PYPI_USERNAME
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>PYPI_PASSWORD
 </span></code></pre></div>
 <p>The first 2 are used after tests run on the develop branch's CI workflow 
 to automatically publish packages to <a href="https://test.pypi.org/">TestPyPI</a>.</p>
@@ -4127,7 +4151,7 @@ has the GitHub run number appended. </p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-25</span>
   </span>
 
     
