@@ -31,12 +31,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: true
+          fetch-depth: 0
       - name: Checking out last commit for tag ${{ inputs.tag_name }}
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag_name }}
           lfs: true
+          fetch-depth: 0
       - name: Fail if running locally
         if: ${{ env.ACT }} # skip during local actions testing
         run: |
