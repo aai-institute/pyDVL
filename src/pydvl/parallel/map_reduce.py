@@ -124,17 +124,8 @@ class MapReduceJob(Generic[T, R]):
         Returns:
              The result of the reduce function.
         """
-        parallel_kwargs: Dict[str, Any] = {"n_jobs": self.n_jobs}
-        if self.config.backend == "joblib":
-            parallel_kwargs["backend"] = "loky"
-        else:
-            parallel_kwargs["backend"] = self.config.backend
-        # In joblib the levels are reversed.
-        # 0 means no logging and 50 means log everything to stdout
-        if self.config.logging_level is not None:
-            parallel_kwargs["verbose"] = 50 - self.config.logging_level
         seed_seq = ensure_seed_sequence(seed)
-        with Parallel(**parallel_kwargs) as parallel:
+        with Parallel() as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(

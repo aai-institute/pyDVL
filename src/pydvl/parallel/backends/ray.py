@@ -23,20 +23,27 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     It shouldn't be initialized directly. You should instead call
     [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
 
+    ??? Example
+        ``` python
+        import ray
+        from pydvl.parallel import init_parallel_backend, ParallelConfig
+        ray.init()
+        config = ParallelConfig(backend="ray")
+        parallel_backend = init_parallel_backend(config)
+        ```
+
     Args:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
-        self.config = {
-            "address": config.address,
-            "logging_level": config.logging_level or logging.WARNING,
-        }
-        if self.config["address"] is None:
-            self.config["num_cpus"] = config.n_cpus_local
         if not ray.is_initialized():
-            ray.init(**self.config)
+            raise RuntimeError(
+                "Starting from v0.9.0, ray is no longer automatically initialized. "
+                "Please use `ray.init()` with the desired configuration "
+                "before using this class."
+            )
         # Register ray joblib backend
         register_ray()
 

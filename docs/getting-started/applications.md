@@ -23,7 +23,7 @@ comprehensive overview, along with concrete examples, please refer to the
 [Transferlab blog post]({{ transferlab.website }}blog/data-valuation-applications/)
 on this topic.
 
-## Data Engineering
+## Data engineering
 
 Some of the promising applications in data engineering include:
 

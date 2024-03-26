@@ -155,8 +155,8 @@ class DaskInfluenceCalculator:
         from pydvl.influence import DaskInfluenceCalculator
         from pydvl.influence.torch import CgInfluence
         from pydvl.influence.torch.util import (
-        torch_dataset_to_dask_array,
-        TorchNumpyConverter,
+            torch_dataset_to_dask_array,
+            TorchNumpyConverter,
         )
         from distributed import Client
 

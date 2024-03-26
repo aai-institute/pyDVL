@@ -26,8 +26,9 @@ class DiskCacheBackend(CacheBackend):
     Attributes:
         cache_dir: Base directory for cache storage.
 
-    ??? Examples
-        ``` pycon
+    Example:
+        Basic usage:
+        ```pycon
         >>> from pydvl.utils.caching.disk import DiskCacheBackend
         >>> cache_backend = DiskCacheBackend()
         >>> cache_backend.clear()
@@ -37,7 +38,8 @@ class DiskCacheBackend(CacheBackend):
         42
         ```
 
-        ``` pycon
+        Callable wrapping:
+        ```pycon
         >>> from pydvl.utils.caching.disk import DiskCacheBackend
         >>> cache_backend = DiskCacheBackend()
         >>> cache_backend.clear()

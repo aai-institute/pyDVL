@@ -1,8 +1,8 @@
 ---
-title: Getting Started
+title: Getting started
 alias:
   name: getting-started
-  title: Getting Started
+  title: Getting started
 ---
 
 # Getting started
@@ -104,4 +104,4 @@ pip install pyDVL[memcached]
 
 This installs [pymemcache](https://github.com/pinterest/pymemcache)
 additionally. Be aware that you still have to start a memcached server manually.
-See [Setting up the Memcached cache](first-steps/#setting-up-memcached).
+See [Setting up the Memcached cache][setting-up-memcached].

@@ -1,3 +1,10 @@
+---
+title: Scaling computation
+alias: 
+  name: scaling-influence-computation
+  text: Scaling computation
+---
+
 The implementations of [InfluenceFunctionModel][pydvl.influence.base_influence_function_model.InfluenceFunctionModel]
 provide a convenient way to calculate influences for
 in memory tensors. 

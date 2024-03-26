@@ -65,8 +65,9 @@ class MemcachedCacheBackend(CacheBackend):
         config: Memcached client configuration.
         client: Memcached client instance.
 
-    ??? Examples
-        ``` pycon
+    Example:
+        Basic usage:
+        ```pycon
         >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
         >>> cache_backend = MemcachedCacheBackend()
         >>> cache_backend.clear()
@@ -76,7 +77,8 @@ class MemcachedCacheBackend(CacheBackend):
         42
         ```
 
-        ``` pycon
+        Callable wrapping:
+        ```pycon
         >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
         >>> cache_backend = MemcachedCacheBackend()
         >>> cache_backend.clear()
