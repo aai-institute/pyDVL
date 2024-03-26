@@ -6,6 +6,8 @@ __all__ = ["ParallelConfig"]
 
 
 # TODO: delete this class once it's made redundant in v0.10.0
+# This string for the benefit of deprecation searches:
+# remove_in="0.10.0"
 @dataclass(frozen=True)
 class ParallelConfig:
     """Configuration for parallel computation backend.
