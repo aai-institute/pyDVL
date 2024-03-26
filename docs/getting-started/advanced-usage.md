@@ -102,35 +102,8 @@ combinatorial_exact_shapley(u, config=config)
 
 ### Influence Functions
 
-#### Dask
-
-For influence functions, pyDVL uses [Dask](https://docs.dask.org/en/stable/)
-to scale out the computation.
-
-```python
-import torch
-from pydvl.influence import DaskInfluenceCalculator
-from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.util import TorchNumpyConverter
-from distributed import Client
-
-infl_model = CgInfluence(...)
-
-client = Client(n_workers=4, threads_per_worker=1)
-infl_calc = DaskInfluenceCalculator(
-    infl_model,
-    TorchNumpyConverter(device=torch.device("cpu")),
-    client
-)
-# da_influences is a dask.array.Array
-da_influences = infl_calc.influences(...)
-
-# trigger computation and write chunks to disk in parallel
-da_influences.to_zarr("path/or/url")
-```
-
-Refer to the documentation of the [DaskInfluenceCalculator]
-[pydvl.influence.influence_calculator.DaskInfluenceCalculator] for more details.
+Refer to the [[scaling-influence-computations]] page for explanations
+about parallelization for Influence Function computations.
 
 ## Caching { #getting-started-cache }
 
