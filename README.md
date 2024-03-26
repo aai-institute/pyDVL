@@ -18,7 +18,7 @@
 
 **pyDVL** collects algorithms for **Data Valuation** and **Influence Function** computation.
 
-Refer to the [Methods](https://pydvl.org/stable/methods/)
+Refer to the [Methods](https://pydvl.org/devel/getting-started/methods/)
 page of our documentation for a list of all implemented methods. 
 
 **Data Valuation** for machine learning is the task of assigning a scalar
