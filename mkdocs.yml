@@ -14,6 +14,7 @@ nav:
     - Applications: getting-started/applications.md
     - Benchmarking: getting-started/benchmarking.md
     - Methods: getting-started/methods.md
+    - Advanced usage: getting-started/advanced-usage.md
     - Glossary: getting-started/glossary.md
   - Data Valuation:
     - value/index.md
@@ -74,7 +75,6 @@ plugins:
       canonical_version: stable
   - section-index
   - alias:
-      use_relative_link: true
       verbose: true
   - gen-files:
       scripts:
@@ -110,6 +110,7 @@ plugins:
             - https://joblib.readthedocs.io/en/stable/objects.inv
             - https://docs.dask.org/en/latest/objects.inv
             - https://distributed.dask.org/en/latest/objects.inv
+            - https://docs.ray.io/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             heading_level: 1
