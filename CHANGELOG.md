@@ -1,34 +1,41 @@
 # Changelog
 
-## Unreleased
+## Unreleased 🆕 New influence method, better docs and bugfixes 📚🐞
 
 ### Added
 
-- Implement new method: `NystroemSketchInfluence` 
+- New method: `NystroemSketchInfluence`
   [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
-- Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
-- Implement a preconditioned block variant of conjugate gradient 
+- New preconditioned block variant of conjugate gradient
   [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
+- Improvements to documentation: fixes, links, text, example gallery, LFS and
+  more. [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
+  [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
+- Glossary of data valuation and influence terms in the documentation
+  [PR #537](https://github.com/aai-institute/pyDVL/pull/537
 
 ### Fixed
 
-- Bug in `LissaInfluence`, when not using CPU device 
+- Bug in `LissaInfluence`, when not using CPU device
   [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
 - Memory issue with `CgInfluence` and `ArnoldiInfluence`
   [PR #498](https://github.com/aai-institute/pyDVL/pull/498)
 - Raising specific error message with install instruction, when trying to load 
-  `pydvl.utils.cache.memcached` without `pymemcache` installed. 
+  `pydvl.utils.cache.memcached` without `pymemcache` installed.
   If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached` 
   are available through `pydvl.utils.cache`
   [PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
 
 ### Changed
 
-- Improvements to documentation: fixes, links, text, example gallery and more
-  [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
-- Bump versions of CI actions to avoid warnings [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
-- Add Python Version 3.11 to supported versions [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
-- Documentation improvements and cleanup [PR #521](https://github.com/aai-institute/pyDVL/pull/521) [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
+- Add property `model_dtype` to instances of type `TorchInfluenceFunctionModel`
+- Bump versions of CI actions to avoid warnings
+  [PR #502](https://github.com/aai-institute/pyDVL/pull/502)
+- Add Python Version 3.11 to supported versions
+  [PR #510](https://github.com/aai-institute/pyDVL/pull/510)
+- Documentation improvements and cleanup
+  [PR #521](https://github.com/aai-institute/pyDVL/pull/521),
+  [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
 
 ## 0.8.1 - 🆕 🏗  New method and notebook, Games with exact shapley values, bug fixes and cleanup
 

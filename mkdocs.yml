@@ -15,6 +15,7 @@ nav:
     - Benchmarking: getting-started/benchmarking.md
     - Methods: getting-started/methods.md
     - Advanced usage: getting-started/advanced-usage.md
+    - Glossary: getting-started/glossary.md
   - Data Valuation:
     - value/index.md
     - Shapley values: value/shapley.md
@@ -127,6 +128,7 @@ plugins:
             docstring_options:
               ignore_init_summary: true
             show_symbol_type_toc: true
+            show_symbol_type_heading: true
             show_root_full_path: true
             show_root_heading: true
   - bibtex:
