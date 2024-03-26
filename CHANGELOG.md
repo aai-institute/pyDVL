@@ -6,7 +6,7 @@
 
 - Many improvements to the documentation: fixes, links, text, example gallery
   and more. [PR #532](https://github.com/aai-institute/pyDVL/pull/532)
-- Glossary of data valuation terms in the docs.
+- Glossary of data valuation and influence terms in the docs.
   [PR #537](https://github.com/aai-institute/pyDVL/pull/537
 - Implement new method: `NystroemSketchInfluence` 
   [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
