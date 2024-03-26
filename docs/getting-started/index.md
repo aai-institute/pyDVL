@@ -1,8 +1,8 @@
 ---
-title: Getting Started
+title: Getting started
 alias:
   name: getting-started
-  title: Getting Started
+  title: Getting started
 ---
 
 # Getting started

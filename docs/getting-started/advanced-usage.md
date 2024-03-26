@@ -18,7 +18,7 @@ using one of Dask, Ray or Joblib. The first is used in
 the [influence][pydvl.influence] package whereas the other two
 are used in the [value][pydvl.value] package. 
 
-### Data Valuation
+### Data valuation
 
 For data valuation, pyDVL uses [joblib](https://joblib.readthedocs.io/en/latest/) for local
 parallelization (within one machine) and supports using
@@ -100,7 +100,7 @@ u = Utility(...)
 combinatorial_exact_shapley(u, config=config)
 ```
 
-### Influence Functions
+### Influence functions
 
 Refer to the [[scaling-influence-computations]] page for explanations
 about parallelization for Influence Function computations.

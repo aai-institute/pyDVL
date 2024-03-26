@@ -1,17 +1,17 @@
 ---
-title: First Steps
+title: First steps
 alias: 
   name: first-steps
   text: First Steps
 ---
 
-# First Steps
+# First steps
 
 !!! Warning
     Make sure you have read [[getting-started#installation]] before using the library. 
     In particular read about which extra dependencies you may need.
 
-## Main Concepts
+## Main concepts
 
 pyDVL aims to be a repository of production-ready, reference implementations of
 algorithms for data valuation and influence functions. Even though we only
@@ -22,7 +22,7 @@ should be enough to get you started.
   computation and related methods.
 * [[influence-function]] for instructions on how to compute influence functions.
 
-## Running the Examples
+## Running the examples
 
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
@@ -34,7 +34,7 @@ by browsing our worked-out examples illustrating pyDVL's capabilities either:
   have to install jupyter first manually since it's not a dependency of the
   library.
 
-## Advanced Usage
+## Advanced usage
 
 Refer to the [[advanced-usage]] page for explanations on how to enable
 and use parallelization and caching.
