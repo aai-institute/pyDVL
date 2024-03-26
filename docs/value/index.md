@@ -8,10 +8,10 @@ alias:
 # Data valuation
 
 !!! Info
-    If you want to jump right into the steps to compute values, skip ahead
-    to [[computing-data-values]]. If you want a quick list of applications, see
-    [[data-valuation-applications]]. For a list of all algorithms implemented in
-    pyDVL, see [[methods]].
+    If you want to jump right into it, skip ahead to [Computing data
+    values][computing-data-values]. If you want a quick list of applications,
+    see [[data-valuation-applications]]. For a list of all algorithms
+    implemented in pyDVL, see [[methods]].
 
 **Data valuation** is the task of assigning a number to each element of a
 training set which reflects its contribution to the final performance of some

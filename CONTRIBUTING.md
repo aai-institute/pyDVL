@@ -27,6 +27,12 @@ Run the following to set up the pre-commit git hook to run before pushes:
 pre-commit install --hook-type pre-push
 ```
 
+Additionally, we use Git LFS for some files like images. Install with
+
+```shell
+git lfs install
+```
+
 ## Setting up your environment
 
 We strongly suggest using some form of virtual environment for working with the
