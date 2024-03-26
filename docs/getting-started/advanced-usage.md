@@ -102,8 +102,8 @@ combinatorial_exact_shapley(u, config=config)
 
 ### Influence functions
 
-Refer to the [[scaling-influence-computations]] page for explanations
-about parallelization for Influence Function computations.
+Refer to [Scaling influence computation][scaling-influence-computation] for
+explanations about parallelization for Influence Functions.
 
 ## Caching { #getting-started-cache }
 
