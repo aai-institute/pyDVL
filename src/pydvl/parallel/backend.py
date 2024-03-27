@@ -2,19 +2,22 @@ from __future__ import annotations
 
 import logging
 import os
+import warnings
 from abc import abstractmethod
 from concurrent.futures import Executor
 from enum import Flag, auto
-from typing import Any, Callable, Type
+from typing import Any, Callable, Optional, Type, Union
 
-from ..utils.types import NoPublicConstructor
+from deprecate import deprecated
+
 from .config import ParallelConfig
 
 __all__ = [
     "init_parallel_backend",
+    "_maybe_init_parallel_backend",
     "effective_n_jobs",
     "available_cpus",
-    "BaseParallelBackend",
+    "ParallelBackend",
     "CancellationPolicy",
 ]
 
@@ -41,25 +44,26 @@ class CancellationPolicy(Flag):
     ALL = PENDING | RUNNING
 
 
-class BaseParallelBackend(metaclass=NoPublicConstructor):
+class ParallelBackend:
     """Abstract base class for all parallel backends."""
 
     config: dict[str, Any] = {}
-    BACKENDS: dict[str, "Type[BaseParallelBackend]"] = {}
+    BACKENDS: dict[str, "Type[ParallelBackend]"] = {}
 
     def __init_subclass__(cls, *, backend_name: str, **kwargs):
         super().__init_subclass__(**kwargs)
-        BaseParallelBackend.BACKENDS[backend_name] = cls
+        ParallelBackend.BACKENDS[backend_name] = cls
 
     @classmethod
     @abstractmethod
     def executor(
         cls,
-        max_workers: int | None = None,
-        config: ParallelConfig = ParallelConfig(),
-        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+        max_workers: Optional[int] = None,
+        *,
+        config: Optional[ParallelConfig] = None,
+        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
     ) -> Executor:
-        """Returns an executor for the parallel backend."""
+        """Returns a futures executor for the parallel backend."""
         ...
 
     @abstractmethod
@@ -92,7 +96,12 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         return f"<{self.__class__.__name__}: {self.config}>"
 
 
-def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
+@deprecated(
+    target=None,
+    remove_in="0.10.0",
+    deprecated_in="0.9.0",
+)
+def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
     The following example creates a parallel backend instance with the default
@@ -121,10 +130,36 @@ def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
 
     """
     try:
-        parallel_backend_cls = BaseParallelBackend.BACKENDS[config.backend]
+        parallel_backend_cls = ParallelBackend.BACKENDS[config.backend]
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
-    return parallel_backend_cls.create(config)  # type: ignore
+    return parallel_backend_cls(config)  # type: ignore
+
+
+# TODO: delete this class once it's made redundant in v0.10.0
+# This string for the benefit of deprecation searches:
+# remove_in="0.10.0"
+def _maybe_init_parallel_backend(
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
+) -> ParallelBackend:
+    """Helper function inside during the deprecation period of
+    [][pydvl.parallel.backend.init_parallel_backend] and should be removed in v0.10.0
+    """
+    if parallel_backend is not None:
+        if config is not None:
+            warnings.warn(
+                "You should not set both `config` and `parallel_backend`. The former will be ignored.",
+                UserWarning,
+            )
+    else:
+        if config is not None:
+            parallel_backend = init_parallel_backend(config)
+        else:
+            from pydvl.parallel.backends import JoblibParallelBackend
+
+            parallel_backend = JoblibParallelBackend()
+    return parallel_backend
 
 
 def available_cpus() -> int:
@@ -162,7 +197,8 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
             is < 1.
     """
     parallel_backend = init_parallel_backend(config)
-    if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
+    eff_n_jobs: int = parallel_backend.effective_n_jobs(n_jobs)
+    if eff_n_jobs < 1:
         raise RuntimeError(
             f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
         )

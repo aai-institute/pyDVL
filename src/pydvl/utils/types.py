@@ -16,7 +16,6 @@ __all__ = [
     "IndexT",
     "NameT",
     "MapFunction",
-    "NoPublicConstructor",
     "ReduceFunction",
     "Seed",
     "SupervisedModel",
@@ -82,32 +81,6 @@ class SupervisedModel(Protocol):
             The score of the model on `(x, y)`
         """
         pass
-
-
-class NoPublicConstructor(ABCMeta):
-    """Metaclass that ensures a private constructor
-
-    If a class uses this metaclass like this:
-
-        class SomeClass(metaclass=NoPublicConstructor):
-            pass
-
-    If you try to instantiate your class (`SomeClass()`),
-    a `TypeError` will be thrown.
-
-    Taken almost verbatim from:
-    [https://stackoverflow.com/a/64682734](https://stackoverflow.com/a/64682734)
-    """
-
-    def __call__(cls, *args, **kwargs):
-        raise TypeError(
-            f"{cls.__module__}.{cls.__qualname__} cannot be initialized directly. "
-            "Use the proper factory instead."
-        )
-
-    def create(cls, *args: Any, **kwargs: Any):
-        """Create an instance of the class"""
-        return super().__call__(*args, **kwargs)
 
 
 def ensure_seed_sequence(
