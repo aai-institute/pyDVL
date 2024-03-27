@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 from concurrent.futures import Executor
-from typing import Any, Callable, Iterable, TypeVar
+from typing import Any, Callable, Iterable, Optional, TypeVar
 
 import ray
+from deprecate import deprecated
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
@@ -23,18 +23,19 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     ??? Example
         ``` python
         import ray
-        from pydvl.parallel import init_parallel_backend, ParallelConfig
+        from pydvl.parallel import RayParallelBackend
         ray.init()
-        config = ParallelConfig(backend="ray")
-        parallel_backend = init_parallel_backend(config)
+        parallel_backend = RayParallelBackend()
         ```
-
-    Args:
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
-            with cluster address, number of cpus, etc.
     """
 
-    def __init__(self, config: ParallelConfig):
+    @deprecated(
+        target=True,
+        args_mapping={"config": None},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
+    def __init__(self, config: Optional[ParallelConfig] = None) -> None:
         if not ray.is_initialized():
             raise RuntimeError(
                 "Starting from v0.9.0, ray is no longer automatically initialized. "

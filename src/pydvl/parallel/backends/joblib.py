@@ -44,7 +44,7 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         deprecated_in="0.9.0",
         remove_in="0.10.0",
     )
-    def __init__(self, config: Optional[ParallelConfig] = None):
+    def __init__(self, config: Optional[ParallelConfig] = None) -> None:
         n_jobs: Optional[int] = None
         if config is not None:
             n_jobs = config.n_cpus_local
