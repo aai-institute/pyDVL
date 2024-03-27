@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import Executor
-from typing import Callable, TypeVar, cast
+from typing import Callable, Optional, TypeVar, cast
 
 import joblib
+from deprecate import deprecated
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
 
@@ -24,28 +25,31 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
 
     ??? Example
         ``` python
-        from pydvl.parallel import init_parallel_backend, ParallelConfig
-        config = ParallelConfig(backend="joblib")
-        parallel_backend = init_parallel_backend(config)
+        from pydvl.parallel import JoblibParallelBackend
+        parallel_backend = JoblibParallelBackend()
         ```
 
     ??? Example
         ``` python
         import joblib
-        from pydvl.parallel import init_paralle_backend, ParallelConfig
+        from pydvl.parallel import JoblibParallelBackend
         with joblib.parallel_config(verbose=100):
-            config = ParallelConfig(backend="joblib")
-            parallel_backend = init_parallel_backend(config)
+            parallel_backend = JoblibParallelBackend()
         ```
-
-    Args:
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
-            with cluster address, number of cpus, etc.
     """
 
-    def __init__(self, config: ParallelConfig):
+    @deprecated(
+        target=True,
+        args_mapping={"config": None},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
+    def __init__(self, config: Optional[ParallelConfig] = None):
+        n_jobs: Optional[int] = None
+        if config is not None:
+            n_jobs = config.n_cpus_local
         self.config = {
-            "n_jobs": config.n_cpus_local,
+            "n_jobs": n_jobs,
         }
 
     @classmethod

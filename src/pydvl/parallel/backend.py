@@ -7,6 +7,8 @@ from concurrent.futures import Executor
 from enum import Flag, auto
 from typing import Any, Callable, Type
 
+from deprecate import deprecated
+
 from .config import ParallelConfig
 
 __all__ = [
@@ -91,6 +93,11 @@ class BaseParallelBackend:
         return f"<{self.__class__.__name__}: {self.config}>"
 
 
+@deprecated(
+    target=None,
+    remove_in="0.10.0",
+    deprecated_in="0.9.0",
+)
 def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
