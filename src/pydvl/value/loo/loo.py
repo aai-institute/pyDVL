@@ -1,21 +1,30 @@
 from __future__ import annotations
 
 from concurrent.futures import FIRST_COMPLETED, Future, wait
+from typing import Optional
 
+from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.parallel import ParallelConfig, effective_n_jobs, init_executor
+from pydvl.parallel import ParallelBackend, ParallelConfig, maybe_init_parallel_backend
 from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_loo"]
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": None},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_loo(
     u: Utility,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = True,
 ) -> ValuationResult:
     r"""Computes leave one out value:
@@ -26,8 +35,12 @@ def compute_loo(
         u: Utility object with model, data, and scoring function
         progress: If True, display a progress bar
         n_jobs: Number of parallel jobs to use
-        config: Object configuring parallel computation, with cluster
-            address, number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If None, use joblib backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (Deprecated) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: If True, display a progress bar
 
     Returns:
@@ -35,8 +48,11 @@ def compute_loo(
 
     !!! tip "New in version 0.7.0"
         Renamed from `naive_loo` and added parallel computation.
-    """
 
+    !!! note "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend configuration.
+    """
     if len(u.data) < 3:
         raise ValueError("Dataset must have at least 2 elements")
 
@@ -52,14 +68,15 @@ def compute_loo(
     def fun(idx: int) -> tuple[int, float]:
         return idx, total_utility - u(all_indices.difference({idx}))
 
-    max_workers = effective_n_jobs(n_jobs, config)
+    parallel_backend = maybe_init_parallel_backend(parallel_backend, config)
+    max_workers = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
 
     # NOTE: this could be done with a simple executor.map(), but we want to
     # display a progress bar
 
-    with init_executor(
-        max_workers=max_workers, config=config, cancel_futures=True
+    with parallel_backend.executor(
+        max_workers=max_workers, cancel_futures=True
     ) as executor:
         pending: set[Future] = set()
         index_it = iter(u.data.indices)
