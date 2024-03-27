@@ -6,6 +6,8 @@
 
 - New method: `NystroemSketchInfluence`
   [PR #504](https://github.com/aai-institute/pyDVL/pull/504)
+- New method: `MSR Banzhaf Semivalues`
+  [PR #504](https://github.com/aai-institute/pyDVL/pull/520)
 - New preconditioned block variant of conjugate gradient
   [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 - Improvements to documentation: fixes, links, text, example gallery, LFS and
