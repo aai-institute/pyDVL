@@ -5,11 +5,6 @@ from typing import Generator, Optional
 from pydvl.parallel.backend import BaseParallelBackend
 from pydvl.parallel.config import ParallelConfig
 
-try:
-    from pydvl.parallel.futures.ray import RayExecutor
-except ModuleNotFoundError:
-    pass
-
 __all__ = ["init_executor"]
 
 

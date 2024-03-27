@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from concurrent.futures import Executor
 from typing import Any, Callable, Iterable, Optional, TypeVar
 
@@ -49,12 +50,20 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def executor(
         cls,
         max_workers: int | None = None,
-        config: ParallelConfig = ParallelConfig(),
+        config: Optional[ParallelConfig] = None,
         cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
     ) -> Executor:
         from pydvl.parallel.futures.ray import RayExecutor
 
-        return RayExecutor(max_workers, config=config, cancel_futures=cancel_futures)  # type: ignore
+        if config is not None:
+            warnings.warn(
+                "The `RayParallelBackend` uses deprecated arguments: "
+                "`config` -> `None`. They were deprecated since v0.9.0 "
+                "and will be removed in v0.10.0.",
+                FutureWarning,
+            )
+
+        return RayExecutor(max_workers, cancel_futures=cancel_futures)  # type: ignore
 
     def get(self, v: ObjectRef | Iterable[ObjectRef] | T, *args, **kwargs) -> T | Any:
         timeout: float | None = kwargs.get("timeout", None)
