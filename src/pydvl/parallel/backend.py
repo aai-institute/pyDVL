@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 import os
+import warnings
 from abc import abstractmethod
 from concurrent.futures import Executor
 from enum import Flag, auto
-from typing import Any, Callable, Type
+from typing import Any, Callable, Optional, Type, Union
 
 from deprecate import deprecated
 
@@ -13,6 +14,7 @@ from .config import ParallelConfig
 
 __all__ = [
     "init_parallel_backend",
+    "maybe_init_parallel_backend",
     "effective_n_jobs",
     "available_cpus",
     "ParallelBackend",
@@ -56,9 +58,10 @@ class ParallelBackend:
     @abstractmethod
     def executor(
         cls,
-        max_workers: int | None = None,
-        config: ParallelConfig = ParallelConfig(),
-        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+        max_workers: Optional[int] = None,
+        *,
+        config: Optional[ParallelConfig] = None,
+        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
     ) -> Executor:
         """Returns an executor for the parallel backend."""
         ...
@@ -131,6 +134,32 @@ def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
     return parallel_backend_cls.create(config)  # type: ignore
+
+
+# TODO: delete this class once it's made redundant in v0.10.0
+# This string for the benefit of deprecation searches:
+# remove_in="0.10.0"
+def maybe_init_parallel_backend(
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
+) -> ParallelBackend:
+    """Helper function inside during the deprecation period of
+    [][pydvl.parallel.backend.init_parallel_backend] and should be removed in v0.10.0
+    """
+    if parallel_backend is not None:
+        if config is not None:
+            warnings.warn(
+                "You should not set both `config` and `parallel_backend`. The former will be ignored.",
+                UserWarning,
+            )
+    else:
+        if config is not None:
+            parallel_backend = init_parallel_backend(config)
+        else:
+            from pydvl.parallel.backends import JoblibParallelBackend
+
+            parallel_backend = JoblibParallelBackend()
+    return parallel_backend
 
 
 def available_cpus() -> int:

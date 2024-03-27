@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from concurrent.futures import Executor
-from typing import Any, Callable, Iterable, Optional, TypeVar
+from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 
 import ray
 from deprecate import deprecated
@@ -50,8 +50,9 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
     def executor(
         cls,
         max_workers: int | None = None,
+        *,
         config: Optional[ParallelConfig] = None,
-        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
     ) -> Executor:
         from pydvl.parallel.futures.ray import RayExecutor
 

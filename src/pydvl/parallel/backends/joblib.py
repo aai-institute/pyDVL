@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import Executor
-from typing import Callable, Optional, TypeVar, cast
+from typing import Callable, Optional, TypeVar, Union, cast
 
 import joblib
 from deprecate import deprecated
@@ -55,13 +55,22 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
     @classmethod
     def executor(
         cls,
-        max_workers: int | None = None,
-        config: ParallelConfig = ParallelConfig(),
-        cancel_futures: CancellationPolicy = CancellationPolicy.NONE,
+        max_workers: Optional[int] = None,
+        *,
+        config: Optional[ParallelConfig] = None,
+        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.NONE,
     ) -> Executor:
+        if config is not None:
+            warnings.warn(
+                "The `JoblibParallelBackend` uses deprecated arguments: "
+                "`config` -> `None`. They were deprecated since v0.9.0 "
+                "and will be removed in v0.10.0.",
+                FutureWarning,
+            )
+
         if cancel_futures not in (CancellationPolicy.NONE, False):
             warnings.warn(
-                "Cancellation of futures is not supported by the joblib backend"
+                "Cancellation of futures is not supported by the joblib backend",
             )
         return cast(Executor, get_reusable_executor(max_workers=max_workers))
 

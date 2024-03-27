@@ -5,7 +5,7 @@ import threading
 import time
 import types
 from concurrent.futures import Executor, Future
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar, Union
 from weakref import WeakSet, ref
 
 from deprecate import deprecated
@@ -57,7 +57,7 @@ class RayExecutor(Executor):
         max_workers: Optional[int] = None,
         *,
         config: Optional[ParallelConfig] = None,
-        cancel_futures: CancellationPolicy = CancellationPolicy.ALL,
+        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.ALL,
     ):
         if max_workers is not None:
             if max_workers <= 0:
