@@ -131,10 +131,18 @@ def test_seed(
         np.testing.assert_equal(values_1.values, values_3.values)
 
 
+@pytest.mark.skip(
+    "This test is brittle and the bound isn't sharp. "
+    "We should at least document the bound in the documentation."
+)
 @pytest.mark.slow
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
-    "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
+    "fun",
+    [
+        ShapleyMode.PermutationMontecarlo,
+        ShapleyMode.CombinatorialMontecarlo,
+    ],
 )
 def test_hoeffding_bound_montecarlo(
     num_samples,

@@ -7,7 +7,7 @@ computation of values. Please see the documentation on
 data and scoring function (the latter being what one usually understands
 under *utility* in the general definition of Shapley value).
 It is automatically cached across machines when the
-[cache is configured][setting-up-the-cache] and it is enabled upon construction.
+[cache is configured][getting-started-cache] and it is enabled upon construction.
 
 [DataUtilityLearning][pydvl.utils.utility.DataUtilityLearning] adds support
 for learning the scoring function to avoid repeated re-training
@@ -65,8 +65,8 @@ class Utility:
     Since evaluating the scoring function requires retraining the model and that
     can be time-consuming, this class wraps it and caches the results of each
     execution. Caching is available both locally and across nodes, but must
-    always be enabled for your project first, see [Setting up the
-    cache][setting-up-the-cache].
+    always be enabled for your project first, see [the documentation][getting-started-cache]
+    and the [module documentation][pydvl.utils.caching].
 
     Attributes:
         model: The supervised model.

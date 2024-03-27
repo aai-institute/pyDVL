@@ -1,7 +1,7 @@
 ---
 title: The influence function
 alias:
-  name: influence-values
+  name: influence-function
   text: Computing Influence Values
 ---
 

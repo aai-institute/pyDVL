@@ -1,4 +1,4 @@
-"""Caching of functions.
+"""This module provides caching of functions.
 
 PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.
@@ -12,7 +12,7 @@ and speed up some computations for data valuation.
 # Configuration
 
 Caching is disabled by default but can be enabled easily,
-see [Setting up the cache](#setting-up-the-cache).
+see [Setting up the cache][getting-started-cache].
 When enabled, it will be added to any callable used to construct a
 [Utility][pydvl.utils.utility.Utility] (done with the wrap method of
 [CacheBackend][pydvl.utils.caching.base.CacheBackend]).
@@ -38,8 +38,10 @@ pyDVL supports 3 different caching backends:
   and read from a Memcached server. This is used to share cached values
   between processes across multiple machines.
 
-  **Note** This specific backend requires optional dependencies.
-  See [[installation#extras]] for more information)
+    !!! Info
+        This specific backend requires optional dependencies not installed by
+        default. See [Extra dependencies][installation-extras] for more
+        information.
 
 # Usage with stochastic functions
 
@@ -50,7 +52,7 @@ for the same input. This can be useful for stochastic functions with high varian
 the speed benefits of memoization.
 
 This behaviour can be activated with the option
-[allow_repeated_evaluations][pydvl.utils.caching.config.CachedFuncConfig]..
+[allow_repeated_evaluations][pydvl.utils.caching.config.CachedFuncConfig].
 
 # Cache reuse
 

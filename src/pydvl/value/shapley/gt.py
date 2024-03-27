@@ -10,7 +10,7 @@ computed with guarantees.
     of evaluations of the utility required). We recommend other Monte Carlo
     methods instead.
 
-You can read more [in the documentation][computing-data-values].
+You can read more [in the documentation][data-valuation].
 
 !!! tip "New in version 0.4.0"
 
@@ -174,7 +174,7 @@ def group_testing_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
-    **options,
+    **options: dict,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
     in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>.

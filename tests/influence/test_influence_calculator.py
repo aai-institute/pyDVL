@@ -27,6 +27,11 @@ from pydvl.influence.torch import (
     DirectInfluence,
     EkfacInfluence,
 )
+from pydvl.influence.torch.influence_function_model import NystroemSketchInfluence
+from pydvl.influence.torch.pre_conditioner import (
+    JacobiPreConditioner,
+    NystroemPreConditioner,
+)
 from pydvl.influence.torch.util import (
     NestedTorchCatAggregator,
     TorchCatAggregator,
@@ -69,7 +74,10 @@ def influence_model(model_and_data, test_case, influence_factory):
     "influence_factory",
     [
         lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
-            model, loss, hessian_reg
+            model,
+            loss,
+            hessian_reg,
+            use_block_cg=True,
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
             model, loss, hessian_reg
@@ -79,8 +87,14 @@ def influence_model(model_and_data, test_case, influence_factory):
             loss,
             hessian_regularization=hessian_reg,
         ).fit(train_dataLoader),
+        lambda model, loss, train_dataLoader, hessian_reg: NystroemSketchInfluence(
+            model,
+            loss,
+            rank=5,
+            hessian_regularization=hessian_reg,
+        ).fit(train_dataLoader),
     ],
-    ids=["cg", "direct", "arnoldi"],
+    ids=["cg", "direct", "arnoldi", "nystroem-sketch"],
 )
 def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     model, loss, x_train, y_train, x_test, y_test = model_and_data

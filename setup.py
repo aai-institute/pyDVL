@@ -52,8 +52,8 @@ setup(
     ],
     project_urls={
         "Source": "https://github.com/aai-institute/pydvl",
-        "Documentation": "https://aai-institute.github.io/pyDVL",
-        "TransferLab": "https://transferlab.appliedai.de",
+        "Documentation": "https://pydvl.org",
+        "TransferLab": "https://transferlab.ai",
     },
     zip_safe=False,  # Needed for mypy to find py.typed
 )

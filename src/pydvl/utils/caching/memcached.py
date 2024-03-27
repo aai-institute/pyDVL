@@ -53,10 +53,10 @@ class MemcachedClientConfig:
 class MemcachedCacheBackend(CacheBackend):
     """Memcached cache backend for the distributed caching of functions.
 
-    Implements the CacheBackend interface for a memcached based cache.
-    This allows sharing evaluations across processes and nodes in a cluster.
-    You can run memcached as a service, locally or remotely,
-    see [Setting up the cache](#setting-up-the-cache)
+    Implements the [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+    interface for a memcached based cache. This allows sharing evaluations
+    across processes and nodes in a cluster. You can run memcached as a service,
+    locally or remotely, see [the caching documentation][getting-started-cache].
 
     Args:
         config: Memcached client configuration.
@@ -65,8 +65,9 @@ class MemcachedCacheBackend(CacheBackend):
         config: Memcached client configuration.
         client: Memcached client instance.
 
-    ??? Examples
-        ``` pycon
+    Example:
+        Basic usage:
+        ```pycon
         >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
         >>> cache_backend = MemcachedCacheBackend()
         >>> cache_backend.clear()
@@ -76,7 +77,8 @@ class MemcachedCacheBackend(CacheBackend):
         42
         ```
 
-        ``` pycon
+        Callable wrapping:
+        ```pycon
         >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
         >>> cache_backend = MemcachedCacheBackend()
         >>> cache_backend.clear()

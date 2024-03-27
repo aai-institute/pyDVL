@@ -17,8 +17,7 @@ D_{-y_i}$.
 
 !!! tip "Analysis of Class-wise Shapley"
     For a detailed analysis of the method, with comparison to other valuation
-    techniques, please refer to the [main
-    documentation](../../../../../value/classwise-shapley).
+    techniques, please refer to the [main documentation][class-wise-shapley].
 
 In practice, the quantity above is estimated using Monte Carlo sampling of
 the powerset and the set of index permutations. This results in the estimator
@@ -265,8 +264,9 @@ def compute_classwise_shapley_values(
     $$
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears and $S$ is a subset of the index set of all other
-    labels(see [[data-valuation]] for details).
+    the position where $i$ appears and $S$ is a subset of the index set of all
+    other labels (see [the main documentation][class-wise-shapley] for
+    details).
 
     Args:
         u: Utility object containing model, data, and scoring function. The

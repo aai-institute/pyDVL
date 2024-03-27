@@ -11,7 +11,8 @@ def parallel_config(request):
         yield ParallelConfig(backend="joblib", n_cpus_local=num_workers())
     elif request.param == "ray-local":
         ray = pytest.importorskip("ray", reason="Ray not installed.")
-        yield ParallelConfig(backend="ray", n_cpus_local=num_workers())
+        ray.init(num_cpus=num_workers())
+        yield ParallelConfig(backend="ray")
         ray.shutdown()
     elif request.param == "ray-external":
         ray = pytest.importorskip("ray", reason="Ray not installed.")
@@ -22,6 +23,7 @@ def parallel_config(request):
         cluster = Cluster(
             initialize_head=True, head_node_args={"num_cpus": num_workers()}
         )
+        ray.init(cluster.address)
         yield ParallelConfig(backend="ray", address=cluster.address)
         ray.shutdown()
         cluster.shutdown()

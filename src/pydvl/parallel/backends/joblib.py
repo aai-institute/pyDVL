@@ -25,6 +25,22 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     It shouldn't be initialized directly. You should instead call
     [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
 
+    ??? Example
+        ``` python
+        from pydvl.parallel import init_paralle_backend, ParallelConfig
+        config = ParallelConfig(backend="joblib")
+        parallel_backend = init_parallel_backend(config)
+        ```
+
+    ??? Example
+        ``` python
+        import joblib
+        from pydvl.parallel import init_paralle_backend, ParallelConfig
+        with joblib.parallel_config(verbose=100):
+            config = ParallelConfig(backend="joblib")
+            parallel_backend = init_parallel_backend(config)
+        ```
+
     Args:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
@@ -32,7 +48,6 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
 
     def __init__(self, config: ParallelConfig):
         self.config = {
-            "logging_level": config.logging_level,
             "n_jobs": config.n_cpus_local,
         }
 
@@ -70,9 +85,8 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        if self.config["n_jobs"] is None:
-            maximum_n_jobs = joblib.effective_n_jobs()
-        else:
+        eff_n_jobs: int = joblib.effective_n_jobs(n_jobs)
+        if self.config["n_jobs"] is not None:
             maximum_n_jobs = self.config["n_jobs"]
-        eff_n_jobs: int = min(joblib.effective_n_jobs(n_jobs), maximum_n_jobs)
+            eff_n_jobs = min(eff_n_jobs, maximum_n_jobs)
         return eff_n_jobs

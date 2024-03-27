@@ -48,7 +48,10 @@ __all__ = [
     "create_per_sample_mixed_derivative_function",
     "model_hessian_low_rank",
     "LowRankProductRepresentation",
+    "randomized_nystroem_approximation",
+    "model_hessian_nystroem_approximation",
 ]
+
 
 logger = logging.getLogger(__name__)
 
@@ -169,8 +172,10 @@ def create_empirical_loss_function(
     on a given dataset. If we denote the model parameters with \( \theta \),
     the resulting function approximates:
 
-    \[ f(\theta) = \frac{1}{N}\sum_{i=1}^N
-        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)) \]
+    \[
+        f(\theta) = \frac{1}{N}\sum_{i=1}^N
+        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))
+    \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$
     with model parameters $\theta$, where $N$ is the number of all elements provided
@@ -260,36 +265,36 @@ def create_hvp_function(
             Hessian is to be computed.
         loss: A callable that takes the model's output and target as input and
             returns the scalar loss.
-        data_loader: A DataLoader instance that provides batches of data for calculating
-            the Hessian-vector product. Each batch from the DataLoader is assumed to
-            return a tuple where the first element
-            is the model's input and the second element is the target output.
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep the full computation graph
-            in memory.
-        use_average: If True, the returned function uses batch-wise computation via
-            [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function]
+        data_loader: A DataLoader instance that provides batches of data for
+            calculating the Hessian-vector product. Each batch from the
+            DataLoader is assumed to return a tuple where the first element is
+            the model's input and the second element is the target output.
+        precompute_grad: If `True`, the full data gradient is precomputed and
+            kept in memory, which can speed up the hessian vector product
+            computation. Set this to `False`, if you can't afford to keep the
+            full computation graph in memory.
+        use_average: If `True`, the returned function uses batch-wise
+            computation via
+            [a batch loss function][pydvl.influence.torch.functional.create_batch_loss_function]
             and averages the results.
-            If False, the function uses backpropagation on the full
-            [empirical_loss_function]
-            [pydvl.influence.torch.functional.empirical_loss_function],
-            which is more accurate than averaging the batch hessians,
-            but probably has a way higher memory usage.
+            If `False`, the function uses backpropagation on the full
+            [empirical loss function]
+            [pydvl.influence.torch.functional.create_empirical_loss_function],
+            which is more accurate than averaging the batch hessians, but
+            probably has a way higher memory usage.
         reverse_only: Whether to use only reverse-mode autodiff or
-            both forward- and reverse-mode autodiff.
-            Ignored if precompute_grad is True.
-        track_gradients: Whether to track gradients for the resulting tensor of the
-            hessian vector products.
+            both forward- and reverse-mode autodiff. Ignored if
+            `precompute_grad` is `True`.
+        track_gradients: Whether to track gradients for the resulting tensor of
+            the Hessian-vector products.
 
     Returns:
-        A function that takes a single argument, a vector, and returns the product of
-            the Hessian of the `loss` function with respect to the `model`'s parameters
-            and the input vector.
+        A function that takes a single argument, a vector, and returns the
+        product of the Hessian of the `loss` function with respect to the
+        `model`'s parameters and the input vector.
     """
 
     if precompute_grad:
-
         model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         if use_average:
@@ -848,19 +853,31 @@ def randomized_nystroem_approximation(
 ) -> LowRankProductRepresentation:
     r"""
     Given a matrix vector product function (representing a symmetric positive definite
-    matrix \(A\) ), computes a random Nyström low rank approximation of
-    \(A\) in factored form, i.e.
+    matrix $A$ ), computes a random Nyström low rank approximation of
+    $A$ in factored form, i.e.
 
-    \[ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\Cross}(A \Omega)^T
-    = U \Sigma U^T\]
+    $$ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\dagger}(A \Omega)^T
+    = U \Sigma U^T $$
 
-    :param mat_mat_prod: A callable representing the matrix vector product
-    :param input_dim: dimension of the input for the matrix vector product
-    :param input_type:
-    :param rank: rank of the approximation
-    :param shift_func:
-    :param mat_vec_device: device where the matrix vector product has to be executed
-    :return: object containing, \(U\) and \(\Sigma\)
+    where $\Omega$ is a standard normal random matrix.
+
+    Args:
+        mat_mat_prod: A callable representing the matrix vector product
+        input_dim: dimension of the input for the matrix vector product
+        input_type: data_type of inputs
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+        mat_vec_device: device where the matrix vector product has to be executed
+
+    Returns:
+        object containing, $U$ and $\Sigma$
     """
 
     if shift_func is None:
@@ -924,14 +941,31 @@ def model_hessian_nystroem_approximation(
     rank: int,
     shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
 ) -> LowRankProductRepresentation:
-    """
+    r"""
+    Given a model, loss and a data_loader, computes a random Nyström low rank approximation of
+    the corresponding Hessian matrix in factored form, i.e.
 
-    :param model:
-    :param loss:
-    :param data_loader:
-    :param rank:
-    :param shift_func:
-    :return:
+    $$ H_{\text{nys}} = (H \Omega)(\Omega^T H \Omega)^{+}(H \Omega)^T
+    = U \Sigma U^T $$
+
+    Args:
+        model: A PyTorch model instance. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss : A callable that computes the loss.
+        data_loader: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+
+    Returns:
+        object containing, $U$ and $\Sigma$
     """
 
     model_hvp = create_hvp_function(
