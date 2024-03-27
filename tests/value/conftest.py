@@ -1,3 +1,4 @@
+import joblib
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -6,6 +7,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.utils import Bunch
 
+from pydvl.parallel import JoblibParallelBackend
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.utils.caching import InMemoryCacheBackend
@@ -162,6 +164,12 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module")
 def parallel_config():
     yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
+
+
+@pytest.fixture(scope="module")
+def parallel_backend():
+    with joblib.parallel_config(n_jobs=num_workers()):
+        yield JoblibParallelBackend()
 
 
 @pytest.fixture()
