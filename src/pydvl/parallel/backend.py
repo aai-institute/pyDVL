@@ -63,7 +63,7 @@ class ParallelBackend:
         config: Optional[ParallelConfig] = None,
         cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
     ) -> Executor:
-        """Returns an executor for the parallel backend."""
+        """Returns a futures executor for the parallel backend."""
         ...
 
     @abstractmethod

@@ -21,7 +21,7 @@ T = TypeVar("T")
 class RayParallelBackend(ParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
-    ??? Example
+    !!! Example
         ``` python
         import ray
         from pydvl.parallel import RayParallelBackend
@@ -54,6 +54,29 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         config: Optional[ParallelConfig] = None,
         cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
     ) -> Executor:
+        """Returns a futures executor for the parallel backend.
+
+        !!! Example
+            ``` python
+            import ray
+            from pydvl.parallel import RayParallelBackend
+            ray.init()
+            parallel_backend = RayParallelBackend()
+            with parallel_backend.executor() as executor:
+                executor.submit(...)
+            ```
+
+        Args:
+            max_workers: Maximum number of parallel workers.
+            config: (**DEPRECATED**) Object configuring parallel computation,
+                with cluster address, number of cpus, etc.
+            cancel_futures: Policy to use when cancelling futures
+                after exiting an Executor.
+
+        Returns:
+            Instance of [RayExecutor][pydvl.parallel.futures.ray.RayExecutor].
+        """
+        # Imported here to avoid circular import errors
         from pydvl.parallel.futures.ray import RayExecutor
 
         if config is not None:

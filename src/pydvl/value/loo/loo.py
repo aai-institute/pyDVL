@@ -36,10 +36,11 @@ def compute_loo(
         progress: If True, display a progress bar
         n_jobs: Number of parallel jobs to use
         parallel_backend: Parallel backend instance to use
-            for parallelizing computations. If None, use joblib backend.
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
             See the [Parallel Backends][pydvl.parallel.backends] package
             for available options.
-        config: (Deprecated) Object configuring parallel computation,
+        config: (**DEPRECATED**) Object configuring parallel computation,
             with cluster address, number of cpus, etc.
         progress: If True, display a progress bar
 

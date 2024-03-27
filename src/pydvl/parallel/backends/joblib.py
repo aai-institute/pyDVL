@@ -9,6 +9,7 @@ import joblib
 from deprecate import deprecated
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
+from joblib.externals.loky.reusable_executor import _ReusablePoolExecutor
 
 from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
@@ -23,18 +24,10 @@ logger = logging.getLogger(__name__)
 class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
-    ??? Example
+    !!! Example
         ``` python
         from pydvl.parallel import JoblibParallelBackend
         parallel_backend = JoblibParallelBackend()
-        ```
-
-    ??? Example
-        ``` python
-        import joblib
-        from pydvl.parallel import JoblibParallelBackend
-        with joblib.parallel_config(verbose=100):
-            parallel_backend = JoblibParallelBackend()
         ```
     """
 
@@ -60,6 +53,26 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
         config: Optional[ParallelConfig] = None,
         cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.NONE,
     ) -> Executor:
+        """Returns a futures executor for the parallel backend.
+
+        !!! Example
+            ``` python
+            from pydvl.parallel import JoblibParallelBackend
+            parallel_backend = JoblibParallelBackend()
+            with parallel_backend.executor() as executor:
+                executor.submit(...)
+            ```
+
+        Args:
+            max_workers: Maximum number of parallel workers.
+            config: (**DEPRECATED**) Object configuring parallel computation,
+                with cluster address, number of cpus, etc.
+            cancel_futures: Policy to use when cancelling futures
+                after exiting an Executor.
+
+        Returns:
+            Instance of [_ReusablePoolExecutor][joblib.externals.loky.reusable_executor._ReusablePoolExecutor].
+        """
         if config is not None:
             warnings.warn(
                 "The `JoblibParallelBackend` uses deprecated arguments: "
