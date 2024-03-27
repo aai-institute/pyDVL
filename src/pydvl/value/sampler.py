@@ -313,9 +313,9 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
 
 
 class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
-    """An iterator to perform MSR Monte Carlo sampling of subsets.
+    """An iterator to perform sampling of random subsets.
 
-    This sampler creates random subsets of the data.
+    This sampler does not return any index, it only returns subsets of the data.
     This sampler is used in :footcite:t:`wang_data_2022`.
     """
 
@@ -324,7 +324,7 @@ class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
             return
         while True:
             subset = random_subset(self.indices, seed=self._rng)
-            yield -1, subset
+            yield None, subset
             self._n_samples += 1
 
     @classmethod

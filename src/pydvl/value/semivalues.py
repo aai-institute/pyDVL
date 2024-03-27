@@ -304,6 +304,8 @@ def compute_generic_semivalues(
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
+        marginal: Marginal function to be used for computing the semivalues
+        future_processor: Additional postprocessing steps required for some algorithms
         batch_size: Number of marginal evaluations per single parallel job.
         skip_converged: Whether to skip marginal evaluations for indices that
             have already converged. **CAUTION**: This is only entirely safe if
@@ -404,6 +406,10 @@ def compute_generic_semivalues(
             except StopIteration:
                 if len(pending) == 0:
                     return result
+
+
+def always_one_coefficient(n: int, k: int) -> float:
+    return 1.0
 
 
 def shapley_coefficient(n: int, k: int) -> float:
@@ -555,6 +561,13 @@ def compute_msr_banzhaf_semivalues(
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
     with the Banzhaf coefficient and MSR sampling.
 
+    This algorithm works by sampling random subsets and then evaluating the utility
+    on that subset only once. Based on the evaluation and the subset indices,
+    the MSRFutureProcessor then computes the marginal updates like in the paper
+    *Data Banzhaf: A Robust Data Valuation Framework for Machine Learning* by Wang et. al.
+    Their approach updates the semivalues for all data points every time a new evaluation
+    is computed. This increases sample efficiency compared to normal Monte Carlo updates.
+
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
@@ -579,7 +592,7 @@ def compute_msr_banzhaf_semivalues(
     return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
-        lambda n, k: 1.0,  # Coefficients not needed
+        always_one_coefficient,
         done,
         marginal=RawUtility(),
         future_processor=MSRFutureProcessor(u),
