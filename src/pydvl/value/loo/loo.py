@@ -6,7 +6,7 @@ from typing import Optional
 from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.parallel import ParallelBackend, ParallelConfig, maybe_init_parallel_backend
+from pydvl.parallel import ParallelBackend, ParallelConfig, _maybe_init_parallel_backend
 from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
@@ -69,7 +69,7 @@ def compute_loo(
     def fun(idx: int) -> tuple[int, float]:
         return idx, total_utility - u(all_indices.difference({idx}))
 
-    parallel_backend = maybe_init_parallel_backend(parallel_backend, config)
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     max_workers = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
 

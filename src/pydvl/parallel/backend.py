@@ -14,7 +14,7 @@ from .config import ParallelConfig
 
 __all__ = [
     "init_parallel_backend",
-    "maybe_init_parallel_backend",
+    "_maybe_init_parallel_backend",
     "effective_n_jobs",
     "available_cpus",
     "ParallelBackend",
@@ -139,7 +139,7 @@ def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
 # TODO: delete this class once it's made redundant in v0.10.0
 # This string for the benefit of deprecation searches:
 # remove_in="0.10.0"
-def maybe_init_parallel_backend(
+def _maybe_init_parallel_backend(
     parallel_backend: Optional[ParallelBackend] = None,
     config: Optional[ParallelConfig] = None,
 ) -> ParallelBackend:
