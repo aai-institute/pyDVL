@@ -10,7 +10,7 @@ from deprecate import deprecated
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
 
-from pydvl.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["JoblibParallelBackend"]
@@ -20,7 +20,7 @@ T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
 
-class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
+class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
     ??? Example

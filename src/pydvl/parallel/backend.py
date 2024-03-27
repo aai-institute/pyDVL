@@ -15,7 +15,7 @@ __all__ = [
     "init_parallel_backend",
     "effective_n_jobs",
     "available_cpus",
-    "BaseParallelBackend",
+    "ParallelBackend",
     "CancellationPolicy",
 ]
 
@@ -42,15 +42,15 @@ class CancellationPolicy(Flag):
     ALL = PENDING | RUNNING
 
 
-class BaseParallelBackend:
+class ParallelBackend:
     """Abstract base class for all parallel backends."""
 
     config: dict[str, Any] = {}
-    BACKENDS: dict[str, "Type[BaseParallelBackend]"] = {}
+    BACKENDS: dict[str, "Type[ParallelBackend]"] = {}
 
     def __init_subclass__(cls, *, backend_name: str, **kwargs):
         super().__init_subclass__(**kwargs)
-        BaseParallelBackend.BACKENDS[backend_name] = cls
+        ParallelBackend.BACKENDS[backend_name] = cls
 
     @classmethod
     @abstractmethod
@@ -98,7 +98,7 @@ class BaseParallelBackend:
     remove_in="0.10.0",
     deprecated_in="0.9.0",
 )
-def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
+def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
     The following example creates a parallel backend instance with the default
@@ -127,7 +127,7 @@ def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
 
     """
     try:
-        parallel_backend_cls = BaseParallelBackend.BACKENDS[config.backend]
+        parallel_backend_cls = ParallelBackend.BACKENDS[config.backend]
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
     return parallel_backend_cls.create(config)  # type: ignore

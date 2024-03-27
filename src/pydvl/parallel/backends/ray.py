@@ -9,7 +9,7 @@ from deprecate import deprecated
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
-from pydvl.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["RayParallelBackend"]
@@ -18,7 +18,7 @@ __all__ = ["RayParallelBackend"]
 T = TypeVar("T")
 
 
-class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
+class RayParallelBackend(ParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
     ??? Example

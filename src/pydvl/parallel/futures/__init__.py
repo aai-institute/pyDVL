@@ -2,7 +2,7 @@ from concurrent.futures import Executor
 from contextlib import contextmanager
 from typing import Generator, Optional
 
-from pydvl.parallel.backend import BaseParallelBackend
+from pydvl.parallel.backend import ParallelBackend
 from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["init_executor"]
@@ -41,7 +41,7 @@ def init_executor(
         ```
     """
     try:
-        cls = BaseParallelBackend.BACKENDS[config.backend]
+        cls = ParallelBackend.BACKENDS[config.backend]
         with cls.executor(max_workers=max_workers, config=config, **kwargs) as e:
             yield e
     except KeyError:
