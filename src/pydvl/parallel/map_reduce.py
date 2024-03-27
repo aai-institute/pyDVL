@@ -10,13 +10,14 @@ from functools import reduce
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
+from deprecate import deprecated
 from joblib import Parallel, delayed
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from ..utils.functional import maybe_add_argument
 from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
-from .backend import init_parallel_backend
+from .backend import ParallelBackend, _maybe_init_parallel_backend
 from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
@@ -46,7 +47,12 @@ class MapReduceJob(Generic[T, R]):
             each job. Alternatively, one can use [functools.partial][].
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
             in each job. Alternatively, one can use [functools.partial][].
-        config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
 
@@ -81,20 +87,26 @@ class MapReduceJob(Generic[T, R]):
         ```
     """
 
+    @deprecated(
+        target=True,
+        args_mapping={"config": None},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
     def __init__(
         self,
         inputs: Union[Collection[T], T],
         map_func: MapFunction[R],
         reduce_func: ReduceFunction[R] = identity,
+        parallel_backend: Optional[ParallelBackend] = None,
+        config: Optional[ParallelConfig] = None,
+        *,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
-        config: ParallelConfig = ParallelConfig(),
-        *,
         n_jobs: int = -1,
         timeout: Optional[float] = None,
     ):
-        self.config = config
-        parallel_backend = init_parallel_backend(self.config)
+        parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
         self.parallel_backend = parallel_backend
 
         self.timeout = timeout
