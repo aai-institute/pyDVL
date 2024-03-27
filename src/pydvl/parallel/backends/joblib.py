@@ -3,13 +3,12 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import Executor
-from typing import Callable, Optional, TypeVar, Union, cast
+from typing import Callable, Optional, TypeVar, Union
 
 import joblib
 from deprecate import deprecated
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
-from joblib.externals.loky.reusable_executor import _ReusablePoolExecutor
 
 from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
@@ -85,7 +84,8 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
             warnings.warn(
                 "Cancellation of futures is not supported by the joblib backend",
             )
-        return cast(Executor, get_reusable_executor(max_workers=max_workers))
+        executor: Executor = get_reusable_executor(max_workers=max_workers)
+        return executor
 
     def get(self, v: T, *args, **kwargs) -> T:
         return v

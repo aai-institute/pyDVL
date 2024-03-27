@@ -197,7 +197,8 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
             is < 1.
     """
     parallel_backend = init_parallel_backend(config)
-    if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
+    eff_n_jobs: int = parallel_backend.effective_n_jobs(n_jobs)
+    if eff_n_jobs < 1:
         raise RuntimeError(
             f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
         )

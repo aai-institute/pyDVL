@@ -99,6 +99,7 @@ class MapReduceJob(Generic[T, R]):
 
         self.timeout = timeout
 
+        self._n_jobs = -1
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
