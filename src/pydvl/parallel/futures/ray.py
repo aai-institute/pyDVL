@@ -8,6 +8,8 @@ from concurrent.futures import Executor, Future
 from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
 
+from deprecate import deprecated
+
 try:
     import ray
 except ModuleNotFoundError as e:
@@ -30,17 +32,12 @@ logger = logging.getLogger(__name__)
 class RayExecutor(Executor):
     """Asynchronous executor using Ray that implements the concurrent.futures API.
 
-    It shouldn't be initialized directly. You should instead call
-    [init_executor()][pydvl.parallel.futures.init_executor].
-
     Args:
         max_workers: Maximum number of concurrent tasks. Each task can request
             itself any number of vCPUs. You must ensure the product of this
             value and the n_cpus_per_job parameter passed to submit() does not
             exceed available cluster resources. If set to `None`, it will
             default to the total number of vCPUs in the ray cluster.
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
-            with cluster address, number of cpus, etc.
         cancel_futures: Select which futures will be cancelled when exiting this
             context manager. `Pending` is the default, which will cancel all
             pending futures, but not running ones, as done by
@@ -49,17 +46,19 @@ class RayExecutor(Executor):
             any. See [CancellationPolicy][pydvl.parallel.backend.CancellationPolicy]
     """
 
+    @deprecated(
+        target=True,
+        args_mapping={"config": None},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
     def __init__(
         self,
         max_workers: Optional[int] = None,
         *,
-        config: ParallelConfig = ParallelConfig(),
+        config: Optional[ParallelConfig] = None,
         cancel_futures: CancellationPolicy = CancellationPolicy.ALL,
     ):
-        if config.backend != "ray":
-            raise ValueError(
-                f"Parallel backend must be set to 'ray' and not '{config.backend}'"
-            )
         if max_workers is not None:
             if max_workers <= 0:
                 raise ValueError("max_workers must be greater than 0")
