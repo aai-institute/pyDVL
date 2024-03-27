@@ -133,7 +133,7 @@ def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
         parallel_backend_cls = ParallelBackend.BACKENDS[config.backend]
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
-    return parallel_backend_cls.create(config)  # type: ignore
+    return parallel_backend_cls(config)  # type: ignore
 
 
 # TODO: delete this class once it's made redundant in v0.10.0

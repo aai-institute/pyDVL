@@ -82,7 +82,7 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         if config is not None:
             warnings.warn(
                 "The `RayParallelBackend` uses deprecated arguments: "
-                "`config` -> `None`. They were deprecated since v0.9.0 "
+                "`config`. They were deprecated since v0.9.0 "
                 "and will be removed in v0.10.0.",
                 FutureWarning,
             )

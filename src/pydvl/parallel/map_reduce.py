@@ -18,6 +18,7 @@ from numpy.typing import NDArray
 from ..utils.functional import maybe_add_argument
 from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
 from .backend import ParallelBackend, _maybe_init_parallel_backend
+from .backends import JoblibParallelBackend, RayParallelBackend
 from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
@@ -89,7 +90,7 @@ class MapReduceJob(Generic[T, R]):
 
     @deprecated(
         target=True,
-        args_mapping={"config": None},
+        args_mapping={"config": "config"},
         deprecated_in="0.9.0",
         remove_in="0.10.0",
     )
@@ -138,7 +139,17 @@ class MapReduceJob(Generic[T, R]):
              The result of the reduce function.
         """
         seed_seq = ensure_seed_sequence(seed)
-        with Parallel() as parallel:
+
+        if isinstance(self.parallel_backend, JoblibParallelBackend):
+            backend = "loky"
+        elif isinstance(self.parallel_backend, RayParallelBackend):
+            backend = "ray"
+        else:
+            raise ValueError(
+                f"Unexpected parallel backend {self.parallel_backend.__class__.__name__}"
+            )
+
+        with Parallel(prefer=backend) as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(

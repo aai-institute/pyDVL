@@ -15,7 +15,7 @@ __all__ = ["compute_loo"]
 
 @deprecated(
     target=True,
-    args_mapping={"config": None},
+    args_mapping={"config": "config"},
     deprecated_in="0.9.0",
     remove_in="0.10.0",
 )
