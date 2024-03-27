@@ -20,9 +20,6 @@ T = TypeVar("T")
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
-    It shouldn't be initialized directly. You should instead call
-    [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
-
     ??? Example
         ``` python
         import ray

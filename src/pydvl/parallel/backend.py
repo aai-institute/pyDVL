@@ -7,7 +7,6 @@ from concurrent.futures import Executor
 from enum import Flag, auto
 from typing import Any, Callable, Type
 
-from ..utils.types import NoPublicConstructor
 from .config import ParallelConfig
 
 __all__ = [
@@ -41,7 +40,7 @@ class CancellationPolicy(Flag):
     ALL = PENDING | RUNNING
 
 
-class BaseParallelBackend(metaclass=NoPublicConstructor):
+class BaseParallelBackend:
     """Abstract base class for all parallel backends."""
 
     config: dict[str, Any] = {}

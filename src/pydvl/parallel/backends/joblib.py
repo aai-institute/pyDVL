@@ -22,12 +22,9 @@ logger = logging.getLogger(__name__)
 class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
-    It shouldn't be initialized directly. You should instead call
-    [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
-
     ??? Example
         ``` python
-        from pydvl.parallel import init_paralle_backend, ParallelConfig
+        from pydvl.parallel import init_parallel_backend, ParallelConfig
         config = ParallelConfig(backend="joblib")
         parallel_backend = init_parallel_backend(config)
         ```
