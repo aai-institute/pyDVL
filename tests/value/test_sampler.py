@@ -10,6 +10,7 @@ from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
+    MSRSampler,
     PermutationSampler,
     RandomHierarchicalSampler,
     StochasticSampler,
@@ -65,6 +66,7 @@ def test_proper_reproducible(sampler_class, indices, seed):
         PermutationSampler,
         AntitheticSampler,
         RandomHierarchicalSampler,
+        MSRSampler,
     ],
 )
 @pytest.mark.parametrize("indices", [(), (list(range(100)))])

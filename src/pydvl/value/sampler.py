@@ -312,6 +312,26 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
+class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
+    """An iterator to perform sampling of random subsets.
+
+    This sampler does not return any index, it only returns subsets of the data.
+    This sampler is used in :footcite:t:`wang_data_2022`.
+    """
+
+    def __iter__(self) -> Iterator[SampleT]:
+        if len(self) == 0:
+            return
+        while True:
+            subset = random_subset(self.indices, seed=self._rng)
+            yield None, subset
+            self._n_samples += 1
+
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return 1.0
+
+
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
@@ -450,4 +470,5 @@ StochasticSampler = Union[
     PermutationSampler[IndexT],
     AntitheticSampler[IndexT],
     RandomHierarchicalSampler[IndexT],
+    MSRSampler[IndexT],
 ]
