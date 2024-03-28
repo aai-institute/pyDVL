@@ -13,6 +13,7 @@ from pydvl.value.stopping import (
     MaxTime,
     MaxUpdates,
     MinUpdates,
+    RankStability,
     StoppingCriterion,
     make_criterion,
 )
@@ -195,4 +196,32 @@ def test_max_checks():
     done = MaxChecks(5)
     for _ in range(4):
         assert not done(v)
+    assert done(v)
+
+
+def test_rank_stability():
+    """Test the RankStability stopping criterion."""
+    v = ValuationResult.zeros(indices=range(5))
+    arr = np.arange(5)
+
+    done = RankStability(rtol=0.1)
+    for i in range(20):
+        arr = np.roll(arr, 1)
+        for j in range(5):
+            v.update(j, arr[j] + 0.01 * j)
+        assert not done(v)
+    assert not done(v)
+    assert done(v)
+
+    done = RankStability(rtol=0.1, min_iterations=3)
+    v = ValuationResult.from_random(size=5)
+    assert not done(v)
+    assert not done(v)
+    assert not done(v)
+    assert done(v)
+
+    done = RankStability(rtol=0.1, min_iterations=2)
+    v = ValuationResult.from_random(size=5)
+    assert not done(v)
+    assert not done(v)
     assert done(v)

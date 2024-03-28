@@ -18,6 +18,7 @@ from pydvl.value.sampler import (
 )
 from pydvl.value.semivalues import (
     DefaultMarginal,
+    MSRFutureProcessor,
     SVCoefficient,
     banzhaf_coefficient,
     beta_coefficient,
@@ -276,3 +277,31 @@ def test_banzhaf(
         config=parallel_config,
     )
     check_values(values, exact_values, rtol=0.2)
+
+
+@pytest.mark.parametrize("num_samples", [6])
+def test_msr_future_processor(num_samples: int, dummy_utility):
+    proc = MSRFutureProcessor(dummy_utility)
+    assert proc.n == num_samples
+    assert proc.total_evaluations == 0
+    data1 = [1, 3, 5]
+    data2 = [0, 2, 4]
+
+    # Iteration 1
+    marginals1 = proc([(data1, 1.0)])
+    assert marginals1 == [[(i, 0.0) for i in range(6)]]
+
+    # Iteration 2
+    marginals2 = proc([(data2, 0.5)])
+    assert marginals2 == [
+        [(0, -1.0), (1, 1.0), (2, -1.0), (3, 1.0), (4, -1.0), (5, 1.0)]
+    ]
+
+    # Iteration 3
+    # Values are -0.5 for even and 0.5 for uneven indices
+    # New values are supposed to be -1.0 and 1.0=(1.0+2.0)/2-(0.5)/1
+    # Marginals need to be 2 and -2 because (2*0.5 + 1*2)/3=1
+    marginals2 = proc([(data1, 2.0)])
+    assert marginals2 == [
+        [(0, -2.0), (1, 2.0), (2, -2.0), (3, 2.0), (4, -2.0), (5, 2.0)]
+    ]
