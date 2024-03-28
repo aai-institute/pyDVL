@@ -31,4 +31,3 @@ jobs:
       uses: niden/actions-memcached@v7
     - name: Test Notebooks
       run: tox -e notebook-tests
-      continue-on-error: true
