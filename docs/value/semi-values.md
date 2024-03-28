@@ -122,7 +122,7 @@ values = compute_msr_banzhaf_semivalues(
 )
 ```
 For further details on how to use this method and a comparison of the sample efficiency, we suggest to take a look
-at the example notebook [msr_banzhaf_spotify](../examples/msr_banzhaf_spotify).
+at the example notebook [msr_banzhaf_spotify](../../examples/msr_banzhaf_spotify).
 
 
 ## General semi-values
