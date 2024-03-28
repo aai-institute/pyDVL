@@ -98,6 +98,33 @@ values = compute_banzhaf_semivalues(
 )
 ```
 
+### Banzhaf semi-values with MSR sampling
+Wang et. al. propose a more sample-efficient method for computing Banzhaf semivalues in their paper 
+*Data Banzhaf: A Robust Data Valuation Framework for Machine Learning* [@wang_data_2022].
+This method updates all semivalues per evaluation of the utility (i.e. per model trained) based on whether
+a specific data point was included in the data subset or not. 
+The mathematical formula for computing the semivalues is
+
+$$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\ni i}} U(S)
+        - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+
+where $\mathbf{S}_{\ni i}$ are the subsets that contain the index $i$ and $\mathbf{S}_{\not{\ni} i}$ are the 
+subsets not containing the index $i$.
+
+The function implementing this mehod is
+[compute_msr_banzhaf_semivalues][pydvl.value.semivalues.compute_msr_banzhaf_semivalues].
+```python
+from pydvl.value import *
+
+utility = Utility(model, data)
+values = compute_msr_banzhaf_semivalues(
+    u=utility, done=RankStability(rtol=0.001),
+)
+```
+For further details on how to use this method and a comparison of the sample efficiency, we suggest to take a look
+at the example notebook [msr_banzhaf_spotify](../examples/msr_banzhaf_spotify).
+
+
 ## General semi-values
 
 As explained above, both Beta Shapley and Banzhaf indices are special cases of
