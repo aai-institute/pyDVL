@@ -12,7 +12,7 @@ from .. import check_values
     [("miner", {"n_players": 5})],
     indirect=True,
 )
-def test_lc_solve_problems(test_game, n_jobs, parallel_config):
+def test_lc_solve_problems(test_game, n_jobs, parallel_backend):
     """Test solving LeastCoreProblems in parallel."""
 
     n_problems = n_jobs
@@ -22,7 +22,7 @@ def test_lc_solve_problems(test_game, n_jobs, parallel_config):
         test_game.u,
         algorithm="test_lc",
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     assert len(solutions) == n_problems
 
