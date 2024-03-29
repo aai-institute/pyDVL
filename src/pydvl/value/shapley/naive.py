@@ -14,13 +14,19 @@ See [Data valuation][data-valuation] for details.
 import math
 import warnings
 from itertools import permutations
-from typing import List
+from typing import List, Optional
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
-from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils import Utility, powerset
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
@@ -103,11 +109,18 @@ def _combinatorial_exact_shapley(
     return local_values / n
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def combinatorial_exact_shapley(
     u: Utility,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
 ) -> ValuationResult:
     r"""Computes the exact Shapley value using the combinatorial definition.
@@ -127,8 +140,13 @@ def combinatorial_exact_shapley(
     Args:
         u: Utility object with model, data, and scoring function
         n_jobs: Number of parallel jobs to use
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
 
     Returns:
@@ -143,13 +161,15 @@ def combinatorial_exact_shapley(
     def reduce_fun(results: List[NDArray]) -> NDArray:
         return np.array(results).sum(axis=0)  # type: ignore
 
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
     map_reduce_job: MapReduceJob[NDArray, NDArray] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_exact_shapley,
         map_kwargs=dict(u=u, progress=progress),
         reduce_func=reduce_fun,
         n_jobs=n_jobs,
-        config=config,
+        parallel_backend=parallel_backend,
     )
     values = map_reduce_job()
     return ValuationResult(
