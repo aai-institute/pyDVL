@@ -166,14 +166,13 @@ def test_map_reduce_seeding(parallel_backend, seed_1, seed_2):
 
 
 def test_wrap_function(parallel_backend):
-    if parallel_backend.backend != "ray":
+    if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Only makes sense for ray")
 
     def fun(x, **kwargs):
         return dict(x=x * x, **kwargs)
 
-    parallel_backend = init_parallel_backend(parallel_backend)
-    # Try two kwargs for @ray.remote. Should be ignored in the sequential backend
+    # Try two kwargs for @ray.remote. Should be ignored in the joblib backend
     wrapped_func = parallel_backend.wrap(fun, num_cpus=1, max_calls=1)
     x = parallel_backend.put(2)
     ret = parallel_backend.get(wrapped_func(x))
@@ -192,14 +191,14 @@ def test_wrap_function(parallel_backend):
 
 
 def test_futures_executor_submit(parallel_backend):
-    with parallel_backend.executor(parallel_backend=parallel_backend) as executor:
+    with parallel_backend.executor() as executor:
         future = executor.submit(lambda x: x + 1, 1)
         result = future.result()
     assert result == 2
 
 
 def test_futures_executor_map(parallel_backend):
-    with parallel_backend.executor(parallel_backend=parallel_backend) as executor:
+    with parallel_backend.executor() as executor:
         results = list(executor.map(lambda x: x + 1, range(3)))
     assert results == [1, 2, 3]
 
@@ -210,7 +209,7 @@ def test_futures_executor_map_with_max_workers(parallel_backend):
         return time.monotonic()
 
     start_time = time.monotonic()
-    with parallel_backend.executor(parallel_backend=parallel_backend) as executor:
+    with parallel_backend.executor(max_workers=num_workers()) as executor:
         assert executor._max_workers == num_workers()
         list(executor.map(func, range(3)))
     end_time = time.monotonic()
