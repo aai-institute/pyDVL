@@ -87,7 +87,7 @@ def compute_least_core_values(
         progress = False
         if n_iterations is None:
             raise ValueError("n_iterations cannot be None for Monte Carlo Least Core")
-        return montecarlo_least_core(
+        return montecarlo_least_core(  # type: ignore
             u=u,
             n_iterations=n_iterations,
             n_jobs=n_jobs,

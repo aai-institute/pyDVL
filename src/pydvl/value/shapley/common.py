@@ -119,11 +119,11 @@ def compute_shapley_values(
             **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
-        return combinatorial_montecarlo_shapley(
+        return combinatorial_montecarlo_shapley(  # type: ignore
             u, done=done, n_jobs=n_jobs, seed=seed, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
-        return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
+        return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)  # type: ignore
     elif mode == ShapleyMode.PermutationExact:
         return permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
@@ -137,7 +137,7 @@ def compute_shapley_values(
             if mode == ShapleyMode.Owen
             else OwenAlgorithm.Antithetic
         )
-        return owen_sampling_shapley(
+        return owen_sampling_shapley(  # type: ignore
             u,
             n_samples=int(kwargs.get("n_samples", -1)),
             max_q=int(kwargs.get("max_q", -1)),
@@ -155,7 +155,7 @@ def compute_shapley_values(
         if epsilon is None:
             raise ValueError("Group Testing requires error bound epsilon")
         delta = kwargs.pop("delta", 0.05)
-        return group_testing_shapley(
+        return group_testing_shapley(  # type: ignore
             u,
             epsilon=float(epsilon),
             delta=delta,
