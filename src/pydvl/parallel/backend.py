@@ -15,7 +15,6 @@ from .config import ParallelConfig
 __all__ = [
     "init_parallel_backend",
     "_maybe_init_parallel_backend",
-    "effective_n_jobs",
     "available_cpus",
     "ParallelBackend",
     "CancellationPolicy",
@@ -175,31 +174,3 @@ def available_cpus() -> int:
     if system() != "Linux":
         return os.cpu_count() or 1
     return len(os.sched_getaffinity(0))  # type: ignore
-
-
-def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
-    """Returns the effective number of jobs.
-
-    This number may vary depending on the parallel backend and the resources
-    available.
-
-    Args:
-        n_jobs: the number of jobs requested. If -1, the number of available
-            CPUs is returned.
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig] with
-            cluster address, number of cpus, etc.
-
-    Returns:
-        The effective number of jobs, guaranteed to be >= 1.
-
-    Raises:
-        RuntimeError: if the effective number of jobs returned by the backend
-            is < 1.
-    """
-    parallel_backend = init_parallel_backend(config)
-    eff_n_jobs: int = parallel_backend.effective_n_jobs(n_jobs)
-    if eff_n_jobs < 1:
-        raise RuntimeError(
-            f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
-        )
-    return eff_n_jobs

@@ -61,9 +61,6 @@ from pydvl.parallel import (
     ParallelBackend,
     ParallelConfig,
     _maybe_init_parallel_backend,
-    effective_n_jobs,
-    init_executor,
-    init_parallel_backend,
 )
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.progress import repeat_indices
@@ -211,7 +208,7 @@ def permutation_montecarlo_shapley(
 
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     u = parallel_backend.put(u)
-    max_workers = effective_n_jobs(n_jobs, config)
+    max_workers = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
     seed_sequence = ensure_seed_sequence(seed)

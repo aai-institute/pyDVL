@@ -69,14 +69,7 @@ from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.parallel import (
-    ParallelBackend,
-    ParallelConfig,
-    _maybe_init_parallel_backend,
-    effective_n_jobs,
-    init_executor,
-    init_parallel_backend,
-)
+from pydvl.parallel import ParallelBackend, ParallelConfig, _maybe_init_parallel_backend
 from pydvl.utils import (
     Dataset,
     Scorer,
@@ -330,9 +323,9 @@ def compute_classwise_shapley_values(
             " utility. See scoring argument of Utility."
         )
 
-    parallel_backend = init_parallel_backend(config)
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     u_ref = parallel_backend.put(u)
-    n_jobs = effective_n_jobs(n_jobs, config)
+    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * n_jobs
 
     pbar = tqdm(disable=not progress, position=0, total=100, unit="%")

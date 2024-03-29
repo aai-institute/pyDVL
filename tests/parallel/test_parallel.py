@@ -8,27 +8,19 @@ import numpy as np
 import pytest
 
 from pydvl.parallel import MapReduceJob, init_parallel_backend
-from pydvl.parallel.backend import effective_n_jobs
 from pydvl.parallel.futures import init_executor
 from pydvl.utils.types import Seed
 
 from ..conftest import num_workers
 
 
-def test_effective_n_jobs(parallel_config):
-    parallel_backend = init_parallel_backend(parallel_config)
+def test_effective_n_jobs(parallel_backend):
     assert parallel_backend.effective_n_jobs(1) == 1
     assert parallel_backend.effective_n_jobs(4) == min(4, num_workers())
-    if parallel_config.address is None:
-        assert parallel_backend.effective_n_jobs(-1) == num_workers()
-    else:
-        assert parallel_backend.effective_n_jobs(-1) == num_workers()
+    assert parallel_backend.effective_n_jobs(-1) == num_workers()
 
     for n_jobs in [-1, 1, 2]:
-        assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
-            n_jobs, parallel_config
-        )
-        assert effective_n_jobs(n_jobs, parallel_config) > 0
+        assert parallel_backend.effective_n_jobs(n_jobs) > 0
 
     with pytest.raises(ValueError):
         parallel_backend.effective_n_jobs(0)

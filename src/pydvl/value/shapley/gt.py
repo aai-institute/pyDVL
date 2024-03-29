@@ -38,7 +38,6 @@ from pydvl.parallel import (
     ParallelBackend,
     ParallelConfig,
     _maybe_init_parallel_backend,
-    effective_n_jobs,
 )
 from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
@@ -259,7 +258,9 @@ def group_testing_shapley(
             f"ε={epsilon:.02f} guarantee at δ={1 - delta:.02f} probability"
         )
 
-    samples_per_job = max(1, n_samples // effective_n_jobs(n_jobs, config))
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+    samples_per_job = max(1, n_samples // parallel_backend.effective_n_jobs(n_jobs))
 
     def reducer(
         results_it: Iterable[Tuple[NDArray, NDArray]]
@@ -270,8 +271,6 @@ def group_testing_shapley(
 
     seed_sequence = ensure_seed_sequence(seed)
     map_reduce_seed_sequence, cvxpy_seed = tuple(seed_sequence.spawn(2))
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
     map_reduce_job: MapReduceJob[Utility, Tuple[NDArray, NDArray]] = MapReduceJob(
         u,

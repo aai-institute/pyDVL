@@ -12,7 +12,6 @@ from pydvl.parallel import (
     ParallelBackend,
     ParallelConfig,
     _maybe_init_parallel_backend,
-    effective_n_jobs,
 )
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.types import Seed
@@ -154,9 +153,11 @@ def mclc_prepare_problem(
         )
         n_iterations = 2**n
 
-    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
-
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+    iterations_per_job = max(
+        1, n_iterations // parallel_backend.effective_n_jobs(n_jobs)
+    )
 
     map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
         inputs=u,
