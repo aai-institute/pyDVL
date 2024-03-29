@@ -226,9 +226,7 @@ def permutation_montecarlo_shapley(
             pbar.n = 100 * done.completion()
             pbar.refresh()
 
-            completed, pending = wait(
-                pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
-            )
+            completed, pending = wait(pending, timeout=1.0, return_when=FIRST_COMPLETED)
             for future in completed:
                 result += future.result()
                 # we could check outside the loop, but that means more
