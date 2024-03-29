@@ -90,6 +90,7 @@ from __future__ import annotations
 import logging
 import math
 import warnings
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from enum import Enum
 from itertools import islice
 from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
@@ -99,6 +100,11 @@ import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
+from pydvl.parallel import (
+    ParallelBackend,
+    _maybe_init_parallel_backend,
+    init_parallel_backend,
+)
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility
 from pydvl.utils.types import IndexT, Seed
@@ -172,6 +178,12 @@ def _marginal(
 #     deprecated_in="0.8.0",
 #     remove_in="0.9.0",
 # )
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_generic_semivalues(
     sampler: PowersetSampler[IndexT],
     u: Utility,
@@ -181,7 +193,8 @@ def compute_generic_semivalues(
     batch_size: int = 1,
     skip_converged: bool = False,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
 ) -> ValuationResult:
     """Computes semi-values for a given utility function and subset sampler.
@@ -202,8 +215,13 @@ def compute_generic_semivalues(
             [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError],
             you will probably have to carefully adjust the threshold).
         n_jobs: Number of parallel jobs to use.
-        config: Object configuring parallel computation, with cluster
-            address, number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:
@@ -212,11 +230,12 @@ def compute_generic_semivalues(
     !!! warning "Deprecation notice"
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
-    from concurrent.futures import FIRST_COMPLETED, Future, wait
-
-    from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
-
     if isinstance(sampler, PermutationSampler) and u.cache is None:
         log.warning(
             "PermutationSampler requires caching to be enabled or computation "
@@ -236,20 +255,20 @@ def compute_generic_semivalues(
         data_names=u.data.data_names,
     )
 
-    parallel_backend = init_parallel_backend(config)
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     u = parallel_backend.put(u)
     correction = parallel_backend.put(
         lambda n, k: coefficient(n, k) * sampler.weight(n, k)
     )
 
-    max_workers = effective_n_jobs(n_jobs, config)
+    max_workers = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
 
     sampler_it = iter(sampler)
     pbar = tqdm(disable=not progress, total=100, unit="%")
 
-    with init_executor(
-        max_workers=max_workers, config=config, cancel_futures=True
+    with parallel_backend.executor(
+        max_workers=max_workers, cancel_futures=True
     ) as executor:
         pending: set[Future] = set()
         while True:
@@ -322,6 +341,12 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
     return cast(SVCoefficient, beta_coefficient_w)
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_shapley_semivalues(
     u: Utility,
     *,
@@ -329,7 +354,8 @@ def compute_shapley_semivalues(
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -348,8 +374,13 @@ def compute_shapley_semivalues(
             [sampler][pydvl.value.sampler] module for a list.
         batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
-        config: Object configuring parallel computation, with cluster
-            address, number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         seed: Either an instance of a numpy random number generator or a seed
             for it.
         progress: Whether to display a progress bar.
@@ -360,6 +391,11 @@ def compute_shapley_semivalues(
     !!! warning "Deprecation notice"
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     # HACK: cannot infer return type because of useless IndexT, NameT
     return compute_generic_semivalues(  # type: ignore
@@ -369,11 +405,18 @@ def compute_shapley_semivalues(
         done,
         batch_size=batch_size,
         n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
         config=config,
         progress=progress,
     )
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_banzhaf_semivalues(
     u: Utility,
     *,
@@ -381,7 +424,8 @@ def compute_banzhaf_semivalues(
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -400,8 +444,13 @@ def compute_banzhaf_semivalues(
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed
             for it.
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:
@@ -410,6 +459,11 @@ def compute_banzhaf_semivalues(
     !!! warning "Deprecation notice"
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     # HACK: cannot infer return type because of useless IndexT, NameT
     return compute_generic_semivalues(  # type: ignore
@@ -419,11 +473,18 @@ def compute_banzhaf_semivalues(
         done,
         batch_size=batch_size,
         n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
         config=config,
         progress=progress,
     )
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_beta_shapley_semivalues(
     u: Utility,
     *,
@@ -433,7 +494,8 @@ def compute_beta_shapley_semivalues(
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -453,8 +515,13 @@ def compute_beta_shapley_semivalues(
         batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
-        config: Object configuring parallel computation, with cluster address, number of
-            cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:
@@ -463,6 +530,11 @@ def compute_beta_shapley_semivalues(
     !!! warning "Deprecation notice"
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     # HACK: cannot infer return type because of useless IndexT, NameT
     return compute_generic_semivalues(  # type: ignore
@@ -472,6 +544,7 @@ def compute_beta_shapley_semivalues(
         done,
         batch_size=batch_size,
         n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
         config=config,
         progress=progress,
     )
