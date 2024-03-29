@@ -149,7 +149,7 @@ class MapReduceJob(Generic[T, R]):
                 f"Unexpected parallel backend {self.parallel_backend.__class__.__name__}"
             )
 
-        with Parallel(prefer=backend) as parallel:
+        with Parallel(backend=backend, prefer="processes") as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(
