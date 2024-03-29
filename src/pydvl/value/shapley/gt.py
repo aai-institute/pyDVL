@@ -237,6 +237,11 @@ def group_testing_shapley(
     !!! tip "Changed in version 0.5.0"
         Changed the solver to cvxpy instead of scipy's linprog. Added the ability
         to pass arbitrary options to it.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
 
     n = len(u.data.indices)

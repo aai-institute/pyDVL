@@ -50,9 +50,10 @@ def compute_loo(
     !!! tip "New in version 0.7.0"
         Renamed from `naive_loo` and added parallel computation.
 
-    !!! note "Changed in version 0.9.0"
+    !!! tip "Changed in version 0.9.0"
         Deprecated `config` argument and added a `parallel_backend`
-        argument to allow users to pass the Parallel Backend configuration.
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     if len(u.data) < 3:
         raise ValueError("Dataset must have at least 2 elements")

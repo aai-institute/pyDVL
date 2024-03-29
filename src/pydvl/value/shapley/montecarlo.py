@@ -201,6 +201,11 @@ def permutation_montecarlo_shapley(
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     algorithm = "permutation_montecarlo_shapley"
 
@@ -355,6 +360,11 @@ def combinatorial_montecarlo_shapley(
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 

@@ -151,6 +151,11 @@ def combinatorial_exact_shapley(
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     # Arbitrary choice, will depend on time required, caching, etc.
     if len(u.data) // n_jobs > 20:

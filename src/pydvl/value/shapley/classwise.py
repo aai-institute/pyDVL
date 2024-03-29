@@ -397,7 +397,6 @@ def _permutation_montecarlo_classwise_shapley_one_step(
     """Helper function for [compute_classwise_shapley_values()]
     [pydvl.value.shapley.classwise.compute_classwise_shapley_values].
 
-
     Args:
         u: Utility object containing model, data, and scoring function. The
             scorer must be of type [ClasswiseScorer]
@@ -417,6 +416,10 @@ def _permutation_montecarlo_classwise_shapley_one_step(
 
     Returns:
         ValuationResult object containing computed data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend configuration.
     """
     if done_sample_complements is None:
         done_sample_complements = MaxChecks(1)

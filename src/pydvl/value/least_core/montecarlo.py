@@ -83,6 +83,11 @@ def montecarlo_least_core(
 
     Returns:
         Object with the data values and the least core value.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     problem = mclc_prepare_problem(
         u,
@@ -102,6 +107,12 @@ def montecarlo_least_core(
     )
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def mclc_prepare_problem(
     u: Utility,
     n_iterations: int,
@@ -120,6 +131,11 @@ def mclc_prepare_problem(
     See
     [montecarlo_least_core][pydvl.value.least_core.montecarlo.montecarlo_least_core]
     for argument descriptions.
+
+    !!! note "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     n = len(u.data)
 

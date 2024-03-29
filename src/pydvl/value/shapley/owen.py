@@ -192,6 +192,11 @@ def owen_sampling_shapley(
     !!! tip "Changed in version 0.5.0"
         Support for parallel computation and enable antithetic sampling.
 
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
+
     """
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
