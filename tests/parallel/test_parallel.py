@@ -7,8 +7,7 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from pydvl.parallel import MapReduceJob, init_parallel_backend
-from pydvl.parallel.futures import init_executor
+from pydvl.parallel import MapReduceJob, RayParallelBackend, init_parallel_backend
 from pydvl.utils.types import Seed
 
 from ..conftest import num_workers
@@ -206,9 +205,6 @@ def test_futures_executor_map(parallel_backend):
 
 
 def test_futures_executor_map_with_max_workers(parallel_backend):
-    if parallel_backend.backend != "ray":
-        pytest.skip("Currently this test only works with Ray")
-
     def func(_):
         time.sleep(1)
         return time.monotonic()
@@ -226,23 +222,19 @@ def test_futures_executor_map_with_max_workers(parallel_backend):
 @pytest.mark.timeout(30)
 @pytest.mark.tolerate(max_failures=1)
 def test_future_cancellation(parallel_backend):
-    if parallel_backend.backend != "ray":
+    if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Currently this test only works with Ray")
 
     from pydvl.parallel import CancellationPolicy
 
-    with parallel_backend.executor(
-        parallel_backend=parallel_backend, cancel_futures=CancellationPolicy.NONE
-    ) as executor:
+    with parallel_backend.executor(cancel_futures=CancellationPolicy.NONE) as executor:
         future = executor.submit(lambda x: x + 1, 1)
 
     assert future.result() == 2
 
     from ray.exceptions import RayTaskError, TaskCancelledError
 
-    with parallel_backend.executor(
-        parallel_backend=parallel_backend, cancel_futures=CancellationPolicy.ALL
-    ) as executor:
+    with parallel_backend.executor(cancel_futures=CancellationPolicy.ALL) as executor:
         future = executor.submit(lambda t: time.sleep(t), 5)
 
     while future._state != "FINISHED":
