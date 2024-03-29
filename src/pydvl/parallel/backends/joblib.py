@@ -5,10 +5,10 @@ import warnings
 from concurrent.futures import Executor
 from typing import Callable, Optional, TypeVar, Union
 
-import joblib
 from deprecate import deprecated
-from joblib import delayed
+from joblib import delayed, effective_n_jobs
 from joblib.externals.loky import get_reusable_executor
+from joblib.parallel import get_active_backend
 
 from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
@@ -108,8 +108,11 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        eff_n_jobs: int = joblib.effective_n_jobs(n_jobs)
+        eff_n_jobs: int = effective_n_jobs(n_jobs)
+        _, backend_n_jobs = get_active_backend()
         if self.config["n_jobs"] is not None:
             maximum_n_jobs = self.config["n_jobs"]
             eff_n_jobs = min(eff_n_jobs, maximum_n_jobs)
+        if backend_n_jobs is not None:
+            eff_n_jobs = min(eff_n_jobs, backend_n_jobs)
         return eff_n_jobs
