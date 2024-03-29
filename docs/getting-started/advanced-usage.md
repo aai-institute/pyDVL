@@ -48,18 +48,23 @@ to compute exact shapley values you would use:
 
 ```python
 import joblib
-from pydvl.parallel import ParallelConfig
+from pydvl.parallel import JoblibParallelBackend
 from pydvl.value.shapley import combinatorial_exact_shapley
 from pydvl.utils.utility import Utility
 
-config = ParallelConfig(backend="joblib") 
+parallel_backend = JoblibParallelBackend() 
 u = Utility(...)
 
 with joblib.parallel_config(backend="loky", verbose=100):
-    combinatorial_exact_shapley(u, config=config)
+    values = combinatorial_exact_shapley(u, parallel_backend=parallel_backend)
 ```
 
 #### Ray
+
+!!! info
+   
+    The Ray parallel backend requires optional dependencies.
+    See [Extras][installation-extras] for more information.
 
 Please follow the instructions in Ray's documentation to
 [set up a remote cluster](https://docs.ray.io/en/latest/cluster/key-concepts.html).
@@ -90,14 +95,14 @@ To use the ray parallel backend to compute exact shapley values you would use:
 
 ```python
 import ray
-from pydvl.parallel import ParallelConfig
+from pydvl.parallel import RayParallelBackend
 from pydvl.value.shapley import combinatorial_exact_shapley
 from pydvl.utils.utility import Utility
 
 ray.init()
-config = ParallelConfig(backend="ray")
+parallel_backend = RayParallelBackend()
 u = Utility(...)
-combinatorial_exact_shapley(u, config=config)
+vaues = combinatorial_exact_shapley(u, parallel_backend=parallel_backend)
 ```
 
 ### Influence functions
