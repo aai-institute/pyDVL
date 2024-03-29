@@ -162,11 +162,6 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
 
 
 @pytest.fixture(scope="module")
-def parallel_config():
-    yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
-
-
-@pytest.fixture(scope="module")
 def parallel_backend():
     with joblib.parallel_config(n_jobs=num_workers()):
         yield JoblibParallelBackend()

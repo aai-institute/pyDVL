@@ -53,7 +53,7 @@ log = logging.getLogger(__name__)
 )
 def test_games(
     test_game,
-    parallel_config,
+    parallel_backend,
     n_jobs,
     fun: ShapleyMode,
     rtol: float,
@@ -79,7 +79,7 @@ def test_games(
         test_game.u,
         mode=fun,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         seed=seed,
         progress=True,
         **kwargs
@@ -110,7 +110,7 @@ def test_games(
 )
 def test_seed(
     test_game,
-    parallel_config: ParallelConfig,
+    parallel_backend: ParallelConfig,
     n_jobs: int,
     fun: ShapleyMode,
     kwargs: dict,
@@ -122,7 +122,7 @@ def test_seed(
         test_game.u,
         mode=fun,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         seeds=(seed, seed, seed_alt),
         **deepcopy(kwargs)
     )

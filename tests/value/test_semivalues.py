@@ -104,7 +104,7 @@ def test_coefficients(n: int, coefficient: SVCoefficient):
 @pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
 def test_games_shapley_deterministic(
     test_game,
-    parallel_config,
+    parallel_backend,
     n_jobs,
     sampler: Type[PowersetSampler],
     coefficient: SVCoefficient,
@@ -118,7 +118,7 @@ def test_games_shapley_deterministic(
         criterion,
         skip_converged=True,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         progress=True,
     )
     exact_values = test_game.shapley_values()
@@ -145,7 +145,7 @@ def test_games_shapley_deterministic(
 @pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
 def test_games_shapley(
     test_game,
-    parallel_config,
+    parallel_backend,
     n_jobs,
     sampler: Type[PowersetSampler],
     coefficient: SVCoefficient,
@@ -159,7 +159,7 @@ def test_games_shapley(
         criterion,
         skip_converged=True,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         progress=True,
     )
 
@@ -196,7 +196,7 @@ def test_shapley_batch_size(
     coefficient: SVCoefficient,
     batch_size: int,
     n_jobs: int,
-    parallel_config: ParallelConfig,
+    parallel_backend: ParallelConfig,
     seed: Seed,
 ):
     timed_fn = timed(compute_generic_semivalues)
@@ -208,7 +208,7 @@ def test_shapley_batch_size(
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=1,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     total_seconds_single_batch = timed_fn.execution_time
 
@@ -220,7 +220,7 @@ def test_shapley_batch_size(
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=batch_size,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     total_seconds_multi_batch = timed_fn.execution_time
     assert total_seconds_multi_batch < total_seconds_single_batch * 1.1
@@ -246,7 +246,7 @@ def test_banzhaf(
     analytic_banzhaf,
     sampler: Type[PowersetSampler],
     n_jobs: int,
-    parallel_config: ParallelConfig,
+    parallel_backend: ParallelConfig,
     seed,
 ):
     u, exact_values = analytic_banzhaf
@@ -258,6 +258,6 @@ def test_banzhaf(
         criterion,
         skip_converged=True,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     check_values(values, exact_values, rtol=0.2)
