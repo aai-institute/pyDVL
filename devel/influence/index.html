@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../assets/signet.svg">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.16">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.bcfcd587.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
@@ -61,6 +61,22 @@
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
+  
+
+
+  <!-- Simple Analytics - 100% privacy-first analytics -->
+<script async defer
+        src="https://scripts.simpleanalyticscdn.com/latest.js"
+        data-collect-dnt="true"
+        data-hostname="pydvl.org"></script>
+<noscript>
+    <img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=True&hostname=pydvl.org&path=influence/"
+         alt=""
+         referrerpolicy="no-referrer-when-downgrade">
+</noscript>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
 
     
     
@@ -3242,7 +3258,7 @@ intractable for large models like deep neural networks. Much of the recent
 research tackles this issue using approximations, like a Neuman series
  (Agarwal et al., 2017)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, with the most successful solution using a low-rank
 approximation that iteratively finds increasing eigenspaces of the Hessian
- (Schioppa et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
+ (Schioppa et al., 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
 <p>pyDVL implements several methods for the efficient computation of the <abbr title="Influence Function">IF</abbr> for
 machine learning. In the examples we document some of the difficulties that can
 arise when using the <abbr title="Influence Function">IF</abbr>.</p>
@@ -3443,7 +3459,7 @@ for influence calculation on different subsets of the training dataset.</p>
 <p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
-<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2021. Scaling Up Influence Functions. Presented at the AAAI-22, arXiv. <a href="https://doi.org/10.48550/arXiv.2112.03052">https://doi.org/10.48550/arXiv.2112.03052</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2022. Scaling Up Influence Functions. Proc. AAAI Conf. Artif. Intell. 36, 8179–8186. <a href="https://doi.org/10.1609/aaai.v36i8.20791">https://doi.org/10.1609/aaai.v36i8.20791</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 <li id="fn:3">
 <p>Hampel, F.R., 1974. The Influence Curve and Its Role in Robust Estimation. J. Am. Stat. Assoc. 69, 383–393. <a href="https://doi.org/10.2307/2285666">https://doi.org/10.2307/2285666</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
@@ -3475,7 +3491,7 @@ for influence calculation on different subsets of the training dataset.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-30</span>
   </span>
 
     
@@ -3493,6 +3509,8 @@ for influence calculation on different subsets of the training dataset.</p>
     
   </aside>
 
+
+  
 
 
 

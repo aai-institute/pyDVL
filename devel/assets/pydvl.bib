@@ -10,7 +10,8 @@
   pages = {1--40},
   url = {https://www.jmlr.org/papers/v18/16-491.html},
   abstract = {First-order stochastic methods are the state-of-the-art in large-scale machine learning optimization owing to efficient per-iteration complexity. Second-order methods, while able to provide faster convergence, have been much less explored due to the high cost of computing the second-order information. In this paper we develop second-order stochastic methods for optimization problems in machine learning that match the per-iteration cost of gradient based methods, and in certain settings improve upon the overall running time over popular first-order methods. Furthermore, our algorithm has the desirable property of being implementable in time linear in the sparsity of the input data.},
-  langid = {english}
+  langid = {english},
+  keywords = {notion}
 }
 
 @inproceedings{bae_if_2022,
@@ -340,6 +341,19 @@
   langid = {english}
 }
 
+@article{maleki_bounding_2014,
+  title = {Bounding the {{Estimation Error}} of {{Sampling-based Shapley Value Approximation}}},
+  author = {Maleki, Sasan and Tran-Thanh, Long and Hines, Greg and Rahwan, Talal and Rogers, Alex},
+  date = {2014-02-12},
+  journaltitle = {ArXiv13064265 Cs},
+  eprint = {1306.4265},
+  eprinttype = {arxiv},
+  eprintclass = {cs},
+  url = {https://arxiv.org/abs/1306.4265},
+  urldate = {2020-11-16},
+  abstract = {The Shapley value is arguably the most central normative solution concept in cooperative game theory. It specifies a unique way in which the reward from cooperation can be "fairly" divided among players. While it has a wide range of real world applications, its use is in many cases hampered by the hardness of its computation. A number of researchers have tackled this problem by (i) focusing on classes of games where the Shapley value can be computed efficiently, or (ii) proposing representation formalisms that facilitate such efficient computation, or (iii) approximating the Shapley value in certain classes of games. For the classical \textbackslash textit\{characteristic function\} representation, the only attempt to approximate the Shapley value for the general class of games is due to Castro \textbackslash textit\{et al.\} \textbackslash cite\{castro\}. While this algorithm provides a bound on the approximation error, this bound is \textbackslash textit\{asymptotic\}, meaning that it only holds when the number of samples increases to infinity. On the other hand, when a finite number of samples is drawn, an unquantifiable error is introduced, meaning that the bound no longer holds. With this in mind, we provide non-asymptotic bounds on the estimation error for two cases: where (i) the \textbackslash textit\{variance\}, and (ii) the \textbackslash textit\{range\}, of the players' marginal contributions is known. Furthermore, for the second case, we show that when the range is significantly large relative to the Shapley value, the bound can be improved (from \$O(\textbackslash frac\{r\}\{m\})\$ to \$O(\textbackslash sqrt\{\textbackslash frac\{r\}\{m\}\})\$). Finally, we propose, and demonstrate the effectiveness of using stratified sampling for improving the bounds further.}
+}
+
 @inproceedings{martens_optimizing_2015,
   title = {Optimizing {{Neural Networks}} with {{Kronecker-factored Approximate Curvature}}},
   booktitle = {Proceedings of the 32nd {{International Conference}} on {{Machine Learning}}},
@@ -388,19 +402,23 @@
   keywords = {notion}
 }
 
-@inproceedings{schioppa_scaling_2021,
+@article{schioppa_scaling_2022,
   title = {Scaling {{Up Influence Functions}}},
   author = {Schioppa, Andrea and Zablotskaia, Polina and Vilar, David and Sokolov, Artem},
-  date = {2021-12-06},
+  date = {2022-06-28},
+  journaltitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  shortjournal = {Proc. AAAI Conf. Artif. Intell.},
+  volume = {36},
+  number = {8},
   eprint = {2112.03052},
   eprinttype = {arxiv},
-  eprintclass = {cs},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2112.03052},
-  url = {https://arxiv.org/abs/2112.03052},
-  urldate = {2023-03-10},
-  abstract = {We address efficient calculation of influence functions for tracking predictions back to the training data. We propose and analyze a new approach to speeding up the inverse Hessian calculation based on Arnoldi iteration. With this improvement, we achieve, to the best of our knowledge, the first successful implementation of influence functions that scales to full-size (language and vision) Transformer models with several hundreds of millions of parameters. We evaluate our approach on image classification and sequence-to-sequence tasks with tens to a hundred of millions of training examples. Our code will be available at https://github.com/google-research/jax-influence.},
-  eventtitle = {{{AAAI-22}}},
+  pages = {8179--8186},
+  issn = {2374-3468},
+  doi = {10.1609/aaai.v36i8.20791},
+  url = {https://ojs.aaai.org/index.php/AAAI/article/view/20791},
+  urldate = {2024-03-30},
+  abstract = {We address efficient calculation of influence functions for tracking predictions back to the training data. We propose and analyze a new approach to speeding up the inverse Hessian calculation based on Arnoldi iteration. With this improvement, we achieve, to the best of our knowledge, the first successful implementation of influence functions that scales to full-size (language and vision) Transformer models with several hundreds of millions of parameters. We evaluate our approach in image classification and sequence-to-sequence tasks with tens to a hundred of millions of training examples. Our code is available at https://github.com/google-research/jax-influence.},
+  langid = {english},
   keywords = {notion}
 }
 
