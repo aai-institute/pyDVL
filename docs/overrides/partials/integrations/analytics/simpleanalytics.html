@@ -1,0 +1,10 @@
+<!-- Simple Analytics - 100% privacy-first analytics -->
+<script async defer
+        src="https://{{ config.extra.analytics.script_domain | default('scripts.simpleanalyticscdn.com')}}/latest.js"
+        data-collect-dnt="true"
+        data-hostname="{{ config.extra.analytics.hostname }}"></script>
+<noscript>
+    <img src="https://{{ config.extra.analytics.noscript_domain | default('queue.simpleanalyticscdn.com' )}}/noscript.gif?collect-dnt={{ config.extra.analytics.collect_dnt }}&hostname={{ config.extra.analytics.hostname }}&path={{ page.url }}"
+         alt=""
+         referrerpolicy="no-referrer-when-downgrade">
+</noscript>
