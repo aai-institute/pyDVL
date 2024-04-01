@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import Executor
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, TypeVar, Union, cast
 
 from deprecate import deprecated
 from joblib import delayed, effective_n_jobs
@@ -84,8 +84,7 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
             warnings.warn(
                 "Cancellation of futures is not supported by the joblib backend",
             )
-        executor: Executor = get_reusable_executor(max_workers=max_workers)
-        return executor
+        return cast(Executor, get_reusable_executor(max_workers=max_workers))
 
     def get(self, v: T, *args, **kwargs) -> T:
         return v
