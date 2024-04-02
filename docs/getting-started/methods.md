@@ -56,7 +56,7 @@ We currently implement the following methods:
   [@agarwal_secondorder_2017].
 
 - [**Arnoldi Influence**][pydvl.influence.torch.ArnoldiInfluence]
-  [@schioppa_scaling_2021].
+  [@schioppa_scaling_2022].
 
 - [**EKFAC Influence**][pydvl.influence.torch.EkfacInfluence]
   [@george_fast_2018;@martens_optimizing_2015].
