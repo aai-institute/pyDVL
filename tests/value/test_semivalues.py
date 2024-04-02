@@ -71,10 +71,17 @@ def test_msr_banzhaf(
 ):
     u, exact_values = analytic_banzhaf
     values = compute_msr_banzhaf_semivalues(
-        u=u, done=MaxChecks(1000), config=parallel_config, n_jobs=n_jobs, seed=seed
+        u=u,
+        done=MaxChecks(200 * num_samples),
+        config=parallel_config,
+        n_jobs=n_jobs,
+        seed=seed,
     )
     # Need to use atol because msr banzhaf is quite noisy.
     check_values(values, exact_values, atol=0.1)
+
+    # Check order
+    assert np.array_equal(np.argsort(exact_values), np.argsort(values))
 
 
 @pytest.mark.parametrize("n", [10, 100])
