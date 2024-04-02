@@ -111,10 +111,10 @@ $$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\
 where $\mathbf{S}_{\ni i}$ are the subsets that contain the index $i$ and $\mathbf{S}_{\not{\ni} i}$ are the 
 subsets not containing the index $i$.
 
-The function implementing this mehod is
+The function implementing this method is
 [compute_msr_banzhaf_semivalues][pydvl.value.semivalues.compute_msr_banzhaf_semivalues].
 ```python
-from pydvl.value import *
+from pydvl.value import compute_msr_banzhaf_semivalues, RankStability, Utility
 
 utility = Utility(model, data)
 values = compute_msr_banzhaf_semivalues(

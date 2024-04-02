@@ -81,9 +81,9 @@ instead.
     [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2110.14049).
     In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
 
-[^3]: <a name="wang_data_2022"></a>Wang, J.T. and Jia, R., 2022.
-    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2205.15466).
-    ArXiv preprint arXiv:2205.15466.
+[^3]: <a name="wang2023data"></a>Wang, J.T. and Jia, R., 2023.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
+    In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
 from __future__ import annotations
 
@@ -183,7 +183,7 @@ class RawUtility(MarginalFunction):
     def __call__(
         self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
     ) -> Tuple[MarginalT, ...]:
-        """Computation of marginal utility. This is a helper function for
+        """Computation of raw utility without marginalization. This is a helper function for
         [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
         Args:
@@ -193,8 +193,7 @@ class RawUtility(MarginalFunction):
                 indices to compute a marginal utility.
 
         Returns:
-            A collection of marginals. Each marginal is a tuple with index and its marginal
-            utility.
+            A collection of marginals. Each marginal is a tuple with index and its raw utility.
         """
         marginals: List[MarginalT] = []
         for idx, s in samples:
@@ -203,11 +202,29 @@ class RawUtility(MarginalFunction):
 
 
 class FutureProcessor:
+    """
+    The FutureProcessor class used to process the results of the parallel marginal evaluations.
+
+    The marginals are evaluated in parallel by `n_jobs` threads, but some algorithms require a central
+    method to postprocess the marginal results. This can be achieved through the future processor.
+    This base class does not perform any postprocessing, it is a noop used in most data valuation algorithms.
+    """
+
     def __call__(self, future_result: Any) -> Any:
         return future_result
 
 
 class MSRFutureProcessor(FutureProcessor):
+    """
+    This FutureProcessor processes the raw marginals in a way that MSR sampling requires.
+
+    MSR sampling evaluates the utility once, and then updates all data semivalues based on this one evaluation.
+    In order to do this, the RawUtility value needs to be postprocessed through this class.
+    For more details on MSR, please refer to the paper (Wang et. al.)<sup><a href="wang2023data">3</a></sup>.
+    This processor keeps track of the current values and computes marginals for all data points, so that
+    the values in the ValuationResult can be updated properly down the line.
+    """
+
     def __init__(self, u: Utility):
         self.n = len(u.data)
         self.all_indices = u.data.indices.copy()
@@ -574,7 +591,7 @@ def compute_msr_banzhaf_semivalues(
     This algorithm works by sampling random subsets and then evaluating the utility
     on that subset only once. Based on the evaluation and the subset indices,
     the MSRFutureProcessor then computes the marginal updates like in the paper
-    *Data Banzhaf: A Robust Data Valuation Framework for Machine Learning* by Wang et. al.
+    (Wang et. al.)<sup><a href="wang2023data">3</a></sup>.
     Their approach updates the semivalues for all data points every time a new evaluation
     is computed. This increases sample efficiency compared to normal Monte Carlo updates.
 

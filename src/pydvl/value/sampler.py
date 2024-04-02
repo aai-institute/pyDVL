@@ -44,6 +44,9 @@ sampler which iterates over the same indices.
       Frank, and Geoffrey Holmes. [Sampling Permutations for Shapley Value
       Estimation](http://jmlr.org/papers/v23/21-0439.html). Journal of Machine
       Learning Research 23, no. 43 (2022): 1–46.
+[^2]: <a name="wang2023data"></a>Wang, J.T. and Jia, R., 2023.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
+    In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 
 """
 
@@ -316,7 +319,7 @@ class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform sampling of random subsets.
 
     This sampler does not return any index, it only returns subsets of the data.
-    This sampler is used in :footcite:t:`wang_data_2022`.
+    This sampler is used in (Wang et. al.)<sup><a href="wang2023data">2</a></sup>.
     """
 
     def __iter__(self) -> Iterator[SampleT]:
