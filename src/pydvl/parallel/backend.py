@@ -6,7 +6,7 @@ import warnings
 from abc import abstractmethod
 from concurrent.futures import Executor
 from enum import Flag, auto
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Type
 
 from deprecate import deprecated
 
@@ -57,10 +57,10 @@ class ParallelBackend:
     @abstractmethod
     def executor(
         cls,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
         *,
-        config: Optional[ParallelConfig] = None,
-        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
+        config: ParallelConfig | None = None,
+        cancel_futures: CancellationPolicy | bool = CancellationPolicy.PENDING,
     ) -> Executor:
         """Returns a futures executor for the parallel backend."""
         ...
@@ -139,8 +139,8 @@ def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
 # This string for the benefit of deprecation searches:
 # remove_in="0.10.0"
 def _maybe_init_parallel_backend(
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
+    parallel_backend: ParallelBackend | None = None,
+    config: ParallelConfig | None = None,
 ) -> ParallelBackend:
     """Helper function inside during the deprecation period of
     [][pydvl.parallel.backend.init_parallel_backend] and should be removed in v0.10.0

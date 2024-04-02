@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import warnings
 from concurrent.futures import Executor
-from typing import Callable, Optional, TypeVar, Union, cast
+from typing import Callable, TypeVar, cast
 
 from deprecate import deprecated
 from joblib import delayed, effective_n_jobs
@@ -36,8 +36,8 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
         deprecated_in="0.9.0",
         remove_in="0.10.0",
     )
-    def __init__(self, config: Optional[ParallelConfig] = None) -> None:
-        n_jobs: Optional[int] = None
+    def __init__(self, config: ParallelConfig | None = None) -> None:
+        n_jobs: int | None = None
         if config is not None:
             n_jobs = config.n_cpus_local
         self.config = {
@@ -47,10 +47,10 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
     @classmethod
     def executor(
         cls,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
         *,
-        config: Optional[ParallelConfig] = None,
-        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.NONE,
+        config: ParallelConfig | None = None,
+        cancel_futures: CancellationPolicy | bool = CancellationPolicy.NONE,
     ) -> Executor:
         """Returns a futures executor for the parallel backend.
 

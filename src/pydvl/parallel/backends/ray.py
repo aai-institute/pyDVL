@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from concurrent.futures import Executor
-from typing import Any, Callable, Iterable, Optional, TypeVar, Union
+from typing import Any, Callable, Iterable, TypeVar
 
 import ray
 from deprecate import deprecated
@@ -36,7 +36,7 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         deprecated_in="0.9.0",
         remove_in="0.10.0",
     )
-    def __init__(self, config: Optional[ParallelConfig] = None) -> None:
+    def __init__(self, config: ParallelConfig | None = None) -> None:
         if not ray.is_initialized():
             raise RuntimeError(
                 "Starting from v0.9.0, ray is no longer automatically initialized. "
@@ -51,8 +51,8 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         cls,
         max_workers: int | None = None,
         *,
-        config: Optional[ParallelConfig] = None,
-        cancel_futures: Union[CancellationPolicy, bool] = CancellationPolicy.PENDING,
+        config: ParallelConfig | None = None,
+        cancel_futures: CancellationPolicy | bool = CancellationPolicy.PENDING,
     ) -> Executor:
         """Returns a futures executor for the parallel backend.
 
