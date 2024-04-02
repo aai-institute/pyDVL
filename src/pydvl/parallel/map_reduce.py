@@ -18,7 +18,7 @@ from numpy.typing import NDArray
 from ..utils.functional import maybe_add_argument
 from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
 from .backend import ParallelBackend, _maybe_init_parallel_backend
-from .backends import JoblibParallelBackend, RayParallelBackend
+from .backends import JoblibParallelBackend
 from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
@@ -108,6 +108,15 @@ class MapReduceJob(Generic[T, R]):
         timeout: Optional[float] = None,
     ):
         parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+        if not isinstance(parallel_backend, JoblibParallelBackend):
+            raise ValueError(
+                f"Unexpected parallel backend {parallel_backend.__class__.__name__}. "
+                "MapReduceJob only supports the use of JoblibParallelBackend "
+                "with passing the specific"
+                "joblib backend name using `joblib.parallel_config`. "
+            )
+
         self.parallel_backend = parallel_backend
 
         self.timeout = timeout
@@ -140,16 +149,7 @@ class MapReduceJob(Generic[T, R]):
         """
         seed_seq = ensure_seed_sequence(seed)
 
-        if isinstance(self.parallel_backend, JoblibParallelBackend):
-            backend = "loky"
-        elif isinstance(self.parallel_backend, RayParallelBackend):
-            backend = "ray"
-        else:
-            raise ValueError(
-                f"Unexpected parallel backend {self.parallel_backend.__class__.__name__}"
-            )
-
-        with Parallel(backend=backend, prefer="processes") as parallel:
+        with Parallel(prefer="processes") as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(
