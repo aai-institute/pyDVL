@@ -96,15 +96,38 @@ class ParallelBackend:
 
 
 @deprecated(
-    target=None,
-    remove_in="0.10.0",
+    target=True,
+    args_mapping={"config": "config"},
     deprecated_in="0.9.0",
+    remove_in="0.10.0",
 )
-def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
+def init_parallel_backend(
+    config: ParallelConfig | None = None, backend_name: str | None = None
+) -> ParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
     The following example creates a parallel backend instance with the default
     configuration, which is a local joblib backend.
+
+    If you don't pass any arguments, then by default it will instantiate
+    the JoblibParallelBackend:
+
+    ??? Example
+        ```python
+        parallel_backend = init_parallel_backend()
+        ```
+
+    To create a parallel backend instance with for example `ray` as a backend,
+    you can pass the backend name as a string:.
+
+    ??? Example
+        ```python
+        parallel_backend = init_parallel_backend(backend_name="ray")
+        ```
+
+
+    The following is an example of the deprecated
+    way for instantiating a parallel backend:
 
     ??? Example
         ``` python
@@ -112,26 +135,23 @@ def init_parallel_backend(config: ParallelConfig) -> ParallelBackend:
         parallel_backend = init_parallel_backend(config)
         ```
 
-    To create a parallel backend instance with a different backend, e.g. ray,
-    you can pass the backend name as a string to the constructor of
-    [ParallelConfig][pydvl.utils.config.ParallelConfig].
-
-    ??? Example
-        ```python
-        config = ParallelConfig(backend="ray")
-        parallel_backend = init_parallel_backend(config)
-        ```
-
     Args:
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+        backend_name: Name of the backend to instantiate.
+        config: (**DEPRECATED**) Object configuring parallel computation,
             with cluster address, number of cpus, etc.
 
 
     """
+    if backend_name is None:
+        if config is None:
+            backend_name = "joblib"
+        else:
+            backend_name = config.backend
+
     try:
-        parallel_backend_cls = ParallelBackend.BACKENDS[config.backend]
+        parallel_backend_cls = ParallelBackend.BACKENDS[backend_name]
     except KeyError:
-        raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
+        raise NotImplementedError(f"Unexpected parallel backend {backend_name}")
     return parallel_backend_cls(config)  # type: ignore
 
 
