@@ -107,7 +107,7 @@ approximated by
 
 where \(D\) is a diagonal matrix with the top (in absolute value) eigenvalues of
 the Hessian and \(V\) contains the corresponding eigenvectors. See also
-[@schioppa_scaling_2021].
+[@schioppa_scaling_2022].
 
 ```python
 from pydvl.influence.torch import ArnoldiInfluence
