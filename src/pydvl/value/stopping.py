@@ -636,9 +636,10 @@ class RankStability(StoppingCriterion):
     When the change in rank correlation between two successive iterations is
     below a given threshold, the computation is terminated.
     The criterion computes the Spearman correlation between two successive iterations.
-    The Spearman correlation uses the ordering indices of the given values and correlates them.
-    This means it focuses on the order of the elements instead of their exact values.
-    If the order stops changing (meaning the Banzhaf semivalues estimates converge), the criterion stops the algorithm.
+    The Spearman correlation uses the ordering indices of the given values and
+    correlates them. This means it focuses on the order of the elements instead of their
+    exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
+    converge), the criterion stops the algorithm.
 
     This criterion is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
 
@@ -647,7 +648,10 @@ class RankStability(StoppingCriterion):
     """
 
     def __init__(
-        self, rtol: float, modify_result: bool = True, min_iterations: int = 10
+        self,
+        rtol: float,
+        modify_result: bool = True,
+        min_iterations: int = 10,
     ):
         super().__init__(modify_result=modify_result)
         if rtol <= 0 or rtol >= 1:
@@ -678,7 +682,7 @@ class RankStability(StoppingCriterion):
                 f"RankStability has converged with {corr=} in iteration {self._iterations}"
             )
             return Status.Converged
-        self._corr = np.nan_to_num(corr, 0.0)
+        self._corr = np.nan_to_num(corr, nan=0.0)
         return Status.Pending
 
     def _update_completion(self, corr: float) -> None:
