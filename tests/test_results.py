@@ -4,6 +4,7 @@ import functools
 import operator
 import pickle
 from copy import deepcopy
+from itertools import permutations
 
 import cloudpickle
 import numpy as np
@@ -157,6 +158,20 @@ def test_updating():
     v.update(4, 1.0)
     assert v.values[1] == 1.0
     assert v.counts[1] == 2
+
+
+def test_updating_order_invariance():
+    updates = [0.8, 0.9, 1.0, 1.1, 1.2]
+    values = []
+    for permutation in permutations(updates):
+        v = ValuationResult.zeros(indices=np.array([0]))
+        for update in permutation:
+            v.update(0, update)
+        values.append(v)
+
+    v1 = values[0]
+    for v2 in values[1:]:
+        np.testing.assert_almost_equal(v1.values, v2.values)
 
 
 @pytest.mark.parametrize(
@@ -415,8 +430,3 @@ def test_empty(n):
     v2 = ValuationResult(values=np.arange(n))
     v += v2
     assert len(v2) == n
-
-
-def test_empty_deprecation():
-    with pytest.warns(DeprecationWarning):
-        v3 = ValuationResult.empty(indices=[1, 2, 3])

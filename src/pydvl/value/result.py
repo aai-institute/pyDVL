@@ -63,18 +63,13 @@ from typing import (
 )
 
 import numpy as np
-from deprecate import deprecated
+import pandas as pd
 from numpy.typing import NDArray
 
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
 from pydvl.utils.types import IndexT, NameT, Seed
-
-try:
-    import pandas  # Try to import here for the benefit of mypy
-except ImportError:
-    pass
 
 __all__ = ["ValuationResult", "ValueItem"]
 
@@ -664,7 +659,7 @@ class ValuationResult(
 
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
-    ) -> pandas.DataFrame:
+    ) -> pd.DataFrame:
         """Returns values as a dataframe.
 
         Args:
@@ -677,13 +672,9 @@ class ValuationResult(
             A dataframe with two columns, one for the values, with name
                 given as explained in `column`, and another with standard errors for
                 approximate algorithms. The latter will be named `column+'_stderr'`.
-        Raises:
-             ImportError: If pandas is not installed
         """
-        if not pandas:
-            raise ImportError("Pandas required for DataFrame export")
         column = column or self._algorithm
-        df = pandas.DataFrame(
+        df = pd.DataFrame(
             self._values[self._sort_positions],
             index=self._names[self._sort_positions]
             if use_names
@@ -735,14 +726,6 @@ class ValuationResult(
         return cls(**options)  # type: ignore
 
     @classmethod
-    @deprecated(
-        target=True,
-        deprecated_in="0.6.0",
-        remove_in="0.8.0",
-        args_mapping=dict(indices=None, data_names=None, n_samples=None),
-        template_mgs="`%(source_name)s` is deprecated for generating zero-filled "
-        "results, use `ValuationResult.zeros()` instead.",
-    )
     def empty(
         cls,
         algorithm: str = "",
@@ -757,6 +740,10 @@ class ValuationResult(
 
         Args:
             algorithm: Name of the algorithm used to compute the values
+            indices: Optional sequence or array of indices.
+            data_names: Optional sequences or array of names for the data points.
+                Defaults to index numbers if not set.
+            n_samples: Number of valuation result entries.
 
         Returns:
             Object with the results.

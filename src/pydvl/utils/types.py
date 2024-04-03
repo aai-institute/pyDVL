@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 IndexT = TypeVar("IndexT", bound=np.int_)
-NameT = TypeVar("NameT", bound=np.object_)
+NameT = TypeVar("NameT", np.object_, np.int_)
 R = TypeVar("R", covariant=True)
 Seed = Union[int, Generator]
 

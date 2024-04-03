@@ -18,6 +18,9 @@
 
 **pyDVL** collects algorithms for **Data Valuation** and **Influence Function** computation.
 
+Refer to the [Methods](https://pydvl.org/devel/getting-started/methods/)
+page of our documentation for a list of all implemented methods. 
+
 **Data Valuation** for machine learning is the task of assigning a scalar
 to each element of a training set which reflects its contribution to the final
 performance or outcome of some model trained on it. Some concepts of
@@ -29,7 +32,7 @@ pyDVL focuses on model-dependent methods.
         width="70%"
         align="center"
         style="display: block; margin-left: auto; margin-right: auto;"
-        src="docs/value/img/mclc-best-removal-10k-natural.svg"
+        src="https://pydvl.org/devel/value/img/mclc-best-removal-10k-natural.svg"
         alt="best sample removal"
     />
     <p align="center" style="text-align:center;">
@@ -48,7 +51,7 @@ of training samples over individual test points.
         width="70%"
         align="center"
         style="display: block; margin-left: auto; margin-right: auto;"
-        src="docs/assets/influence_functions_example.png"
+        src="https://pydvl.org/devel/examples/img/influence_functions_example.png"
         alt="best sample removal"
     />
     <p align="center" style="text-align:center;">
@@ -72,10 +75,14 @@ You can also install the latest development version from
 pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
-pyDVL has also extra dependencies for certain functionalities (e.g. influence functions).
+pyDVL has also extra dependencies for certain functionalities, 
+e.g. for using influence functions run
+```shell
+$ pip install pyDVL[influence]
+```
 
 For more instructions and information refer to [Installing pyDVL
-](https://pydvl.org/stable/getting-started/installation/) in the
+](https://pydvl.org/stable/getting-started/#installation) in the
 documentation.
 
 # Usage
@@ -256,71 +263,6 @@ Please open new issues for bugs, feature requests and extensions. You can read
 about the structure of the project, the toolchain and workflow in the [guide for
 contributions](CONTRIBUTING.md).
 
-# Papers
-
-We currently implement the following papers:
-
-## Data Valuation
-
-- Castro, Javier, Daniel Gómez, and Juan Tejada. [Polynomial Calculation of the
-  Shapley Value Based on Sampling](https://doi.org/10.1016/j.cor.2008.04.004).
-  Computers & Operations Research, Selected papers presented at the Tenth
-  International Symposium on Locational Decisions (ISOLDE X), 36, no. 5 (May 1,
-  2009): 1726–30.
-- Ghorbani, Amirata, and James Zou. [Data Shapley: Equitable Valuation of Data
-  for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html). In
-  International Conference on Machine Learning, 2242–51. PMLR, 2019.
-- Wang, Tianhao, Yu Yang, and Ruoxi Jia. 
-  [Improving Cooperative Game Theory-Based Data Valuation via Data Utility
-  Learning](https://doi.org/10.48550/arXiv.2107.06336). arXiv, 2022.
-- Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo
-  Li, Ce Zhang, Costas Spanos, and Dawn Song. [Efficient Task-Specific Data
-  Valuation for Nearest Neighbor Algorithms](https://doi.org/10.14778/3342263.3342637).
-  Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
-- Okhrati, Ramin, and Aldo Lipani. [A Multilinear Sampling Algorithm to Estimate
-  Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511). In 25th
-  International Conference on Pattern Recognition (ICPR 2020), 7992–99. IEEE,
-  2021.
-- Yan, T., and Procaccia, A. D. [If You Like Shapley Then You’ll Love the
-  Core](https://ojs.aaai.org/index.php/AAAI/article/view/16721). Proceedings of
-  the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
-- Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
-  Gürel, Bo Li, Ce Zhang, Dawn Song, and Costas J. Spanos. [Towards Efficient
-  Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
-  In 22nd International Conference on Artificial Intelligence and Statistics,
-  1167–76. PMLR, 2019.
-- Wang, Jiachen T., and Ruoxi Jia. [Data Banzhaf: A Robust Data Valuation
-  Framework for Machine Learning](https://doi.org/10.48550/arXiv.2205.15466).
-  arXiv, October 22, 2022.
-- Kwon, Yongchan, and James Zou. [Beta Shapley: A Unified and Noise-Reduced Data
-  Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
-  In Proceedings of the 25th International Conference on Artificial Intelligence
-  and Statistics (AISTATS) 2022, Vol. 151. Valencia, Spain: PMLR, 2022.
-- Kwon, Yongchan, and James Zou. [Data-OOB: Out-of-Bag Estimate as a Simple and
-  Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html). In
-  Proceedings of the 40th International Conference on Machine Learning, 18135–52.
-  PMLR, 2023.
-- Schoch, Stephanie, Haifeng Xu, and Yangfeng Ji. [CS-Shapley: Class-Wise
-  Shapley Values for Data Valuation in
-  Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of the
-  Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS).
-  New Orleans, Louisiana, USA, 2022.
-
-## Influence Functions
-
-- Koh, Pang Wei, and Percy Liang. [Understanding Black-Box Predictions via
-  Influence Functions](http://proceedings.mlr.press/v70/koh17a.html). In
-  Proceedings of the 34th International Conference on Machine Learning,
-  70:1885–94. Sydney, Australia: PMLR, 2017.
-- Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
-  for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
-  Journal of Machine Learning Research 18 (2017): 1-40.
-- Schioppa, Andrea, Polina Zablotskaia, David Vilar, and Artem Sokolov. 
-  [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
-  In Proceedings of the AAAI-22. arXiv, 2021.
-- James Martens, Roger Grosse, [Optimizing Neural Networks with Kronecker-factored Approximate Curvature](https://arxiv.org/abs/1503.05671), International Conference on Machine Learning (ICML), 2015.
-- George, Thomas, César Laurent, Xavier Bouthillier, Nicolas Ballas, Pascal Vincent, [Fast Approximate Natural Gradient Descent in a Kronecker-factored Eigenbasis](https://arxiv.org/abs/1806.03884), Advances in Neural Information Processing Systems 31,2018.
-  
 # License
 
 pyDVL is distributed under

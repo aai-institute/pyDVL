@@ -7,7 +7,7 @@ computation of values. Please see the documentation on
 data and scoring function (the latter being what one usually understands
 under *utility* in the general definition of Shapley value).
 It is automatically cached across machines when the
-[cache is configured][setting-up-the-cache] and it is enabled upon construction.
+[cache is configured][getting-started-cache] and it is enabled upon construction.
 
 [DataUtilityLearning][pydvl.utils.utility.DataUtilityLearning] adds support
 for learning the scoring function to avoid repeated re-training
@@ -38,7 +38,7 @@ from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.score import Scorer
 from pydvl.utils.types import SupervisedModel
 
-__all__ = ["Utility", "DataUtilityLearning", "MinerGameUtility", "GlovesGameUtility"]
+__all__ = ["Utility", "DataUtilityLearning"]
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +65,8 @@ class Utility:
     Since evaluating the scoring function requires retraining the model and that
     can be time-consuming, this class wraps it and caches the results of each
     execution. Caching is available both locally and across nodes, but must
-    always be enabled for your project first, see [Setting up the
-    cache][setting-up-the-cache].
+    always be enabled for your project first, see [the documentation][getting-started-cache]
+    and the [module documentation][pydvl.utils.caching].
 
     Attributes:
         model: The supervised model.
@@ -356,120 +356,3 @@ class DataUtilityLearning:
     def data(self) -> Dataset:
         """Returns the wrapped utility's [Dataset][pydvl.utils.dataset.Dataset]."""
         return self.utility.data
-
-
-class MinerGameUtility(Utility):
-    r"""Toy game utility that is used for testing and demonstration purposes.
-
-    Consider a group of n miners, who have discovered large bars of gold.
-
-    If two miners can carry one piece of gold, then the payoff of a
-    coalition $S$ is:
-
-    $${
-    v(S) = \left\{\begin{array}{lll}
-    \mid S \mid / 2 & \text{, if} & \mid S \mid \text{ is even} \\
-    ( \mid S \mid - 1)/2 & \text{, if} & \mid S \mid \text{ is odd}
-    \end{array}\right.
-    }$$
-
-    If there are more than two miners and there is an even number of miners,
-    then the core consists of the single payoff where each miner gets 1/2.
-
-    If there is an odd number of miners, then the core is empty.
-
-    Taken from [Wikipedia](https://en.wikipedia.org/wiki/Core_(game_theory))
-
-    Args:
-        n_miners: Number of miners that participate in the game.
-    """
-
-    def __init__(self, n_miners: int, **kwargs):
-        if n_miners <= 2:
-            raise ValueError(f"n_miners, {n_miners} should be > 2")
-        self.n_miners = n_miners
-
-        x = np.arange(n_miners)[..., np.newaxis]
-        # The y values don't matter here
-        y = np.zeros_like(x)
-
-        self.data = Dataset(x_train=x, y_train=y, x_test=x, y_test=y)
-
-    def __call__(self, indices: Iterable[int]) -> float:
-        n = len(tuple(indices))
-        if n % 2 == 0:
-            return n / 2
-        else:
-            return (n - 1) / 2
-
-    def _initialize_utility_wrapper(self):
-        pass
-
-    def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
-        if self.n_miners % 2 == 0:
-            values = np.array([0.5] * self.n_miners)
-            subsidy = 0.0
-        else:
-            values = np.array(
-                [(self.n_miners - 1) / (2 * self.n_miners)] * self.n_miners
-            )
-            subsidy = (self.n_miners - 1) / (2 * self.n_miners)
-        return values, subsidy
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(n={self.n_miners})"
-
-
-class GlovesGameUtility(Utility):
-    r"""Toy game utility that is used for testing and demonstration purposes.
-
-    In this game, some players have a left glove and others a right glove.
-    Single gloves have a worth of zero while pairs have a worth of 1.
-
-    The payoff of a coalition $S$ is:
-
-    $${
-    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
-    }$$
-
-    Where $L$, respectively $R$, is the set of players with left gloves,
-    respectively right gloves.
-
-    Args:
-        left: Number of players with a left glove.
-        right: Number of player with a right glove.
-
-    """
-
-    def __init__(self, left: int, right: int, **kwargs):
-        self.left = left
-        self.right = right
-
-        x = np.empty(left + right)[..., np.newaxis]
-        # The y values don't matter here
-        y = np.zeros_like(x)
-
-        self.data = Dataset(x_train=x, y_train=y, x_test=x, y_test=y)
-
-    def __call__(self, indices: Iterable[int]) -> float:
-        left_sum = float(np.sum(np.asarray(indices) < self.left))
-        right_sum = float(np.sum(np.asarray(indices) >= self.left))
-        return min(left_sum, right_sum)
-
-    def _initialize_utility_wrapper(self):
-        pass
-
-    def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
-        if self.left == self.right:
-            subsidy = -0.5
-            values = np.array([0.5] * (self.left + self.right))
-        elif self.left < self.right:
-            subsidy = 0.0
-            values = np.array([1.0] * self.left + [0.0] * self.right)
-        else:
-            subsidy = 0.0
-            values = np.array([0.0] * self.left + [1.0] * self.right)
-        return values, subsidy
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"

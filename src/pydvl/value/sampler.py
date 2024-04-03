@@ -65,7 +65,6 @@ from typing import (
 )
 
 import numpy as np
-from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
@@ -87,7 +86,7 @@ Sequence.register(np.ndarray)
 
 
 class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
-    """Samplers are custom iterables over subsets of indices.
+    r"""Samplers are custom iterables over subsets of indices.
 
     Calling ``iter()`` on a sampler returns an iterator over tuples of the form
     $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
@@ -311,14 +310,6 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset."""
         return float(2 ** (n - 1)) if n > 0 else 1.0
-
-
-class DeterministicCombinatorialSampler(DeterministicUniformSampler[IndexT]):
-    @deprecated(
-        target=DeterministicUniformSampler, deprecated_in="0.6.0", remove_in="0.8.0"
-    )
-    def __init__(self, indices: NDArray[IndexT], *args, **kwargs):
-        void(indices, args, kwargs)
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):

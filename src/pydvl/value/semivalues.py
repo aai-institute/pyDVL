@@ -94,6 +94,7 @@ from enum import Enum
 from itertools import islice
 from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
 
+import numpy as np
 import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
@@ -271,15 +272,10 @@ def compute_generic_semivalues(
 
                     # Filter out samples for indices that have already converged
                     filtered_samples = samples
-                    if skip_converged and len(done.converged) > 0:
-                        # TODO: cloudpickle can't pickle this on python 3.8:
-                        # filtered_samples = filter(
-                        #     lambda t: not done.converged[t[0]], samples
-                        # )
+                    if skip_converged and np.count_nonzero(done.converged) > 0:
+                        # TODO: cloudpickle can't pickle result of `filter` on python 3.8
                         filtered_samples = tuple(
-                            (idx, sample)
-                            for idx, sample in samples
-                            if not done.converged[idx]
+                            filter(lambda t: not done.converged[t[0]], samples)
                         )
 
                     if filtered_samples:
@@ -527,17 +523,16 @@ def compute_semivalues(
 
     - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode]:
       Shapley values.
-    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode]:
       Implements the Beta Shapley semi-value as introduced in
       (Kwon and Zou, 2022)<sup><a href="#kwon_beta_2022">1</a></sup>.
       Pass additional keyword arguments `alpha` and `beta` to set the
       parameters of the Beta distribution (both default to 1).
-    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
-      semi-value as introduced in (Wang and Jia, 2022)<sup><a href="#wang_data_2022">1</a></sup>.
-
-    See [[data-valuation]] for an overview of valuation.
     - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
-      the Banzhaf semi-value as introduced in [@wang_data_2022].
+      the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
+      href="#wang_data_2022">1</a></sup>.
+
+    See [Data valuation][data-valuation] for an overview of valuation.
 
     Args:
         u: Utility object with model, data, and scoring function.

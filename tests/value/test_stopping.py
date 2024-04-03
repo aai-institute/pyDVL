@@ -62,10 +62,10 @@ def test_stopping_criterion_composition():
     assert (C() & C() & C())(v) == c
     assert (P() | P() | P())(v) == p
 
-    assert (C() & P()).name == "Composite StoppingCriterion: C AND P"
-    assert (C() | P()).name == "Composite StoppingCriterion: C OR P"
-    assert (~C()).name == "Composite StoppingCriterion: NOT C"
-    assert (~P()).name == "Composite StoppingCriterion: NOT P"
+    assert str(C() & P()) == "Composite StoppingCriterion: C AND P"
+    assert str(C() | P()) == "Composite StoppingCriterion: C OR P"
+    assert str(~C()) == "Composite StoppingCriterion: NOT C"
+    assert str(~P()) == "Composite StoppingCriterion: NOT P"
 
 
 def test_make_criterion():
@@ -88,9 +88,9 @@ def test_make_criterion():
     assert P()(v) == Status.Pending
     assert F()(v) == Status.Failed
 
-    assert C().name == "always_converged"
-    assert P().name == "always_pending"
-    assert F().name == "always_failed"
+    assert str(C()) == "always_converged"
+    assert str(P()) == "always_pending"
+    assert str(F()) == "always_failed"
 
     assert (~C())(v) == Status.Failed
     assert (~P())(v) == Status.Converged
@@ -104,7 +104,7 @@ def test_make_criterion():
 
 def test_minmax_updates():
     maxstop = MaxUpdates(10)
-    assert maxstop.name == "MaxUpdates"
+    assert str(maxstop) == "MaxUpdates(n_updates=10)"
     v = ValuationResult.from_random(5)
     v._counts = np.zeros(5)
     assert maxstop(v) == Status.Pending
@@ -114,7 +114,7 @@ def test_minmax_updates():
     assert maxstop(v) == Status.Converged
 
     minstop = MinUpdates(10)
-    assert minstop.name == "MinUpdates"
+    assert str(minstop) == "MinUpdates(n_updates=10)"
     v._counts = np.zeros(5)
     assert minstop(v) == Status.Pending
     v._counts += np.ones(5) * 9

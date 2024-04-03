@@ -3,8 +3,8 @@ Monte Carlo approximations to Shapley Data values.
 
 !!! Warning
     You probably want to use the common interface provided by
-    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values] instead of directly using
-    the functions in this module.
+    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values]
+    instead of directly using the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
 re-trainings of the model, several Monte Carlo approximations are available. The
@@ -16,9 +16,9 @@ utility.
 
 Alternatively, employing another reformulation of the expression above as a sum
 over permutations, one has the implementation in
-[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley],
-or using an early stopping strategy to reduce computation
-[truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
+[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
+with the option to pass an early stopping strategy to reduce computation
+as done in Truncated MonteCarlo Shapley (TMCS).
 
 !!! info "Also see"
     It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
@@ -50,7 +50,6 @@ from functools import reduce
 from typing import Optional, Sequence, Union
 
 import numpy as np
-from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
@@ -82,17 +81,20 @@ def _permutation_montecarlo_one_step(
     algorithm_name: str,
     seed: Optional[Union[Seed, SeedSequence]] = None,
 ) -> ValuationResult:
-    """Helper function for [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
+    """Helper function for
+    [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     Computes marginal utilities of each training sample in a randomly sampled
     permutation.
+
     Args:
         u: Utility object with model, data, and scoring function
         truncation: A callable which decides whether to interrupt
             processing a permutation and set all subsequent marginals to zero.
         algorithm_name: For the results object. Used internally by different
             variants of Shapley using this subroutine
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         An object with the results
@@ -125,14 +127,6 @@ def _permutation_montecarlo_one_step(
     return result
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.8.0",
-    args_mapping=dict(
-        coordinator_update_period=None, worker_update_period=None, progress=None
-    ),
-)
 def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
@@ -154,12 +148,12 @@ def permutation_montecarlo_shapley(
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
     the position where $i$ appears (see [[data-valuation]] for details).
 
-    This implements the method described in (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
-    with a double stopping criterion.
+    This implements the method described in (Ghorbani and Zou, 2019)<sup><a
+    href="#ghorbani_data_2019">1</a></sup> with a double stopping criterion.
 
-    .. todo::
-       Think of how to add Robin-Gelman or some other more principled stopping
-       criterion.
+    !!! Todo
+        Think of how to add Robin-Gelman or some other more principled stopping
+        criterion.
 
     Instead of naively implementing the expectation, we sequentially add points
     to coalitions from a permutation and incrementally compute marginal utilities.
@@ -311,7 +305,7 @@ def combinatorial_montecarlo_shapley(
 
     This consists of randomly sampling subsets of the power set of the training
     indices in [u.data][pydvl.utils.utility.Utility], and computing their
-    marginal utilities. See [Data valuation][computing-data-values] for details.
+    marginal utilities. See [Data valuation][data-valuation] for details.
 
     Note that because sampling is done with replacement, the approximation is
     poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$

@@ -3,7 +3,9 @@ from typing import Dict, Tuple, cast
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.typing import NDArray
+from packaging import version
 
 from pydvl.utils import Dataset, Utility, powerset
 from pydvl.value import MaxChecks, ValuationResult
@@ -165,7 +167,13 @@ def test_classwise_scorer_representation():
 
     scorer = ClasswiseScorer("accuracy", initial_label=0)
     assert str(scorer) == "classwise accuracy"
-    assert repr(scorer) == "ClasswiseAccuracy (scorer=make_scorer(accuracy_score))"
+    if version.parse(sklearn.__version__) >= version.parse("1.4.0"):
+        assert (
+            repr(scorer)
+            == "ClasswiseAccuracy (scorer=make_scorer(accuracy_score, response_method='predict'))"
+        )
+    else:
+        assert repr(scorer) == "ClasswiseAccuracy (scorer=make_scorer(accuracy_score))"
 
 
 @pytest.mark.parametrize("n_element, left_margin, right_margin", [(101, 0.3, 0.4)])

@@ -12,7 +12,7 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.8.1.dev0",
+    version="0.8.2.dev0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
@@ -43,6 +43,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Typing :: Typed",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
@@ -51,8 +52,8 @@ setup(
     ],
     project_urls={
         "Source": "https://github.com/aai-institute/pydvl",
-        "Documentation": "https://aai-institute.github.io/pyDVL",
-        "TransferLab": "https://transferlab.appliedai.de",
+        "Documentation": "https://pydvl.org",
+        "TransferLab": "https://transferlab.ai",
     },
     zip_safe=False,  # Needed for mypy to find py.typed
 )

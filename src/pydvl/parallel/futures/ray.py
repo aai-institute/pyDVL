@@ -8,14 +8,19 @@ from concurrent.futures import Executor, Future
 from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
 
-import ray
-from deprecate import deprecated
+try:
+    import ray
+except ModuleNotFoundError as e:
+    raise ModuleNotFoundError(
+        f"Cannot use RayExecutor because ray was not installed. "
+        f"Make sure to install pyDVL using `pip install pyDVL[ray]`. \n"
+        f"Original error: {e}"
+    )
 
+from pydvl.parallel import CancellationPolicy
 from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["RayExecutor"]
-
-from pydvl.parallel import CancellationPolicy
 
 T = TypeVar("T")
 
@@ -44,12 +49,6 @@ class RayExecutor(Executor):
             any. See [CancellationPolicy][pydvl.parallel.backend.CancellationPolicy]
     """
 
-    @deprecated(
-        target=True,
-        deprecated_in="0.7.0",
-        remove_in="0.8.0",
-        args_mapping={"cancel_futures_on_exit": "cancel_futures"},
-    )
     def __init__(
         self,
         max_workers: Optional[int] = None,
@@ -75,12 +74,12 @@ class RayExecutor(Executor):
                 else CancellationPolicy.NONE
             )
 
-        self.config = {"address": config.address, "logging_level": config.logging_level}
-        if config.address is None:
-            self.config["num_cpus"] = config.n_cpus_local
-
         if not ray.is_initialized():
-            ray.init(**self.config)
+            raise RuntimeError(
+                "Starting from v0.9.0, ray is no longer automatically initialized. "
+                "Please use `ray.init()` with the desired configuration "
+                "before using this class."
+            )
 
         self._max_workers = max_workers
         if self._max_workers is None:

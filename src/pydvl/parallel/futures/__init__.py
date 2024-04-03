@@ -7,7 +7,7 @@ from pydvl.parallel.config import ParallelConfig
 
 try:
     from pydvl.parallel.futures.ray import RayExecutor
-except ImportError:
+except ModuleNotFoundError:
     pass
 
 __all__ = ["init_executor"]
@@ -30,7 +30,7 @@ def init_executor(
 
     ??? Examples
         ``` python
-        from pydvl.parallel import init_executor, ParallelConfig
+        from pydvl.parallel.futures import init_executor, ParallelConfig
 
         config = ParallelConfig(backend="ray")
         with init_executor(max_workers=1, config=config) as executor:

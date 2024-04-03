@@ -5,30 +5,55 @@ title: Home
 # The python library for data valuation
 
 pyDVL collects algorithms for data valuation and influence function computation.
-It runs most of them in parallel either locally or in a cluster and supports
-distributed caching of results.
+For the full list see [[methods]]. It supports out-of-core and distributed
+computation, as well as local or distributed caching of results.
 
-If you're a first time user of pyDVL, we recommend you to go through the
-[[getting-started]] and [[installation]] guides.
+If you're a first time user of pyDVL, we recommend you to go through
+[[getting-started]].
 
-::cards:: cols=2
 
-- title: Installation
-  content: Steps to install and requirements
-  url: getting-started/installation.md
+<div class="grid cards" markdown>
 
-- title: Data valuation
-  content: >
+-   :fontawesome-solid-toolbox:{ .lg .middle }
+    [[getting-started|__Getting started__]]
+
+    ---
+    Steps to install and requirements
+
+-   :fontawesome-regular-images:{ .lg .middle }
+    [[examples|__Example gallery__]]
+    
+    ---
+
+    Notebooks with worked-out examples of data valuation and influence functions
+
+-   :fontawesome-solid-scale-unbalanced:{ .lg .middle }
+    [[data-valuation|__Data valuation__]]
+
+    ---
+
     Basics of data valuation and description of the main algorithms
-  url: value/
 
-- title: Influence Function
-  content: >
+-   :fontawesome-solid-scale-unbalanced-flip:{ .lg .middle } 
+    [[influence-function|__Influence Function__]]
+
+    ---
+
     An introduction to the influence function and its computation with pyDVL
-  url: influence/
 
-- title: Browse the API
-  content: Full documentation of the API
-  url: api/pydvl/
+-   :material-cog:{ .lg .middle }
+    [[methods|__Supported methods__]]
 
-::/cards::
+    ---
+
+    List of all methods implemented with references.
+
+
+-   :fontawesome-regular-file-code:{ .lg .middle }
+    [__API Reference__](api/pydvl/)
+
+    ---
+
+    Full documentation of the API
+
+</div>

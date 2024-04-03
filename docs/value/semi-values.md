@@ -27,7 +27,7 @@ rank stability in certain situations.
 
 !!! Note
     Shapley values are a particular case of semi-values and can therefore also
-    be computed with the methods described here. However, as of version 0.7.0,
+    be computed with the methods described here. However, as of version 0.8.1,
     we recommend using
     [compute_shapley_values][pydvl.value.shapley.compute_shapley_values]
     instead, in particular because it implements truncation policies for TMCS.
@@ -141,10 +141,10 @@ of rank stability, across a range of models and datasets [@wang_data_2022].
     sampling that reuses the utility computation from the last iteration when
     iterating over a permutation. This doubles the computation requirements (and
     slightly increases variance) when using permutation sampling, unless [the
-    cache](getting-started/installation.md#setting-up-the-cache) is enabled.
-    In addition, as mentioned above,
+    cache is enabled][getting-started-cache]. In addition,
+    as mentioned above,
     [truncation policies][pydvl.value.shapley.truncated.TruncationPolicy] are
-    not supported by this generic implementation (as of v0.7.0). For these
+    not supported by this generic implementation (as of v0.8.1). For these
     reasons it is preferable to use
     [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values]
     whenever not computing other semi-values.
