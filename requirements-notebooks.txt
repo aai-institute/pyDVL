@@ -1,6 +1,6 @@
 datasets==2.14.6
 distributed==2024.4.0
-pillow==10.0.1
+pillow==10.3.0
 torch==2.0.1
 torchvision==0.15.2
 transformers==4.36.0
