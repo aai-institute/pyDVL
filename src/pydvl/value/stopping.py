@@ -115,7 +115,7 @@ these operations affect the behavior of the stopping criteria.
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
     [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
-[^2]: <a name="wang2023data"></a>Wang, J.T. and Jia, R., 2023.
+[^2]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
     [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
     In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
@@ -640,7 +640,7 @@ class RankStability(StoppingCriterion):
     This means it focuses on the order of the elements instead of their exact values.
     If the order stops changing (meaning the Banzhaf semivalues estimates converge), the criterion stops the algorithm.
 
-    This criterion is used in (Wang et. al.)<sup><a href="wang2023data">2</a></sup>.
+    This criterion is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
 
     Args:
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)

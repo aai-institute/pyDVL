@@ -81,7 +81,7 @@ instead.
     [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2110.14049).
     In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
 
-[^3]: <a name="wang2023data"></a>Wang, J.T. and Jia, R., 2023.
+[^3]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
     [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
     In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
@@ -220,7 +220,7 @@ class MSRFutureProcessor(FutureProcessor):
 
     MSR sampling evaluates the utility once, and then updates all data semivalues based on this one evaluation.
     In order to do this, the RawUtility value needs to be postprocessed through this class.
-    For more details on MSR, please refer to the paper (Wang et. al.)<sup><a href="wang2023data">3</a></sup>.
+    For more details on MSR, please refer to the paper (Wang et. al.)<sup><a href="wang_data_2023">3</a></sup>.
     This processor keeps track of the current values and computes marginals for all data points, so that
     the values in the ValuationResult can be updated properly down the line.
     """
@@ -591,7 +591,7 @@ def compute_msr_banzhaf_semivalues(
     This algorithm works by sampling random subsets and then evaluating the utility
     on that subset only once. Based on the evaluation and the subset indices,
     the MSRFutureProcessor then computes the marginal updates like in the paper
-    (Wang et. al.)<sup><a href="wang2023data">3</a></sup>.
+    (Wang et. al.)<sup><a href="wang_data_2023">3</a></sup>.
     Their approach updates the semivalues for all data points every time a new evaluation
     is computed. This increases sample efficiency compared to normal Monte Carlo updates.
 
@@ -736,7 +736,7 @@ def compute_semivalues(
       parameters of the Beta distribution (both default to 1).
     - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
       the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
-      href="#wang_data_2022">1</a></sup>.
+      href="#wang_data_2023">1</a></sup>.
 
     See [Data valuation][data-valuation] for an overview of valuation.
 
