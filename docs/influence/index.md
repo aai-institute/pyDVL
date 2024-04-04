@@ -24,7 +24,7 @@ intractable for large models like deep neural networks. Much of the recent
 research tackles this issue using approximations, like a Neuman series
 [@agarwal_secondorder_2017], with the most successful solution using a low-rank
 approximation that iteratively finds increasing eigenspaces of the Hessian
-[@schioppa_scaling_2021].
+[@schioppa_scaling_2022].
 
 pyDVL implements several methods for the efficient computation of the IF for
 machine learning. In the examples we document some of the difficulties that can

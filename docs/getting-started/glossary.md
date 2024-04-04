@@ -14,7 +14,7 @@ Terms in data valuation and influence functions:
 The Arnoldi method approximately computes eigenvalue, eigenvector pairs of
 a symmetric matrix. For influence functions, it is used to approximate
 the [iHVP][inverse-hessian-vector-product].
-Introduced by [@schioppa_scaling_2021] in the context of influence functions.
+Introduced by [@schioppa_scaling_2022] in the context of influence functions.
 
   * [Implementation (torch)
     ][pydvl.influence.torch.influence_function_model.ArnoldiInfluence]

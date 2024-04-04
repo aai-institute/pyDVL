@@ -214,6 +214,12 @@ extra:
       link: https://twitter.com/aai_transferlab
     - icon: fontawesome/brands/linkedin
       link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
+  analytics:
+    provider: simpleanalytics
+    hostname: pydvl.org
+    script_domain: scripts.simpleanalyticscdn.com
+    noscript_domain: queue.simpleanalyticscdn.com
+    collect_dnt: true
 
 markdown_extensions:
   - abbr
