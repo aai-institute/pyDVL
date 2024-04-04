@@ -42,6 +42,15 @@ of executors for the different algorithms: the first uses a map reduce pattern a
 the [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] class
 and the second implements the futures executor interface from [concurrent.futures][].
 
+As a convenience, you can also instantiate a parallel backend class
+by using the [init_parallel_backend][pydvl.parallel.init_parallel_backend]
+function:
+
+```python
+from pydvl.parallel import init_parallel_backend
+parallel_backend = init_parallel_backend(backend_name="joblib")
+```
+
 !!! info
 
     The executor classes are not meant to be instantiated and used by users
