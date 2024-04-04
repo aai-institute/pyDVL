@@ -16,7 +16,7 @@ keep in mind when using pyDVL namely Parallelization and Caching.
 pyDVL uses parallelization to scale and speed up computations. It does so
 using one of Dask, Ray or Joblib. The first is used in
 the [influence][pydvl.influence] package whereas the other two
-are used in the [value][pydvl.value] package. 
+are used in the [value][pydvl.value] package.
 
 ### Data valuation
 
@@ -36,6 +36,24 @@ and to provide a running cluster (or run ray in local mode).
     will typically make a copy of the whole model and dataset to each worker, even
     if the re-training only happens on a subset of the data. This means that you
     should make sure that each worker has enough memory to handle the whole dataset.
+
+We use backend classes for both joblib and ray as well as two types
+of executors for the different algorithms: the first uses a map reduce pattern as seen in
+the [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] class
+and the second implements the futures executor interface from [concurrent.futures][].
+
+!!! info
+
+    The executor classes are not meant to be instantiated and used by users
+    of pyDVL. They are used internally as part of the computations of the 
+    different methods.
+
+!!! info
+
+    We are currently planning to deprecate
+    [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] in favour of the
+    futures executor interface because it allows for more diverse computation
+    patterns with interruptions.
 
 #### Joblib
 
@@ -103,6 +121,50 @@ ray.init()
 parallel_backend = RayParallelBackend()
 u = Utility(...)
 vaues = combinatorial_exact_shapley(u, parallel_backend=parallel_backend)
+```
+
+#### Futures executor
+
+For the futures executor interface, we have implemented an executor 
+class for ray in [RayExecutor][pydvl.parallel.futures.ray.RayExecutor]
+and rely on joblib's loky [get_reusable_executor][loky.get_reusable_executor]
+function to instantiate an executor for local parallelization.
+
+They are both compatibles with the builtin
+[ThreadPoolExecutor][concurrent.futures.ThreadPoolExecutor]
+and [ProcessPoolExecutor][concurrent.futures.ProcessPoolExecutor]
+classes.
+
+```pycon
+>>> from joblib.externals.loky import _ReusablePoolExecutor
+>>> from pydvl.parallel import JoblibParallelBackend
+>>> parallel_backend = JoblibParallelBackend() 
+>>> with parallel_backend.executor() as executor:
+...     results = list(executor.map(lambda x: x + 1, range(3)))
+...
+>>> results
+[1, 2, 3]
+```
+
+#### Map reduce
+
+The map reduce interface is older and more limited in the patterns
+it allows us to use.
+
+To reproduce the previous example using
+[MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob]we would use:
+
+```pycon
+>>> from pydvl.parallel import JoblibParallelBackend, MapReduceJob
+>>> parallel_backend = JoblibParallelBackend() 
+>>> map_reduce_job = MapReduceJob(
+...     list(range(3)),
+...     map_func=lambda x: x[0] + 1,
+...     parallel_backend=parallel_backend,
+... )
+>>> results = map_reduce_job()
+>>> results
+[1, 2, 3]
 ```
 
 ### Influence functions
