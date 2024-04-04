@@ -141,7 +141,6 @@ plugins:
       type: iso_date
       fallback_to_build_date: true
   - social:
-      enabled: false
       cards: !ENV [CI, True] # only build in CI
 
 theme:
