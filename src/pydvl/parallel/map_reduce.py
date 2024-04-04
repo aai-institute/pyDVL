@@ -6,6 +6,7 @@ easy to run map-reduce jobs.
     This interface might be deprecated or changed in a future release before 1.0
 
 """
+import warnings
 from functools import reduce
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
@@ -18,7 +19,6 @@ from numpy.typing import NDArray
 from ..utils.functional import maybe_add_argument
 from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
 from .backend import ParallelBackend, _maybe_init_parallel_backend
-from .backends import JoblibParallelBackend
 from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
@@ -109,14 +109,6 @@ class MapReduceJob(Generic[T, R]):
     ):
         parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
-        if not isinstance(parallel_backend, JoblibParallelBackend):
-            raise ValueError(
-                f"Unexpected parallel backend {parallel_backend.__class__.__name__}. "
-                "MapReduceJob only supports the use of JoblibParallelBackend "
-                "with passing the specific"
-                "joblib backend name using `joblib.parallel_config`. "
-            )
-
         self.parallel_backend = parallel_backend
 
         self.timeout = timeout
@@ -149,7 +141,19 @@ class MapReduceJob(Generic[T, R]):
         """
         seed_seq = ensure_seed_sequence(seed)
 
-        with Parallel(prefer="processes") as parallel:
+        if hasattr(self.parallel_backend, "_joblib_backend_name"):
+            backend = getattr(self.parallel_backend, "_joblib_backend_name")
+        else:
+            warnings.warn(
+                "Parallel backend "
+                f"{self.parallel_backend.__class__.__name__}. "
+                "should have a `_joblib_backend_name` attribute in order to work "
+                "property with MapReduceJob. "
+                "Defaulting to joblib loky backend"
+            )
+            backend = "loky"
+
+        with Parallel(backend=backend, prefer="processes") as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(

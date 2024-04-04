@@ -30,6 +30,9 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
         ```
     """
 
+    _joblib_backend_name: str = "loky"
+    """Name of the backend to use for joblib inside [MapReduceJob][pydvl.parallel.mapreduce.MapReduceJob]."""
+
     @deprecated(
         target=True,
         args_mapping={"config": None},
