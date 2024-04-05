@@ -57,7 +57,7 @@ parallel_backend = init_parallel_backend(backend_name="joblib")
     of pyDVL. They are used internally as part of the computations of the 
     different methods.
 
-!!! info
+!!! danger "Deprecation notice"
 
     We are currently planning to deprecate
     [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] in favour of the
@@ -88,7 +88,7 @@ with joblib.parallel_config(backend="loky", verbose=100):
 
 #### Ray
 
-!!! info
+!!! warning "Additional dependencies"
    
     The Ray parallel backend requires optional dependencies.
     See [Extras][installation-extras] for more information.
@@ -155,13 +155,13 @@ classes.
 [1, 2, 3]
 ```
 
-#### Map reduce
+#### Map-reduce
 
-The map reduce interface is older and more limited in the patterns
+The map-reduce interface is older and more limited in the patterns
 it allows us to use.
 
 To reproduce the previous example using
-[MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob]we would use:
+[MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob], we would use:
 
 ```pycon
 >>> from pydvl.parallel import JoblibParallelBackend, MapReduceJob
