@@ -77,6 +77,7 @@ __all__ = [
     "AntitheticSampler",
     "DeterministicUniformSampler",
     "DeterministicPermutationSampler",
+    "MSRSampler",
     "PermutationSampler",
     "PowersetSampler",
     "RandomHierarchicalSampler",
