@@ -16,7 +16,7 @@ keep in mind when using pyDVL namely Parallelization and Caching.
 pyDVL uses parallelization to scale and speed up computations. It does so
 using one of Dask, Ray or Joblib. The first is used in
 the [influence][pydvl.influence] package whereas the other two
-are used in the [value][pydvl.value] package. 
+are used in the [value][pydvl.value] package.
 
 ### Data valuation
 
@@ -37,6 +37,33 @@ and to provide a running cluster (or run ray in local mode).
     if the re-training only happens on a subset of the data. This means that you
     should make sure that each worker has enough memory to handle the whole dataset.
 
+We use backend classes for both joblib and ray as well as two types
+of executors for the different algorithms: the first uses a map reduce pattern as seen in
+the [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] class
+and the second implements the futures executor interface from [concurrent.futures][].
+
+As a convenience, you can also instantiate a parallel backend class
+by using the [init_parallel_backend][pydvl.parallel.init_parallel_backend]
+function:
+
+```python
+from pydvl.parallel import init_parallel_backend
+parallel_backend = init_parallel_backend(backend_name="joblib")
+```
+
+!!! info
+
+    The executor classes are not meant to be instantiated and used by users
+    of pyDVL. They are used internally as part of the computations of the 
+    different methods.
+
+!!! danger "Deprecation notice"
+
+    We are currently planning to deprecate
+    [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob] in favour of the
+    futures executor interface because it allows for more diverse computation
+    patterns with interruptions.
+
 #### Joblib
 
 Please follow the instructions in Joblib's documentation
@@ -48,18 +75,23 @@ to compute exact shapley values you would use:
 
 ```python
 import joblib
-from pydvl.parallel import ParallelConfig
+from pydvl.parallel import JoblibParallelBackend
 from pydvl.value.shapley import combinatorial_exact_shapley
 from pydvl.utils.utility import Utility
 
-config = ParallelConfig(backend="joblib") 
+parallel_backend = JoblibParallelBackend() 
 u = Utility(...)
 
 with joblib.parallel_config(backend="loky", verbose=100):
-    combinatorial_exact_shapley(u, config=config)
+    values = combinatorial_exact_shapley(u, parallel_backend=parallel_backend)
 ```
 
 #### Ray
+
+!!! warning "Additional dependencies"
+   
+    The Ray parallel backend requires optional dependencies.
+    See [Extras][installation-extras] for more information.
 
 Please follow the instructions in Ray's documentation to
 [set up a remote cluster](https://docs.ray.io/en/latest/cluster/key-concepts.html).
@@ -90,14 +122,58 @@ To use the ray parallel backend to compute exact shapley values you would use:
 
 ```python
 import ray
-from pydvl.parallel import ParallelConfig
+from pydvl.parallel import RayParallelBackend
 from pydvl.value.shapley import combinatorial_exact_shapley
 from pydvl.utils.utility import Utility
 
 ray.init()
-config = ParallelConfig(backend="ray")
+parallel_backend = RayParallelBackend()
 u = Utility(...)
-combinatorial_exact_shapley(u, config=config)
+vaues = combinatorial_exact_shapley(u, parallel_backend=parallel_backend)
+```
+
+#### Futures executor
+
+For the futures executor interface, we have implemented an executor 
+class for ray in [RayExecutor][pydvl.parallel.futures.ray.RayExecutor]
+and rely on joblib's loky [get_reusable_executor][loky.get_reusable_executor]
+function to instantiate an executor for local parallelization.
+
+They are both compatibles with the builtin
+[ThreadPoolExecutor][concurrent.futures.ThreadPoolExecutor]
+and [ProcessPoolExecutor][concurrent.futures.ProcessPoolExecutor]
+classes.
+
+```pycon
+>>> from joblib.externals.loky import _ReusablePoolExecutor
+>>> from pydvl.parallel import JoblibParallelBackend
+>>> parallel_backend = JoblibParallelBackend() 
+>>> with parallel_backend.executor() as executor:
+...     results = list(executor.map(lambda x: x + 1, range(3)))
+...
+>>> results
+[1, 2, 3]
+```
+
+#### Map-reduce
+
+The map-reduce interface is older and more limited in the patterns
+it allows us to use.
+
+To reproduce the previous example using
+[MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob], we would use:
+
+```pycon
+>>> from pydvl.parallel import JoblibParallelBackend, MapReduceJob
+>>> parallel_backend = JoblibParallelBackend() 
+>>> map_reduce_job = MapReduceJob(
+...     list(range(3)),
+...     map_func=lambda x: x[0] + 1,
+...     parallel_backend=parallel_backend,
+... )
+>>> results = map_reduce_job()
+>>> results
+[1, 2, 3]
 ```
 
 ### Influence functions

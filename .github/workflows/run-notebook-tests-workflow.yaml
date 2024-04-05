@@ -3,6 +3,14 @@ name: Run Notebook Tests
 on:
   workflow_call:
     inputs:
+      split_size:
+        description: "Determines the number of groups into which the tests should be split"
+        type: string
+        default: 4
+      group_number:
+        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
+        type: string
+        required: true      
       python_version:
         description: "Determines which Python version to use"
         type: string
@@ -30,5 +38,5 @@ jobs:
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Notebooks
-      run: tox -e notebook-tests
-      continue-on-error: true
+      run: tox -e notebook-tests -- --durations-path .notebook_test_durations --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
+

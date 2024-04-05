@@ -3,10 +3,16 @@ import warnings
 from typing import Iterable, Optional
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
-from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.types import Seed
 from pydvl.utils.utility import Utility
@@ -19,12 +25,19 @@ logger = logging.getLogger(__name__)
 __all__ = ["montecarlo_least_core", "mclc_prepare_problem"]
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def montecarlo_least_core(
     u: Utility,
     n_iterations: int,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
     progress: bool = False,
@@ -51,8 +64,13 @@ def montecarlo_least_core(
         u: Utility object with model, data, and scoring function
         n_iterations: total number of iterations to use
         n_jobs: number of jobs across which to distribute the computation
-        config: Object configuring parallel computation, with cluster
-            address, number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         solver_options: Dictionary of options that will be used to select a solver
@@ -64,9 +82,20 @@ def montecarlo_least_core(
 
     Returns:
         Object with the data values and the least core value.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     problem = mclc_prepare_problem(
-        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress, seed=seed
+        u,
+        n_iterations,
+        n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
+        config=config,
+        progress=progress,
+        seed=seed,
     )
     return lc_solve_problem(
         problem,
@@ -77,12 +106,19 @@ def montecarlo_least_core(
     )
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def mclc_prepare_problem(
     u: Utility,
     n_iterations: int,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> LeastCoreProblem:
@@ -94,6 +130,11 @@ def mclc_prepare_problem(
     See
     [montecarlo_least_core][pydvl.value.least_core.montecarlo.montecarlo_least_core]
     for argument descriptions.
+
+    !!! note "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     n = len(u.data)
 
@@ -112,7 +153,11 @@ def mclc_prepare_problem(
         )
         n_iterations = 2**n
 
-    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+    iterations_per_job = max(
+        1, n_iterations // parallel_backend.effective_n_jobs(n_jobs)
+    )
 
     map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
         inputs=u,
@@ -120,7 +165,7 @@ def mclc_prepare_problem(
         reduce_func=_reduce_func,
         map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
         n_jobs=n_jobs,
-        config=config,
+        parallel_backend=parallel_backend,
     )
 
     return map_reduce_job(seed=seed)

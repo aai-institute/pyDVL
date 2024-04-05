@@ -28,11 +28,17 @@ from typing import Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import cvxpy as cp
 import numpy as np
+from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm.auto import trange
 
-from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
@@ -164,6 +170,12 @@ def _group_testing_shapley(
     return uu, betas
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def group_testing_shapley(
     u: Utility,
     n_samples: int,
@@ -171,7 +183,8 @@ def group_testing_shapley(
     delta: float,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
     **options: dict,
@@ -201,8 +214,13 @@ def group_testing_shapley(
             estimation of `n_iterations`.
         n_jobs: Number of parallel jobs to use. Each worker performs a chunk
             of all tests (i.e. utility evaluations).
-        config: Object configuring parallel computation, with cluster
-            address, number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
         seed: Either an instance of a numpy random number generator or a seed for it.
         options: Additional options to pass to
@@ -218,6 +236,11 @@ def group_testing_shapley(
     !!! tip "Changed in version 0.5.0"
         Changed the solver to cvxpy instead of scipy's linprog. Added the ability
         to pass arbitrary options to it.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
 
     n = len(u.data.indices)
@@ -235,7 +258,9 @@ def group_testing_shapley(
             f"ε={epsilon:.02f} guarantee at δ={1 - delta:.02f} probability"
         )
 
-    samples_per_job = max(1, n_samples // effective_n_jobs(n_jobs, config))
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+    samples_per_job = max(1, n_samples // parallel_backend.effective_n_jobs(n_jobs))
 
     def reducer(
         results_it: Iterable[Tuple[NDArray, NDArray]]
@@ -252,7 +277,7 @@ def group_testing_shapley(
         map_func=_group_testing_shapley,
         reduce_func=reducer,
         map_kwargs=dict(n_samples=samples_per_job, progress=progress),
-        config=config,
+        parallel_backend=parallel_backend,
         n_jobs=n_jobs,
     )
     uu, betas = map_reduce_job(seed=map_reduce_seed_sequence)
