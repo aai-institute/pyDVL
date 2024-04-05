@@ -7,35 +7,26 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from pydvl.parallel import MapReduceJob, init_parallel_backend
-from pydvl.parallel.backend import effective_n_jobs
-from pydvl.parallel.futures import init_executor
+from pydvl.parallel import MapReduceJob, RayParallelBackend, init_parallel_backend
 from pydvl.utils.types import Seed
 
 from ..conftest import num_workers
 
 
-def test_effective_n_jobs(parallel_config):
-    parallel_backend = init_parallel_backend(parallel_config)
+def test_effective_n_jobs(parallel_backend):
     assert parallel_backend.effective_n_jobs(1) == 1
     assert parallel_backend.effective_n_jobs(4) == min(4, num_workers())
-    if parallel_config.address is None:
-        assert parallel_backend.effective_n_jobs(-1) == num_workers()
-    else:
-        assert parallel_backend.effective_n_jobs(-1) == num_workers()
+    assert parallel_backend.effective_n_jobs(-1) == num_workers()
 
     for n_jobs in [-1, 1, 2]:
-        assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
-            n_jobs, parallel_config
-        )
-        assert effective_n_jobs(n_jobs, parallel_config) > 0
+        assert parallel_backend.effective_n_jobs(n_jobs) > 0
 
     with pytest.raises(ValueError):
         parallel_backend.effective_n_jobs(0)
 
 
 @pytest.fixture()
-def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
+def map_reduce_job_and_parameters(parallel_backend, n_jobs, request):
     try:
         kind, map_func, reduce_func = request.param
         assert kind == "custom"
@@ -46,7 +37,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
             MapReduceJob,
             map_func=np.sum,
             reduce_func=np.sum,
-            config=parallel_config,
+            parallel_backend=parallel_backend,
             n_jobs=n_jobs,
         )
     elif kind == "list":
@@ -54,7 +45,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
             MapReduceJob,
             map_func=lambda x: x,
             reduce_func=lambda r: reduce(operator.add, r, []),
-            config=parallel_config,
+            parallel_backend=parallel_backend,
             n_jobs=n_jobs,
         )
     elif kind == "range":
@@ -62,7 +53,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
             MapReduceJob,
             map_func=lambda x: list(x),
             reduce_func=lambda r: reduce(operator.add, list(r), []),
-            config=parallel_config,
+            parallel_backend=parallel_backend,
             n_jobs=n_jobs,
         )
     elif kind == "custom":
@@ -70,7 +61,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
             MapReduceJob,
             map_func=map_func,
             reduce_func=reduce_func,
-            config=parallel_config,
+            parallel_backend=parallel_backend,
             n_jobs=n_jobs,
         )
     else:
@@ -78,7 +69,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
             MapReduceJob,
             map_func=lambda x: x * x,
             reduce_func=lambda r: r,
-            config=parallel_config,
+            parallel_backend=parallel_backend,
             n_jobs=n_jobs,
         )
     return map_reduce_job, n_jobs
@@ -116,14 +107,16 @@ def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
         (np.arange(10), 4, np.array_split(np.arange(10), 4)),
     ],
 )
-def test_chunkification(parallel_config, data, n_chunks, expected_chunks):
-    map_reduce_job = MapReduceJob([], map_func=lambda x: x, config=parallel_config)
+def test_chunkification(parallel_backend, data, n_chunks, expected_chunks):
+    map_reduce_job = MapReduceJob(
+        [], map_func=lambda x: x, parallel_backend=parallel_backend
+    )
     chunks = list(map_reduce_job._chunkify(data, n_chunks))
     for x, y in zip(chunks, expected_chunks):
         assert np.all(x == y)
 
 
-def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
+def test_map_reduce_job_partial_map_and_reduce_func(parallel_backend):
     def map_func(x, y):
         return x + y
 
@@ -137,7 +130,7 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
         np.arange(10),
         map_func=map_func,
         reduce_func=reduce_func,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     result = map_reduce_job()
     assert result == 150
@@ -149,7 +142,7 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
         (42, 12),
     ],
 )
-def test_map_reduce_seeding(parallel_config, seed_1, seed_2):
+def test_map_reduce_seeding(parallel_backend, seed_1, seed_2):
     """Test that the same result is obtained when using the same seed. And that
     different results are obtained when using different seeds.
     """
@@ -163,7 +156,7 @@ def test_map_reduce_seeding(parallel_config, seed_1, seed_2):
         None,
         map_func=_sum_of_random_integers,
         reduce_func=np.mean,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
     )
     result_1 = map_reduce_job(seed=seed_1)
     result_2 = map_reduce_job(seed=seed_1)
@@ -172,15 +165,14 @@ def test_map_reduce_seeding(parallel_config, seed_1, seed_2):
     assert result_1 != result_3
 
 
-def test_wrap_function(parallel_config):
-    if parallel_config.backend != "ray":
+def test_wrap_function(parallel_backend):
+    if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Only makes sense for ray")
 
     def fun(x, **kwargs):
         return dict(x=x * x, **kwargs)
 
-    parallel_backend = init_parallel_backend(parallel_config)
-    # Try two kwargs for @ray.remote. Should be ignored in the sequential backend
+    # Try two kwargs for @ray.remote. Should be ignored in the joblib backend
     wrapped_func = parallel_backend.wrap(fun, num_cpus=1, max_calls=1)
     x = parallel_backend.put(2)
     ret = parallel_backend.get(wrapped_func(x))
@@ -198,29 +190,26 @@ def test_wrap_function(parallel_config):
     assert len(set(pids)) == num_workers()
 
 
-def test_futures_executor_submit(parallel_config):
-    with init_executor(config=parallel_config) as executor:
+def test_futures_executor_submit(parallel_backend):
+    with parallel_backend.executor() as executor:
         future = executor.submit(lambda x: x + 1, 1)
         result = future.result()
     assert result == 2
 
 
-def test_futures_executor_map(parallel_config):
-    with init_executor(config=parallel_config) as executor:
+def test_futures_executor_map(parallel_backend):
+    with parallel_backend.executor() as executor:
         results = list(executor.map(lambda x: x + 1, range(3)))
     assert results == [1, 2, 3]
 
 
-def test_futures_executor_map_with_max_workers(parallel_config):
-    if parallel_config.backend != "ray":
-        pytest.skip("Currently this test only works with Ray")
-
+def test_futures_executor_map_with_max_workers(parallel_backend):
     def func(_):
         time.sleep(1)
         return time.monotonic()
 
     start_time = time.monotonic()
-    with init_executor(config=parallel_config) as executor:
+    with parallel_backend.executor(max_workers=num_workers()) as executor:
         assert executor._max_workers == num_workers()
         list(executor.map(func, range(3)))
     end_time = time.monotonic()
@@ -231,24 +220,20 @@ def test_futures_executor_map_with_max_workers(parallel_config):
 
 @pytest.mark.timeout(30)
 @pytest.mark.tolerate(max_failures=1)
-def test_future_cancellation(parallel_config):
-    if parallel_config.backend != "ray":
+def test_future_cancellation(parallel_backend):
+    if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Currently this test only works with Ray")
 
     from pydvl.parallel import CancellationPolicy
 
-    with init_executor(
-        config=parallel_config, cancel_futures=CancellationPolicy.NONE
-    ) as executor:
+    with parallel_backend.executor(cancel_futures=CancellationPolicy.NONE) as executor:
         future = executor.submit(lambda x: x + 1, 1)
 
     assert future.result() == 2
 
     from ray.exceptions import RayTaskError, TaskCancelledError
 
-    with init_executor(
-        config=parallel_config, cancel_futures=CancellationPolicy.ALL
-    ) as executor:
+    with parallel_backend.executor(cancel_futures=CancellationPolicy.ALL) as executor:
         future = executor.submit(lambda t: time.sleep(t), 5)
 
     while future._state != "FINISHED":

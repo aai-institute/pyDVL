@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 )
 def test_games(
     test_game,
-    parallel_config,
+    parallel_backend,
     n_jobs,
     done,
     truncation_cls,
@@ -52,7 +52,7 @@ def test_games(
         done=done,
         truncation=truncation,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         seed=seed,
         progress=True,
     )
