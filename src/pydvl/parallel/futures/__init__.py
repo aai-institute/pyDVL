@@ -2,18 +2,23 @@ from concurrent.futures import Executor
 from contextlib import contextmanager
 from typing import Generator, Optional
 
-from pydvl.parallel.backend import BaseParallelBackend
-from pydvl.parallel.config import ParallelConfig
+from deprecate import deprecated
 
-try:
-    from pydvl.parallel.futures.ray import RayExecutor
-except ModuleNotFoundError:
-    pass
+from pydvl.parallel.backend import ParallelBackend
+from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["init_executor"]
 
 
+# TODO: delete this function once it's made redundant in v0.10.0
+# This string for the benefit of deprecation searches:
+# remove_in="0.10.0"
 @contextmanager
+@deprecated(
+    target=None,
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def init_executor(
     max_workers: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
@@ -46,7 +51,7 @@ def init_executor(
         ```
     """
     try:
-        cls = BaseParallelBackend.BACKENDS[config.backend]
+        cls = ParallelBackend.BACKENDS[config.backend]
         with cls.executor(max_workers=max_workers, config=config, **kwargs) as e:
             yield e
     except KeyError:

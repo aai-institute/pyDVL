@@ -36,6 +36,8 @@
 - Documentation improvements and cleanup
   [PR #521](https://github.com/aai-institute/pyDVL/pull/521),
   [PR #522](https://github.com/aai-institute/pyDVL/pull/522)
+- Simplified parallel backend configuration
+  [PR #549](https://github.com/mkdocstrings/mkdocstrings/issues/615)
 
 ## 0.8.1 - 🆕 🏗  New method and notebook, Games with exact shapley values, bug fixes and cleanup
 

@@ -6,17 +6,19 @@ easy to run map-reduce jobs.
     This interface might be deprecated or changed in a future release before 1.0
 
 """
+import warnings
 from functools import reduce
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
+from deprecate import deprecated
 from joblib import Parallel, delayed
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from ..utils.functional import maybe_add_argument
 from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
-from .backend import init_parallel_backend
+from .backend import ParallelBackend, _maybe_init_parallel_backend
 from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
@@ -46,7 +48,12 @@ class MapReduceJob(Generic[T, R]):
             each job. Alternatively, one can use [functools.partial][].
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
             in each job. Alternatively, one can use [functools.partial][].
-        config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
 
@@ -81,24 +88,32 @@ class MapReduceJob(Generic[T, R]):
         ```
     """
 
+    @deprecated(
+        target=True,
+        args_mapping={"config": "config"},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
     def __init__(
         self,
         inputs: Union[Collection[T], T],
         map_func: MapFunction[R],
         reduce_func: ReduceFunction[R] = identity,
+        parallel_backend: Optional[ParallelBackend] = None,
+        config: Optional[ParallelConfig] = None,
+        *,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
-        config: ParallelConfig = ParallelConfig(),
-        *,
         n_jobs: int = -1,
         timeout: Optional[float] = None,
     ):
-        self.config = config
-        parallel_backend = init_parallel_backend(self.config)
+        parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
         self.parallel_backend = parallel_backend
 
         self.timeout = timeout
 
+        self._n_jobs = -1
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
@@ -125,7 +140,20 @@ class MapReduceJob(Generic[T, R]):
              The result of the reduce function.
         """
         seed_seq = ensure_seed_sequence(seed)
-        with Parallel() as parallel:
+
+        if hasattr(self.parallel_backend, "_joblib_backend_name"):
+            backend = getattr(self.parallel_backend, "_joblib_backend_name")
+        else:
+            warnings.warn(
+                "Parallel backend "
+                f"{self.parallel_backend.__class__.__name__}. "
+                "should have a `_joblib_backend_name` attribute in order to work "
+                "property with MapReduceJob. "
+                "Defaulting to joblib loky backend"
+            )
+            backend = "loky"
+
+        with Parallel(backend=backend, prefer="processes") as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(
