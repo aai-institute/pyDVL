@@ -38,5 +38,5 @@ jobs:
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Notebooks
-      run: tox -e notebook-tests -- --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
+      run: tox -e notebook-tests -- --durations-path .notebook_test_durations --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
 
