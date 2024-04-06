@@ -314,37 +314,58 @@ that a link will remain valid, add a custom anchor to the section title:
 (note the space after the opening brace). You can then refer to it within
 another markdown file with `[Some section][permanent-anchor-to-some-section]`.
 
-### Adding notes about new features or changes
+### Adding notes about new features, changes or deprecations
 
 We use the admonition extension of
 [Mkdocs Material](https://squidfunk.github.io/mkdocs-material/reference/admonitions/)
 to create admonitions, also known as call-outs, that hold information
-about when a certain feature was added or changed and optionally
-some description of the change. We put the admonition directly
+about when a certain feature was added, changed or deprecated and optionally
+a description with more details. We put the admonition directly
 in a module's, a function's or class' docstring.
 
-For a new feature, we use the following admonition:
+We use the following syntax:
 
 ```
-!!! tip "New in version <Version Number>"
+!!! tip "<Event Type> in version <Version Number>"
+
+    <Optional Description>
 ```
 
-For a change to an existing feature we use instead:
+The description is useful when the note is about a smaller change
+such as a parameter.
 
-```
-!!! tip "Changed in version <Version Number>"
+- For a new feature, we use:
 
-    <Description>
-```
+  ```
+  !!! tip "New in version <Version Number>"
+  
+      <Optional Description>
+  ```
 
-For example, for a change in version `1.2.3` that adds kwargs
-to a class' constructor we would write:
+- For a change to an existing feature we use:
 
-```
-!!! tip "Changed in version 1.2.3"
+  ```
+  !!! tip "Changed in version <Version Number>"
 
-    Added kwargs to the constructor.
-```
+      <Optional Description>
+  ```
+
+  For example, for a change in version `1.2.3` that adds kwargs
+  to a class' constructor we would write:
+
+  ```
+  !!! tip "Changed in version 1.2.3"
+
+      Added kwargs to the constructor.
+  ```
+
+- For a deprecation we use:
+
+  ```
+  !!! tip "Deprecated in version <Version Number>"
+
+      <Optional Description>
+  ```
 
 ### Using bibliography
 
