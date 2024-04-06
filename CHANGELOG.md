@@ -13,6 +13,8 @@
   [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
 - Glossary of data valuation and influence terms in the documentation
   [PR #537](https://github.com/aai-institute/pyDVL/pull/537
+- Documentation about writing notes for new features, changes or deprecations.
+  [PR #557](https://github.com/aai-institute/pyDVL/pull/557)
 
 ### Fixed
 
