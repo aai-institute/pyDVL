@@ -314,6 +314,37 @@ that a link will remain valid, add a custom anchor to the section title:
 (note the space after the opening brace). You can then refer to it within
 another markdown file with `[Some section][permanent-anchor-to-some-section]`.
 
+### Adding notes about new features or changes
+
+We use the admonition extension of
+[Mkdocs Material](https://squidfunk.github.io/mkdocs-material/reference/admonitions/)
+to create admonitions, also known as call-outs, that hold information
+about when a certain feature was added or changed and optionally
+some description of the change. We put the admonition directly
+in a module's, a function's or class' docstring.
+
+For a new feature, we use the following admonition:
+
+```
+!!! tip "New in version <Version Number>"
+```
+
+For a change to an existing feature we use instead:
+
+```
+!!! tip "Changed in version <Version Number>"
+
+    <Description>
+```
+
+For example, for a change in version `1.2.3` that adds kwargs
+to a class' constructor we would write:
+
+```
+!!! tip "Changed in version 1.2.3"
+
+    Added kwargs to the constructor.
+```
 
 ### Using bibliography
 
