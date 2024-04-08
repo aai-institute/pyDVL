@@ -4,7 +4,9 @@ markdown-captions
 mkdocs==1.5.3
 mkdocstrings[python]>=0.24
 mkdocstrings-python==1.9.0
-mkdocs-alias-plugin>=0.6.0
+# There is a bug in version 0.8.0 with type hints
+# https://github.com/aai-institute/pyDVL/actions/runs/8598810209/job/23560394768
+mkdocs-alias-plugin==0.7.1
 mkdocs-autorefs==1.0.1
 mkdocs-bibtex==2.15.0
 mkdocs-gen-files
