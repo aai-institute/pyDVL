@@ -2,6 +2,10 @@ from typing import Optional
 
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
+from torch import nn, optim
+from torch.utils.data import TensorDataset, DataLoader
+from numpy.typing import NDArray
+from pydvl.utils.types import SupervisedModel
 
 
 def load_digits_dataset(
@@ -40,3 +44,64 @@ def load_digits_dataset(
         x_val, y_val = None, None
 
     return ((x_train, y_train), (x_val, y_val), (x_test, y_test))
+
+
+class TorchCNNModel(SupervisedModel):
+    def __init__(
+        self,
+        lr: float,
+        epochs: int,
+        batch_size: int,
+        device: str,
+    ):
+        self.lr = lr
+        self.batch_size = batch_size
+        self.model = nn.Sequential(
+            nn.Conv2d(
+                out_channels=8, in_channels=1, kernel_size=(3, 3), padding="same"
+            ),
+            nn.Conv2d(
+                out_channels=4, in_channels=8, kernel_size=(3, 3), padding="same"
+            ),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Flatten(),
+            nn.Linear(in_features=64, out_features=32),
+            nn.Linear(in_features=32, out_features=10),
+            nn.Softmax(dim=1),
+        )
+        self.loss = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.epochs = epochs
+        self.model.to(device)
+
+    def fit(self, x: NDArray, y: NDArray) -> None:
+        torch_dataset = TensorDataset(
+            torch.tensor(
+                np.reshape(x, (x.shape[0], 1, 8, 8)), dtype=torch.float, device=device
+            ),
+            torch.tensor(y, device=device),
+        )
+        torch_dataloader = DataLoader(torch_dataset, batch_size=self.batch_size)
+        for epoch in range(self.epochs):
+            for features, labels in torch_dataloader:
+                pred = self.model(features)
+                loss = self.loss(pred, labels)
+                loss.backward()
+                self.optimizer.step()
+
+    def predict(self, x: NDArray) -> NDArray:
+        pred = self.model(
+            torch.tensor(
+                np.reshape(x, (x.shape[0], 1, 8, 8)), dtype=torch.float, device=device
+            )
+        )
+        pred = torch.argmax(pred, dim=1)
+        return pred.cpu().numpy()
+
+    def score(self, x: NDArray, y: NDArray) -> float:
+        pred = self.predict(x)
+        acc = accuracy_score(pred, y)
+        return acc
+
+    def get_params(self, deep: bool = False):
+        return {"lr": self.lr, "epochs": self.epochs}
