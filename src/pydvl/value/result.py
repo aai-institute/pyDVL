@@ -41,6 +41,7 @@ together. Empty results are discarded when added to other results. Finally,
 samples random values uniformly.
 
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -357,16 +358,13 @@ class ValuationResult(
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
-        ...
+    def __getitem__(self, key: int) -> ValueItem: ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: slice) -> List[ValueItem]: ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -392,16 +390,13 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: int, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
@@ -676,12 +671,15 @@ class ValuationResult(
         column = column or self._algorithm
         df = pd.DataFrame(
             self._values[self._sort_positions],
-            index=self._names[self._sort_positions]
-            if use_names
-            else self._indices[self._sort_positions],
+            index=(
+                self._names[self._sort_positions]
+                if use_names
+                else self._indices[self._sort_positions]
+            ),
             columns=[column],
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
+        df[column + "_updates"] = self.counts[self._sort_positions]
         return df
 
     @classmethod
