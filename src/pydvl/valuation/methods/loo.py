@@ -1,101 +1,50 @@
+"""
+This module implements Leave-One-Out (LOO) valuation.
+
+This is the simplest example of marginal-contribution-based valuation method. It is
+defined as:
+
+$$
+v_\text{LOO}(i) = U(I) - U(I \setminus \{i\}),
+$$
+
+where $U$ is the utility function, $I$ is the set of all data points, and $i$ is the
+data point of interest.
+
+Strictly speaking, LOO can be seen as a [semivalue][pydvl.valuation.semivalue] where the
+coefficients are zero except for $k=|D|-1$,
+"""
 from __future__ import annotations
 
-from concurrent.futures import FIRST_COMPLETED, Future, wait
-from typing import Optional
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers import LOOSampler
+from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.stopping import MinUpdates
+from pydvl.valuation.utility.base import UtilityBase
 
-from deprecate import deprecated
-from tqdm import tqdm
-
-from pydvl.parallel import ParallelBackend, ParallelConfig, _maybe_init_parallel_backend
-from pydvl.utils import Utility
-from pydvl.value.result import ValuationResult
-
-__all__ = ["compute_loo"]
+__all__ = ["LOOValuation"]
 
 
-@deprecated(
-    target=True,
-    args_mapping={"config": "config"},
-    deprecated_in="0.9.0",
-    remove_in="0.10.0",
-)
-def compute_loo(
-    u: Utility,
-    *,
-    n_jobs: int = 1,
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
-    progress: bool = True,
-) -> ValuationResult:
-    r"""Computes leave one out value:
-
-    $$v(i) = u(D) - u(D \setminus \{i\}) $$
-
-    Args:
-        u: Utility object with model, data, and scoring function
-        progress: If True, display a progress bar
-        n_jobs: Number of parallel jobs to use
-        parallel_backend: Parallel backend instance to use
-            for parallelizing computations. If `None`,
-            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
-            See the [Parallel Backends][pydvl.parallel.backends] package
-            for available options.
-        config: (**DEPRECATED**) Object configuring parallel computation,
-            with cluster address, number of cpus, etc.
-        progress: If True, display a progress bar
-
-    Returns:
-        Object with the data values.
-
-    !!! tip "New in version 0.7.0"
-        Renamed from `naive_loo` and added parallel computation.
-
-    !!! tip "Changed in version 0.9.0"
-        Deprecated `config` argument and added a `parallel_backend`
-        argument to allow users to pass the Parallel Backend instance
-        directly.
+class LOOValuation(SemivalueValuation):
     """
-    if len(u.data) < 3:
-        raise ValueError("Dataset must have at least 2 elements")
+    Computes LOO values for a dataset.
+    """
 
-    result = ValuationResult.zeros(
-        algorithm="loo",
-        indices=u.data.indices,
-        data_names=u.data.data_names,
-    )
+    algorithm_name = "Leave-One-Out"
 
-    all_indices = set(u.data.indices)
-    total_utility = u(u.data.indices)
+    def __init__(self, utility: UtilityBase, progress: bool = False):
+        self.result: ValuationResult | None = None
+        super().__init__(
+            utility,
+            LOOSampler(),
+            # LOO is done when every index has been updated once
+            MinUpdates(n_updates=1),
+            progress=progress,
+        )
 
-    def fun(idx: int) -> tuple[int, float]:
-        return idx, total_utility - u(all_indices.difference({idx}))
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
-    max_workers = parallel_backend.effective_n_jobs(n_jobs)
-    n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
-
-    # NOTE: this could be done with a simple executor.map(), but we want to
-    # display a progress bar
-
-    with parallel_backend.executor(
-        max_workers=max_workers, cancel_futures=True
-    ) as executor:
-        pending: set[Future] = set()
-        index_it = iter(u.data.indices)
-
-        pbar = tqdm(disable=not progress, total=100, unit="%")
-        while True:
-            pbar.n = 100 * sum(result.counts) / len(u.data)
-            pbar.refresh()
-            completed, pending = wait(pending, timeout=0.1, return_when=FIRST_COMPLETED)
-            for future in completed:
-                idx, marginal = future.result()
-                result.update(idx, marginal)
-
-            # Ensure that we always have n_submitted_jobs running
-            try:
-                for _ in range(n_submitted_jobs - len(pending)):
-                    pending.add(executor.submit(fun, next(index_it)))
-            except StopIteration:
-                if len(pending) == 0:
-                    return result
+    def coefficient(self, n: int, k: int) -> float:
+        """
+        This is never actually used to filter out sets, because the LOOSampler returns
+        only complements of {idx}, but it is required by the abstract class.
+        """
+        return 1 if k == n - 1 else 0

@@ -1,20 +1,72 @@
-from enum import Enum
+from __future__ import annotations
+
+import hashlib
+from dataclasses import dataclass
+from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
+
+import numpy as np
+from numpy.typing import NDArray
+
+__all__ = [
+    "BatchGenerator",
+    "IndexT",
+    "IndexSetT",
+    "LossFunction",
+    "NameT",
+    "NullaryPredicate",
+    "Sample",
+    "SampleBatch",
+    "SampleGenerator",
+    "SampleT",
+    "UtilityEvaluation",
+    "ValueUpdate",
+]
+
+IndexT = np.int_
+IndexSetT = NDArray[IndexT]
+NameT = Union[np.object_, np.int_]
+NullaryPredicate = Callable[[], bool]
 
 
-class ShapleyMode(str, Enum):
-    """Supported algorithms for the computation of Shapley values.
+@dataclass(frozen=True)
+class ValueUpdate:
+    idx: IndexT
+    update: float
 
-    !!! Todo
-        Make algorithms register themselves here.
-    """
 
-    ApproShapley = "appro_shapley"  # Alias for PermutationMontecarlo
-    CombinatorialExact = "combinatorial_exact"
-    CombinatorialMontecarlo = "combinatorial_montecarlo"
-    GroupTesting = "group_testing"
-    KNN = "knn"
-    Owen = "owen"
-    OwenAntithetic = "owen_antithetic"
-    PermutationExact = "permutation_exact"
-    PermutationMontecarlo = "permutation_montecarlo"
-    TruncatedMontecarlo = "truncated_montecarlo"  # Alias for PermutationMontecarlo
+@dataclass(frozen=True)
+class Sample:
+    idx: IndexT | None
+    subset: NDArray[IndexT]
+
+    # Make the unpacking operator work
+    def __iter__(self):  # No way to type the return Iterator properly
+        return iter((self.idx, self.subset))
+
+    # hashlib.sha256 is about 4-5x faster than hash(), and returns the same value
+    # in all processes, as opposed to hash() which is salted in each process
+    def __hash__(self):
+        sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
+        return int(sha256_hash, base=16)
+
+
+SampleT = TypeVar("SampleT", bound=Sample)
+
+SampleBatch = Iterable[Sample]
+SampleGenerator = Generator[Sample, None, None]
+BatchGenerator = Generator[SampleBatch, bool, None]
+
+
+@dataclass(frozen=True)
+class UtilityEvaluation:
+    idx: IndexT
+    subset: IndexSetT
+    evaluation: float
+
+    def __iter__(self):  # No way to type the return Iterator properly
+        return iter((self.idx, self.subset, self.evaluation))
+
+
+class LossFunction(Protocol):
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
+        ...

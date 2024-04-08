@@ -1,6 +1,7 @@
+from __future__ import annotations
 from concurrent.futures import Executor
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Generator
 
 from deprecate import deprecated
 
@@ -20,8 +21,8 @@ __all__ = ["init_executor"]
     remove_in="0.10.0",
 )
 def init_executor(
-    max_workers: Optional[int] = None,
-    config: ParallelConfig = ParallelConfig(),
+    max_workers: int | None = None,
+    config: ParallelConfig | None = None,
     **kwargs,
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor for the given parallel configuration.
@@ -50,6 +51,8 @@ def init_executor(
         assert results == [1, 2, 3, 4, 5]
         ```
     """
+    if config is None:
+        config = ParallelConfig()
     try:
         cls = ParallelBackend.BACKENDS[config.backend]
         with cls.executor(max_workers=max_workers, config=config, **kwargs) as e:

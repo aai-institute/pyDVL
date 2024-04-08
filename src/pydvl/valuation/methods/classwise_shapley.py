@@ -55,559 +55,179 @@ $y_i$ and $-y_i$, respectively.
     Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
     the Thirty-Sixth Conference on Neural Information Processing Systems
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
-
 """
+from __future__ import annotations
+
 import logging
-import numbers
-from concurrent.futures import FIRST_COMPLETED, Future, wait
-from copy import copy
-from typing import Callable, Optional, Set, Tuple, Union, cast
+from typing import Callable, Generator
 
 import numpy as np
-from deprecate import deprecated
-from numpy.random import SeedSequence
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.parallel import ParallelBackend, ParallelConfig, _maybe_init_parallel_backend
-from pydvl.utils import (
-    Dataset,
-    Scorer,
-    ScorerCallable,
-    Seed,
-    SupervisedModel,
-    Utility,
-    ensure_seed_sequence,
-    random_powerset_label_min,
+from pydvl.valuation.base import (
+    Valuation,
+    ensure_backend_has_generator_return,
+    make_parallel_flag,
 )
-from pydvl.value.result import ValuationResult
-from pydvl.value.shapley.truncated import TruncationPolicy
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
+from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers import IndexSampler, PowersetSampler
+from pydvl.valuation.samplers.base import EvaluationStrategy
+from pydvl.valuation.samplers.powerset import NoIndexIteration
+from pydvl.valuation.scorers.classwise import ClasswiseScorer
+from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import BatchGenerator, IndexSetT
+from pydvl.valuation.utility.base import UtilityBase
+from pydvl.valuation.utility.classwise import CSSample
+
+__all__ = ["ClasswiseShapley"]
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ClasswiseScorer", "compute_classwise_shapley_values"]
+
+def unique_labels(array: NDArray) -> NDArray:
+    """Labels of the dataset."""
+    # Object, String, Unicode, Unsigned integer, Signed integer, boolean
+    if array.dtype.kind in "OSUiub":
+        return np.unique(array)
+    raise ValueError("Dataset must be categorical to have unique labels.")
 
 
-class ClasswiseScorer(Scorer):
-    r"""A Scorer designed for evaluation in classification problems. Its value
-    is computed from an in-class and an out-of-class "inner score" (Schoch et
-    al., 2022) <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the
-    training set and $D$ be the valuation set. For each label $c$, $D$ is
-    factorized into two disjoint sets: $D_c$ for in-class instances and $D_{-c}$
-    for out-of-class instances. The score combines an in-class metric of
-    performance, adjusted by a discounted out-of-class metric. These inner
-    scores must be provided upon construction or default to accuracy. They are
-    combined into:
-
-    $$
-    u(S_{y_i}) = f(a_S(D_{y_i}))\ g(a_S(D_{-y_i})),
-    $$
-
-    where $f$ and $g$ are continuous, monotonic functions. For a detailed
-    explanation, refer to section four of (Schoch et al., 2022)<sup><a
-    href="#schoch_csshapley_2022"> 1</a></sup>.
-
-    !!! warning Multi-class support
-        Metrics must support multiple class labels if you intend to apply them
-        to a multi-class problem. For instance, the metric 'accuracy' supports
-        multiple classes, but the metric `f1` does not. For a two-class
-        classification problem, using `f1_weighted` is essentially equivalent to
-        using `accuracy`.
-
-    Args:
-        scoring: Name of the scoring function or a callable that can be passed
-            to [Scorer][pydvl.utils.score.Scorer].
-        default: Score to use when a model fails to provide a number, e.g. when
-            too little was used to train it, or errors arise.
-        range: Numerical range of the score function. Some Monte Carlo methods
-            can use this to estimate the number of samples required for a
-            certain quality of approximation. If not provided, it can be read
-            from the `scoring` object if it provides it, for instance if it was
-            constructed with
-            [compose_score][pydvl.utils.score.compose_score].
-        in_class_discount_fn: Continuous, monotonic increasing function used to
-            discount the in-class score.
-        out_of_class_discount_fn: Continuous, monotonic increasing function used
-            to discount the out-of-class score.
-        initial_label: Set initial label (for the first iteration)
-        name: Name of the scorer. If not provided, the name of the inner scoring
-            function will be prefixed by `classwise `.
-
-    !!! tip "New in version 0.7.1"
-    """
-
+class ClasswiseSampler(IndexSampler):
     def __init__(
         self,
-        scoring: Union[str, ScorerCallable] = "accuracy",
-        default: float = 0.0,
-        range: Tuple[float, float] = (0, 1),
-        in_class_discount_fn: Callable[[float], float] = lambda x: x,
-        out_of_class_discount_fn: Callable[[float], float] = np.exp,
-        initial_label: Optional[int] = None,
-        name: Optional[str] = None,
+        in_class: IndexSampler,
+        out_of_class: PowersetSampler,
+        label: int | None = None,
     ):
-        disc_score_in_class = in_class_discount_fn(range[1])
-        disc_score_out_of_class = out_of_class_discount_fn(range[1])
-        transformed_range = (0, disc_score_in_class * disc_score_out_of_class)
-        super().__init__(
-            scoring=scoring,
-            range=transformed_range,
-            default=default,
-            name=name or f"classwise {str(scoring)}",
-        )
-        self._in_class_discount_fn = in_class_discount_fn
-        self._out_of_class_discount_fn = out_of_class_discount_fn
-        self.label = initial_label
+        super().__init__()
+        self.in_class = in_class
+        self.out_of_class = out_of_class
+        self.label = label
 
-    def __str__(self):
-        return self._name
+    def for_label(self, label: int) -> ClasswiseSampler:
+        return ClasswiseSampler(self.in_class, self.out_of_class, label)
 
-    def __call__(
-        self: "ClasswiseScorer",
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-    ) -> float:
-        (
-            in_class_score,
-            out_of_class_score,
-        ) = self.estimate_in_class_and_out_of_class_score(model, x_test, y_test)
-        disc_score_in_class = self._in_class_discount_fn(in_class_score)
-        disc_score_out_of_class = self._out_of_class_discount_fn(out_of_class_score)
-        return disc_score_in_class * disc_score_out_of_class
+    def from_data(self, data: Dataset) -> Generator[list[CSSample], None, None]:
+        assert self.label is not None
 
-    def estimate_in_class_and_out_of_class_score(
+        without_label = np.where(data.y != self.label)[0]
+        with_label = np.where(data.y == self.label)[0]
+
+        # HACK: the outer sampler is over full subsets of T_{-y_i}
+        self.out_of_class._index_iteration = NoIndexIteration
+
+        for ooc_batch in self.out_of_class.from_indices(without_label):
+            # NOTE: The inner sampler can be a permutation sampler => we need to
+            #  return batches of the same size as that sampler in order for the
+            #  in_class strategy to work correctly.
+            for ooc_sample in ooc_batch:
+                for ic_batch in self.in_class.from_indices(with_label):
+                    # FIXME? this sends the same out_of_class_subset for all samples
+                    #   maybe a few 10s of KB... probably irrelevant
+                    yield [
+                        CSSample(
+                            idx=ic_sample.idx,
+                            label=self.label,
+                            subset=ooc_sample.subset,
+                            in_class_subset=ic_sample.subset,
+                        )
+                        for ic_sample in ic_batch
+                    ]
+
+    def from_indices(self, indices: IndexSetT) -> BatchGenerator:
+        raise AttributeError("Cannot sample from indices directly.")
+
+    def make_strategy(
         self,
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-        rescale_scores: bool = True,
-    ) -> Tuple[float, float]:
-        r"""
-        Computes in-class and out-of-class scores using the provided inner
-        scoring function. The result is
+        utility: UtilityBase,
+        coefficient: Callable[[int, int], float] | None = None,
+    ) -> EvaluationStrategy[IndexSampler]:
+        return self.in_class.make_strategy(utility, coefficient)
 
-        $$
-        a_S(D=\{(x_1, y_1), \dots, (x_K, y_K)\}) = \frac{1}{N} \sum_k s(y(x_k), y_k).
-        $$
 
-        In this context, for label $c$ calculations are executed twice: once for $D_c$
-        and once for $D_{-c}$ to determine the in-class and out-of-class scores,
-        respectively. By default, the raw scores are multiplied by $\frac{|D_c|}{|D|}$
-        and $\frac{|D_{-c}|}{|D|}$, respectively. This is done to ensure that both
-        scores are of the same order of magnitude. This normalization is particularly
-        useful when the inner score function $a_S$ is calculated by an estimator of the
-        form $\frac{1}{N} \sum_i x_i$, e.g. the accuracy.
+class ClasswiseShapley(Valuation):
+    def __init__(
+        self,
+        utility: UtilityBase,
+        sampler: ClasswiseSampler,
+        is_done: StoppingCriterion,
+        progress: bool = False,
+    ):
+        super().__init__()
+        self.utility = utility
+        self.sampler = sampler
+        self.labels: NDArray | None = None
+        if not isinstance(utility.scorer, ClasswiseScorer):
+            raise ValueError("Scorer must be a ClasswiseScorer.")
+        self.scorer: ClasswiseScorer = utility.scorer
+        self.is_done = is_done
+        self.progress = progress
 
-        Args:
-            model: Model used for computing the score on the validation set.
-            x_test: Array containing the features of the classification problem.
-            y_test: Array containing the labels of the classification problem.
-            rescale_scores: If set to True, the scores will be denormalized. This is
-                particularly useful when the inner score function $a_S$ is calculated by
-                an estimator of the form $\frac{1}{N} \sum_i x_i$.
-
-        Returns:
-            Tuple containing the in-class and out-of-class scores.
-        """
-        scorer = self._scorer
-        label_set_match = y_test == self.label
-        label_set = np.where(label_set_match)[0]
-        num_classes = len(np.unique(y_test))
-
-        if len(label_set) == 0:
-            return 0, 1 / (num_classes - 1)
-
-        complement_label_set = np.where(~label_set_match)[0]
-        in_class_score = scorer(model, x_test[label_set], y_test[label_set])
-        out_of_class_score = scorer(
-            model, x_test[complement_label_set], y_test[complement_label_set]
+    def fit(self, data: Dataset):
+        self.result = ValuationResult.zeros(
+            # TODO: automate str representation for all Valuations
+            algorithm=f"classwise-shapley",
+            indices=data.indices,
+            data_names=data.data_names,
         )
+        ensure_backend_has_generator_return()
+        flag = make_parallel_flag()
+        parallel = Parallel(return_as="generator_unordered")
 
-        if rescale_scores:
-            n_in_class = np.count_nonzero(y_test == self.label)
-            n_out_of_class = len(y_test) - n_in_class
-            in_class_score *= n_in_class / (n_in_class + n_out_of_class)
-            out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)
+        self.utility.training_data = data
+        self.labels = unique_labels(np.concatenate((data.y, self.utility.test_data.y)))
 
-        return in_class_score, out_of_class_score
-
-
-@deprecated(
-    target=True,
-    args_mapping={"config": "config"},
-    deprecated_in="0.9.0",
-    remove_in="0.10.0",
-)
-def compute_classwise_shapley_values(
-    u: Utility,
-    *,
-    done: StoppingCriterion,
-    truncation: TruncationPolicy,
-    done_sample_complements: Optional[StoppingCriterion] = None,
-    normalize_values: bool = True,
-    use_default_scorer_value: bool = True,
-    min_elements_per_label: int = 1,
-    n_jobs: int = 1,
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
-    progress: bool = False,
-    seed: Optional[Seed] = None,
-) -> ValuationResult:
-    r"""
-    Computes an approximate Class-wise Shapley value by sampling independent
-    permutations of the index set for each label and index sets sampled from the
-    powerset of the complement (with respect to the currently evaluated label),
-    approximating the sum:
-
-    $$
-    v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
-    [u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
-    $$
-
-    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears and $S$ is a subset of the index set of all
-    other labels (see [the main documentation][class-wise-shapley] for
-    details).
-
-    Args:
-        u: Utility object containing model, data, and scoring function. The
-            scorer must be of type
-            [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer].
-        done: Function that checks whether the computation needs to stop.
-        truncation: Callable function that decides whether to interrupt processing a
-            permutation and set subsequent marginals to zero.
-        done_sample_complements: Function checking whether computation needs to stop.
-            Otherwise, it will resample conditional sets until the stopping criterion is
-            met.
-        normalize_values: Indicates whether to normalize the values by the variation
-            in each class times their in-class accuracy.
-        done_sample_complements: Number of times to resample the complement set
-            for each permutation.
-        use_default_scorer_value: The first set of indices is the sampled complement
-            set. Unless not otherwise specified, the default scorer value is used for
-            this. If it is set to false, the base score is calculated from the utility.
-        min_elements_per_label: The minimum number of elements for each opposite
-            label.
-        n_jobs: Number of parallel jobs to run.
-        parallel_backend: Parallel backend instance to use
-            for parallelizing computations. If `None`,
-            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
-            See the [Parallel Backends][pydvl.parallel.backends] package
-            for available options.
-        config: (**DEPRECATED**) Object configuring parallel computation,
-            with cluster address, number of cpus, etc.
-        progress: Whether to display a progress bar.
-        seed: Either an instance of a numpy random number generator or a seed for it.
-
-    Returns:
-        ValuationResult object containing computed data values.
-
-    !!! tip "New in version 0.7.1"
-    """
-    dim_correct = u.data.y_train.ndim == 1 and u.data.y_test.ndim == 1
-    is_integral = all(
-        map(
-            lambda v: isinstance(v, numbers.Integral), (*u.data.y_train, *u.data.y_test)
-        )
-    )
-    if not dim_correct or not is_integral:
-        raise ValueError(
-            "The supplied dataset has to be a 1-dimensional classification dataset."
-        )
-
-    if not isinstance(u.scorer, ClasswiseScorer):
-        raise ValueError(
-            "Please set a subclass of ClasswiseScorer object as scorer object of the"
-            " utility. See scoring argument of Utility."
-        )
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
-    u_ref = parallel_backend.put(u)
-    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
-    n_submitted_jobs = 2 * n_jobs
-
-    pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
-    algorithm = "classwise_shapley"
-    accumulated_result = ValuationResult.zeros(
-        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
-    )
-    terminate_exec = False
-    seed_sequence = ensure_seed_sequence(seed)
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
-
-    with parallel_backend.executor(max_workers=n_jobs) as executor:
-        pending: Set[Future] = set()
-        while True:
-            completed_futures, pending = wait(
-                pending, timeout=60, return_when=FIRST_COMPLETED
+        # FIXME, DUH: this loop needs to be in the sampler or we will never converge
+        for label in self.labels:
+            sampler = self.sampler.for_label(label)
+            strategy = sampler.make_strategy(self.utility)
+            processor = delayed(strategy.process)
+            delayed_evals = parallel(
+                processor(batch=list(batch), is_interrupted=flag)
+                for batch in sampler.from_data(data)
             )
-            for future in completed_futures:
-                accumulated_result += future.result()
-                if done(accumulated_result):
-                    terminate_exec = True
+            for evaluation in tqdm(iterable=delayed_evals, disable=not self.progress):
+                self.result.update(evaluation.idx, evaluation.update)
+                if self.is_done(self.result):
+                    flag.set()
                     break
 
-            pbar.n = 100 * done.completion()
-            pbar.refresh()
-            if terminate_exec:
-                break
+    def _normalize(self) -> ValuationResult:
+        r"""
+        Normalize a valuation result specific to classwise Shapley.
 
-            n_remaining_slots = n_submitted_jobs - len(pending)
-            seeds = seed_sequence.spawn(n_remaining_slots)
-            for i in range(n_remaining_slots):
-                future = executor.submit(
-                    _permutation_montecarlo_classwise_shapley_one_step,
-                    u_ref,
-                    truncation=truncation,
-                    done_sample_complements=done_sample_complements,
-                    use_default_scorer_value=use_default_scorer_value,
-                    min_elements_per_label=min_elements_per_label,
-                    algorithm_name=algorithm,
-                    seed=seeds[i],
-                )
-                pending.add(future)
+        Each value $v_i$ associated with the sample $(x_i, y_i)$ is normalized by
+        multiplying it with $a_S(D_{y_i})$ and dividing by $\sum_{j \in D_{y_i}} v_j$.
+        For more details, see (Schoch et al., 2022) <sup><a
+        href="#schoch_csshapley_2022">1</a> </sup>.
 
-    result = accumulated_result
-    if normalize_values:
-        result = _normalize_classwise_shapley_values(result, u)
+        Returns:
+            Normalized ValuationResult object.
+        """
+        assert self.result is not None
+        assert self.utility.training_data is not None
 
-    return result
+        u = self.utility
 
+        logger.info("Normalizing valuation result.")
+        u.model.fit(u.training_data.x, u.training_data.y)
 
-def _permutation_montecarlo_classwise_shapley_one_step(
-    u: Utility,
-    *,
-    done_sample_complements: Optional[StoppingCriterion] = None,
-    truncation: TruncationPolicy,
-    use_default_scorer_value: bool = True,
-    min_elements_per_label: int = 1,
-    algorithm_name: str = "classwise_shapley",
-    seed: Optional[SeedSequence] = None,
-) -> ValuationResult:
-    """Helper function for [compute_classwise_shapley_values()]
-    [pydvl.value.shapley.classwise.compute_classwise_shapley_values].
+        for idx_label, label in enumerate(self.labels):
+            self.scorer.label = label
+            active_elements = u.training_data.y == label
+            indices_label_set = np.where(active_elements)[0]
+            indices_label_set = u.training_data.indices[indices_label_set]
 
-    Args:
-        u: Utility object containing model, data, and scoring function. The
-            scorer must be of type [ClasswiseScorer]
-            [pydvl.value.shapley.classwise.ClasswiseScorer].
-        done_sample_complements: Function checking whether computation needs to stop.
-            Otherwise, it will resample conditional sets until the stopping criterion is
-            met.
-        truncation: Callable function that decides whether to interrupt processing a
-            permutation and set subsequent marginals to zero.
-        use_default_scorer_value: The first set of indices is the sampled complement
-            set. Unless not otherwise specified, the default scorer value is used for
-            this. If it is set to false, the base score is calculated from the utility.
-        min_elements_per_label: The minimum number of elements for each opposite
-            label.
-        algorithm_name: For the results object.
-        seed: Either an instance of a numpy random number generator or a seed for it.
-
-    Returns:
-        ValuationResult object containing computed data values.
-
-    !!! tip "Changed in version 0.9.0"
-        Deprecated `config` argument and added a `parallel_backend`
-        argument to allow users to pass the Parallel Backend configuration.
-    """
-    if done_sample_complements is None:
-        done_sample_complements = MaxChecks(1)
-
-    result = ValuationResult.zeros(
-        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
-    )
-    rng = np.random.default_rng(seed)
-    x_train, y_train = u.data.get_training_data(u.data.indices)
-    unique_labels = np.unique(y_train)
-    scorer = cast(ClasswiseScorer, copy(u.scorer))
-    u.scorer = scorer
-
-    for label in unique_labels:
-        u.scorer.label = label
-        class_indices_set, class_complement_indices_set = _split_indices_by_label(
-            u.data.indices, y_train, label
-        )
-        _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
-        indices_permutation = rng.permutation(class_indices_set)
-        done_sample_complements.reset()
-
-        for subset_idx, subset_complement in enumerate(
-            random_powerset_label_min(
-                class_complement_indices_set,
-                complement_y_train,
-                min_elements_per_label=min_elements_per_label,
-                seed=rng,
-            )
-        ):
-            result += _permutation_montecarlo_shapley_rollout(
-                u,
-                indices_permutation,
-                additional_indices=subset_complement,
-                truncation=truncation,
-                algorithm_name=algorithm_name,
-                use_default_scorer_value=use_default_scorer_value,
-            )
-            if done_sample_complements(result):
-                break
-
-    return result
-
-
-def _normalize_classwise_shapley_values(
-    result: ValuationResult, u: Utility
-) -> ValuationResult:
-    r"""
-    Normalize a valuation result specific to classwise Shapley.
-
-    Each value $v_i$ associated with the sample $(x_i, y_i)$ is normalized by
-    multiplying it with $a_S(D_{y_i})$ and dividing by $\sum_{j \in D_{y_i}} v_j$. For
-    more details, see (Schoch et al., 2022) <sup><a href="#schoch_csshapley_2022">1</a>
-    </sup>.
-
-    Args:
-        result: ValuationResult object to be normalized.
-        u: Utility object containing model, data, and scoring function. The
-            scorer must be of type [ClasswiseScorer]
-            [pydvl.value.shapley.classwise.ClasswiseScorer].
-
-    Returns:
-        Normalized ValuationResult object.
-    """
-    y_train = u.data.y_train
-    unique_labels = np.unique(np.concatenate((y_train, u.data.y_test)))
-    scorer = cast(ClasswiseScorer, u.scorer)
-
-    for idx_label, label in enumerate(unique_labels):
-        scorer.label = label
-        active_elements = y_train == label
-        indices_label_set = np.where(active_elements)[0]
-        indices_label_set = u.data.indices[indices_label_set]
-
-        u.model.fit(u.data.x_train, u.data.y_train)
-        scorer.label = label
-        in_class_acc, _ = scorer.estimate_in_class_and_out_of_class_score(
-            u.model, u.data.x_test, u.data.y_test
-        )
-
-        sigma = np.sum(result.values[indices_label_set])
-        if sigma != 0:
-            result.scale(in_class_acc / sigma, indices=indices_label_set)
-
-    return result
-
-
-def _permutation_montecarlo_shapley_rollout(
-    u: Utility,
-    permutation: NDArray[np.int_],
-    truncation: TruncationPolicy,
-    algorithm_name: str,
-    additional_indices: Optional[NDArray[np.int_]] = None,
-    use_default_scorer_value: bool = True,
-) -> ValuationResult:
-    """
-    Represents a truncated version of a permutation-based MC estimator. It iterates over
-    all subsets starting from the empty set to the full set of indices as specified by
-    `permutation`. For each subset, the marginal contribution is computed and added to
-    the result. The computation is interrupted if the truncation policy returns `True`.
-
-    !!! Todo
-        Reuse in [permutation_montecarlo_shapley()]
-        [pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
-
-    Args:
-        u: Utility object containing model, data, and scoring function.
-        permutation: Permutation of indices to be considered.
-        truncation: Callable which decides whether to interrupt processing a
-            permutation and set all subsequent marginals to zero.
-        algorithm_name: For the results object. Used internally by different
-            variants of Shapley using this subroutine
-        additional_indices: Set of additional indices for data points which should be
-            always considered.
-        use_default_scorer_value: Use default scorer value even if additional_indices
-            is not None.
-
-    Returns:
-         ValuationResult object containing computed data values.
-    """
-    if (
-        additional_indices is not None
-        and len(np.intersect1d(permutation, additional_indices)) > 0
-    ):
-        raise ValueError(
-            "The class label set and the complement set have to be disjoint."
-        )
-
-    result = ValuationResult.zeros(
-        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
-    )
-
-    prev_score = (
-        u.default_score
-        if (
-            use_default_scorer_value
-            or additional_indices is None
-            or additional_indices is not None
-            and len(additional_indices) == 0
-        )
-        else u(additional_indices)
-    )
-
-    truncation_u = u
-    if additional_indices is not None:
-        # hack to calculate the correct value in reset.
-        truncation_indices = np.sort(np.concatenate((permutation, additional_indices)))
-        truncation_u = Utility(
-            u.model,
-            Dataset(
-                u.data.x_train[truncation_indices],
-                u.data.y_train[truncation_indices],
-                u.data.x_test,
-                u.data.y_test,
-            ),
-            u.scorer,
-        )
-    truncation.reset(truncation_u)
-
-    is_terminated = False
-    for i, idx in enumerate(permutation):
-        if is_terminated or (is_terminated := truncation(i, prev_score)):
-            score = prev_score
-        else:
-            score = u(
-                np.concatenate((permutation[: i + 1], additional_indices))
-                if additional_indices is not None and len(additional_indices) > 0
-                else permutation[: i + 1]
+            self.scorer.label = label
+            in_class_acc, _ = self.scorer.estimate_in_class_and_out_of_class_score(
+                u.model, u.test_data.x, u.test_data.y
             )
 
-        marginal = score - prev_score
-        result.update(idx, marginal)
-        prev_score = score
+            sigma = np.sum(self.result.values[indices_label_set])
+            if sigma != 0:
+                self.result.scale(in_class_acc / sigma, indices=indices_label_set)
 
-    return result
-
-
-def _split_indices_by_label(
-    indices: NDArray[np.int_], labels: NDArray[np.int_], label: int
-) -> Tuple[NDArray[np.int_], NDArray[np.int_]]:
-    """
-    Splits the indices into two sets based on the value of `label`, e.g. those samples
-    with and without that label.
-
-    Args:
-        indices: The indices to be used for referring to the data.
-        labels: Corresponding labels for the indices.
-        label: Label to be used for splitting.
-
-    Returns:
-        Tuple with two sets of indices.
-    """
-    active_elements = labels == label
-    class_indices_set = np.where(active_elements)[0]
-    class_complement_indices_set = np.where(~active_elements)[0]
-    class_indices_set = indices[class_indices_set]
-    class_complement_indices_set = indices[class_complement_indices_set]
-    return class_indices_set, class_complement_indices_set
+        return self.result

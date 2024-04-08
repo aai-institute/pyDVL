@@ -1,0 +1,264 @@
+from __future__ import annotations
+
+import logging
+import warnings
+from typing import Optional, Tuple, Union, cast
+
+import numpy as np
+from sklearn.base import clone
+from sklearn.metrics import check_scoring
+
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
+from pydvl.utils.types import SupervisedModel
+from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.scorers.scorer import Scorer
+from pydvl.valuation.types import Sample, SampleT
+
+__all__ = ["Utility"]
+
+from pydvl.valuation.utility.base import UtilityBase
+
+logger = logging.getLogger(__name__)
+
+
+# Need a generic because subclasses might use subtypes of Sample
+class Utility(UtilityBase[SampleT]):
+    """Convenience wrapper with configurable memoization of the scoring
+    function.
+
+    An instance of `Utility` holds the triple of model, dataset and scoring
+    function which determines the value of data points. This is used for the
+    computation of [all game-theoretic values][game-theoretical-methods] like
+    [Shapley values][pydvl.valuation.shapley] and [the Least
+    Core][pydvl.valuation.least_core].
+
+    The Utility expect the model to fulfill the
+    [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
+    to have `fit()`, `predict()`, and `score()` methods.
+
+    When calling the utility, the model will be
+    [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
+    if it is a Sci-Kit Learn model, otherwise a copy is created using
+    [copy.deepcopy][]
+
+    Since evaluating the scoring function requires retraining the model and that
+    can be time-consuming, this class wraps it and caches the results of each
+    execution. Caching is available both locally and across nodes, but must
+    always be enabled for your project first, see [the documentation][getting-started-cache]
+    and the [module documentation][pydvl.utils.caching].
+
+    Attributes:
+        model: The supervised model.
+        data: An object containing the split data.
+        scorer: A scoring function. If None, the `score()` method of the model
+            will be used. See [score][pydvl.utils.score] for ways to create
+            and compose scorers, in particular how to set default values and
+            ranges.
+
+    Args:
+        model: Any supervised model. Typical choices can be found in the
+            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+        test_data: [Dataset][pydvl.utils.dataset.Dataset]
+            or [GroupedDataset][pydvl.utils.dataset.GroupedDataset] instance.
+        scorer: A scoring object. If None, the `score()` method of the model
+            will be used. See [score][pydvl.utils.score] for ways to create
+            and compose scorers, in particular how to set default values and
+            ranges. For convenience, a string can be passed, which will be used
+            to construct a [Scorer][pydvl.utils.score.Scorer].
+        default_score: As a convenience when no `scorer` object is passed
+            (where a default value can be provided), this argument also allows
+            to set the default score for models that have not been fit, e.g.
+            when too little data is passed, or errors arise.
+        score_range: As with `default_score`, this is a convenience argument for
+            when no `scorer` argument is provided, to set the numerical range
+            of the score function. Some Monte Carlo methods can use this to
+            estimate the number of samples required for a certain quality of
+            approximation.
+        catch_errors: set to `True` to catch the errors when `fit()` fails. This
+            could happen in several steps of the pipeline, e.g. when too little
+            training data is passed, which happens often during Shapley value
+            calculations. When this happens, the `default_score` is returned as
+            a score and computation continues.
+        show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
+        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+            used to wrap the _utility method of the Utility instance.
+            By default, this is set to None and that means that the utility evaluations
+            will not be cached.
+        cached_func_options: Optional configuration object for cached utility evaluation.
+        clone_before_fit: If `True`, the model will be cloned before calling
+            `fit()`.
+
+    ??? Example
+        ``` pycon
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> u = Utility(LogisticRegression(random_state=16), dataset)
+        >>> u(Sample(subset=dataset.indices))
+        0.9
+        ```
+
+        With caching enabled:
+
+        ```pycon
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> cache_backend = InMemoryCacheBackend()
+        >>> u = Utility(LogisticRegression(random_state=16), dataset, cache_backend=cache_backend)
+        >>> u(Sample(subset=dataset.indices))
+        0.9
+        ```
+
+    """
+
+    model: SupervisedModel
+    test_data: Dataset
+    scorer: Scorer
+
+    def __init__(
+        self,
+        model: SupervisedModel,
+        test_data: Dataset,
+        scorer: Optional[Union[str, Scorer]] = None,
+        *,
+        default_score: float = 0.0,
+        score_range: Tuple[float, float] = (-np.inf, np.inf),
+        catch_errors: bool = True,
+        show_warnings: bool = False,
+        cache_backend: Optional[CacheBackend] = None,
+        cached_func_options: Optional[CachedFuncConfig] = None,
+        clone_before_fit: bool = True,
+    ):
+        self.model = self._clone_model(model)
+        self.test_data = test_data
+        if isinstance(scorer, str):
+            scorer = Scorer(scorer, default=default_score, range=score_range)
+        self.scorer = check_scoring(self.model, scorer)
+        self.default_score: float = (
+            scorer.default if scorer is not None else default_score
+        )
+        # TODO: auto-fill from known scorers ?
+        self.score_range = scorer.range if scorer is not None else np.array(score_range)
+        self.clone_before_fit = clone_before_fit
+        self.catch_errors = catch_errors
+        self.show_warnings = show_warnings
+        self.cache = cache_backend
+        if cached_func_options is None:
+            cached_func_options = CachedFuncConfig()
+        # TODO: Find a better way to do this.
+        if cached_func_options.hash_prefix is None:
+            # FIX: This does not handle reusing the same across runs.
+            cached_func_options.hash_prefix = str(hash((model, test_data, scorer)))
+        self.cached_func_options = cached_func_options
+        self._initialize_utility_wrapper()
+
+    def _initialize_utility_wrapper(self):
+        if self.cache is not None:
+            self._utility_wrapper = self.cache.wrap(
+                self._utility, config=self.cached_func_options
+            )
+        else:
+            self._utility_wrapper = self._utility
+
+    def __call__(self, sample: SampleT) -> float:
+        """
+        Args:
+            indices: a subset of valid indices for the
+                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+        """
+        return cast(float, self._utility_wrapper(sample))
+
+    def _utility(self, sample: SampleT) -> float:
+        """Clones the model, fits it on a subset of the training data
+        and scores it on the test data.
+
+        If an instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        is passed during construction, results are
+        memoized to avoid duplicate computation. This is useful in particular
+        when computing utilities of permutations of indices or when randomly
+        sampling from the powerset of indices.
+
+        Args:
+            indices: a subset of valid indices for the
+                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+                The type must be hashable for the caching to work,
+                e.g. wrap the argument with [frozenset][]
+                (rather than `tuple` since order should not matter)
+
+        Returns:
+            0 if no indices are passed, `default_score` if we fail
+                to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
+                of the model on the test data.
+        """
+        if len(sample.subset) == 0:
+            return self.default_score
+
+        if self.training_data is None:
+            raise ValueError("No training data provided")
+
+        x_train, y_train = self.training_data.get_data(sample.subset)
+        x_test, y_test = self.test_data.get_data()
+
+        with warnings.catch_warnings():
+            if not self.show_warnings:
+                warnings.simplefilter("ignore")
+            try:
+                if self.clone_before_fit:
+                    model = self._clone_model(self.model)
+                else:
+                    model = self.model
+                model.fit(x_train, y_train)
+                score = float(self.scorer(model, x_test, y_test))
+                # Some scorers raise exceptions if they return NaNs, some might not
+                if np.isnan(score):
+                    warnings.warn("Scorer returned NaN", RuntimeWarning)
+                    return self.default_score
+                return score
+            except Exception as e:
+                if self.catch_errors:
+                    warnings.warn(str(e), RuntimeWarning)
+                    return self.default_score
+                raise
+
+    @staticmethod
+    def _clone_model(model: SupervisedModel) -> SupervisedModel:
+        """Clones the passed model to avoid the possibility
+        of reusing a fitted estimator
+
+        Args:
+            model: Any supervised model. Typical choices can be found
+                on [this page](https://scikit-learn.org/stable/supervised_learning.html)
+        """
+        try:
+            model = clone(model)
+        except TypeError:
+            # This happens if the passed model is not an sklearn model
+            # In this case, we just make a deepcopy of the model.
+            model = clone(model, safe=False)
+        model = cast(SupervisedModel, model)
+        return model
+
+    @property
+    def cache_stats(self) -> Optional[CacheStats]:
+        """Cache statistics are gathered when cache is enabled.
+        See [CacheStats][pydvl.utils.caching.base.CacheStats] for all fields returned.
+        """
+        cache_stats: Optional[CacheStats] = None
+        if self.cache is not None:
+            cache_stats = self._utility_wrapper.stats
+        return cache_stats
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Don't pickle _utility_wrapper
+        state.pop("_utility_wrapper", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Add _utility_wrapper back since it doesn't exist in the pickle
+        self._initialize_utility_wrapper()

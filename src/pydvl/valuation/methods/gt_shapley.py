@@ -43,9 +43,20 @@ from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
-from pydvl.value import ValuationResult
+from pydvl.valuation.samplers import IndexSampler
+from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["group_testing_shapley", "num_samples_eps_delta"]
+
+__all__ = ["GroupTestingValuation"]
+
+
+class GroupTestingValuation(SemivalueValuation):
+    algorithm_name = "Group-Testing-Shapley"
+
+    def __init__(self, utility: UtilityBase, sampler: IndexSampler):
+        raise NotImplementedError()
+
 
 log = logging.getLogger(__name__)
 
@@ -139,7 +150,7 @@ def _group_testing_shapley(
     seed: Optional[Union[Seed, SeedSequence]] = None,
 ):
     """Helper function for
-    [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley].
+    [group_testing_shapley()][pydvl.valuation.methods.gt_shapley.group_testing_shapley].
 
     Computes utilities of sets sampled using the strategy for estimating the
     differences in Shapley values.
@@ -195,7 +206,7 @@ def group_testing_shapley(
     !!! Warning
         This method is very inefficient. It requires several orders of magnitude
         more evaluations of the utility than others in
-        [montecarlo][pydvl.value.shapley.montecarlo]. It also uses several intermediate
+        [montecarlo][pydvl.valuation.shapley.montecarlo]. It also uses several intermediate
         objects like the results from the runners and the constraint matrices
         which can become rather large.
 
@@ -206,7 +217,7 @@ def group_testing_shapley(
     Args:
         u: Utility object with model, data, and scoring function
         n_samples: Number of tests to perform. Use
-            [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta]
+            [num_samples_eps_delta][pydvl.valuation.methods.gt_shapley.num_samples_eps_delta]
             to estimate this.
         epsilon: From the (ε,δ) sample bound. Use the same as for the
             estimation of `n_iterations`.

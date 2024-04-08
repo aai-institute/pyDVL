@@ -2,9 +2,10 @@
 This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
-The most important class is [ValuationResult][pydvl.value.result.ValuationResult], which provides access
-to raw values, as well as convenient behaviour as a `Sequence` with extended
-indexing and updating abilities, and conversion to [pandas DataFrames][pandas.DataFrame].
+The most important class is [ValuationResult][pydvl.valuation.result.ValuationResult], which
+provides access to raw values, as well as convenient behaviour as a `Sequence` with
+extended indexing and updating abilities, and conversion to [pandas
+DataFrames][pandas.DataFrame].
 
 # Operating on results
 
@@ -13,31 +14,31 @@ are typically running averages of iterative algorithms, addition behaves like a
 weighted average of the two results, with the weights being the number of
 updates in each result: adding two results is the same as generating one result
 with the mean of the values of the two results as values. The variances are
-updated accordingly. See [ValuationResult][pydvl.value.result.ValuationResult] for details.
+updated accordingly. See [ValuationResult][pydvl.valuation.result.ValuationResult] for details.
 
 Results can also be sorted by value, variance or number of updates, see
-[sort()][pydvl.value.result.ValuationResult.sort]. The arrays of
-[ValuationResult.values][pydvl.value.result.ValuationResult.values],
-[ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
-[ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
-[ValuationResult.indices][pydvl.value.result.ValuationResult.indices],
-[ValuationResult.names][pydvl.value.result.ValuationResult.names] are sorted in
+[sort()][pydvl.valuation.result.ValuationResult.sort]. The arrays of
+[ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
+[ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
+[ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
+[ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices],
+[ValuationResult.names][pydvl.valuation.result.ValuationResult.names] are sorted in
 the same way.
 
 Indexing and slicing of results is supported and
-[ValueItem][pydvl.value.result.ValueItem] objects are returned. These objects
+[ValueItem][pydvl.valuation.result.ValueItem] objects are returned. These objects
 can be compared with the usual operators, which take only the
-[ValueItem.value][pydvl.value.result.ValueItem] into account.
+[ValueItem.value][pydvl.valuation.result.ValueItem] into account.
 
 # Creating result objects
 
 The most commonly used factory method is
-[ValuationResult.zeros()][pydvl.value.result.ValuationResult.zeros], which
+[ValuationResult.zeros()][pydvl.valuation.result.ValuationResult.zeros], which
 creates a result object with all values, variances and counts set to zero.
-[ValuationResult.empty()][pydvl.value.result.ValuationResult.empty] creates an
+[ValuationResult.empty()][pydvl.valuation.result.ValuationResult.empty] creates an
 empty result object, which can be used as a starting point for adding results
 together. Empty results are discarded when added to other results. Finally,
-[ValuationResult.from_random()][pydvl.value.result.ValuationResult.from_random]
+[ValuationResult.from_random()][pydvl.valuation.result.ValuationResult.from_random]
 samples random values uniformly.
 
 """
@@ -50,13 +51,13 @@ from functools import total_ordering
 from numbers import Integral
 from typing import (
     Any,
-    Generic,
     Iterable,
     Iterator,
     List,
     Literal,
     Optional,
     Sequence,
+    Set,
     Union,
     cast,
     overload,
@@ -66,10 +67,11 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from pydvl.utils.dataset import Dataset
+from pydvl.valuation.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
-from pydvl.utils.types import IndexT, NameT, Seed
+from pydvl.utils.types import Seed
+from pydvl.valuation.types import IndexSetT, IndexT, NameT
 
 __all__ = ["ValuationResult", "ValueItem"]
 
@@ -78,7 +80,7 @@ logger = logging.getLogger(__name__)
 
 @total_ordering
 @dataclass
-class ValueItem(Generic[IndexT, NameT]):
+class ValueItem:
     """The result of a value computation for one datum.
 
     `ValueItems` can be compared with the usual operators, forming a total
@@ -101,29 +103,31 @@ class ValueItem(Generic[IndexT, NameT]):
     index: IndexT
     name: NameT
     value: float
-    variance: Optional[float]
-    count: Optional[int]
+    variance: float | None
+    count: int | None
 
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, ValueItem):
+            raise TypeError(f"Cannot compare ValueItem with {type(other)}")
         return self.value < other.value
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ValueItem):
+            raise TypeError(f"Cannot compare ValueItem with {type(other)}")
         return self.value == other.value
 
     def __index__(self) -> IndexT:
         return self.index
 
     @property
-    def stderr(self) -> Optional[float]:
+    def stderr(self) -> float | None:
         """Standard error of the value."""
         if self.variance is None or self.count is None:
             return None
         return float(np.sqrt(self.variance / self.count).item())
 
 
-class ValuationResult(
-    collections.abc.Sequence, Iterable[ValueItem[IndexT, NameT]], Generic[IndexT, NameT]
-):
+class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     """Objects of this class hold the results of valuation algorithms.
 
     These include indices in the original [Dataset][pydvl.utils.dataset.Dataset],
@@ -131,29 +135,29 @@ class ValuationResult(
     the values themselves, and variance of the computation in the case of Monte
     Carlo methods. `ValuationResults` can be iterated over like any `Sequence`:
     `iter(valuation_result)` returns a generator of
-    [ValueItem][pydvl.value.result.ValueItem] in the order in which the object
+    [ValueItem][pydvl.valuation.result.ValueItem] in the order in which the object
     is sorted.
 
     ## Indexing
 
     Indexing can be position-based, when accessing any of the attributes
-    [values][pydvl.value.result.ValuationResult.values], [variances][pydvl.value.result.ValuationResult.variances],
-    [counts][pydvl.value.result.ValuationResult.counts] and [indices][pydvl.value.result.ValuationResult.indices], as
+    [values][pydvl.valuation.result.ValuationResult.values], [variances][pydvl.valuation.result.ValuationResult.variances],
+    [counts][pydvl.valuation.result.ValuationResult.counts] and [indices][pydvl.valuation.result.ValuationResult.indices], as
     well as when iterating over the object, or using the item access operator,
     both getter and setter. The "position" is either the original sequence in
     which the data was passed to the constructor, or the sequence in which the
     object is sorted, see below.
 
     Alternatively, indexing can be data-based, i.e. using the indices in the
-    original dataset. This is the case for the methods [get()][pydvl.value.result.ValuationResult.get] and
-    [update()][pydvl.value.result.ValuationResult.update].
+    original dataset. This is the case for the methods [get()][pydvl.valuation.result.ValuationResult.get] and
+    [update()][pydvl.valuation.result.ValuationResult.update].
 
     ## Sorting
 
-    Results can be sorted in-place with [sort()][pydvl.value.result.ValuationResult.sort], or alternatively using
+    Results can be sorted in-place with [sort()][pydvl.valuation.result.ValuationResult.sort], or alternatively using
     python's standard `sorted()` and `reversed()` Note that sorting values
     affects how iterators and the object itself as `Sequence` behave:
-    `values[0]` returns a [ValueItem][pydvl.value.result.ValueItem] with the highest or lowest
+    `values[0]` returns a [ValueItem][pydvl.valuation.result.ValueItem] with the highest or lowest
     ranking point if this object is sorted by descending or ascending value,
     respectively. If unsorted, `values[0]` returns the `ValueItem` at
     position 0, which has data index `indices[0]` in the
@@ -161,21 +165,21 @@ class ValuationResult(
 
     The same applies to direct indexing of the `ValuationResult`: the index
     is positional, according to the sorting. It does not refer to the "data
-    index". To sort according to data index, use [sort()][pydvl.value.result.ValuationResult.sort] with
+    index". To sort according to data index, use [sort()][pydvl.valuation.result.ValuationResult.sort] with
     `key="index"`.
 
-    In order to access [ValueItem][pydvl.value.result.ValueItem] objects by their data index, use
-    [get()][pydvl.value.result.ValuationResult.get].
+    In order to access [ValueItem][pydvl.valuation.result.ValueItem] objects by their data index, use
+    [get()][pydvl.valuation.result.ValuationResult.get].
 
     ## Operating on results
 
     Results can be added to each other with the `+` operator. Means and
     variances are correctly updated, using the `counts` attribute.
 
-    Results can also be updated with new values using [update()][pydvl.value.result.ValuationResult.update]. Means and
+    Results can also be updated with new values using [update()][pydvl.valuation.result.ValuationResult.update]. Means and
     variances are updated accordingly using the Welford algorithm.
 
-    Empty objects behave in a special way, see [empty()][pydvl.value.result.ValuationResult.empty].
+    Empty objects behave in a special way, see [empty()][pydvl.valuation.result.ValuationResult.empty].
 
     Args:
         values: An array of values. If omitted, defaults to an empty array
@@ -209,17 +213,17 @@ class ValuationResult(
     _algorithm: str
     _status: Status
     # None for unsorted, True for ascending, False for descending
-    _sort_order: Optional[bool]
-    _extra_values: dict
+    _sort_order: bool | None
+    _extra_values: dict[str, Any]
 
     def __init__(
         self,
         *,
-        values: NDArray[np.float_],
-        variances: Optional[NDArray[np.float_]] = None,
-        counts: Optional[NDArray[np.int_]] = None,
-        indices: Optional[NDArray[IndexT]] = None,
-        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
+        values: Sequence[np.float_] | NDArray[np.float_],
+        variances: Sequence[np.float_] | NDArray[np.float_] | None = None,
+        counts: Sequence[np.int_] | NDArray[np.int_] | None = None,
+        indices: Sequence[IndexT] | NDArray[IndexT] | None = None,
+        data_names: Sequence[NameT] | NDArray[NameT] | None = None,
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
@@ -234,9 +238,15 @@ class ValuationResult(
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = values
-        self._variances = np.zeros_like(values) if variances is None else variances
-        self._counts = np.ones_like(values) if counts is None else counts
+        self._values = np.array(values, copy=False)
+        self._variances = (
+            np.zeros_like(values)
+            if variances is None
+            else np.array(variances, copy=False)
+        )
+        self._counts = (
+            np.ones_like(values) if counts is None else np.array(counts, copy=False)
+        )
         self._sort_order = None
         self._extra_values = extra_values or {}
 
@@ -246,16 +256,15 @@ class ValuationResult(
                 self._names = np.copy(indices)
             else:
                 self._names = np.arange(len(self._values), dtype=np.int_)
-        elif not isinstance(data_names, np.ndarray):
-            self._names = np.array(data_names)
         else:
-            self._names = data_names.copy()
+            self._names = np.array(data_names, copy=True)
+
         if len(np.unique(self._names)) != len(self._names):
             raise ValueError("Data names must be unique")
 
         if indices is None:
             indices = np.arange(len(self._values), dtype=np.int_)
-        self._indices = indices
+        self._indices = np.array(indices, dtype=np.int_, copy=False)
         self._positions = {idx: pos for pos, idx in enumerate(indices)}
 
         self._sort_positions: NDArray[np.int_] = np.arange(
@@ -274,17 +283,17 @@ class ValuationResult(
 
         Once sorted, iteration over the results, and indexing of all the
         properties
-        [ValuationResult.values][pydvl.value.result.ValuationResult.values],
-        [ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
-        [ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
-        [ValuationResult.indices][pydvl.value.result.ValuationResult.indices]
-        and [ValuationResult.names][pydvl.value.result.ValuationResult.names]
+        [ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
+        [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
+        [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
+        [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices]
+        and [ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
         will follow the same order.
 
         Args:
             reverse: Whether to sort in descending order by value.
             key: The key to sort by. Defaults to
-                [ValueItem.value][pydvl.value.result.ValueItem].
+                [ValueItem.value][pydvl.valuation.result.ValueItem].
         """
         keymap = {
             "index": "_indices",
@@ -426,9 +435,9 @@ class ValuationResult(
         else:
             raise TypeError("Indices must be integers, iterable or slices")
 
-    def __iter__(self) -> Iterator[ValueItem[IndexT, NameT]]:
-        """Iterate over the results returning [ValueItem][pydvl.value.result.ValueItem] objects.
-        To sort in place before iteration, use [sort()][pydvl.value.result.ValuationResult.sort].
+    def __iter__(self) -> Iterator[ValueItem]:
+        """Iterate over the results returning [ValueItem][pydvl.valuation.result.ValueItem] objects.
+        To sort in place before iteration, use [sort()][pydvl.valuation.result.ValuationResult.sort].
         """
         for pos in self._sort_positions:
             yield ValueItem(
@@ -481,9 +490,7 @@ class ValuationResult(
         if self.algorithm and self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
 
-    def __add__(
-        self, other: ValuationResult[IndexT, NameT]
-    ) -> ValuationResult[IndexT, NameT]:
+    def __add__(self, other: ValuationResult) -> ValuationResult:
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
@@ -494,7 +501,7 @@ class ValuationResult(
             Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise `&`, see [Status][pydvl.value.result.Status].
+        bit-wise `&`, see [Status][pydvl.valuation.result.Status].
         `data_names` are taken from the left summand, or if unavailable from
         the right one. The `algorithm` string is carried over if both terms
         have the same one or concatenated.
@@ -596,7 +603,7 @@ class ValuationResult(
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> ValuationResult[IndexT, NameT]:
+    def update(self, idx: int, new_value: float) -> ValuationResult:
         """Updates the result in place with a new value, using running mean
         and variance.
 
@@ -688,11 +695,11 @@ class ValuationResult(
     def from_random(
         cls,
         size: int,
-        total: Optional[float] = None,
-        seed: Optional[Seed] = None,
+        total: float | None = None,
+        seed: Seed | None = None,
         **kwargs,
     ) -> "ValuationResult":
-        """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
+        """Creates a [ValuationResult][pydvl.valuation.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
         be made to sum up to a given total number (doing so will change their range).
 
@@ -700,8 +707,9 @@ class ValuationResult(
             size: Number of values to generate
             total: If set, the values are normalized to sum to this number
                 ("efficiency" property of Shapley values).
+            seed: Random seed to use
             kwargs: Additional options to pass to the constructor of
-                [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
+                [ValuationResult][pydvl.valuation.result.ValuationResult]. Use to override status, names, etc.
 
         Returns:
             A valuation result with its status set to
@@ -729,11 +737,11 @@ class ValuationResult(
     def empty(
         cls,
         algorithm: str = "",
-        indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
-        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
+        indices: IndexSetT | None = None,
+        data_names: Sequence[NameT] | NDArray[NameT] | None = None,
         n_samples: int = 0,
     ) -> ValuationResult:
-        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
+        """Creates an empty [ValuationResult][pydvl.valuation.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is discarded.
@@ -761,11 +769,11 @@ class ValuationResult(
     def zeros(
         cls,
         algorithm: str = "",
-        indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
-        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
+        indices: IndexSetT | None = None,
+        data_names: Sequence[NameT] | NDArray[NameT] | None = None,
         n_samples: int = 0,
     ) -> ValuationResult:
-        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
+        """Creates an empty [ValuationResult][pydvl.valuation.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is ignored.
@@ -800,4 +808,26 @@ class ValuationResult(
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
+        )
+
+    def subset(
+        self, indices: Sequence[IndexT] | NDArray[IndexT] | Set[IndexT]
+    ) -> ValuationResult:
+        """Returns a subset of the ValuationResult.
+
+        Args:
+            indices: Indices of the subset.
+
+        Returns:
+            A new ValuationResult with the subset of values.
+        """
+        indices = np.array(indices, copy=False)
+        return ValuationResult(
+            algorithm=self.algorithm,
+            status=self.status,
+            indices=self._indices[indices],
+            values=self._values[indices],
+            variances=self._variances[indices],
+            counts=self._counts[indices],
+            data_names=self._names[indices],
         )

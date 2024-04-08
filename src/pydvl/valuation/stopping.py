@@ -2,17 +2,17 @@ r"""
 Stopping criteria for value computations.
 
 This module provides a basic set of stopping criteria, like
-[MaxUpdates][pydvl.value.stopping.MaxUpdates],
-[MaxTime][pydvl.value.stopping.MaxTime], or
-[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others. These
+[MaxUpdates][pydvl.valuation.stopping.MaxUpdates],
+[MaxTime][pydvl.valuation.stopping.MaxTime], or
+[HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] among others. These
 can behave in different ways depending on the context. For example,
-[MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
+[MaxUpdates][pydvl.valuation.stopping.MaxUpdates] limits
 the number of updates to values, which depending on the algorithm may mean a
 different number of utility evaluations or imply other computations like solving
 a linear or quadratic program.
 
 Stopping criteria are callables that are evaluated on a
-[ValuationResult][pydvl.value.result.ValuationResult] and return a
+[ValuationResult][pydvl.valuation.result.ValuationResult] and return a
 [Status][pydvl.utils.status.Status] object. They can be combined using boolean
 operators.
 
@@ -37,7 +37,7 @@ estimates. In this case, this has been beneficial, but one might not wish for
 converged values to be updated, if one is sure that the criterion is adequate
 for individual values.
 
-[Semi-value methods][pydvl.value.semivalues] include a parameter
+[Semi-value methods][pydvl.valuation.methods.semivalue] include a parameter
 `skip_converged` that allows to skip the computation of values that have
 converged. The way to avoid doing this too early is to use a more stringent
 check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
@@ -48,10 +48,10 @@ despite requiring more iterations for some indices.
 ## Choosing a stopping criterion
 
 The choice of a stopping criterion greatly depends on the algorithm and the
-context. A safe bet is to combine a [MaxUpdates][pydvl.value.stopping.MaxUpdates]
-or a [MaxTime][pydvl.value.stopping.MaxTime] with a
-[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] or an
-[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError]. The former
+context. A safe bet is to combine a [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
+or a [MaxTime][pydvl.valuation.stopping.MaxTime] with a
+[HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] or an
+[AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError]. The former
 will ensure that the computation does not run for too long, while the latter
 will try to achieve results that are stable enough. Note however that if the
 threshold is too strict, one will always end up running until a maximum number
@@ -62,7 +62,7 @@ as described above for semi-values.
 
 ??? Example
     ```python
-    from pydvl.value import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
+    from pydvl.valuation import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
 
     utility = ...  # some utility object
     criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
@@ -78,8 +78,8 @@ as described above for semi-values.
     from the computation of the standard error. The `skip_converged` parameter
     is used to avoid computing more marginals for indices that have converged,
     which is useful if
-    [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError] is met
-    before [MaxUpdates][pydvl.value.stopping.MaxUpdates] for some indices.
+    [AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError] is met
+    before [MaxUpdates][pydvl.valuation.stopping.MaxUpdates] for some indices.
 
 !!! Warning
     Be careful not to reuse the same stopping criterion for different
@@ -91,22 +91,22 @@ as described above for semi-values.
 ## Creating stopping criteria
 
 The easiest way is to declare a function implementing the interface
-[StoppingCriterionCallable][pydvl.value.stopping.StoppingCriterionCallable] and
-wrap it with [make_criterion()][pydvl.value.stopping.make_criterion]. This
-creates a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object
+[StoppingCriterionCallable][pydvl.valuation.stopping.StoppingCriterionCallable] and
+wrap it with [make_criterion()][pydvl.valuation.stopping.make_criterion]. This
+creates a [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] object
 that can be composed with other stopping criteria.
 
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods `_check` and
-[completion][pydvl.value.stopping.StoppingCriterion.completion].
+[completion][pydvl.valuation.stopping.StoppingCriterion.completion].
 
 ## Combining stopping criteria
 
-Objects of type [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] can
+Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
 be combined with the binary operators `&` (*and*), and `|` (*or*), following the
 truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
 (*not*) is also supported. See
-[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
+[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] for details on how
 these operations affect the behavior of the stopping criteria.
 
 
@@ -122,13 +122,13 @@ from __future__ import annotations
 import abc
 import logging
 from time import time
-from typing import Callable, Optional, Protocol, Type
+from typing import Callable, Optional, Protocol, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import Status
-from pydvl.value import ValuationResult
+from pydvl.valuation.result import ValuationResult
 
 __all__ = [
     "make_criterion",
@@ -156,12 +156,12 @@ class StoppingCriterion(abc.ABC):
     must stop.
 
     A `StoppingCriterion` is a callable taking a
-    [ValuationResult][pydvl.value.result.ValuationResult] and returning a
-    [Status][pydvl.value.result.Status]. It also keeps track of individual
+    [ValuationResult][pydvl.valuation.result.ValuationResult] and returning a
+    [Status][pydvl.valuation.result.Status]. It also keeps track of individual
     convergence of values with
-    [converged][pydvl.value.stopping.StoppingCriterion.converged], and reports
+    [converged][pydvl.valuation.stopping.StoppingCriterion.converged], and reports
     the overall completion of the computation with
-    [completion][pydvl.value.stopping.StoppingCriterion.completion].
+    [completion][pydvl.valuation.stopping.StoppingCriterion.completion].
 
     Instances of `StoppingCriterion` can be composed with the binary operators
     `&` (*and*), and `|` (*or*), following the truth tables of
@@ -172,31 +172,31 @@ class StoppingCriterion(abc.ABC):
     - The results of `check()` are combined with the operator. See
       [Status][pydvl.utils.status.Status] for the truth tables.
     - The results of
-      [converged][pydvl.value.stopping.StoppingCriterion.converged] are combined
+      [converged][pydvl.valuation.stopping.StoppingCriterion.converged] are combined
       with the operator (returning another boolean array).
-    - The [completion][pydvl.value.stopping.StoppingCriterion.completion]
+    - The [completion][pydvl.valuation.stopping.StoppingCriterion.completion]
       method returns the min, max, or the complement to 1 of the completions of
       the operands, for AND, OR and NOT respectively. This is required for cases
       where one of the criteria does not keep track of the convergence of single
-      values, e.g. [MaxUpdates][pydvl.value.stopping.MaxUpdates], because
-      [completion][pydvl.value.stopping.StoppingCriterion.completion] by
+      values, e.g. [MaxUpdates][pydvl.valuation.stopping.MaxUpdates], because
+      [completion][pydvl.valuation.stopping.StoppingCriterion.completion] by
       default returns the mean of the boolean convergence array.
 
     # Subclassing
 
     Subclassing this class requires implementing a `check()` method that
     returns a [Status][pydvl.utils.status.Status] object based on a given
-    [ValuationResult][pydvl.value.result.ValuationResult]. This method should
+    [ValuationResult][pydvl.valuation.result.ValuationResult]. This method should
     update the attribute `_converged`, which is a boolean array indicating
     whether the value for each index has converged.
     When this does not make sense for a particular stopping criterion,
-    [completion][pydvl.value.stopping.StoppingCriterion.completion] should be
+    [completion][pydvl.valuation.stopping.StoppingCriterion.completion] should be
     overridden to provide an overall completion value, since its default
     implementation attempts to compute the mean of `_converged`.
 
     Args:
         modify_result: If `True` the status of the input
-            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
             place after the call.
     """
 
@@ -221,7 +221,7 @@ class StoppingCriterion(abc.ABC):
             return 0.0
         return float(np.mean(self.converged).item())
 
-    def reset(self):
+    def reset(self) -> None:
         pass
 
     @property
@@ -238,7 +238,7 @@ class StoppingCriterion(abc.ABC):
         """
         return self._converged
 
-    def __str__(self):
+    def __str__(self) -> str:
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
@@ -284,8 +284,8 @@ def make_criterion(
     completion: Callable[[], float] | None = None,
     name: str | None = None,
 ) -> Type[StoppingCriterion]:
-    """Create a new [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] from a function.
-    Use this to enable simpler functions to be composed with bitwise operators
+    """Create a new [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] from a
+    function. Use this to enable simpler functions to be composed with bitwise operators
 
     Args:
         fun: The callable to wrap.
@@ -298,13 +298,13 @@ def make_criterion(
             the function is used.
 
     Returns:
-        A new subclass of [StoppingCriterion][pydvl.value.stopping.StoppingCriterion].
+        A new subclass of [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion].
     """
 
     class WrappedCriterion(StoppingCriterion):
         def __init__(self, modify_result: bool = True):
             super().__init__(modify_result=modify_result)
-            self._name = name or getattr(fun, "__name__", "WrappedCriterion")
+            self._name = name or cast(str, getattr(fun, "__name__", "WrappedCriterion"))
 
         def _check(self, result: ValuationResult) -> Status:
             return fun(result)
@@ -315,7 +315,7 @@ def make_criterion(
                 return super().converged
             return converged()
 
-        def __str__(self):
+        def __str__(self) -> str:
             return self._name
 
         def completion(self) -> float:
@@ -345,7 +345,7 @@ class AbsoluteStandardError(StoppingCriterion):
         burn_in: The number of iterations to ignore before checking for
             convergence. This is required because computations typically start
             with zero variance, as a result of using
-            [zeros()][pydvl.value.result.ValuationResult.zeros]. The default is
+            [zeros()][pydvl.valuation.result.ValuationResult.zeros]. The default is
             set to an arbitrary minimum which is usually enough but may need to
             be increased.
     """
@@ -370,7 +370,7 @@ class AbsoluteStandardError(StoppingCriterion):
             return Status.Converged
         return Status.Pending
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"AbsoluteStandardError(threshold={self.threshold}, fraction={self.fraction}, burn_in={self.burn_in})"
 
 
@@ -408,7 +408,7 @@ class MaxChecks(StoppingCriterion):
     def reset(self):
         self._count = 0
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MaxChecks(n_checks={self.n_checks})"
 
 
@@ -418,10 +418,10 @@ class MaxUpdates(StoppingCriterion):
 
     !!! Note
         If you want to ensure that **all** values have been updated, you
-        probably want [MinUpdates][pydvl.value.stopping.MinUpdates] instead.
+        probably want [MinUpdates][pydvl.valuation.stopping.MinUpdates] instead.
 
     This checks the `counts` field of a
-    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of
+    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of
     times that each index has been updated. For powerset samplers, the maximum
     of this number coincides with the maximum number of subsets sampled. For
     permutation samplers, it coincides with the number of permutations sampled.
@@ -455,7 +455,7 @@ class MaxUpdates(StoppingCriterion):
             return self.last_max / self.n_updates
         return 0.0
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MaxUpdates(n_updates={self.n_updates})"
 
 
@@ -463,7 +463,7 @@ class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
 
     This checks the `counts` field of a
-    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of times that
+    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of times that
     each index has been updated. For powerset samplers, the minimum of this
     number is a lower bound for the number of subsets sampled. For
     permutation samplers, it lower-bounds the amount of permutations sampled.
@@ -495,7 +495,7 @@ class MinUpdates(StoppingCriterion):
             return self.last_min / self.n_updates
         return 0.0
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MinUpdates(n_updates={self.n_updates})"
 
 
@@ -534,7 +534,7 @@ class MaxTime(StoppingCriterion):
     def reset(self):
         self.start = time()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MaxTime(seconds={self.max_seconds})"
 
 
@@ -621,5 +621,5 @@ class HistoryDeviation(StoppingCriterion):
     def reset(self):
         self._memory = None  # type: ignore
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
