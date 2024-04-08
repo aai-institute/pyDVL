@@ -6,7 +6,7 @@ mkdocstrings[python]>=0.24
 mkdocstrings-python==1.9.0
 mkdocs-alias-plugin>=0.6.0
 mkdocs-autorefs==1.0.1
-mkdocs-bibtex==2.14.1
+mkdocs-bibtex==2.15.0
 mkdocs-gen-files
 mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox==0.3.7
