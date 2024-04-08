@@ -639,7 +639,8 @@ def compute_msr_banzhaf_semivalues(
     sampler_t: Type[StochasticSampler] = MSRSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -686,6 +687,7 @@ def compute_msr_banzhaf_semivalues(
         future_processor=MSRFutureProcessor(u),
         batch_size=batch_size,
         n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
         config=config,
         progress=progress,
     )

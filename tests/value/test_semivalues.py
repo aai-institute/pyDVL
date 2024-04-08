@@ -67,13 +67,13 @@ def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
 
 @pytest.mark.parametrize("num_samples", [5])
 def test_msr_banzhaf(
-    num_samples: int, analytic_banzhaf, parallel_config, n_jobs, seed: Seed
+    num_samples: int, analytic_banzhaf, parallel_backend, n_jobs, seed: Seed
 ):
     u, exact_values = analytic_banzhaf
     values = compute_msr_banzhaf_semivalues(
         u=u,
         done=MaxChecks(200 * num_samples),
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         n_jobs=n_jobs,
         seed=seed,
     )
