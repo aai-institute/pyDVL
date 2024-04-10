@@ -62,6 +62,8 @@ def lc_solve_problem(
 
     if solver_options is None:
         solver_options = {}
+    else:
+        solver_options = solver_options.copy()
 
     if "solver" not in solver_options:
         solver_options["solver"] = cp.SCS
