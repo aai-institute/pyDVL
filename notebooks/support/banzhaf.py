@@ -1,11 +1,19 @@
+import numpy as np
+
+from numpy.typing import NDArray
+from sklearn.datasets import load_digits
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from typing import Optional
 
-from sklearn.datasets import load_digits
-from sklearn.model_selection import train_test_split
-from torch import nn, optim
-from torch.utils.data import TensorDataset, DataLoader
-from numpy.typing import NDArray
 from pydvl.utils.types import SupervisedModel
+
+try:
+    import torch
+    from torch import nn, optim
+    from torch.utils.data import TensorDataset, DataLoader
+except ImportError as e:
+    raise RuntimeError("PyTorch is required to run the Banzhaf MSR notebook") from e
 
 
 def load_digits_dataset(
@@ -21,12 +29,6 @@ def load_digits_dataset(
         target values in the form of matrices of shape (N,8,8) the first
         and (N,) the second.
     """
-    try:
-        import torch
-    except ImportError as e:
-        raise RuntimeError(
-            "PyTorch is required in order to load the Digits Dataset"
-        ) from e
 
     digits_bunch = load_digits(as_frame=True)
     x, x_test, y, y_test = train_test_split(
@@ -49,13 +51,15 @@ def load_digits_dataset(
 class TorchCNNModel(SupervisedModel):
     def __init__(
         self,
-        lr: float,
-        epochs: int,
-        batch_size: int,
-        device: str,
+        lr: float = 0.001,
+        epochs: int = 40,
+        batch_size: int = 32,
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         self.lr = lr
         self.batch_size = batch_size
+        self.epochs = epochs
+        self.device = device
         self.model = nn.Sequential(
             nn.Conv2d(
                 out_channels=8, in_channels=1, kernel_size=(3, 3), padding="same"
@@ -71,15 +75,16 @@ class TorchCNNModel(SupervisedModel):
         )
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
-        self.epochs = epochs
         self.model.to(device)
 
     def fit(self, x: NDArray, y: NDArray) -> None:
         torch_dataset = TensorDataset(
             torch.tensor(
-                np.reshape(x, (x.shape[0], 1, 8, 8)), dtype=torch.float, device=device
+                np.reshape(x, (x.shape[0], 1, 8, 8)),
+                dtype=torch.float,
+                device=self.device,
             ),
-            torch.tensor(y, device=device),
+            torch.tensor(y, device=self.device),
         )
         torch_dataloader = DataLoader(torch_dataset, batch_size=self.batch_size)
         for epoch in range(self.epochs):
@@ -92,7 +97,9 @@ class TorchCNNModel(SupervisedModel):
     def predict(self, x: NDArray) -> NDArray:
         pred = self.model(
             torch.tensor(
-                np.reshape(x, (x.shape[0], 1, 8, 8)), dtype=torch.float, device=device
+                np.reshape(x, (x.shape[0], 1, 8, 8)),
+                dtype=torch.float,
+                device=self.device,
             )
         )
         pred = torch.argmax(pred, dim=1)
