@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0 🆕 New methods, better docs and bugfixes 📚🐞
+## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
 
 ### Added
 
