@@ -101,11 +101,7 @@ import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.parallel import (
-    ParallelBackend,
-    _maybe_init_parallel_backend,
-    init_parallel_backend,
-)
+from pydvl.parallel import ParallelBackend, _maybe_init_parallel_backend
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility
 from pydvl.utils.types import IndexT, Seed
@@ -117,7 +113,7 @@ from pydvl.value.sampler import (
     SampleT,
     StochasticSampler,
 )
-from pydvl.value.stopping import MaxUpdates, RankCorrelation, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 __all__ = [
     "compute_banzhaf_semivalues",
@@ -497,7 +493,7 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
 def compute_shapley_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -567,7 +563,7 @@ def compute_shapley_semivalues(
 def compute_banzhaf_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -635,7 +631,7 @@ def compute_banzhaf_semivalues(
 def compute_msr_banzhaf_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = RankCorrelation(0.01),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = MSRSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -704,7 +700,7 @@ def compute_beta_shapley_semivalues(
     *,
     alpha: float = 1,
     beta: float = 1,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -782,7 +778,7 @@ class SemiValueMode(str, Enum):
 def compute_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     mode: SemiValueMode = SemiValueMode.Shapley,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
