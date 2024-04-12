@@ -1,17 +1,17 @@
-import numpy as np
+from typing import Optional
 
+import numpy as np
 from numpy.typing import NDArray
 from sklearn.datasets import load_digits
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from typing import Optional
 
 from pydvl.utils.types import SupervisedModel
 
 try:
     import torch
     from torch import nn, optim
-    from torch.utils.data import TensorDataset, DataLoader
+    from torch.utils.data import DataLoader, TensorDataset
 except ImportError as e:
     raise RuntimeError("PyTorch is required to run the Banzhaf MSR notebook") from e
 

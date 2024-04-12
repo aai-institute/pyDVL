@@ -358,13 +358,16 @@ class ValuationResult(
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem: ...
+    def __getitem__(self, key: int) -> ValueItem:
+        ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]: ...
+    def __getitem__(self, key: slice) -> List[ValueItem]:
+        ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
+        ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -390,13 +393,16 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None: ...
+    def __setitem__(self, key: int, value: ValueItem) -> None:
+        ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None:
+        ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
+        ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
