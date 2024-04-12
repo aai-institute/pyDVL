@@ -1234,6 +1234,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/msr_banzhaf_digits/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Banzhaf Semivalues
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3448,7 +3469,7 @@ of lowest-valued points are selected, and the overlap with the subset of flipped
 points is computed. This synthetic experiment is however hard to put into
 practical use, since the fraction <span class="arithmatex">\(\alpha\)</span> is of course unknown in practice.</p>
 <h3 id="rank-stability">Rank stability<a class="headerlink" href="#rank-stability" title="Permanent link">&para;</a></h3>
-<p>Introduced in (Wang and Jia, 2023)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, one can  look at how stable the top <span class="arithmatex">\(k\)</span>% of
+<p>Introduced in [@wang_data_2022], one can  look at how stable the top <span class="arithmatex">\(k\)</span>% of
 the values is across runs. Rank stability of a method is necessary but not
 sufficient for good results. Ideally one wants to identify high-value points
 reliably (good precision and recall) and consistently (good rank stability).</p>
@@ -3466,11 +3487,11 @@ compare their efficacy.</p>
 inverse Hessian-vector product. For this reason one often sees in the literature
 the quality of the approximation to <abbr title="Leave-One-Out">LOO</abbr> as an indicator of performance, the
 exact Influence Function being a first order approximation to it. However, as
-shown by (Bae et al., 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>, the different approximation errors ensuing for lack of
+shown by (Bae et al., 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">1</a></sup>, the different approximation errors ensuing for lack of
 convexity, approximate Hessian-vector products and so on, lead to this being a
 poor benchmark overall.</p>
 <h3 id="data-re-labelling">Data re-labelling<a class="headerlink" href="#data-re-labelling" title="Permanent link">&para;</a></h3>
-<p>(Kong et al., 2022)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup> introduce a method using IFs to re-label harmful training
+<p>(Kong et al., 2022)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">2</a></sup> introduce a method using IFs to re-label harmful training
 samples in order to improve accuracy. One can then take the obtained improvement
 as a measure of the quality of the <abbr title="Influence Function">IF</abbr> method.</p>
 <h3 id="post-hoc-fairness-adjustment">Post-hoc fairness adjustment<a class="headerlink" href="#post-hoc-fairness-adjustment" title="Permanent link">&para;</a></h3>
@@ -3479,14 +3500,11 @@ selected fair set, and using them to re-weight the training data.</p>
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:1">
-<p>Wang, J.T., Jia, R., 2023. <a href="https://proceedings.mlr.press/v206/wang23e.html">Data Banzhaf: A Robust Data Valuation Framework for Machine Learning</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 6388–6421.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
 <li id="fn:2">
-<p>Bae, J., Ng, N., Lo, A., Ghassemi, M., Grosse, R.B., 2022. <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/7234e0c36fdbcb23e7bd56b68838999b-Abstract-Conference.html">If Influence Functions are the Answer, Then What is the Question?</a>, in: Advances in Neural Information Processing Systems. Presented at the NeurIPS 2022, pp. 17953–17967.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>Bae, J., Ng, N., Lo, A., Ghassemi, M., Grosse, R.B., 2022. <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/7234e0c36fdbcb23e7bd56b68838999b-Abstract-Conference.html">If Influence Functions are the Answer, Then What is the Question?</a>, in: Advances in Neural Information Processing Systems. Presented at the NeurIPS 2022, pp. 17953–17967.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:3">
-<p>Kong, S., Shen, Y., Huang, L., 2022. <a href="https://openreview.net/forum?id=EskfH0bwNVn">Resolving Training Biases via <span class="nocase">Influence-based Data Relabeling</span></a>. Presented at the International Conference on Learning Representations (ICLR 2022).&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+<p>Kong, S., Shen, Y., Huang, L., 2022. <a href="https://openreview.net/forum?id=EskfH0bwNVn">Resolving Training Biases via <span class="nocase">Influence-based Data Relabeling</span></a>. Presented at the International Conference on Learning Representations (ICLR 2022).&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>

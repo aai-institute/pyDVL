@@ -800,6 +800,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Banzhaf indices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#banzhaf-semi-values-with-msr-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Banzhaf semi-values with MSR sampling
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1150,6 +1165,27 @@
   
   <span class="md-ellipsis">
     Data OOB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/msr_banzhaf_digits/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Banzhaf Semivalues
   </span>
   
 
@@ -3229,6 +3265,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Banzhaf indices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#banzhaf-semi-values-with-msr-sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Banzhaf semi-values with MSR sampling
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3331,6 +3382,30 @@ available in pyDVL through
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="banzhaf-semi-values-with-msr-sampling">Banzhaf semi-values with <abbr title="Maximum Sample Reuse">MSR</abbr> sampling<a class="headerlink" href="#banzhaf-semi-values-with-msr-sampling" title="Permanent link">&para;</a></h3>
+<p>Wang et. al. propose a more sample-efficient method for computing Banzhaf 
+semivalues in their paper <em>Data Banzhaf: A Robust Data Valuation Framework 
+for Machine Learning</em> (Wang and Jia, 2023)<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. This method updates all semivalues
+per evaluation of the utility (i.e. per model trained) based on whether a 
+specific data point was included in the data subset or not. The expression 
+for computing the semivalues is</p>
+<div class="arithmatex">\[\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in 
+\mathbf{S}_{\ni i}} U(S) - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} 
+\sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)\]</div>
+<p>where <span class="arithmatex">\(\mathbf{S}_{\ni i}\)</span> are the subsets that contain the index <span class="arithmatex">\(i\)</span> and 
+<span class="arithmatex">\(\mathbf{S}_{\not{\ni} i}\)</span> are the subsets not containing the index <span class="arithmatex">\(i\)</span>.</p>
+<p>The function implementing this method is
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_msr_banzhaf_semivalues">compute_msr_banzhaf_semivalues</a>.</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_msr_banzhaf_semivalues</span><span class="p">,</span> <span class="n">RankCorrelation</span><span class="p">,</span> <span class="n">Utility</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_msr_banzhaf_semivalues</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">RankCorrelation</span><span class="p">(</span><span class="n">rtol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">),</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  <span class="p">)</span>
+</span></code></pre></div>
+For further details on how to use this method and a comparison of the sample 
+efficiency, we suggest to take a look at the example notebook 
+<a href="../../examples/msr_banzhaf_spotify">msr_banzhaf_spotify</a>.</p>
 <h2 id="general-semi-values">General semi-values<a class="headerlink" href="#general-semi-values" title="Permanent link">&para;</a></h2>
 <p>As explained above, both Beta Shapley and Banzhaf indices are special cases of
 semi-values. In pyDVL we provide a general method for computing these with any
@@ -3345,21 +3420,21 @@ combination of the three ingredients that define a semi-value:</p>
 The utility function is the same as for Shapley values, and the sampling method
 can be any of the types defined in <a class="autorefs autorefs-internal" href="../../api/pydvl/value/sampler/#pydvl.value.sampler">the samplers module</a>.
 For instance, the following snippet is equivalent to the above:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_generic_semivalues</span><span class="p">(</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  <span class="n">sampler</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  <span class="n">coefficient</span><span class="o">=</span><span class="n">beta_coefficient</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_generic_semivalues</span><span class="p">(</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  <span class="n">sampler</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  <span class="n">coefficient</span><span class="o">=</span><span class="n">beta_coefficient</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>Allowing any coefficient can help when experimenting with models which are more
 sensitive to changes in training set size. However, Data Banzhaf indices are
 proven to be the most robust to variance in the utility function, in the sense
-of rank stability, across a range of models and datasets (Wang and Jia, 2023)<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. </p>
+of rank stability, across a range of models and datasets (Wang and Jia, 2023)<sup id="fnref4:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. </p>
 <div class="admonition warning">
 <p class="admonition-title">Careful with permutation sampling</p>
 <p>This generic implementation of semi-values allowing for any combination of
@@ -3382,7 +3457,7 @@ whenever not computing other semi-values.</p>
 <hr />
 <ol>
 <li id="fn:1">
-<p>Wang, J.T., Jia, R., 2023. <a href="https://proceedings.mlr.press/v206/wang23e.html">Data Banzhaf: A Robust Data Valuation Framework for Machine Learning</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 6388–6421.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>Wang, J.T., Jia, R., 2023. <a href="https://proceedings.mlr.press/v206/wang23e.html">Data Banzhaf: A Robust Data Valuation Framework for Machine Learning</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 6388–6421.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:2">
 <p>Kwon, Y., Zou, J., 2022. <a href="https://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
@@ -3411,7 +3486,7 @@ whenever not computing other semi-values.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-04-12</span>
   </span>
 
     

@@ -1092,6 +1092,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/msr_banzhaf_digits/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Banzhaf Semivalues
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3285,8 +3306,8 @@ we focus on game-theoretic concepts and refer to the main documentation on the
 <p>The main contenders in game-theoretic approaches are <a href="shapley.md]">Shapley
 values</a> (Ghorbani and Zou, 2019)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, (Kwon et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>,
  (Schoch et al., 2022)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>, their generalization to so-called
-<a href="semi-values/">semi-values</a> by (Kwon and Zou, 2022)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup> and (Wang and Jia, 2023)<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>,
-and <a href="the-core/">the Core</a> (Yan and Procaccia, 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>. All of these are implemented
+<a href="semi-values/">semi-values</a> by (Kwon and Zou, 2022)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup> and [@wang_data_2022],
+and <a href="the-core/">the Core</a> (Yan and Procaccia, 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">5</a></sup>. All of these are implemented
 in pyDVL. For a full list see <a href="../getting-started/methods/">Methods</a></p>
 <p>In these methods, data points are considered players in a cooperative game 
 whose outcome is the performance of the model when trained on subsets 
@@ -3296,8 +3317,8 @@ the training set, so that an exact computation is <span class="arithmatex">\(\ma
 number of samples <span class="arithmatex">\(n\)</span>, with each iteration requiring a full re-fitting of the 
 model using a coalition as training set. Consequently, most methods involve 
 Monte Carlo approximations, and sometimes approximate utilities which are 
-faster to compute, e.g. proxy models (Wang et al., 2022)<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup> or constant-cost
-approximations like Neural Tangent Kernels (Wu et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+faster to compute, e.g. proxy models (Wang et al., 2022)<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">6</a></sup> or constant-cost
+approximations like Neural Tangent Kernels (Wu et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">7</a></sup>.</p>
 <p>The reasoning behind using game theory is that, in order to be useful, an
 assignment of value, dubbed <strong>valuation function</strong>, is usually required to
 fulfil certain requirements of consistency and "fairness". For instance, in some
@@ -3414,7 +3435,7 @@ when constructing the <code>Utility</code> object. The two following calls are e
 <p>Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
 from subsets to scores. This is the idea behind <strong>Data Utility Learning (<abbr title="Data Utility Learning">DUL</abbr>)</strong>
- (Wang et al., 2022)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">7</a></sup> and in pyDVL it's as simple as wrapping the
+ (Wang et al., 2022)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">6</a></sup> and in pyDVL it's as simple as wrapping the
 <code>Utility</code> inside <a class="autorefs autorefs-internal" href="../api/pydvl/utils/utility/#pydvl.utils.utility.DataUtilityLearning">DataUtilityLearning</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
@@ -3471,7 +3492,7 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
   literature. But in <abbr title="Machine Learning">ML</abbr> we use an evaluation of the model on a validation set as a
   proxy for the true risk. Even if the utility is bounded, its variance will
   affect final values, and even more so any Monte Carlo estimates.
-  Several works have tried to cope with variance. (Wang and Jia, 2023)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by
+  Several works have tried to cope with variance. [@wang_data_2022] prove that by
   relaxing one of the Shapley axioms and considering the general class of
   semi-values, of which Shapley is an instance, one can prove that a choice of
   constant weights is the best one can do in a utility-agnostic setting. This
@@ -3528,9 +3549,9 @@ can also introduce issues in the low-value regime.</p>
   also provide different sampling strategies to reduce the variance, but due to a
   no-free-lunch-type theorem, no single strategy can be optimal for all utilities.
   Finally, model specific methods like
-  <a class="autorefs autorefs-internal" href="../api/pydvl/value/shapley/knn/#pydvl.value.shapley.knn.knn_shapley">kNN-Shapley</a> (Jia et al., 2019)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>, or
+  <a class="autorefs autorefs-internal" href="../api/pydvl/value/shapley/knn/#pydvl.value.shapley.knn.knn_shapley">kNN-Shapley</a> (Jia et al., 2019)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">8</a></sup>, or
   altogether different and typically faster approaches like
-  <a class="autorefs autorefs-internal" href="../api/pydvl/value/oob/oob/#pydvl.value.oob.oob.compute_data_oob">Data-<abbr title="Out-of-Bag">OOB</abbr></a> (Kwon and Zou, 2023)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup> can also be
+  <a class="autorefs autorefs-internal" href="../api/pydvl/value/oob/oob/#pydvl.value.oob.oob.compute_data_oob">Data-<abbr title="Out-of-Bag">OOB</abbr></a> (Kwon and Zou, 2023)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">9</a></sup> can also be
   used. </p>
 </li>
 <li>
@@ -3580,23 +3601,20 @@ include sample <span class="arithmatex">\(x_i\)</span>.</p>
 <li id="fn:4">
 <p>Kwon, Y., Zou, J., 2022. <a href="https://arxiv.org/abs/2110.14049">Beta Shapley: A Unified and <span class="nocase">Noise-reduced Data Valuation Framework</span> for Machine Learning</a>, in: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,. Presented at the AISTATS 2022, PMLR.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
 </li>
-<li id="fn:5">
-<p>Wang, J.T., Jia, R., 2023. <a href="https://proceedings.mlr.press/v206/wang23e.html">Data Banzhaf: A Robust Data Valuation Framework for Machine Learning</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 6388–6421.&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
-</li>
 <li id="fn:6">
-<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 5 in the text">&#8617;</a></p>
 </li>
 <li id="fn:7">
-<p>Wang, T., Yang, Y., Jia, R., 2022. Improving <span class="nocase">Cooperative Game Theory-based Data Valuation</span> via Data Utility Learning. Presented at the International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning, arXiv. <a href="https://doi.org/10.48550/arXiv.2107.06336">https://doi.org/10.48550/arXiv.2107.06336</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+<p>Wang, T., Yang, Y., Jia, R., 2022. Improving <span class="nocase">Cooperative Game Theory-based Data Valuation</span> via Data Utility Learning. Presented at the International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning, arXiv. <a href="https://doi.org/10.48550/arXiv.2107.06336">https://doi.org/10.48550/arXiv.2107.06336</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 6 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:7" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 <li id="fn:8">
-<p>Wu, Z., Shu, Y., Low, B.K.H., 2022. <a href="https://proceedings.mlr.press/v162/wu22j.html">DAVINZ: Data Valuation using Deep Neural Networks at Initialization</a>, in: Proceedings of the 39th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 24150–24176.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+<p>Wu, Z., Shu, Y., Low, B.K.H., 2022. <a href="https://proceedings.mlr.press/v162/wu22j.html">DAVINZ: Data Valuation using Deep Neural Networks at Initialization</a>, in: Proceedings of the 39th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 24150–24176.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 <li id="fn:9">
-<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Gurel, N.M., Li, B., Zhang, C., Spanos, C., Song, D., 2019. Efficient task-specific data valuation for nearest neighbor algorithms. Proc. VLDB Endow. 12, 1610–1623. <a href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Gurel, N.M., Li, B., Zhang, C., Spanos, C., Song, D., 2019. Efficient task-specific data valuation for nearest neighbor algorithms. Proc. VLDB Endow. 12, 1610–1623. <a href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 8 in the text">&#8617;</a></p>
 </li>
 <li id="fn:10">
-<p>Kwon, Y., Zou, J., 2023. <a href="https://proceedings.mlr.press/v202/kwon23e.html">Data-<abbr title="Out-of-Bag">OOB</abbr>: <span class="nocase">Out-of-bag Estimate</span> as a Simple and Efficient Data Value</a>, in: Proceedings of the 40th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 18135–18152.&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+<p>Kwon, Y., Zou, J., 2023. <a href="https://proceedings.mlr.press/v202/kwon23e.html">Data-<abbr title="Out-of-Bag">OOB</abbr>: <span class="nocase">Out-of-bag Estimate</span> as a Simple and Efficient Data Value</a>, in: Proceedings of the 40th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 18135–18152.&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>

@@ -805,6 +805,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#maximum-sample-reuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maximum Sample Reuse
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#monte-carlo-least-core" class="md-nav__link">
     <span class="md-ellipsis">
       Monte Carlo Least Core
@@ -1372,6 +1381,27 @@
   
   <span class="md-ellipsis">
     Data OOB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/msr_banzhaf_digits/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Banzhaf Semivalues
   </span>
   
 
@@ -3553,6 +3583,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#maximum-sample-reuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maximum Sample Reuse
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#monte-carlo-least-core" class="md-nav__link">
     <span class="md-ellipsis">
       Monte Carlo Least Core
@@ -3833,6 +3872,13 @@ performance when that point is removed from the training set.</p>
 <li><a class="autorefs autorefs-internal" href="../../api/pydvl/value/loo/loo/#pydvl.value.loo.loo.compute_loo">Implementation</a></li>
 <li><a class="autorefs autorefs-internal" href="../../value/#leave-one-out-values">Documentation</a></li>
 </ul>
+<h3 id="maximum-sample-reuse">Maximum Sample Reuse<a class="headerlink" href="#maximum-sample-reuse" title="Permanent link">&para;</a></h3>
+<p><abbr title="Maximum Sample Reuse">MSR</abbr> is a sampling method for data valuation that updates the value of every
+data point in one sample. This method can achieve much faster convergence.
+Introduced by (Wang and Jia, 2023)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup></p>
+<ul>
+<li><a class="autorefs autorefs-internal" href="../../api/pydvl/value/sampler/#pydvl.value.sampler.MSRSampler">Implementation</a></li>
+</ul>
 <h3 id="monte-carlo-least-core">Monte Carlo Least Core<a class="headerlink" href="#monte-carlo-least-core" title="Permanent link">&para;</a></h3>
 <p><abbr title="Monte Carlo Least Core">MCLC</abbr> is a variation of the Least Core that uses a reduced amount of
 constraints, sampled randomly from the powerset of the training data.
@@ -3846,7 +3892,7 @@ Introduced by (Yan and Procaccia, 2021)<sup id="fnref2:6"><a class="footnote-ref
 over subsets of the training set. This reduces computation to polynomial time
 at the cost of accuracy, but this loss is typically irrelevant for downstream
 applications in <abbr title="Machine Learning">ML</abbr>.
-Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
 <ul>
 <li><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/montecarlo/#pydvl.value.shapley.montecarlo">Implementation</a></li>
 <li><a class="autorefs autorefs-internal" href="../../value/shapley/#monte-carlo-combinatorial-shapley">Documentation</a></li>
@@ -3855,9 +3901,9 @@ Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref:8"><a c
 <p>The Nyström approximation computes a low-rank approximation to a symmetric
 positive-definite matrix via random projections. For influence functions, 
 it is used to approximate the <a class="autorefs autorefs-internal" href="#inverse-hessian-vector-product"><abbr title="inverse Hessian-vector product">iHVP</abbr></a>.
-Introduced as sketch and solve algorithm in (Hataya and Yamada, 2023)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>, and as
+Introduced as sketch and solve algorithm in (Hataya and Yamada, 2023)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup>, and as
 preconditioner for <a class="autorefs autorefs-internal" href="#preconditioned-conjugate-gradient"><abbr title="Preconditioned Conjugate Gradient">PCG</abbr></a> in
- (Frangella et al., 2023)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup>.</p>
+ (Frangella et al., 2023)<sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup>.</p>
 <ul>
 <li><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.NystroemSketchInfluence">Implementation Sketch-and-Solve (torch)
    </a></li>
@@ -3903,7 +3949,7 @@ on a weighted average of its marginal contributions to the model's performance
 when trained on each subset of the training set. This requires
 <span class="arithmatex">\(\mathcal{O}(2^{n-1})\)</span> re-trainings of the model, which is infeasible for even
 trivial data set sizes, so one resorts to approximations like <abbr title="Truncated Monte Carlo Shapley">TMCS</abbr>.
-Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref2:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref2:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
 <ul>
 <li><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/naive/#pydvl.value.shapley.naive">Implementation</a></li>
 <li><a class="autorefs autorefs-internal" href="../../value/shapley/#shapley-value">Documentation</a></li>
@@ -3912,7 +3958,7 @@ Introduced into data valuation by (Ghorbani and Zou, 2019)<sup id="fnref2:8"><a 
 <p><abbr title="Truncated Monte Carlo Shapley">TMCS</abbr> is an efficient approach to estimating the Shapley Value using a
 truncated version of the Monte Carlo method, reducing computation time while
 maintaining accuracy in large datasets.
-Introduced by (Ghorbani and Zou, 2019)<sup id="fnref3:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+Introduced by (Ghorbani and Zou, 2019)<sup id="fnref3:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
 <ul>
 <li><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/montecarlo/#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">Implementation
    </a></li>
@@ -3969,13 +4015,16 @@ transparency and reliability in the field. Papers are published in
 <p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 <li id="fn:8">
-<p>Ghorbani, A., Zou, J., 2019. <a href="https://proceedings.mlr.press/v97/ghorbani19c.html">Data Shapley: Equitable Valuation of Data for Machine Learning</a>, in: Proceedings of the 36th International Conference on Machine Learning, PMLR. Presented at the International Conference on Machine Learning (ICML 2019), PMLR, pp. 2242–2251.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:8" title="Jump back to footnote 8 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+<p>Wang, J.T., Jia, R., 2023. <a href="https://proceedings.mlr.press/v206/wang23e.html">Data Banzhaf: A Robust Data Valuation Framework for Machine Learning</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 6388–6421.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
 </li>
 <li id="fn:9">
-<p>Hataya, R., Yamada, M., 2023. <a href="https://proceedings.mlr.press/v206/hataya23a.html">Nyström Method for Accurate and Scalable Implicit Differentiation</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 4643–4654.&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+<p>Ghorbani, A., Zou, J., 2019. <a href="https://proceedings.mlr.press/v97/ghorbani19c.html">Data Shapley: Equitable Valuation of Data for Machine Learning</a>, in: Proceedings of the 36th International Conference on Machine Learning, PMLR. Presented at the International Conference on Machine Learning (ICML 2019), PMLR, pp. 2242–2251.&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:9" title="Jump back to footnote 9 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 <li id="fn:10">
-<p>Frangella, Z., Tropp, J.A., Udell, M., 2023. Randomized Nyström Preconditioning. SIAM J. Matrix Anal. Appl. 44, 718–752. <a href="https://doi.org/10.1137/21M1466244">https://doi.org/10.1137/21M1466244</a>&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+<p>Hataya, R., Yamada, M., 2023. <a href="https://proceedings.mlr.press/v206/hataya23a.html">Nyström Method for Accurate and Scalable Implicit Differentiation</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 4643–4654.&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+<li id="fn:11">
+<p>Frangella, Z., Tropp, J.A., Udell, M., 2023. Randomized Nyström Preconditioning. SIAM J. Matrix Anal. Appl. 44, 718–752. <a href="https://doi.org/10.1137/21M1466244">https://doi.org/10.1137/21M1466244</a>&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -4001,7 +4050,7 @@ transparency and reliability in the field. Papers are published in
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-30</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-04-11</span>
   </span>
 
     
