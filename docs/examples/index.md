@@ -53,6 +53,15 @@ alias:
 
     [![](img/data_oob.png)](data_oob/)
 
+-  [__Faster Banzhaf values__](msr_banzhaf_digits/)
+
+    ---
+
+    Using Banzhaf values to estimate the value of data points in MNIST, and
+    evaluating convergence speed of MSR. 
+
+    [![](img/msr_banzhaf_digits.png)](msr_banzhaf_digits/)
+
 </div>
 
 
