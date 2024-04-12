@@ -1,6 +1,6 @@
 site_name: "pyDVL"
 site_dir: "docs_build"
-site_url: "https://aai-institute.github.io/pyDVL/"
+site_url: "https://pydvl.org"
 repo_name: "aai-institute/pyDVL"
 repo_url: "https://github.com/aai-institute/pyDVL"
 copyright: "Copyright &copy; AppliedAI Institute gGmbH"
@@ -9,32 +9,37 @@ remote_branch: gh-pages
 nav:
   - Home: index.md
   - Getting Started:
-    - Installation: getting-started/installation.md
+    - getting-started/index.md
     - First steps: getting-started/first-steps.md
+    - Applications: getting-started/applications.md
+    - Benchmarking: getting-started/benchmarking.md
+    - Methods: getting-started/methods.md
+    - Advanced usage: getting-started/advanced-usage.md
+    - Glossary: getting-started/glossary.md
   - Data Valuation:
-    - Introduction: value/index.md
-    - Applications: value/applications.md
-    - Notation: value/notation.md
+    - value/index.md
     - Shapley values: value/shapley.md
     - Semi-values: value/semi-values.md
     - The Core: value/the-core.md
-    - Classwise Shapley: value/classwise-shapley.md
+    - Class-wise Shapley: value/classwise-shapley.md
   - The Influence Function:
-    - Introduction: influence/index.md
+    - influence/index.md
     - Influence Function Model: influence/influence_function_model.md
     - Scaling Computation: influence/scaling_computation.md
   - Examples:
+    - examples/index.md
     - Data Valuation:
         - Shapley values: examples/shapley_basic_spotify.ipynb
         - KNN Shapley: examples/shapley_knn_flowers.ipynb
         - Data utility learning: examples/shapley_utility_learning.ipynb
         - Least Core: examples/least_core_basic.ipynb
         - Data OOB: examples/data_oob.ipynb
+        - Banzhaf Semivalues: examples/msr_banzhaf_digits.ipynb
     - Influence Function:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
       - For outlier detection: examples/influence_wine.ipynb
-      - For sentiment analysis: examples/influence_sentiment_analysis.ipynb
+      - For language models: examples/influence_sentiment_analysis.ipynb
   - Code:
     - API Reference: api/pydvl/
     - Changelog: CHANGELOG.md
@@ -51,6 +56,7 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
+  - search
   - autorefs
   - glightbox:
       touchNavigation: true
@@ -68,10 +74,8 @@ plugins:
   - macros
   - mike:
       canonical_version: stable
-  - search
   - section-index
   - alias:
-      use_relative_link: true
       verbose: true
   - gen-files:
       scripts:
@@ -105,10 +109,13 @@ plugins:
             - https://pytorch.org/docs/stable/objects.inv
             - https://pymemcache.readthedocs.io/en/latest/objects.inv
             - https://joblib.readthedocs.io/en/stable/objects.inv
+            - https://loky.readthedocs.io/en/stable/objects.inv
             - https://docs.dask.org/en/latest/objects.inv
             - https://distributed.dask.org/en/latest/objects.inv
+            - https://docs.ray.io/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
+            heading_level: 1
             inherited_members: true
             docstring_style: google
             docstring_section_style: spacy
@@ -116,11 +123,16 @@ plugins:
             show_bases: true
             members_order: source
             show_submodules: false
-            show_signature_annotations: false
+            separate_signature: true
+            show_signature_annotations: true
             signature_crossrefs: true
             merge_init_into_class: true
             docstring_options:
               ignore_init_summary: true
+            show_symbol_type_toc: true
+            show_symbol_type_heading: true
+            show_root_full_path: true
+            show_root_heading: true
   - bibtex:
       bib_file: "docs/assets/pydvl.bib"
       csl_file: "docs/assets/elsevier-harvard.csl"
@@ -129,6 +141,8 @@ plugins:
       enable_creation_date: true
       type: iso_date
       fallback_to_build_date: true
+  - social:
+      cards: !ENV [CI, True] # only build in CI
 
 theme:
   name: material
@@ -146,7 +160,7 @@ theme:
     - navigation.instant
     - navigation.path
     - navigation.sections
-#    - navigation.tabs
+    - navigation.tabs
     - navigation.top
     - navigation.tracking
     - search.suggest
@@ -200,11 +214,18 @@ extra:
       link: https://twitter.com/aai_transferlab
     - icon: fontawesome/brands/linkedin
       link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
+  analytics:
+    provider: simpleanalytics
+    hostname: pydvl.org
+    script_domain: scripts.simpleanalyticscdn.com
+    noscript_domain: queue.simpleanalyticscdn.com
+    collect_dnt: true
 
 markdown_extensions:
   - abbr
   - admonition
   - attr_list
+  - def_list
   - footnotes
   - markdown_captions
   - md_in_html

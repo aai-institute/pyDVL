@@ -17,8 +17,7 @@ D_{-y_i}$.
 
 !!! tip "Analysis of Class-wise Shapley"
     For a detailed analysis of the method, with comparison to other valuation
-    techniques, please refer to the [main
-    documentation](../../../../../value/classwise-shapley).
+    techniques, please refer to the [main documentation][class-wise-shapley].
 
 In practice, the quantity above is estimated using Monte Carlo sampling of
 the powerset and the set of index permutations. This results in the estimator
@@ -65,16 +64,12 @@ from copy import copy
 from typing import Callable, Optional, Set, Tuple, Union, cast
 
 import numpy as np
+from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.parallel import (
-    ParallelConfig,
-    effective_n_jobs,
-    init_executor,
-    init_parallel_backend,
-)
+from pydvl.parallel import ParallelBackend, ParallelConfig, _maybe_init_parallel_backend
 from pydvl.utils import (
     Dataset,
     Scorer,
@@ -239,6 +234,12 @@ class ClasswiseScorer(Scorer):
         return in_class_score, out_of_class_score
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_classwise_shapley_values(
     u: Utility,
     *,
@@ -249,7 +250,8 @@ def compute_classwise_shapley_values(
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -265,8 +267,9 @@ def compute_classwise_shapley_values(
     $$
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears and $S$ is a subset of the index set of all other
-    labels(see [[data-valuation]] for details).
+    the position where $i$ appears and $S$ is a subset of the index set of all
+    other labels (see [the main documentation][class-wise-shapley] for
+    details).
 
     Args:
         u: Utility object containing model, data, and scoring function. The
@@ -288,7 +291,13 @@ def compute_classwise_shapley_values(
         min_elements_per_label: The minimum number of elements for each opposite
             label.
         n_jobs: Number of parallel jobs to run.
-        config: Parallel configuration.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display a progress bar.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
@@ -314,9 +323,9 @@ def compute_classwise_shapley_values(
             " utility. See scoring argument of Utility."
         )
 
-    parallel_backend = init_parallel_backend(config)
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     u_ref = parallel_backend.put(u)
-    n_jobs = effective_n_jobs(n_jobs, config)
+    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * n_jobs
 
     pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
@@ -327,7 +336,9 @@ def compute_classwise_shapley_values(
     terminate_exec = False
     seed_sequence = ensure_seed_sequence(seed)
 
-    with init_executor(max_workers=n_jobs, config=config) as executor:
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
+    with parallel_backend.executor(max_workers=n_jobs) as executor:
         pending: Set[Future] = set()
         while True:
             completed_futures, pending = wait(
@@ -379,7 +390,6 @@ def _permutation_montecarlo_classwise_shapley_one_step(
     """Helper function for [compute_classwise_shapley_values()]
     [pydvl.value.shapley.classwise.compute_classwise_shapley_values].
 
-
     Args:
         u: Utility object containing model, data, and scoring function. The
             scorer must be of type [ClasswiseScorer]
@@ -399,6 +409,10 @@ def _permutation_montecarlo_classwise_shapley_one_step(
 
     Returns:
         ValuationResult object containing computed data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend configuration.
     """
     if done_sample_complements is None:
         done_sample_complements = MaxChecks(1)

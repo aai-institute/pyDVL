@@ -3,8 +3,8 @@ Monte Carlo approximations to Shapley Data values.
 
 !!! Warning
     You probably want to use the common interface provided by
-    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values] instead of directly using
-    the functions in this module.
+    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values]
+    instead of directly using the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
 re-trainings of the model, several Monte Carlo approximations are available. The
@@ -50,6 +50,7 @@ from functools import reduce
 from typing import Optional, Sequence, Union
 
 import numpy as np
+from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
@@ -57,10 +58,9 @@ from tqdm.auto import tqdm
 from pydvl.parallel import (
     CancellationPolicy,
     MapReduceJob,
+    ParallelBackend,
     ParallelConfig,
-    effective_n_jobs,
-    init_executor,
-    init_parallel_backend,
+    _maybe_init_parallel_backend,
 )
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.progress import repeat_indices
@@ -81,17 +81,20 @@ def _permutation_montecarlo_one_step(
     algorithm_name: str,
     seed: Optional[Union[Seed, SeedSequence]] = None,
 ) -> ValuationResult:
-    """Helper function for [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
+    """Helper function for
+    [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     Computes marginal utilities of each training sample in a randomly sampled
     permutation.
+
     Args:
         u: Utility object with model, data, and scoring function
         truncation: A callable which decides whether to interrupt
             processing a permutation and set all subsequent marginals to zero.
         algorithm_name: For the results object. Used internally by different
             variants of Shapley using this subroutine
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         An object with the results
@@ -124,13 +127,20 @@ def _permutation_montecarlo_one_step(
     return result
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
     *,
     truncation: TruncationPolicy = NoTruncation(),
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -145,12 +155,12 @@ def permutation_montecarlo_shapley(
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
     the position where $i$ appears (see [[data-valuation]] for details).
 
-    This implements the method described in (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
-    with a double stopping criterion.
+    This implements the method described in (Ghorbani and Zou, 2019)<sup><a
+    href="#ghorbani_data_2019">1</a></sup> with a double stopping criterion.
 
-    .. todo::
-       Think of how to add Robin-Gelman or some other more principled stopping
-       criterion.
+    !!! Todo
+        Think of how to add Robin-Gelman or some other more principled stopping
+        criterion.
 
     Instead of naively implementing the expectation, we sequentially add points
     to coalitions from a permutation and incrementally compute marginal utilities.
@@ -176,19 +186,29 @@ def permutation_montecarlo_shapley(
             processing a permutation and set all subsequent marginals to
             zero. Typically used to stop computation when the marginal is small.
         n_jobs: number of jobs across which to distribute the computation.
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display a progress bar.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     algorithm = "permutation_montecarlo_shapley"
 
-    parallel_backend = init_parallel_backend(config)
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
     u = parallel_backend.put(u)
-    max_workers = effective_n_jobs(n_jobs, config)
+    max_workers = parallel_backend.effective_n_jobs(n_jobs)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
     seed_sequence = ensure_seed_sequence(seed)
@@ -198,17 +218,15 @@ def permutation_montecarlo_shapley(
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
 
-    with init_executor(
-        max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
+    with parallel_backend.executor(
+        max_workers=max_workers, cancel_futures=CancellationPolicy.ALL
     ) as executor:
         pending: set[Future] = set()
         while True:
             pbar.n = 100 * done.completion()
             pbar.refresh()
 
-            completed, pending = wait(
-                pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
-            )
+            completed, pending = wait(pending, timeout=1.0, return_when=FIRST_COMPLETED)
             for future in completed:
                 result += future.result()
                 # we could check outside the loop, but that means more
@@ -285,12 +303,19 @@ def _combinatorial_montecarlo_shapley(
     return result
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def combinatorial_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
@@ -302,7 +327,7 @@ def combinatorial_montecarlo_shapley(
 
     This consists of randomly sampling subsets of the power set of the training
     indices in [u.data][pydvl.utils.utility.Utility], and computing their
-    marginal utilities. See [Data valuation][computing-data-values] for details.
+    marginal utilities. See [Data valuation][data-valuation] for details.
 
     Note that because sampling is done with replacement, the approximation is
     poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$
@@ -318,14 +343,25 @@ def combinatorial_montecarlo_shapley(
         n_jobs: number of parallel jobs across which to distribute the
             computation. Each worker receives a chunk of
             [indices][pydvl.utils.dataset.Dataset.indices]
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
@@ -333,6 +369,6 @@ def combinatorial_montecarlo_shapley(
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(u=u, done=done, progress=progress),
         n_jobs=n_jobs,
-        config=config,
+        parallel_backend=parallel_backend,
     )
     return map_reduce_job(seed=seed)

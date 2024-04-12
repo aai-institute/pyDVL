@@ -44,6 +44,9 @@ sampler which iterates over the same indices.
       Frank, and Geoffrey Holmes. [Sampling Permutations for Shapley Value
       Estimation](http://jmlr.org/papers/v23/21-0439.html). Journal of Machine
       Learning Research 23, no. 43 (2022): 1–46.
+[^2]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
+    In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 
 """
 
@@ -72,13 +75,16 @@ from pydvl.utils.types import IndexT, Seed
 
 __all__ = [
     "AntitheticSampler",
-    "DeterministicUniformSampler",
     "DeterministicPermutationSampler",
+    "DeterministicUniformSampler",
+    "MSRSampler",
     "PermutationSampler",
     "PowersetSampler",
     "RandomHierarchicalSampler",
-    "UniformSampler",
+    "SampleT",
+    "StochasticSampler",
     "StochasticSamplerMixin",
+    "UniformSampler",
 ]
 
 SampleT = Tuple[IndexT, NDArray[IndexT]]
@@ -86,7 +92,7 @@ Sequence.register(np.ndarray)
 
 
 class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
-    """Samplers are custom iterables over subsets of indices.
+    r"""Samplers are custom iterables over subsets of indices.
 
     Calling ``iter()`` on a sampler returns an iterator over tuples of the form
     $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
@@ -312,6 +318,26 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
+class MSRSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
+    """An iterator to perform sampling of random subsets.
+
+    This sampler does not return any index, it only returns subsets of the data.
+    This sampler is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
+    """
+
+    def __iter__(self) -> Iterator[SampleT]:
+        if len(self) == 0:
+            return
+        while True:
+            subset = random_subset(self.indices, seed=self._rng)
+            yield None, subset
+            self._n_samples += 1
+
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return 1.0
+
+
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
@@ -450,4 +476,5 @@ StochasticSampler = Union[
     PermutationSampler[IndexT],
     AntitheticSampler[IndexT],
     RandomHierarchicalSampler[IndexT],
+    MSRSampler[IndexT],
 ]

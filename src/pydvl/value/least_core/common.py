@@ -5,9 +5,15 @@ from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 
-from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils import Status, Utility
 from pydvl.value import ValuationResult
 
@@ -144,11 +150,18 @@ def lc_solve_problem(
     )
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def lc_solve_problems(
     problems: Sequence[LeastCoreProblem],
     u: Utility,
     algorithm: str,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     n_jobs: int = 1,
     non_negative_subsidy: bool = True,
     solver_options: Optional[dict] = None,
@@ -161,8 +174,13 @@ def lc_solve_problems(
         problems: Least Core problems to solve, as returned by
             [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
         algorithm: Name of the valuation algorithm.
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
@@ -177,6 +195,8 @@ def lc_solve_problems(
     ) -> List[ValuationResult]:
         return [lc_solve_problem(p, *args, **kwargs) for p in problems]
 
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
     map_reduce_job: MapReduceJob[
         "LeastCoreProblem", "List[ValuationResult]"
     ] = MapReduceJob(
@@ -190,7 +210,7 @@ def lc_solve_problems(
             **options,
         ),
         reduce_func=lambda x: list(itertools.chain(*x)),
-        config=config,
+        parallel_backend=parallel_backend,
         n_jobs=n_jobs,
     )
     solutions = map_reduce_job()

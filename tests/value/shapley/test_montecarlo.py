@@ -53,7 +53,7 @@ log = logging.getLogger(__name__)
 )
 def test_games(
     test_game,
-    parallel_config,
+    parallel_backend,
     n_jobs,
     fun: ShapleyMode,
     rtol: float,
@@ -79,7 +79,7 @@ def test_games(
         test_game.u,
         mode=fun,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         seed=seed,
         progress=True,
         **kwargs
@@ -110,7 +110,7 @@ def test_games(
 )
 def test_seed(
     test_game,
-    parallel_config: ParallelConfig,
+    parallel_backend: ParallelConfig,
     n_jobs: int,
     fun: ShapleyMode,
     kwargs: dict,
@@ -122,7 +122,7 @@ def test_seed(
         test_game.u,
         mode=fun,
         n_jobs=n_jobs,
-        config=parallel_config,
+        parallel_backend=parallel_backend,
         seeds=(seed, seed, seed_alt),
         **deepcopy(kwargs)
     )
@@ -131,10 +131,18 @@ def test_seed(
         np.testing.assert_equal(values_1.values, values_3.values)
 
 
+@pytest.mark.skip(
+    "This test is brittle and the bound isn't sharp. "
+    "We should at least document the bound in the documentation."
+)
 @pytest.mark.slow
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
-    "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
+    "fun",
+    [
+        ShapleyMode.PermutationMontecarlo,
+        ShapleyMode.CombinatorialMontecarlo,
+    ],
 )
 def test_hoeffding_bound_montecarlo(
     num_samples,

@@ -28,10 +28,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
+from torch._C import _LinAlgError
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
@@ -47,7 +48,10 @@ __all__ = [
     "create_per_sample_mixed_derivative_function",
     "model_hessian_low_rank",
     "LowRankProductRepresentation",
+    "randomized_nystroem_approximation",
+    "model_hessian_nystroem_approximation",
 ]
+
 
 logger = logging.getLogger(__name__)
 
@@ -168,8 +172,10 @@ def create_empirical_loss_function(
     on a given dataset. If we denote the model parameters with \( \theta \),
     the resulting function approximates:
 
-    \[ f(\theta) = \frac{1}{N}\sum_{i=1}^N
-        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)) \]
+    \[
+        f(\theta) = \frac{1}{N}\sum_{i=1}^N
+        \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))
+    \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$
     with model parameters $\theta$, where $N$ is the number of all elements provided
@@ -259,36 +265,36 @@ def create_hvp_function(
             Hessian is to be computed.
         loss: A callable that takes the model's output and target as input and
             returns the scalar loss.
-        data_loader: A DataLoader instance that provides batches of data for calculating
-            the Hessian-vector product. Each batch from the DataLoader is assumed to
-            return a tuple where the first element
-            is the model's input and the second element is the target output.
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep an additional
-            parameter-sized vector in memory.
-        use_average: If True, the returned function uses batch-wise computation via
-            [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function]
+        data_loader: A DataLoader instance that provides batches of data for
+            calculating the Hessian-vector product. Each batch from the
+            DataLoader is assumed to return a tuple where the first element is
+            the model's input and the second element is the target output.
+        precompute_grad: If `True`, the full data gradient is precomputed and
+            kept in memory, which can speed up the hessian vector product
+            computation. Set this to `False`, if you can't afford to keep the
+            full computation graph in memory.
+        use_average: If `True`, the returned function uses batch-wise
+            computation via
+            [a batch loss function][pydvl.influence.torch.functional.create_batch_loss_function]
             and averages the results.
-            If False, the function uses backpropagation on the full
-            [empirical_loss_function]
-            [pydvl.influence.torch.functional.empirical_loss_function],
-            which is more accurate than averaging the batch hessians,
-            but probably has a way higher memory usage.
+            If `False`, the function uses backpropagation on the full
+            [empirical loss function]
+            [pydvl.influence.torch.functional.create_empirical_loss_function],
+            which is more accurate than averaging the batch hessians, but
+            probably has a way higher memory usage.
         reverse_only: Whether to use only reverse-mode autodiff or
-            both forward- and reverse-mode autodiff.
-            Ignored if precompute_grad is True.
-        track_gradients: Whether to track gradients for the resulting tensor of the
-            hessian vector products.
+            both forward- and reverse-mode autodiff. Ignored if
+            `precompute_grad` is `True`.
+        track_gradients: Whether to track gradients for the resulting tensor of
+            the Hessian-vector products.
 
     Returns:
-        A function that takes a single argument, a vector, and returns the product of
-            the Hessian of the `loss` function with respect to the `model`'s parameters
-            and the input vector.
+        A function that takes a single argument, a vector, and returns the
+        product of the Hessian of the `loss` function with respect to the
+        `model`'s parameters and the input vector.
     """
 
     if precompute_grad:
-
         model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         if use_average:
@@ -408,7 +414,7 @@ def hessian(
 
     if use_hessian_avg:
         n_samples = 0
-        hessian = to_model_device(
+        hessian_mat = to_model_device(
             torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
         blf = create_batch_loss_function(model, loss)
@@ -420,11 +426,11 @@ def hessian(
 
         for x, y in iter(data_loader):
             n_samples += x.shape[0]
-            hessian += x.shape[0] * torch.func.hessian(flat_input_batch_loss_function)(
-                flat_params, to_model_device(x, model), to_model_device(y, model)
-            )
+            hessian_mat += x.shape[0] * torch.func.hessian(
+                flat_input_batch_loss_function
+            )(flat_params, to_model_device(x, model), to_model_device(y, model))
 
-        hessian /= n_samples
+        hessian_mat /= n_samples
     else:
 
         def flat_input_empirical_loss(p: torch.Tensor):
@@ -432,11 +438,11 @@ def hessian(
                 align_with_model(p, model)
             )
 
-        hessian = torch.func.jacrev(torch.func.jacrev(flat_input_empirical_loss))(
+        hessian_mat = torch.func.jacrev(torch.func.jacrev(flat_input_empirical_loss))(
             flat_params
         )
 
-    return hessian
+    return hessian_mat
 
 
 def create_per_sample_loss_function(
@@ -772,6 +778,7 @@ def model_hessian_low_rank(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
+    precompute_grad: bool = False,
 ) -> LowRankProductRepresentation:
     r"""
     Calculates a low-rank approximation of the Hessian matrix of the model's
@@ -807,6 +814,10 @@ def model_hessian_low_rank(
             small rank_estimate to fit your device's memory.
             If False, the eigen pair approximation is executed on the CPU by
             scipy wrapper to ARPACK.
+        precompute_grad: If True, the full data gradient is precomputed and kept
+            in memory, which can speed up the hessian vector product computation.
+            Set this to False, if you can't afford to keep the full computation graph
+            in memory.
 
     Returns:
         [LowRankProductRepresentation]
@@ -814,7 +825,9 @@ def model_hessian_low_rank(
             instance that contains the top (up until rank_estimate) eigenvalues
             and corresponding eigenvectors of the Hessian.
     """
-    raw_hvp = create_hvp_function(model, loss, training_data, use_average=True)
+    raw_hvp = create_hvp_function(
+        model, loss, training_data, use_average=True, precompute_grad=precompute_grad
+    )
     n_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
     device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(
@@ -827,4 +840,149 @@ def model_hessian_low_rank(
         max_iter=max_iter,
         device=device,
         eigen_computation_on_gpu=eigen_computation_on_gpu,
+    )
+
+
+def randomized_nystroem_approximation(
+    mat_mat_prod: Union[torch.Tensor, Callable[[torch.Tensor], torch.Tensor]],
+    input_dim: int,
+    rank: int,
+    input_type: torch.dtype,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+    mat_vec_device: torch.device = torch.device("cpu"),
+) -> LowRankProductRepresentation:
+    r"""
+    Given a matrix vector product function (representing a symmetric positive definite
+    matrix $A$ ), computes a random Nyström low rank approximation of
+    $A$ in factored form, i.e.
+
+    $$ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\dagger}(A \Omega)^T
+    = U \Sigma U^T $$
+
+    where $\Omega$ is a standard normal random matrix.
+
+    Args:
+        mat_mat_prod: A callable representing the matrix vector product
+        input_dim: dimension of the input for the matrix vector product
+        input_type: data_type of inputs
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+        mat_vec_device: device where the matrix vector product has to be executed
+
+    Returns:
+        object containing, $U$ and $\Sigma$
+    """
+
+    if shift_func is None:
+
+        def shift_func(x: torch.Tensor):
+            return (
+                torch.sqrt(torch.as_tensor(input_dim))
+                * torch.finfo(x.dtype).eps
+                * torch.linalg.norm(x)
+            )
+
+    _mat_mat_prod: Callable[[torch.Tensor], torch.Tensor]
+
+    if isinstance(mat_mat_prod, torch.Tensor):
+
+        def _mat_mat_prod(x: torch.Tensor):
+            return mat_mat_prod @ x
+
+    else:
+        _mat_mat_prod = mat_mat_prod
+
+    random_sample_matrix = torch.randn(
+        input_dim, rank, device=mat_vec_device, dtype=input_type
+    )
+    random_sample_matrix, _ = torch.linalg.qr(random_sample_matrix)
+
+    sketch_mat = _mat_mat_prod(random_sample_matrix)
+
+    shift = shift_func(sketch_mat)
+    sketch_mat += shift * random_sample_matrix
+    cholesky_mat = torch.matmul(random_sample_matrix.t(), sketch_mat)
+    try:
+        triangular_mat = torch.linalg.cholesky(cholesky_mat)
+    except _LinAlgError as e:
+        logger.warning(
+            f"Encountered error in cholesky decomposition: {e}.\n "
+            f"Increasing shift by smallest eigenvalue and re-compute"
+        )
+        eigen_vals, eigen_vectors = torch.linalg.eigh(cholesky_mat)
+        shift += torch.abs(torch.min(eigen_vals))
+        eigen_vals += shift
+        triangular_mat = torch.linalg.cholesky(
+            torch.mm(eigen_vectors, torch.mm(torch.diag(eigen_vals), eigen_vectors.T))
+        )
+
+    svd_input = torch.linalg.solve_triangular(
+        triangular_mat.t(), sketch_mat, upper=True, left=False
+    )
+    left_singular_vecs, singular_vals, _ = torch.linalg.svd(
+        svd_input, full_matrices=False
+    )
+    singular_vals = torch.clamp(singular_vals**2 - shift, min=0)
+
+    return LowRankProductRepresentation(singular_vals, left_singular_vecs)
+
+
+def model_hessian_nystroem_approximation(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+    rank: int,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+) -> LowRankProductRepresentation:
+    r"""
+    Given a model, loss and a data_loader, computes a random Nyström low rank approximation of
+    the corresponding Hessian matrix in factored form, i.e.
+
+    $$ H_{\text{nys}} = (H \Omega)(\Omega^T H \Omega)^{+}(H \Omega)^T
+    = U \Sigma U^T $$
+
+    Args:
+        model: A PyTorch model instance. The Hessian will be calculated with respect to
+            this model's parameters.
+        loss : A callable that computes the loss.
+        data_loader: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+
+    Returns:
+        object containing, $U$ and $\Sigma$
+    """
+
+    model_hvp = create_hvp_function(
+        model, loss, data_loader, precompute_grad=False, use_average=True
+    )
+    device = next((p.device for p in model.parameters()))
+    dtype = next((p.dtype for p in model.parameters()))
+    in_dim = sum((p.numel() for p in model.parameters() if p.requires_grad))
+
+    def model_hessian_mat_mat_prod(x: torch.Tensor):
+        return torch.func.vmap(model_hvp, in_dims=1, randomness="same")(x).t()
+
+    return randomized_nystroem_approximation(
+        model_hessian_mat_mat_prod,
+        in_dim,
+        rank,
+        dtype,
+        shift_func=shift_func,
+        mat_vec_device=device,
     )

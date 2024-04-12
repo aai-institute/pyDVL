@@ -1,17 +1,20 @@
+import joblib
 import pytest
 
-from pydvl.parallel.config import ParallelConfig
+from pydvl.parallel import JoblibParallelBackend, RayParallelBackend
 
 from ..conftest import num_workers
 
 
 @pytest.fixture(scope="module", params=["joblib", "ray-local", "ray-external"])
-def parallel_config(request):
+def parallel_backend(request):
     if request.param == "joblib":
-        yield ParallelConfig(backend="joblib", n_cpus_local=num_workers())
+        with joblib.parallel_config(backend="loky", n_jobs=num_workers()):
+            yield JoblibParallelBackend()
     elif request.param == "ray-local":
         ray = pytest.importorskip("ray", reason="Ray not installed.")
-        yield ParallelConfig(backend="ray", n_cpus_local=num_workers())
+        ray.init(num_cpus=num_workers())
+        yield RayParallelBackend()
         ray.shutdown()
     elif request.param == "ray-external":
         ray = pytest.importorskip("ray", reason="Ray not installed.")
@@ -22,6 +25,7 @@ def parallel_config(request):
         cluster = Cluster(
             initialize_head=True, head_node_args={"num_cpus": num_workers()}
         )
-        yield ParallelConfig(backend="ray", address=cluster.address)
+        ray.init(cluster.address)
+        yield RayParallelBackend()
         ray.shutdown()
         cluster.shutdown()

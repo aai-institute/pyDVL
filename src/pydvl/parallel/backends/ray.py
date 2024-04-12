@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import logging
+import warnings
 from concurrent.futures import Executor
 from typing import Any, Callable, Iterable, TypeVar
 
 import ray
+from deprecate import deprecated
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
-from pydvl.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.backend import CancellationPolicy, ParallelBackend
 from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["RayParallelBackend"]
@@ -17,26 +18,34 @@ __all__ = ["RayParallelBackend"]
 T = TypeVar("T")
 
 
-class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
+class RayParallelBackend(ParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
-    It shouldn't be initialized directly. You should instead call
-    [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
-
-    Args:
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
-            with cluster address, number of cpus, etc.
+    !!! Example
+        ``` python
+        import ray
+        from pydvl.parallel import RayParallelBackend
+        ray.init()
+        parallel_backend = RayParallelBackend()
+        ```
     """
 
-    def __init__(self, config: ParallelConfig):
-        self.config = {
-            "address": config.address,
-            "logging_level": config.logging_level or logging.WARNING,
-        }
-        if self.config["address"] is None:
-            self.config["num_cpus"] = config.n_cpus_local
+    _joblib_backend_name: str = "ray"
+    """Name of the backend to use for joblib inside [MapReduceJob][pydvl.parallel.mapreduce.MapReduceJob]."""
+
+    @deprecated(
+        target=True,
+        args_mapping={"config": None},
+        deprecated_in="0.9.0",
+        remove_in="0.10.0",
+    )
+    def __init__(self, config: ParallelConfig | None = None) -> None:
         if not ray.is_initialized():
-            ray.init(**self.config)
+            raise RuntimeError(
+                "Starting from v0.9.0, ray is no longer automatically initialized. "
+                "Please use `ray.init()` with the desired configuration "
+                "before using this class."
+            )
         # Register ray joblib backend
         register_ray()
 
@@ -44,12 +53,44 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def executor(
         cls,
         max_workers: int | None = None,
-        config: ParallelConfig = ParallelConfig(),
-        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+        *,
+        config: ParallelConfig | None = None,
+        cancel_futures: CancellationPolicy | bool = CancellationPolicy.PENDING,
     ) -> Executor:
+        """Returns a futures executor for the parallel backend.
+
+        !!! Example
+            ``` python
+            import ray
+            from pydvl.parallel import RayParallelBackend
+            ray.init()
+            parallel_backend = RayParallelBackend()
+            with parallel_backend.executor() as executor:
+                executor.submit(...)
+            ```
+
+        Args:
+            max_workers: Maximum number of parallel workers.
+            config: (**DEPRECATED**) Object configuring parallel computation,
+                with cluster address, number of cpus, etc.
+            cancel_futures: Policy to use when cancelling futures
+                after exiting an Executor.
+
+        Returns:
+            Instance of [RayExecutor][pydvl.parallel.futures.ray.RayExecutor].
+        """
+        # Imported here to avoid circular import errors
         from pydvl.parallel.futures.ray import RayExecutor
 
-        return RayExecutor(max_workers, config=config, cancel_futures=cancel_futures)  # type: ignore
+        if config is not None:
+            warnings.warn(
+                "The `RayParallelBackend` uses deprecated arguments: "
+                "`config`. They were deprecated since v0.9.0 "
+                "and will be removed in v0.10.0.",
+                FutureWarning,
+            )
+
+        return RayExecutor(max_workers, cancel_futures=cancel_futures)  # type: ignore
 
     def get(self, v: ObjectRef | Iterable[ObjectRef] | T, *args, **kwargs) -> T | Any:
         timeout: float | None = kwargs.get("timeout", None)

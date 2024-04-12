@@ -12,9 +12,15 @@ from functools import reduce
 from typing import Optional, Sequence
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 
-from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils import Utility, random_powerset
 from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed
@@ -25,6 +31,13 @@ __all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
 
 
 class OwenAlgorithm(Enum):
+    """Choices for the Owen sampling method.
+
+    Attributes:
+        Standard: Use q ∈ [0, 1]
+        Antithetic: Use q ∈ [0, 0.5] and correlated samples
+    """
+
     Standard = "standard"
     Antithetic = "antithetic"
 
@@ -99,6 +112,12 @@ def _owen_sampling_shapley(
     return result
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def owen_sampling_shapley(
     u: Utility,
     n_samples: int,
@@ -106,7 +125,8 @@ def owen_sampling_shapley(
     *,
     method: OwenAlgorithm = OwenAlgorithm.Standard,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
     seed: Optional[Seed] = None
 ) -> ValuationResult:
@@ -154,8 +174,13 @@ def owen_sampling_shapley(
             $q \in [0,0.5]$ and correlated samples
         n_jobs: Number of parallel jobs to use. Each worker receives a chunk
             of the total of `max_q` values for q.
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
@@ -167,7 +192,14 @@ def owen_sampling_shapley(
     !!! tip "Changed in version 0.5.0"
         Support for parallel computation and enable antithetic sampling.
 
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
+
     """
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
@@ -180,7 +212,7 @@ def owen_sampling_shapley(
             progress=progress,
         ),
         n_jobs=n_jobs,
-        config=config,
+        parallel_backend=parallel_backend,
     )
 
     return map_reduce_job(seed=seed)

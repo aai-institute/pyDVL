@@ -5,9 +5,10 @@ benchmarking purposes.
 
 ## References
 
-[^1]: <a name="castro_polynomial_2009"></a>Castro, J., Gómez, D. and Tejada, J., 2009.
-    [Polynomial calculation of the Shapley value based on sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
-    Computers & Operations Research, 36(5), pp.1726-1730.
+[^1]: <a name="castro_polynomial_2009"></a>Castro, J., Gómez, D. and Tejada,
+      J., 2009. [Polynomial calculation of the Shapley value based on
+      sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
+      Computers & Operations Research, 36(5), pp.1726-1730.
 
 """
 from __future__ import annotations
@@ -328,10 +329,10 @@ class AsymmetricVotingGame(Game):
 
 
 class ShoesGame(Game):
-    """Toy game that is used for testing and demonstration purposes.
+    r"""Toy game that is used for testing and demonstration purposes.
 
-    An shoes game defined in
-    (Castro et al., 2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
+    A shoes game defined in (Castro et al.,
+    2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
 
     In this game, some players have a left shoe and others a right shoe.
     Single shoes have a worth of zero while pairs have a worth of 1.

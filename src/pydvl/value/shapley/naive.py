@@ -1,13 +1,32 @@
+r"""
+This module implements exact Shapley values using either the combinatorial or
+permutation definition.
+
+The exact computation of $n$ values takes $\mathcal{O}(2^n)$ evaluations of the
+utility and is therefore only possible for small datasets. For larger datasets,
+consider using any of the approximations, such as [Monte
+Carlo][pydvl.value.shapley.montecarlo], or proxy models like
+[kNN][pydvl.value.shapley.knn].
+
+See [Data valuation][data-valuation] for details.
+"""
+
 import math
 import warnings
 from itertools import permutations
-from typing import List
+from typing import List, Optional
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
-from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.parallel import (
+    MapReduceJob,
+    ParallelBackend,
+    ParallelConfig,
+    _maybe_init_parallel_backend,
+)
 from pydvl.utils import Utility, powerset
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
@@ -18,9 +37,10 @@ __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     r"""Computes the exact Shapley value using the formulation with permutations:
 
-    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1}
+    \cup {i}) − u(\sigma_{i})].$$
 
-    See [Data valuation][computing-data-values] for details.
+    See [Data valuation][data-valuation] for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
@@ -89,35 +109,53 @@ def _combinatorial_exact_shapley(
     return local_values / n
 
 
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def combinatorial_exact_shapley(
     u: Utility,
     *,
     n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
     progress: bool = False,
 ) -> ValuationResult:
     r"""Computes the exact Shapley value using the combinatorial definition.
 
-    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
+    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}}
+    \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
 
-    See [Data valuation][computing-data-values] for details.
+    See [Data valuation][data-valuation] for details.
 
     !!! Note
         If the length of the training set is > n_jobs*20 this prints a warning
-        because the computation is very expensive. Used mostly for internal testing
-        and simple use cases. Please refer to the
-        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
-        applications.
+        because the computation is very expensive. Used mostly for internal
+        testing and simple use cases. Please refer to the
+        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for
+        practical applications.
 
     Args:
         u: Utility object with model, data, and scoring function
         n_jobs: Number of parallel jobs to use
-        config: Object configuring parallel computation, with cluster address,
-            number of cpus, etc.
+        parallel_backend: Parallel backend instance to use
+            for parallelizing computations. If `None`,
+            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
+            See the [Parallel Backends][pydvl.parallel.backends] package
+            for available options.
+        config: (**DEPRECATED**) Object configuring parallel computation,
+            with cluster address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
 
     Returns:
         Object with the data values.
+
+    !!! tip "Changed in version 0.9.0"
+        Deprecated `config` argument and added a `parallel_backend`
+        argument to allow users to pass the Parallel Backend instance
+        directly.
     """
     # Arbitrary choice, will depend on time required, caching, etc.
     if len(u.data) // n_jobs > 20:
@@ -128,13 +166,15 @@ def combinatorial_exact_shapley(
     def reduce_fun(results: List[NDArray]) -> NDArray:
         return np.array(results).sum(axis=0)  # type: ignore
 
+    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
+
     map_reduce_job: MapReduceJob[NDArray, NDArray] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_exact_shapley,
         map_kwargs=dict(u=u, progress=progress),
         reduce_func=reduce_fun,
         n_jobs=n_jobs,
-        config=config,
+        parallel_backend=parallel_backend,
     )
     values = map_reduce_job()
     return ValuationResult(

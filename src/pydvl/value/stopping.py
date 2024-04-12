@@ -115,6 +115,9 @@ these operations affect the behavior of the stopping criteria.
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
     [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+[^2]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
+    In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
 
 from __future__ import annotations
@@ -126,6 +129,7 @@ from typing import Callable, Optional, Protocol, Type
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.stats import spearmanr
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -139,6 +143,7 @@ __all__ = [
     "MinUpdates",
     "MaxTime",
     "HistoryDeviation",
+    "RankCorrelation",
 ]
 
 logger = logging.getLogger(__name__)
@@ -169,9 +174,8 @@ class StoppingCriterion(abc.ABC):
     also supported. These boolean operations act according to the following
     rules:
 
-    - The results of [_check][pydvl.value.stopping.StoppingCriterion._check] are
-      combined with the operator. See [Status][pydvl.utils.status.Status] for
-      the truth tables.
+    - The results of `check()` are combined with the operator. See
+      [Status][pydvl.utils.status.Status] for the truth tables.
     - The results of
       [converged][pydvl.value.stopping.StoppingCriterion.converged] are combined
       with the operator (returning another boolean array).
@@ -185,17 +189,15 @@ class StoppingCriterion(abc.ABC):
 
     # Subclassing
 
-    Subclassing this class requires implementing a
-    [_check][pydvl.value.stopping.StoppingCriterion._check] method that
+    Subclassing this class requires implementing a `check()` method that
     returns a [Status][pydvl.utils.status.Status] object based on a given
     [ValuationResult][pydvl.value.result.ValuationResult]. This method should
-    update the attribute [_converged][pydvl.value.stopping.StoppingCriterion._converged],
-    which is a boolean array indicating whether the value for each index has
-    converged. When this does not make sense for a particular stopping criterion,
+    update the attribute `_converged`, which is a boolean array indicating
+    whether the value for each index has converged.
+    When this does not make sense for a particular stopping criterion,
     [completion][pydvl.value.stopping.StoppingCriterion.completion] should be
     overridden to provide an overall completion value, since its default
-    implementation attempts to compute the mean of
-    [_converged][pydvl.value.stopping.StoppingCriterion._converged].
+    implementation attempts to compute the mean of `_converged`.
 
     Args:
         modify_result: If `True` the status of the input
@@ -233,7 +235,7 @@ class StoppingCriterion(abc.ABC):
         for each data point.
 
         Inheriting classes must set the `_converged` attribute in their
-        [_check][pydvl.value.stopping.StoppingCriterion._check].
+        `check()`.
 
         Returns:
             A boolean array indicating whether the values have converged for
@@ -245,7 +247,7 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
-        """Calls [_check][pydvl.value.stopping.StoppingCriterion._check], maybe updating the result."""
+        """Calls `check()`, maybe updating the result."""
         if len(result) == 0:
             logger.warning(
                 "At least one iteration finished but no results where generated. "
@@ -626,3 +628,86 @@ class HistoryDeviation(StoppingCriterion):
 
     def __str__(self):
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
+
+
+class RankCorrelation(StoppingCriterion):
+    r"""A check for stability of Spearman correlation between checks.
+
+    When the change in rank correlation between two successive iterations is
+    below a given threshold, the computation is terminated.
+    The criterion computes the Spearman correlation between two successive iterations.
+    The Spearman correlation uses the ordering indices of the given values and
+    correlates them. This means it focuses on the order of the elements instead of their
+    exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
+    converge), the criterion stops the algorithm.
+
+    This criterion is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
+
+    Args:
+        rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
+        modify_result: If `True`, the status of the input
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
+        burn_in: The minimum number of iterations before checking for
+            convergence. This is required because the first correlation is
+            meaningless.
+
+    !!! tip "Added in 0.9.0"
+    """
+
+    def __init__(
+        self,
+        rtol: float,
+        burn_in: int,
+        modify_result: bool = True,
+    ):
+        super().__init__(modify_result=modify_result)
+        if rtol <= 0 or rtol >= 1:
+            raise ValueError("rtol must be in (0, 1)")
+        self.rtol = rtol
+        self.burn_in = burn_in
+        self._memory: NDArray[np.float_] | None = None
+        self._corr = 0.0
+        self._completion = 0.0
+        self._iterations = 0
+
+    def _check(self, r: ValuationResult) -> Status:
+        self._iterations += 1
+        if self._memory is None:
+            self._memory = r.values.copy()
+            self._converged = np.full(len(r), False)
+            return Status.Pending
+
+        corr = spearmanr(self._memory, r.values)[0]
+        self._memory = r.values.copy()
+        self._update_completion(corr)
+        if (
+            np.isclose(corr, self._corr, rtol=self.rtol)
+            and self._iterations > self.burn_in
+        ):
+            self._converged = np.full(len(r), True)
+            logger.debug(
+                f"RankCorrelation has converged with {corr=} in iteration {self._iterations}"
+            )
+            return Status.Converged
+        self._corr = np.nan_to_num(corr, nan=0.0)
+        return Status.Pending
+
+    def _update_completion(self, corr: float) -> None:
+        if np.isnan(corr):
+            self._completion = 0.0
+        elif not np.isclose(corr, self._corr, rtol=self.rtol):
+            self._completion = corr
+            # self.rtol / np.abs(corr - self._corr) might be another option
+        else:
+            self._completion = 1.0
+
+    def completion(self) -> float:
+        return self._completion
+
+    def reset(self):
+        self._memory = None  # type: ignore
+        self._corr = 0.0
+
+    def __str__(self):
+        return f"RankCorrelation(rtol={self.rtol})"

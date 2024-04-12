@@ -3,7 +3,7 @@
 
 This package holds all routines for the computation of Least Core data values.
 
-Please refer to [Data valuation][computing-data-values] for an overview.
+Please refer to [Data valuation][data-valuation] for an overview.
 
 In addition to the standard interface via
 [compute_least_core_values()][pydvl.value.least_core.compute_least_core_values], because computing the
@@ -53,7 +53,7 @@ def compute_least_core_values(
     """Umbrella method to compute Least Core values with any of the available
     algorithms.
 
-    See [Data valuation][computing-data-values] for an overview.
+    See [Data valuation][data-valuation] for an overview.
 
     The following algorithms are available. Note that the exact method can only
     work with very small datasets and is thus intended only for testing.
@@ -87,7 +87,7 @@ def compute_least_core_values(
         progress = False
         if n_iterations is None:
             raise ValueError("n_iterations cannot be None for Monte Carlo Least Core")
-        return montecarlo_least_core(
+        return montecarlo_least_core(  # type: ignore
             u=u,
             n_iterations=n_iterations,
             n_jobs=n_jobs,

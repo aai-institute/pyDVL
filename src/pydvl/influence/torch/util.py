@@ -11,6 +11,7 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
+    Type,
     Union,
 )
 
@@ -135,12 +136,10 @@ def align_structure(
     tangent_dict: Dict[str, torch.Tensor]
 
     if isinstance(target, dict):
-
         if list(target.keys()) != list(source.keys()):
             raise ValueError("The keys in 'target' do not match the keys in 'source'.")
 
         if [v.shape for v in target.values()] != [v.shape for v in source.values()]:
-
             raise ValueError(
                 "The shapes of the values in 'target' do not match the shapes "
                 "of the values in 'source'."
@@ -149,9 +148,7 @@ def align_structure(
         tangent_dict = target
 
     elif isinstance(target, tuple) or isinstance(target, list):
-
         if [v.shape for v in target] != [v.shape for v in source.values()]:
-
             raise ValueError(
                 "'target' is a tuple/list but its elements' shapes do not match "
                 "the shapes of the values in 'source'."
@@ -160,7 +157,6 @@ def align_structure(
         tangent_dict = dict(zip(source.keys(), target))
 
     elif isinstance(target, torch.Tensor):
-
         try:
             tangent_dict = dict(
                 zip(
@@ -249,7 +245,7 @@ def torch_dataset_to_dask_array(
     dataset: Dataset,
     chunk_size: int,
     total_size: Optional[int] = None,
-    resulting_dtype=np.float32,
+    resulting_dtype: Type[np.number] = np.float32,
 ) -> Tuple[da.Array, ...]:
     """
     Construct tuple of dask arrays from a PyTorch dataset, using dask.delayed
@@ -350,7 +346,6 @@ def torch_dataset_to_dask_array(
 
     for chunk, (start, stop) in zip(delayed_chunks, chunk_indices):
         for tensor_idx, sample_tensor in enumerate(sample):
-
             delayed_tensor = da.from_delayed(
                 dask.delayed(lambda t: t.cpu().numpy())(chunk[tensor_idx]),
                 shape=(stop - start, *sample_tensor.shape),

@@ -3,6 +3,14 @@ name: Run Notebook Tests
 on:
   workflow_call:
     inputs:
+      split_size:
+        description: "Determines the number of groups into which the tests should be split"
+        type: string
+        default: 4
+      group_number:
+        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
+        type: string
+        required: true      
       python_version:
         description: "Determines which Python version to use"
         type: string
@@ -15,7 +23,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup Python ${{ inputs.python_version }}
@@ -23,12 +31,12 @@ jobs:
       with:
         python_version: ${{ inputs.python_version }}
     - name: Cache Tox Directory for Tests
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         key: tox-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Notebooks
-      run: tox -e notebook-tests
-      continue-on-error: true
+      run: tox -e notebook-tests -- --durations-path .notebook_test_durations --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
+
