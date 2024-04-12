@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0 🆕 New methods, better docs and bugfixes 📚🐞
+## Unreleased 🆕 New influence method, better docs and bugfixes 📚🐞
 
 ### Added
 
@@ -9,11 +9,11 @@
 - New preconditioned block variant of conjugate gradient
   [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 - Improvements to documentation: fixes, links, text, example gallery, LFS and
-  more [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
+  more. [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
   [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
 - Glossary of data valuation and influence terms in the documentation
   [PR #537](https://github.com/aai-institute/pyDVL/pull/537
-- Documentation about writing notes for new features, changes or deprecations
+- Documentation about writing notes for new features, changes or deprecations.
   [PR #557](https://github.com/aai-institute/pyDVL/pull/557)
 
 ### Fixed
