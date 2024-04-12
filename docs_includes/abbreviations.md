@@ -19,6 +19,7 @@
 *[MLRC]: Machine Learning Reproducibility Challenge
 *[ML]: Machine Learning
 *[MSE]: Mean Squared Error
+*[MSR]: Maximum Sample Reuse
 *[NLRA]: Nyström Low-Rank Approximation
 *[OOB]: Out-of-Bag
 *[PCA]: Principal Component Analysis

@@ -16,7 +16,7 @@ from pydvl.value.shapley.naive import (
 from pydvl.value.shapley.owen import OwenAlgorithm, owen_sampling_shapley
 from pydvl.value.shapley.truncated import NoTruncation
 from pydvl.value.shapley.types import ShapleyMode
-from pydvl.value.stopping import MaxUpdates, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 __all__ = ["compute_shapley_values"]
 
@@ -24,7 +24,7 @@ __all__ = ["compute_shapley_values"]
 def compute_shapley_values(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,

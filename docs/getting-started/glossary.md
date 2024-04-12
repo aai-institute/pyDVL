@@ -147,6 +147,15 @@ performance when that point is removed from the training set.
  * [Implementation][pydvl.value.loo.loo.compute_loo]
  * [Documentation][leave-one-out-values]
 
+### Maximum Sample Reuse
+
+MSR is a sampling method for data valuation that updates the value of every
+data point in one sample. This method can achieve much faster convergence.
+Introduced by [@wang_data_2023]
+
+* [Implementation][pydvl.value.sampler.MSRSampler]
+
+
 ### Monte Carlo Least Core
 
 MCLC is a variation of the Least Core that uses a reduced amount of

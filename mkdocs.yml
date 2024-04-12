@@ -34,6 +34,7 @@ nav:
         - Data utility learning: examples/shapley_utility_learning.ipynb
         - Least Core: examples/least_core_basic.ipynb
         - Data OOB: examples/data_oob.ipynb
+        - Banzhaf Semivalues: examples/msr_banzhaf_digits.ipynb
     - Influence Function:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
