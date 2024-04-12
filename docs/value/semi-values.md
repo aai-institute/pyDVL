@@ -21,7 +21,7 @@ the set $D_{-i}^{(k)}$ contains all subsets of $D$ of size $k$ that do not
 include sample $x_i$, $S_{+i}$ is the set $S$ with $x_i$ added, and $u$ is the
 utility function.
 
-Two instances of this are **Banzhaf indices** [@wang_data_2022],
+Two instances of this are **Banzhaf indices** [@wang_data_2023],
 and **Beta Shapley** [@kwon_beta_2022], with better numerical and
 rank stability in certain situations.
 
@@ -84,7 +84,7 @@ any choice of weight function $w$, one can always construct a utility with
 higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.
 
-The authors of [@wang_data_2022] show that Banzhaf indices are more robust to
+The authors of [@wang_data_2023] show that Banzhaf indices are more robust to
 variance in the utility function than Shapley and Beta Shapley values. They are
 available in pyDVL through
 [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues]:
@@ -97,6 +97,37 @@ values = compute_banzhaf_semivalues(
     u=utility, done=AbsoluteStandardError(threshold=1e-4), alpha=1, beta=16
 )
 ```
+
+### Banzhaf semi-values with MSR sampling
+Wang et. al. propose a more sample-efficient method for computing Banzhaf 
+semivalues in their paper *Data Banzhaf: A Robust Data Valuation Framework 
+for Machine Learning* [@wang_data_2023]. This method updates all semivalues
+per evaluation of the utility (i.e. per model trained) based on whether a 
+specific data point was included in the data subset or not. The expression 
+for computing the semivalues is
+
+$$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in 
+\mathbf{S}_{\ni i}} U(S) - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} 
+\sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+
+where $\mathbf{S}_{\ni i}$ are the subsets that contain the index $i$ and 
+$\mathbf{S}_{\not{\ni} i}$ are the subsets not containing the index $i$.
+
+The function implementing this method is
+[compute_msr_banzhaf_semivalues][pydvl.value.semivalues.compute_msr_banzhaf_semivalues].
+
+```python
+from pydvl.value import compute_msr_banzhaf_semivalues, RankCorrelation, Utility
+
+utility = Utility(model, data)
+values = compute_msr_banzhaf_semivalues(
+  u=utility, done=RankCorrelation(rtol=0.001),
+  )
+```
+For further details on how to use this method and a comparison of the sample 
+efficiency, we suggest to take a look at the example notebook 
+[msr_banzhaf_spotify](../../examples/msr_banzhaf_spotify).
+
 
 ## General semi-values
 
@@ -130,7 +161,7 @@ values = compute_generic_semivalues(
 Allowing any coefficient can help when experimenting with models which are more
 sensitive to changes in training set size. However, Data Banzhaf indices are
 proven to be the most robust to variance in the utility function, in the sense
-of rank stability, across a range of models and datasets [@wang_data_2022]. 
+of rank stability, across a range of models and datasets [@wang_data_2023]. 
 
 !!! warning "Careful with permutation sampling"
     This generic implementation of semi-values allowing for any combination of
