@@ -75,14 +75,16 @@ from pydvl.utils.types import IndexT, Seed
 
 __all__ = [
     "AntitheticSampler",
-    "DeterministicUniformSampler",
     "DeterministicPermutationSampler",
+    "DeterministicUniformSampler",
     "MSRSampler",
     "PermutationSampler",
     "PowersetSampler",
     "RandomHierarchicalSampler",
-    "UniformSampler",
+    "SampleT",
+    "StochasticSampler",
     "StochasticSamplerMixin",
+    "UniformSampler",
 ]
 
 SampleT = Tuple[IndexT, NDArray[IndexT]]
