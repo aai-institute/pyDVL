@@ -117,7 +117,7 @@ from pydvl.value.sampler import (
     SampleT,
     StochasticSampler,
 )
-from pydvl.value.stopping import MaxUpdates, RankStability, StoppingCriterion
+from pydvl.value.stopping import MaxUpdates, RankCorrelation, StoppingCriterion
 
 __all__ = [
     "compute_banzhaf_semivalues",
@@ -635,7 +635,7 @@ def compute_banzhaf_semivalues(
 def compute_msr_banzhaf_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = RankStability(0.01),
+    done: StoppingCriterion = RankCorrelation(0.01),
     sampler_t: Type[StochasticSampler] = MSRSampler,
     batch_size: int = 1,
     n_jobs: int = 1,

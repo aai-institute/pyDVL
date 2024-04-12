@@ -143,7 +143,7 @@ __all__ = [
     "MinUpdates",
     "MaxTime",
     "HistoryDeviation",
-    "RankStability",
+    "RankCorrelation",
 ]
 
 logger = logging.getLogger(__name__)
@@ -630,7 +630,7 @@ class HistoryDeviation(StoppingCriterion):
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
 
 
-class RankStability(StoppingCriterion):
+class RankCorrelation(StoppingCriterion):
     r"""A check for stability of Spearman correlation between checks.
 
     When the change in rank correlation between two successive iterations is
@@ -645,23 +645,31 @@ class RankStability(StoppingCriterion):
 
     Args:
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
+        modify_result: If `True`, the status of the input
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
+        burn_in: The minimum number of iterations before checking for
+            convergence. This is required because the first correlation is
+            meaningless.
+
+    !!! tip "Added in 0.9.0"
     """
 
     def __init__(
         self,
         rtol: float,
+        burn_in: int,
         modify_result: bool = True,
-        min_iterations: int = 10,
     ):
         super().__init__(modify_result=modify_result)
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
         self.rtol = rtol
-        self._memory = None  # type: ignore
+        self.burn_in = burn_in
+        self._memory: NDArray[np.float_] | None = None
         self._corr = 0.0
         self._completion = 0.0
         self._iterations = 0
-        self.min_iterations = min_iterations
 
     def _check(self, r: ValuationResult) -> Status:
         self._iterations += 1
@@ -675,11 +683,11 @@ class RankStability(StoppingCriterion):
         self._update_completion(corr)
         if (
             np.isclose(corr, self._corr, rtol=self.rtol)
-            and self._iterations > self.min_iterations
+            and self._iterations > self.burn_in
         ):
             self._converged = np.full(len(r), True)
             logger.debug(
-                f"RankStability has converged with {corr=} in iteration {self._iterations}"
+                f"RankCorrelation has converged with {corr=} in iteration {self._iterations}"
             )
             return Status.Converged
         self._corr = np.nan_to_num(corr, nan=0.0)
@@ -702,4 +710,4 @@ class RankStability(StoppingCriterion):
         self._corr = 0.0
 
     def __str__(self):
-        return f"RankStability(rtol={self.rtol})"
+        return f"RankCorrelation(rtol={self.rtol})"

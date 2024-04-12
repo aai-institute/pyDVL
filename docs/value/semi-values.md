@@ -115,13 +115,14 @@ $\mathbf{S}_{\not{\ni} i}$ are the subsets not containing the index $i$.
 
 The function implementing this method is
 [compute_msr_banzhaf_semivalues][pydvl.value.semivalues.compute_msr_banzhaf_semivalues].
+
 ```python
-from pydvl.value import compute_msr_banzhaf_semivalues, RankStability, Utility
+from pydvl.value import compute_msr_banzhaf_semivalues, RankCorrelation, Utility
 
 utility = Utility(model, data)
 values = compute_msr_banzhaf_semivalues(
-    u=utility, done=RankStability(rtol=0.001),
-)
+  u=utility, done=RankCorrelation(rtol=0.001),
+  )
 ```
 For further details on how to use this method and a comparison of the sample 
 efficiency, we suggest to take a look at the example notebook 
