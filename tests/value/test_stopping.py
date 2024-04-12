@@ -204,7 +204,7 @@ def test_rank_correlation():
     v = ValuationResult.zeros(indices=range(5))
     arr = np.arange(5)
 
-    done = RankCorrelation(rtol=0.1)
+    done = RankCorrelation(rtol=0.1, burn_in=10)
     for i in range(20):
         arr = np.roll(arr, 1)
         for j in range(5):
