@@ -33,14 +33,14 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Type
+from typing import Callable, Generator, Iterable, Type
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler, SamplerT
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -98,6 +98,21 @@ class NoIndexIteration(IndexIteration):
             yield None
 
 
+def complement(include: IndexSetT, exclude: Iterable[IndexT]) -> NDArray[IndexT]:
+    """Returns the complement of the set of indices excluding the given
+    indices.
+
+    Args:
+        include: The set of indices to consider.
+        exclude: The indices to exclude from the complement.
+
+    Returns:
+        The complement of the set of indices excluding the given indices.
+    """
+    _exclude = [i for i in exclude if i is not None]
+    return np.setxor1d(include, _exclude).astype(np.int_)
+
+
 class PowersetSampler(IndexSampler, ABC):
     """
     An abstract class for samplers which iterate over the powerset of the
@@ -124,31 +139,11 @@ class PowersetSampler(IndexSampler, ABC):
         super().__init__(batch_size)
         self._index_iteration = index_iteration
 
-    @staticmethod
-    def complement(include: IndexSetT, exclude: IndexSetT) -> NDArray[IndexT]:
-        """Returns the complement of the set of indices excluding the given
-        indices.
-
-        Args:
-            include: The set of indices to consider.
-            exclude: The indices to exclude from the complement.
-
-        Returns:
-            The complement of the set of indices excluding the given indices.
-        """
-        exclude = [i for i in exclude if i is not None]
-        return np.setxor1d(include, exclude).astype(np.int_)
-
-    def index_iterator(self, indices: IndexSetT) -> Generator[IndexT, None, None]:
+    def index_iterator(
+        self, indices: IndexSetT
+    ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
         yield from self._index_iteration(indices)
-
-    @abstractmethod
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        """Iterates over subsets given an index (e.g. subsets of its complement)."""
-        ...
 
     def make_strategy(
         self,
@@ -157,6 +152,7 @@ class PowersetSampler(IndexSampler, ABC):
     ) -> PowersetEvaluationStrategy:
         return PowersetEvaluationStrategy(self, utility, coefficient)
 
+    @abstractmethod
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates samples iterating in sequence over the outer indices, then over
         subsets of the complement of the current index. Each PowersetSampler defines
@@ -166,11 +162,7 @@ class PowersetSampler(IndexSampler, ABC):
 
         Args:
             indices:"""
-        while True:
-            for idx in self.index_iterator(indices):
-                for subset in self.subset_iterator(indices, idx):
-                    yield Sample(idx, subset)
-                    self._n_samples += 1
+        ...
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -206,9 +198,7 @@ class LOOSampler(IndexSampler):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in indices:
-            complement = np.setxor1d(indices, [idx]).astype(np.int_)
-            yield Sample(idx, complement)
-            self._n_samples += 1
+            yield Sample(idx, complement(indices, [idx]))
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -232,7 +222,7 @@ class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
         coefficient: Callable[[int, int], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
-        self.total_utility = utility(Sample(None, utility.training_data.indices))
+        self.total_utility = utility(Sample(-1, utility.training_data.indices))
 
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
@@ -270,11 +260,12 @@ class DeterministicUniformSampler(PowersetSampler):
     def __init__(self):
         super().__init__(index_iteration=SequentialIndexIteration)
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        for subset in powerset(self.complement(indices, [idx])):
-            yield subset
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        for idx in self.index_iterator(indices):
+            for subset in powerset(
+                self.complement(indices, [idx] if idx is not None else [])
+            ):
+                yield Sample(idx, np.array(subset))
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
@@ -298,10 +289,14 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
         ```
     """
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        yield random_subset(self.complement(indices, [idx]), seed=self._rng)
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        while True:
+            for idx in self.index_iterator(indices):
+                subset = random_subset(
+                    complement(indices, [idx] if idx is not None else []),
+                    seed=self._rng,
+                )
+                yield Sample(idx, subset)
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
@@ -313,13 +308,13 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     complement of the set $S$ in the set of indices, excluding $i$.
     """
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        _complement = self.complement(indices, [idx])
-        subset = random_subset(_complement, seed=self._rng)
-        yield subset
-        yield np.setxor1d(_complement, subset)
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        while True:
+            for idx in self.index_iterator(indices):
+                _complement = complement(indices, [idx] if idx is not None else [])
+                subset = random_subset(_complement, seed=self._rng)
+                yield Sample(idx, subset)
+                yield Sample(idx, complement(_complement, subset))
 
     # FIXME: is a uniform 2^{1-n} weight correct here too?
 
@@ -327,13 +322,16 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
 class UniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     """For every index, sample a set size, then a set of that size."""
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        k = int(self._rng.choice(np.arange(len(indices)), size=1).item())
-        yield random_subset_of_size(
-            self.complement(indices, [idx]), size=k, seed=self._rng
-        )
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        while True:
+            for idx in self.index_iterator(indices):
+                k = int(self._rng.choice(np.arange(len(indices)), size=1).item())
+                subset = random_subset_of_size(
+                    complement(indices, [idx] if idx is not None else []),
+                    size=k,
+                    seed=self._rng,
+                )
+                yield Sample(idx, subset)
 
     # FIXME: is a uniform 2^{1-n} weight correct here too?
 
@@ -359,15 +357,18 @@ class TruncatedUniformStratifiedSampler(UniformStratifiedSampler):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        k = self._rng.integers(
-            low=self.lower_bound, high=self.upper_bound + 1, size=1
-        ).item()
-        yield random_subset_of_size(
-            self.complement(indices, [idx]), size=k, seed=self._rng
-        )
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        while True:
+            for idx in self.index_iterator(indices):
+                k = self._rng.integers(
+                    low=self.lower_bound, high=self.upper_bound + 1, size=1
+                ).item()
+                subset = random_subset_of_size(
+                    complement(indices, [idx] if idx is not None else []),
+                    size=k,
+                    seed=self._rng,
+                )
+                yield Sample(idx, subset)
 
     # FIXME: is a uniform 2^{1-n} weight correct here too?
 
@@ -398,14 +399,14 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # FIXME: is this the correct weight anyway?
         self.weight = lambda n, subset_len: samples_per_setsize(subset_len)
 
-    def subset_iterator(
-        self, indices: IndexSetT, idx: IndexT
-    ) -> Generator[IndexSetT, None, None]:
-        for k in range(1, len(self.complement(indices, [idx]))):
-            for _ in range(self.samples_per_setsize(k)):
-                yield random_subset_of_size(
-                    self.complement(indices, [idx]), size=k, seed=self._rng
-                )
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        while True:
+            for idx in self.index_iterator(indices):
+                from_set = complement(indices, [idx] if idx is not None else [])
+                for k in range(1, len(from_set)):
+                    for _ in range(self.samples_per_setsize(k)):
+                        subset = random_subset_of_size(from_set, size=k, seed=self._rng)
+                        yield Sample(idx, subset)
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
