@@ -1,7 +1,7 @@
 import scipy as sp
 
-from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["BetaShapleyValuation"]

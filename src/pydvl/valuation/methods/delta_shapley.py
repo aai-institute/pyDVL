@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 
 from pydvl.utils import Seed
-from pydvl.valuation.samplers import TruncatedUniformStratifiedSampler
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.samplers import TruncatedUniformStratifiedSampler
 from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["DeltaShapleyValuation"]

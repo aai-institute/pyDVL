@@ -165,7 +165,7 @@ class RelativeTruncation(TruncationPolicy):
             return
         logger.info("Computing total utility for RelativeTruncation.")
         assert utility.training_data is not None
-        self.total_utility = utility(Sample(None, utility.training_data.indices))
+        self.total_utility = utility(Sample(-1, utility.training_data.indices))
         self._is_setup = True
 
 
@@ -224,5 +224,5 @@ class DeviationTruncation(TruncationPolicy):
             return
         logger.info("Computing total utility for DeviationTruncation.")
         assert utility.training_data is not None
-        self.total_utility = utility(Sample(None, utility.training_data.indices))
+        self.total_utility = utility(Sample(-1, utility.training_data.indices))
         self._is_setup = True

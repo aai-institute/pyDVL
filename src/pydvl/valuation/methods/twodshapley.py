@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+
 from numpy.typing import NDArray
 
 from pydvl.valuation.base import Valuation

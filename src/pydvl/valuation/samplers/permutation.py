@@ -91,13 +91,12 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         Args:
             indices:
         """
+        if len(indices) == 0:
+            return
         while True:
             permutation = self._rng.permutation(indices)
             for i, idx in enumerate(permutation):
                 yield Sample(idx, permutation[: i + 1])
-                self._n_samples += 1
-            if self._n_samples == 0:  # Empty index set
-                break
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -169,7 +168,7 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
         self.truncation.reset(self.utility)  # Reset before every batch (must be cached)
         r = []
         truncated = False
-        curr = prev = self.utility.default_score
+        curr = prev = self.utility.scorer.default
         for sample in batch:
             assert sample.idx is not None
             if not truncated:

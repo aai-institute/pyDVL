@@ -258,7 +258,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) & other._check(result),
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {str(self)} AND {str(other)}",
+            name=f"{str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
@@ -266,7 +266,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) | other._check(result),
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {str(self)} OR {str(other)}",
+            name=f"{str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
@@ -274,7 +274,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: ~self._check(result),
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
-            name=f"Composite StoppingCriterion: NOT {str(self)}",
+            name=f"NOT {str(self)}",
         )(modify_result=self.modify_result)
 
 
