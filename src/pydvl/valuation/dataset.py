@@ -11,10 +11,10 @@ This abstraction layer also seamlessly groups data points together if one is int
 in computing their value as a group, see
 [GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
 
-Objects of both types can be used to construct a
-[Utility][pydvl.valuation.utility.Utility] object.
-
+Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] and to
+fit valuation methods.
 """
+
 from __future__ import annotations
 
 import logging
@@ -37,6 +37,9 @@ class Dataset:
     It holds a dataset, together with info on feature names, target names, and
     data names. It is used to pass data around to valuation methods.
     """
+
+    _indices: NDArray[np.int_]
+    _data_names: NDArray[np.object_]
 
     def __init__(
         self,
@@ -66,7 +69,7 @@ class Dataset:
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y.
         """
-        self.x, self.y = check_X_y(x, y, multi_output=multi_output)
+        self.x, self.y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
 
         def make_names(s: str, a: np.ndarray) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
