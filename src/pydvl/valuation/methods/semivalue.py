@@ -22,20 +22,21 @@ point is removed from one or more subsets of the data.
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Any
 
 from joblib import Parallel, delayed
-from tqdm import tqdm
 
-from pydvl.valuation.base import (
-    Valuation,
-    ensure_backend_has_generator_return,
-    make_parallel_flag,
-)
+from pydvl.utils.progress import Progress
+from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.utility.base import UtilityBase
+from pydvl.valuation.utils import (
+    ensure_backend_has_generator_return,
+    make_parallel_flag,
+)
 
 __all__ = ["SemivalueValuation"]
 
@@ -66,13 +67,19 @@ class SemivalueValuation(Valuation):
         utility: UtilityBase,
         sampler: IndexSampler,
         is_done: StoppingCriterion,
-        progress: bool = False,
+        progress: dict[str, Any] | bool = False,
     ):
         super().__init__()
         self.utility = utility
         self.sampler = sampler
         self.is_done = is_done
-        self.progress = progress
+        self.tqdm_args = {"desc": f"{self.__class__.__name__}: {str(is_done)}"}
+        # HACK: parse additional args for the progress bar if any (we probably want
+        #  something better)
+        if isinstance(progress, bool):
+            self.tqdm_args.update({"disable": not progress})
+        else:
+            self.tqdm_args.update(progress if isinstance(progress, dict) else {})
 
     @abstractmethod
     def coefficient(self, n: int, k: int) -> float:
@@ -93,7 +100,6 @@ class SemivalueValuation(Valuation):
         )
 
         ensure_backend_has_generator_return()
-        flag = make_parallel_flag()
 
         self.utility.training_data = data
 
@@ -101,17 +107,18 @@ class SemivalueValuation(Valuation):
         strategy = self.sampler.make_strategy(self.utility, self.coefficient)
         processor = delayed(strategy.process)
 
-        delayed_evals = parallel(
-            processor(batch=list(batch), is_interrupted=flag)
-            for batch in self.sampler.from_data(data)
-        )
-        for batch in tqdm(iterable=delayed_evals, disable=not self.progress):
-            for evaluation in batch:
-                self.result.update(evaluation.idx, evaluation.update)
-                if self.is_done(self.result):
-                    flag.set()
-                    self.sampler.interrupt()
-                    break
+        with make_parallel_flag() as flag:
+            delayed_evals = parallel(
+                processor(batch=list(batch), is_interrupted=flag)
+                for batch in self.sampler.from_data(data)
+            )
+            for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
+                for evaluation in batch:
+                    self.result.update(evaluation.idx, evaluation.update)
+                    if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
+                        break
 
         #####################
 
@@ -127,3 +134,5 @@ class SemivalueValuation(Valuation):
                 f"{nans} NaN values in current result. "
                 "Consider setting a default value for the Scorer"
             )
+
+        return self

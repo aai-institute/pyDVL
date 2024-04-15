@@ -14,7 +14,7 @@ class Valuation(ABC):
         self.result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset) -> Valuation:
         ...
 
     def values(self) -> ValuationResult:
