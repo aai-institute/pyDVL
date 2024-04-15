@@ -6,7 +6,7 @@ from typing import cast
 
 from numpy.typing import NDArray
 
-from pydvl.valuation.scorers.classwise import ClasswiseScorer
+from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.types import IndexT, Sample
 from pydvl.valuation.utility import Utility
 
@@ -33,7 +33,7 @@ class ClasswiseUtility(Utility[CSSample]):
     FIXME: probably unnecessary, just a test
     """
 
-    scorer: ClasswiseScorer
+    scorer: ClasswiseSupervisedScorer
 
     def __call__(self, sample: CSSample) -> float:
         return cast(float, self._utility_wrapper(sample))

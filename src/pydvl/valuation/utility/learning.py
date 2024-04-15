@@ -2,6 +2,11 @@
 This module implements **Data Utility Learning** (Wang et al., 2022)<sup><a
 href="#wang_improving_2022">1</a></sup>.
 
+!!! fixme "Parallel processing not supported"
+    As of 0.9.0, this method does not support parallel processing. DataUtilityLearning
+    would have to collect all utility samples in a single process before fitting the
+    model.
+
 ## References
 
 [^1]: <a name="wang_improving_2022"></a>Wang, T., Yang, Y. and Jia, R., 2021.
@@ -31,7 +36,7 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     utility instead of delegating.
 
     Args:
-        u: The [Utility][pydvl.valuation.utility.Utility] to learn.
+        utility: The [Utility][pydvl.valuation.utility.Utility] to learn.
         training_budget: Number of utility samples to collect before fitting
             the given model.
         model: A supervised regression model
@@ -45,7 +50,7 @@ class DataUtilityLearning(UtilityBase[SampleT]):
         >>> from sklearn.datasets import load_iris
         >>>
         >>> train, test = Dataset.from_sklearn(load_iris())
-        >>> u = Utility(LogisticRegression(), test)
+        >>> u = Utility(LogisticRegression())
         >>> u.training_data = train
         >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
         ... # First 3 calls will be computed normally
@@ -58,9 +63,9 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     """
 
     def __init__(
-        self, u: UtilityBase, training_budget: int, model: SupervisedModel
+        self, utility: UtilityBase, training_budget: int, model: SupervisedModel
     ) -> None:
-        self.utility = u
+        self.utility = utility
         self.training_budget = training_budget
         self.model = model
         self._current_iteration = 0

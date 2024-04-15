@@ -1,48 +1,59 @@
-"""
+r"""
 This module contains the implementation of the
 [ClasswiseScorer][pydvl.valuation.scorers.classwise.ClasswiseScorer] class for
-Class-wise Shapley values.
+[Class-wise Shapley][pydvl.valuation.methods.classwise_shapley] values.
 
-TODO: finish doc
+Its value is computed from an in-class and an out-of-class "inner score" (Schoch et al.,
+2022) <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the training set and
+$D$ be the valuation set. For each label $c$, $D$ is factorized into two disjoint sets:
+$D_c$ for in-class instances and $D_{-c}$ for out-of-class instances. The score combines
+an in-class metric of performance, adjusted by a discounted out-of-class metric. These
+inner scores must be provided upon construction or default to accuracy. They are
+combined into:
+
+$$
+u(S_{y_i}) = f(a_S(D_{y_i}))\ g(a_S(D_{-y_i})),
+$$
+
+where $f$ and $g$ are continuous, monotonic functions. For a detailed explanation,
+refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_2022">1</a>
+</sup>.
 """
-from typing import Callable, Optional, Tuple, Union
+
+from __future__ import annotations
+
+from typing import Callable
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pydvl.utils import SupervisedModel
-from pydvl.valuation.scorers.scorer import Scorer, ScorerCallable
+from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.scorers.supervised import (
+    SupervisedScorer,
+    SupervisedScorerCallable,
+)
 
 
-class ClasswiseScorer(Scorer):
-    r"""A Scorer designed for evaluation in classification problems. Its value
-    is computed from an in-class and an out-of-class "inner score" (Schoch et
-    al., 2022) <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the
-    training set and $D$ be the valuation set. For each label $c$, $D$ is
-    factorized into two disjoint sets: $D_c$ for in-class instances and $D_{-c}$
-    for out-of-class instances. The score combines an in-class metric of
-    performance, adjusted by a discounted out-of-class metric. These inner
-    scores must be provided upon construction or default to accuracy. They are
-    combined into:
+class ClasswiseSupervisedScorer(SupervisedScorer):
+    """A Scorer designed for evaluation in classification problems.
 
-    $$
-    u(S_{y_i}) = f(a_S(D_{y_i}))\ g(a_S(D_{-y_i})),
-    $$
+    The final score is the combination of the in-class and out-of-class scores, which
+    are e.g. the accuracy of the trained model over the instances of the test set with
+    the same, and different, labels, respectively. See the [module's
+    documentation][pydvl.valuation.scorers.classwise] for more on this.
 
-    where $f$ and $g$ are continuous, monotonic functions. For a detailed
-    explanation, refer to section four of (Schoch et al., 2022)<sup><a
-    href="#schoch_csshapley_2022"> 1</a></sup>.
+    These two scores are computed with an "inner" scoring function, which must be
+    provided upon construction.
 
-    !!! warning Multi-class support
-        Metrics must support multiple class labels if you intend to apply them
-        to a multi-class problem. For instance, the metric 'accuracy' supports
-        multiple classes, but the metric `f1` does not. For a two-class
-        classification problem, using `f1_weighted` is essentially equivalent to
-        using `accuracy`.
+    !!! warning "Multi-class support"
+        The inner score must support multiple class labels if you intend to apply them
+        to a multi-class problem. For instance, 'accuracy' supports multiple classes,
+        but `f1` does not. For a two-class classification problem, using `f1_weighted`
+        is essentially equivalent to using `accuracy`.
 
     Args:
         scoring: Name of the scoring function or a callable that can be passed
-            to [Scorer][pydvl.utils.score.Scorer].
+            to [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer].
         default: Score to use when a model fails to provide a number, e.g. when
             too little was used to train it, or errors arise.
         range: Numerical range of the score function. Some Monte Carlo methods
@@ -64,19 +75,21 @@ class ClasswiseScorer(Scorer):
 
     def __init__(
         self,
-        scoring: Union[str, ScorerCallable] = "accuracy",
+        scoring: str | SupervisedScorerCallable | SupervisedModel,
+        test_data: Dataset,
         default: float = 0.0,
-        range: Tuple[float, float] = (0, 1),
+        range: tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
         out_of_class_discount_fn: Callable[[float], float] = np.exp,
-        initial_label: Optional[int] = None,
-        name: Optional[str] = None,
+        initial_label: int | None = None,
+        name: str | None = None,
     ):
         disc_score_in_class = in_class_discount_fn(range[1])
         disc_score_out_of_class = out_of_class_discount_fn(range[1])
         transformed_range = (0, disc_score_in_class * disc_score_out_of_class)
         super().__init__(
             scoring=scoring,
+            test_data=test_data,
             range=transformed_range,
             default=default,
             name=name or f"classwise {str(scoring)}",
@@ -84,31 +97,22 @@ class ClasswiseScorer(Scorer):
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label = initial_label
+        self.num_classes = len(np.unique(self.test_data.y))
 
     def __str__(self) -> str:
-        return self._name
+        return self.name
 
-    def __call__(
-        self: "ClasswiseScorer",
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-    ) -> float:
-        (
-            in_class_score,
-            out_of_class_score,
-        ) = self.estimate_in_class_and_out_of_class_score(model, x_test, y_test)
+    def __call__(self, model: SupervisedModel) -> float:
+        (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
+            model
+        )
         disc_score_in_class = self._in_class_discount_fn(in_class_score)
         disc_score_out_of_class = self._out_of_class_discount_fn(out_of_class_score)
         return disc_score_in_class * disc_score_out_of_class
 
-    def estimate_in_class_and_out_of_class_score(
-        self,
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-        rescale_scores: bool = True,
-    ) -> Tuple[float, float]:
+    def compute_in_and_out_of_class_scores(
+        self, model: SupervisedModel, rescale_scores: bool = True
+    ) -> tuple[float, float]:
         r"""
         Computes in-class and out-of-class scores using the provided inner
         scoring function. The result is
@@ -137,22 +141,25 @@ class ClasswiseScorer(Scorer):
             Tuple containing the in-class and out-of-class scores.
         """
         scorer = self._scorer
-        label_set_match = y_test == self.label
+        label_set_match = self.test_data.y == self.label
         label_set = np.where(label_set_match)[0]
-        num_classes = len(np.unique(y_test))
 
         if len(label_set) == 0:
-            return 0, 1 / (num_classes - 1)
+            return 0, 1 / max(1, self.num_classes - 1)
 
         complement_label_set = np.where(~label_set_match)[0]
-        in_class_score = scorer(model, x_test[label_set], y_test[label_set])
+        in_class_score = scorer(
+            model, self.test_data.y[label_set], self.test_data.y[label_set]
+        )
         out_of_class_score = scorer(
-            model, x_test[complement_label_set], y_test[complement_label_set]
+            model,
+            self.test_data.x[complement_label_set],
+            self.test_data.y[complement_label_set],
         )
 
         if rescale_scores:
-            n_in_class = np.count_nonzero(y_test == self.label)
-            n_out_of_class = len(y_test) - n_in_class
+            n_in_class = np.count_nonzero(self.test_data.y == self.label)
+            n_out_of_class = len(self.test_data.y) - n_in_class
             in_class_score *= n_in_class / (n_in_class + n_out_of_class)
             out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)
 
