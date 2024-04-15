@@ -59,22 +59,19 @@ class Valuation(ABC):
     def fit(self, data: Dataset):
         ...
 
-    def values(self, indices: IndexSetT | None = None) -> ValuationResult:
-        """Returns the valuation result, or a subset of it.
+    def values(self) -> ValuationResult:
+        """Returns the valuation result.
 
         The valuation must have been run with `fit()` before calling this method.
 
-        Args:
-            indices: indices of the subset to return. `None` to receive the full result.
         Returns:
             The result of the valuation.
         """
         if not self.is_fitted:
             raise RuntimeError("Valuation is not fitted")
         assert self.result is not None
-        if indices is None:
-            return self.result
-        return self.result.subset(indices)
+
+        return self.result
 
     @property
     def is_fitted(self) -> bool:
