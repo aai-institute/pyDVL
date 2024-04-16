@@ -41,6 +41,7 @@ together. Empty results are discarded when added to other results. Finally,
 samples random values uniformly.
 
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -676,12 +677,15 @@ class ValuationResult(
         column = column or self._algorithm
         df = pd.DataFrame(
             self._values[self._sort_positions],
-            index=self._names[self._sort_positions]
-            if use_names
-            else self._indices[self._sort_positions],
+            index=(
+                self._names[self._sort_positions]
+                if use_names
+                else self._indices[self._sort_positions]
+            ),
             columns=[column],
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
+        df[column + "_updates"] = self.counts[self._sort_positions]
         return df
 
     @classmethod

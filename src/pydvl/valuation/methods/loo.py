@@ -16,9 +16,9 @@ coefficients are zero except for $k=|D|-1$,
 """
 from __future__ import annotations
 
+from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import LOOSampler
-from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.stopping import MinUpdates
 from pydvl.valuation.utility.base import UtilityBase
 

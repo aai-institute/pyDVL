@@ -67,10 +67,10 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from pydvl.valuation.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
+from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.types import IndexSetT, IndexT, NameT
 
 __all__ = ["ValuationResult", "ValueItem"]
@@ -808,26 +808,4 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
-        )
-
-    def subset(
-        self, indices: Sequence[IndexT] | NDArray[IndexT] | Set[IndexT]
-    ) -> ValuationResult:
-        """Returns a subset of the ValuationResult.
-
-        Args:
-            indices: Indices of the subset.
-
-        Returns:
-            A new ValuationResult with the subset of values.
-        """
-        indices = np.array(indices, copy=False)
-        return ValuationResult(
-            algorithm=self.algorithm,
-            status=self.status,
-            indices=self._indices[indices],
-            values=self._values[indices],
-            variances=self._variances[indices],
-            counts=self._counts[indices],
-            data_names=self._names[indices],
         )

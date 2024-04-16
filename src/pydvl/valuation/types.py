@@ -36,16 +36,19 @@ class ValueUpdate:
 
 @dataclass(frozen=True)
 class Sample:
-    idx: IndexT | None
+    idx: IndexT
     subset: NDArray[IndexT]
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.idx, self.subset))
 
-    # hashlib.sha256 is about 4-5x faster than hash(), and returns the same value
-    # in all processes, as opposed to hash() which is salted in each process
     def __hash__(self):
+        """This type must be hashable for the utility caching to work.
+        We use hashlib.sha256 which is about 4-5x faster than hash(), and returns the
+        same value in all processes, as opposed to hash() which is salted in each
+        process
+        """
         sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
         return int(sha256_hash, base=16)
 

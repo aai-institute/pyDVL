@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from concurrent.futures import Executor
 from contextlib import contextmanager
 from typing import Generator

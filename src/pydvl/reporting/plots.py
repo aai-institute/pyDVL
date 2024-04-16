@@ -240,6 +240,7 @@ def plot_shapley(
     title: Optional[str] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
+    prefix: Optional[str] = "data_value",
 ) -> plt.Axes:
     r"""Plots the shapley values, as returned from
     [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values],
@@ -260,9 +261,9 @@ def plot_shapley(
     if ax is None:
         _, ax = plt.subplots()
 
-    yerr = norm.ppf(1 - level / 2) * df["data_value_stderr"]
+    yerr = norm.ppf(1 - level / 2) * df[f"{prefix}_stderr"]
 
-    ax.errorbar(x=df.index, y=df["data_value"], yerr=yerr, fmt="o", capsize=6)
+    ax.errorbar(x=df.index, y=df[prefix], yerr=yerr, fmt="o", capsize=6)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)

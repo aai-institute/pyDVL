@@ -17,14 +17,16 @@ from pydvl.value.sampler import (
     UniformSampler,
 )
 from pydvl.value.semivalues import (
+    DefaultMarginal,
+    MSRFutureProcessor,
     SVCoefficient,
-    _marginal,
     banzhaf_coefficient,
     beta_coefficient,
     compute_generic_semivalues,
+    compute_msr_banzhaf_semivalues,
     shapley_coefficient,
 )
-from pydvl.value.stopping import HistoryDeviation, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
 
 from . import check_values
 from .utils import timed
@@ -52,13 +54,34 @@ def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
     marginals_single = []
     for sample in samples:
         marginals_single.extend(
-            _marginal(test_game.u, coefficient=coefficient, samples=[sample])
+            DefaultMarginal()(test_game.u, coefficient=coefficient, samples=[sample])
         )
 
-    marginals_batch = _marginal(test_game.u, coefficient=coefficient, samples=samples)
+    marginals_batch = DefaultMarginal()(
+        test_game.u, coefficient=coefficient, samples=samples
+    )
 
     assert len(marginals_single) == len(marginals_batch)
     assert set(marginals_single) == set(marginals_batch)
+
+
+@pytest.mark.parametrize("num_samples", [5])
+def test_msr_banzhaf(
+    num_samples: int, analytic_banzhaf, parallel_backend, n_jobs, seed: Seed
+):
+    u, exact_values = analytic_banzhaf
+    values = compute_msr_banzhaf_semivalues(
+        u=u,
+        done=MaxChecks(200 * num_samples),
+        parallel_backend=parallel_backend,
+        n_jobs=n_jobs,
+        seed=seed,
+    )
+    # Need to use atol because msr banzhaf is quite noisy.
+    check_values(values, exact_values, atol=0.1)
+
+    # Check order
+    assert np.array_equal(np.argsort(exact_values), np.argsort(values))
 
 
 @pytest.mark.parametrize("n", [10, 100])
@@ -261,3 +284,31 @@ def test_banzhaf(
         parallel_backend=parallel_backend,
     )
     check_values(values, exact_values, rtol=0.2)
+
+
+@pytest.mark.parametrize("num_samples", [6])
+def test_msr_future_processor(num_samples: int, dummy_utility):
+    proc = MSRFutureProcessor(dummy_utility)
+    assert proc.n == num_samples
+    assert proc.total_evaluations == 0
+    data1 = [1, 3, 5]
+    data2 = [0, 2, 4]
+
+    # Iteration 1
+    marginals1 = proc([(data1, 1.0)])
+    assert marginals1 == [[(i, 0.0) for i in range(6)]]
+
+    # Iteration 2
+    marginals2 = proc([(data2, 0.5)])
+    assert marginals2 == [
+        [(0, -1.0), (1, 1.0), (2, -1.0), (3, 1.0), (4, -1.0), (5, 1.0)]
+    ]
+
+    # Iteration 3
+    # Values are -0.5 for even and 0.5 for uneven indices
+    # New values are supposed to be -1.0 and 1.0=(1.0+2.0)/2-(0.5)/1
+    # Marginals need to be 2 and -2 because (2*0.5 + 1*2)/3=1
+    marginals2 = proc([(data1, 2.0)])
+    assert marginals2 == [
+        [(0, -2.0), (1, 2.0), (2, -2.0), (3, 2.0), (4, -2.0), (5, 2.0)]
+    ]

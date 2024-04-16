@@ -115,6 +115,8 @@ class IndexSampler(ABC):
         self._interrupted = False
         for batch in take_n(self._generate(indices), self.batch_size):
             yield batch
+            # FIXME, BUG: this could be wrong if the batch is not full. Just use lists
+            self._n_samples += self.batch_size
             if self._interrupted:
                 break
 
@@ -222,7 +224,11 @@ class EvaluationStrategy(ABC, Generic[SamplerT]):
         coefficient: Callable[[int, int], float] | None = None,
     ):
         self.utility = utility
-        self.n_indices = len(utility.training_data.indices)
+        self.n_indices = (
+            len(utility.training_data.indices)
+            if utility.training_data is not None
+            else 0
+        )
         self.coefficient: Callable[[int, int], float] = lambda n, k: 1.0
 
         if sampler is not None:

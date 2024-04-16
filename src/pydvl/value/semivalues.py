@@ -81,44 +81,43 @@ instead.
     [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2110.14049).
     In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
 
-[^3]: <a name="wang_data_2022"></a>Wang, J.T. and Jia, R., 2022.
-    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2205.15466).
-    ArXiv preprint arXiv:2205.15466.
+[^3]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
+    In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
 from __future__ import annotations
 
 import logging
 import math
 import warnings
+from abc import ABC, abstractmethod
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from enum import Enum
 from itertools import islice
-from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
+from typing import Any, Iterable, List, Optional, Protocol, Tuple, Type, cast
 
 import numpy as np
 import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.parallel import (
-    ParallelBackend,
-    _maybe_init_parallel_backend,
-    init_parallel_backend,
-)
+from pydvl.parallel import ParallelBackend, _maybe_init_parallel_backend
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility
 from pydvl.utils.types import IndexT, Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
+    MSRSampler,
     PermutationSampler,
     PowersetSampler,
     SampleT,
     StochasticSampler,
 )
-from pydvl.value.stopping import MaxUpdates, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 __all__ = [
     "compute_banzhaf_semivalues",
+    "compute_msr_banzhaf_semivalues",
     "compute_beta_shapley_semivalues",
     "compute_shapley_semivalues",
     "beta_coefficient",
@@ -149,28 +148,156 @@ class SVCoefficient(Protocol):
 MarginalT = Tuple[IndexT, float]
 
 
-def _marginal(
-    u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
-) -> Tuple[MarginalT, ...]:
-    """Computation of marginal utility. This is a helper function for
-    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+class MarginalFunction(ABC):
+    @abstractmethod
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        raise NotImplementedError
 
-    Args:
-        u: Utility object with model, data, and scoring function.
-        coefficient: The semivalue coefficient and sampler weight
-        samples: A collection of samples. Each sample is a tuple of index and subset of
-            indices to compute a marginal utility.
 
-    Returns:
-        A collection of marginals. Each marginal is a tuple with index and its marginal
-        utility.
+class DefaultMarginal(MarginalFunction):
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        """Computation of marginal utility. This is a helper function for
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+
+        Args:
+            u: Utility object with model, data, and scoring function.
+            coefficient: The semivalue coefficient and sampler weight
+            samples: A collection of samples. Each sample is a tuple of index and subset of
+                indices to compute a marginal utility.
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its marginal
+            utility.
+        """
+        n = len(u.data)
+        marginals: List[MarginalT] = []
+        for idx, s in samples:
+            marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
+            marginals.append((idx, marginal))
+        return tuple(marginals)
+
+
+class RawUtility(MarginalFunction):
+    def __call__(
+        self, u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+    ) -> Tuple[MarginalT, ...]:
+        """Computation of raw utility without marginalization. This is a helper function for
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+
+        Args:
+            u: Utility object with model, data, and scoring function.
+            coefficient: The semivalue coefficient and sampler weight
+            samples: A collection of samples. Each sample is a tuple of index and subset of
+                indices to compute a marginal utility.
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its raw utility.
+        """
+        marginals: List[MarginalT] = []
+        for idx, s in samples:
+            marginals.append((s, u(s)))
+        return tuple(marginals)
+
+
+class FutureProcessor:
     """
-    n = len(u.data)
-    marginals: List[MarginalT] = []
-    for idx, s in samples:
-        marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
-        marginals.append((idx, marginal))
-    return tuple(marginals)
+    The FutureProcessor class used to process the results of the parallel marginal evaluations.
+
+    The marginals are evaluated in parallel by `n_jobs` threads, but some algorithms require a central
+    method to postprocess the marginal results. This can be achieved through the future processor.
+    This base class does not perform any postprocessing, it is a noop used in most data valuation algorithms.
+    """
+
+    def __call__(self, future_result: Any) -> Any:
+        return future_result
+
+
+class MSRFutureProcessor(FutureProcessor):
+    """
+    This FutureProcessor processes the raw marginals in a way that MSR sampling requires.
+
+    MSR sampling evaluates the utility once, and then updates all data semivalues based on this one evaluation.
+    In order to do this, the RawUtility value needs to be postprocessed through this class.
+    For more details on MSR, please refer to the paper (Wang et. al.)<sup><a href="wang_data_2023">3</a></sup>.
+    This processor keeps track of the current values and computes marginals for all data points, so that
+    the values in the ValuationResult can be updated properly down the line.
+    """
+
+    def __init__(self, u: Utility):
+        self.n = len(u.data)
+        self.all_indices = u.data.indices.copy()
+        self.point_in_subset = np.zeros((self.n,))
+        self.positive_sums = np.zeros((self.n,))
+        self.negative_sums = np.zeros((self.n,))
+        self.total_evaluations = 0
+
+    def compute_values(self) -> np.ndarray:
+        points_not_in_subset = self.total_evaluations - self.point_in_subset
+        feasibility_map = np.logical_and(
+            self.point_in_subset > 0, points_not_in_subset > 0
+        )
+        values: np.ndarray = (
+            np.divide(
+                1,
+                self.point_in_subset,
+                out=np.zeros_like(self.point_in_subset),
+                where=feasibility_map,
+            )
+            * self.positive_sums
+            - np.divide(
+                1,
+                points_not_in_subset,
+                out=np.zeros_like(self.point_in_subset),
+                where=feasibility_map,
+            )
+            * self.negative_sums
+        )
+        return values
+
+    def __call__(
+        self, future_result: List[Tuple[List[IndexT], float]]
+    ) -> List[List[MarginalT]]:
+        """Computation of marginal utility using Maximum Sample Reuse.
+
+        This processor requires the Marginal Function to be set to RawUtility.
+        Then, this processor computes marginals based on the utility value and the index set provided.
+
+        The final formula that gives the Banzhaf semivalue using MSR is:
+        $$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\ni i}} U(S)
+        - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+
+        Args:
+            future_result: Result of the parallel computing jobs comprised of
+                a list of indices that were used to evaluate the utility, and the evaluation result (metric).
+
+        Returns:
+            A collection of marginals. Each marginal is a tuple with index and its marginal
+            utility.
+        """
+        marginals: List[List[MarginalT]] = []
+        for batch_id, (s, evaluation) in enumerate(future_result):
+            previous_values = self.compute_values()
+            self.total_evaluations += 1
+            self.point_in_subset[s] += 1
+            self.positive_sums[s] += evaluation
+            not_s = np.setdiff1d(self.all_indices, s)
+            self.negative_sums[not_s] += evaluation
+            new_values = self.compute_values()
+            # Hack to work around the update mechanic that does not work out of the box for MSR
+            marginal_vals = (
+                self.total_evaluations * new_values
+                - (self.total_evaluations - 1) * previous_values
+            )
+            marginals.append([])
+            for data_index in range(self.n):
+                marginals[batch_id].append(
+                    (data_index, float(marginal_vals[data_index]))
+                )
+        return marginals
 
 
 # @deprecated(
@@ -190,6 +317,8 @@ def compute_generic_semivalues(
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
+    marginal: MarginalFunction = DefaultMarginal(),
+    future_processor: FutureProcessor = FutureProcessor(),
     batch_size: int = 1,
     skip_converged: bool = False,
     n_jobs: int = 1,
@@ -204,6 +333,8 @@ def compute_generic_semivalues(
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
+        marginal: Marginal function to be used for computing the semivalues
+        future_processor: Additional postprocessing steps required for some algorithms
         batch_size: Number of marginal evaluations per single parallel job.
         skip_converged: Whether to skip marginal evaluations for indices that
             have already converged. **CAUTION**: This is only entirely safe if
@@ -277,8 +408,16 @@ def compute_generic_semivalues(
 
             completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
             for future in completed:
-                for idx, marginal in future.result():
-                    result.update(idx, marginal)
+                processed_future = future_processor(
+                    future.result()
+                )  # List of tuples or
+                for batch_future in processed_future:
+                    if isinstance(batch_future, list):  # Case when batch size is > 1
+                        for idx, marginal_val in batch_future:
+                            result.update(idx, marginal_val)
+                    else:  # Batch size 1
+                        idx, marginal_val = batch_future
+                        result.update(idx, marginal_val)
                     if done(result):
                         return result
 
@@ -300,7 +439,7 @@ def compute_generic_semivalues(
                     if filtered_samples:
                         pending.add(
                             executor.submit(
-                                _marginal,
+                                marginal,
                                 u=u,
                                 coefficient=correction,
                                 samples=filtered_samples,
@@ -309,6 +448,10 @@ def compute_generic_semivalues(
             except StopIteration:
                 if len(pending) == 0:
                     return result
+
+
+def always_one_coefficient(n: int, k: int) -> float:
+    return 1.0
 
 
 def shapley_coefficient(n: int, k: int) -> float:
@@ -350,7 +493,7 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
 def compute_shapley_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -420,7 +563,7 @@ def compute_shapley_semivalues(
 def compute_banzhaf_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -485,12 +628,79 @@ def compute_banzhaf_semivalues(
     deprecated_in="0.9.0",
     remove_in="0.10.0",
 )
+def compute_msr_banzhaf_semivalues(
+    u: Utility,
+    *,
+    done: StoppingCriterion,
+    sampler_t: Type[StochasticSampler] = MSRSampler,
+    batch_size: int = 1,
+    n_jobs: int = 1,
+    parallel_backend: Optional[ParallelBackend] = None,
+    config: Optional[ParallelConfig] = None,
+    progress: bool = False,
+    seed: Optional[Seed] = None,
+) -> ValuationResult:
+    """Computes MSR sampled Banzhaf values for a given utility function.
+
+    This is a convenience wrapper for
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
+    with the Banzhaf coefficient and MSR sampling.
+
+    This algorithm works by sampling random subsets and then evaluating the utility
+    on that subset only once. Based on the evaluation and the subset indices,
+    the MSRFutureProcessor then computes the marginal updates like in the paper
+    (Wang et. al.)<sup><a href="wang_data_2023">3</a></sup>.
+    Their approach updates the semivalues for all data points every time a new evaluation
+    is computed. This increases sample efficiency compared to normal Monte Carlo updates.
+
+    Args:
+        u: Utility object with model, data, and scoring function.
+        done: Stopping criterion.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
+        batch_size: Number of marginal evaluations per single parallel job.
+        n_jobs: Number of parallel jobs to use.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display a progress bar.
+
+    Returns:
+        Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
+    """
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
+        sampler_t(u.data.indices, seed=seed),
+        u,
+        always_one_coefficient,
+        done,
+        marginal=RawUtility(),
+        future_processor=MSRFutureProcessor(u),
+        batch_size=batch_size,
+        n_jobs=n_jobs,
+        parallel_backend=parallel_backend,
+        config=config,
+        progress=progress,
+    )
+
+
+@deprecated(
+    target=True,
+    args_mapping={"config": "config"},
+    deprecated_in="0.9.0",
+    remove_in="0.10.0",
+)
 def compute_beta_shapley_semivalues(
     u: Utility,
     *,
     alpha: float = 1,
     beta: float = 1,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
@@ -568,7 +778,7 @@ class SemiValueMode(str, Enum):
 def compute_semivalues(
     u: Utility,
     *,
-    done: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion,
     mode: SemiValueMode = SemiValueMode.Shapley,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
@@ -603,7 +813,7 @@ def compute_semivalues(
       parameters of the Beta distribution (both default to 1).
     - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
       the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
-      href="#wang_data_2022">1</a></sup>.
+      href="#wang_data_2023">1</a></sup>.
 
     See [Data valuation][data-valuation] for an overview of valuation.
 

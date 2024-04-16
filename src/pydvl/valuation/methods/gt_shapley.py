@@ -22,6 +22,7 @@ You can read more [in the documentation][data-valuation].
     In: Proceedings of the 22nd International Conference on Artificial
     Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
+
 import logging
 from collections import namedtuple
 from typing import Iterable, Optional, Tuple, TypeVar, Union, cast
@@ -43,10 +44,9 @@ from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
-from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.utility.base import UtilityBase
-
 
 __all__ = ["GroupTestingValuation"]
 
@@ -83,7 +83,7 @@ def _constants(
             - q: the probability of drawing a sample of size k
             - q_tot: another normalization constant
             - T: the number of iterations. This will be -1 if the utility_range is
-                infinite. E.g. because the [Scorer][pydvl.utils.score.Scorer] does
+                infinite. E.g. because the [Scorer][pydvl.valuation.scorers] does
                 not define a range.
     """
     r = utility_range

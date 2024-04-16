@@ -10,8 +10,8 @@ This module implements the Weighted-Banzhaf valuation method, as described in
       Systems. New Orleans, Louisiana, USA, 2023.
 """
 
-from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.utility.base import UtilityBase
 

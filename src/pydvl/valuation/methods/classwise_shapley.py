@@ -56,6 +56,7 @@ $y_i$ and $-y_i$, respectively.
     the Thirty-Sixth Conference on Neural Information Processing Systems
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
 """
+
 from __future__ import annotations
 
 import logging
@@ -64,23 +65,23 @@ from typing import Callable, Generator
 import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
-from tqdm import tqdm
 
-from pydvl.valuation.base import (
-    Valuation,
-    ensure_backend_has_generator_return,
-    make_parallel_flag,
-)
+from pydvl.utils import Progress
+from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler, PowersetSampler
 from pydvl.valuation.samplers.base import EvaluationStrategy
 from pydvl.valuation.samplers.powerset import NoIndexIteration
-from pydvl.valuation.scorers.classwise import ClasswiseScorer
+from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.types import BatchGenerator, IndexSetT
 from pydvl.valuation.utility.base import UtilityBase
 from pydvl.valuation.utility.classwise import CSSample
+from pydvl.valuation.utils import (
+    ensure_backend_has_generator_return,
+    make_parallel_flag,
+)
 
 __all__ = ["ClasswiseShapley"]
 
@@ -160,9 +161,9 @@ class ClasswiseShapley(Valuation):
         self.utility = utility
         self.sampler = sampler
         self.labels: NDArray | None = None
-        if not isinstance(utility.scorer, ClasswiseScorer):
+        if not isinstance(utility.scorer, ClasswiseSupervisedScorer):
             raise ValueError("Scorer must be a ClasswiseScorer.")
-        self.scorer: ClasswiseScorer = utility.scorer
+        self.scorer: ClasswiseSupervisedScorer = utility.scorer
         self.is_done = is_done
         self.progress = progress
 
@@ -174,26 +175,27 @@ class ClasswiseShapley(Valuation):
             data_names=data.data_names,
         )
         ensure_backend_has_generator_return()
-        flag = make_parallel_flag()
+
         parallel = Parallel(return_as="generator_unordered")
 
         self.utility.training_data = data
-        self.labels = unique_labels(np.concatenate((data.y, self.utility.test_data.y)))
+        self.labels = unique_labels(data.y)
 
-        # FIXME, DUH: this loop needs to be in the sampler or we will never converge
-        for label in self.labels:
-            sampler = self.sampler.for_label(label)
-            strategy = sampler.make_strategy(self.utility)
-            processor = delayed(strategy.process)
-            delayed_evals = parallel(
-                processor(batch=list(batch), is_interrupted=flag)
-                for batch in sampler.from_data(data)
-            )
-            for evaluation in tqdm(iterable=delayed_evals, disable=not self.progress):
-                self.result.update(evaluation.idx, evaluation.update)
-                if self.is_done(self.result):
-                    flag.set()
-                    break
+        with make_parallel_flag() as flag:
+            # FIXME, DUH: this loop needs to be in the sampler or we will never converge
+            for label in self.labels:
+                sampler = self.sampler.for_label(label)
+                strategy = sampler.make_strategy(self.utility)
+                processor = delayed(strategy.process)
+                delayed_evals = parallel(
+                    processor(batch=list(batch), is_interrupted=flag)
+                    for batch in sampler.from_data(data)
+                )
+                for evaluation in Progress(delayed_evals, self.is_done):
+                    self.result.update(evaluation.idx, evaluation.update)
+                    if self.is_done(self.result):
+                        flag.set()
+                        break
 
     def _normalize(self) -> ValuationResult:
         r"""
@@ -222,9 +224,7 @@ class ClasswiseShapley(Valuation):
             indices_label_set = u.training_data.indices[indices_label_set]
 
             self.scorer.label = label
-            in_class_acc, _ = self.scorer.estimate_in_class_and_out_of_class_score(
-                u.model, u.test_data.x, u.test_data.y
-            )
+            in_class_acc, _ = self.scorer.compute_in_and_out_of_class_scores(u.model)
 
             sigma = np.sum(self.result.values[indices_label_set])
             if sigma != 0:

@@ -1,4 +1,3 @@
-from .semivalue import *
 from .beta_shapley import *
 from .classwise_shapley import *
 from .data_banzhaf import *
@@ -10,4 +9,5 @@ from .knn_shapley import *
 from .least_core import *
 from .loo import *
 from .owen_shapley import *
+from .semivalue import *
 from .weighted_banzhaf import *
