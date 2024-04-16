@@ -9,6 +9,7 @@ from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.types import SupervisedModel
+from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import SupervisedScorer
 from pydvl.valuation.types import Sample, SampleT
 
@@ -129,6 +130,19 @@ class Utility(UtilityBase[SampleT]):
             cached_func_options.hash_prefix = str(hash((model, scorer)))
         self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
+
+    def with_dataset(self, dataset: Dataset):
+        copy = type(self)(
+            model=self.model,
+            scorer=self.scorer,
+            catch_errors=self.catch_errors,
+            show_warnings=self.show_warnings,
+            cache_backend=self.cache,
+            cached_func_options=self.cached_func_options,
+            clone_before_fit=self.clone_before_fit,
+        )
+        copy.training_data = dataset
+        return copy
 
     def _initialize_utility_wrapper(self):
         if self.cache is not None:

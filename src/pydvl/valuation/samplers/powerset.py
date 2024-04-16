@@ -257,13 +257,15 @@ class DeterministicUniformSampler(PowersetSampler):
         ```
     """
 
-    def __init__(self):
-        super().__init__(index_iteration=SequentialIndexIteration)
+    def __init__(
+        self, index_iteration: Type[IndexIteration] = SequentialIndexIteration
+    ):
+        super().__init__(index_iteration=index_iteration)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             for subset in powerset(
-                self.complement(indices, [idx] if idx is not None else [])
+                complement(indices, [idx] if idx is not None else [])
             ):
                 yield Sample(idx, np.array(subset))
 
