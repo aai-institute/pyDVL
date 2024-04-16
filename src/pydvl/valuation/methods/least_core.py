@@ -8,8 +8,8 @@ from pydvl.valuation.samplers.powerset import PowersetSampler
 from pydvl.valuation.utility.base import UtilityBase
 
 # Imports from old value folder
-from pydvl.value.least_core.montecarlo import *
-from pydvl.value.least_core.naive import *
+from pydvl.value.least_core.montecarlo import montecarlo_least_core
+from pydvl.value.least_core.naive import exact_least_core
 
 __all__ = ["LeastCoreValuation"]
 
