@@ -5,7 +5,7 @@ from pydvl.valuation.methods._least_core_solving import (
     lc_solve_problem,
     lc_solve_problems,
 )
-from pydvl.value.least_core.naive import lc_prepare_problem
+from pydvl.valuation.methods._naive_least_core import lc_prepare_problem
 
 from .. import check_values
 
@@ -18,6 +18,7 @@ from .. import check_values
 def test_lc_solve_problems(test_game, n_jobs, parallel_backend):
     """Test solving LeastCoreProblems in parallel."""
 
+    test_game.u = test_game.u.with_dataset(test_game.data)
     n_problems = n_jobs
     problem = lc_prepare_problem(test_game.u)
     solutions = lc_solve_problems(

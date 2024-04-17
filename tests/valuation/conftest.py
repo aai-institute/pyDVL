@@ -8,18 +8,19 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.utils import Bunch
 
 from pydvl.parallel import JoblibParallelBackend
-from pydvl.parallel.config import ParallelConfig
-from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.utils import SupervisedModel
 from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
-from pydvl.value import ValuationResult
-from pydvl.value.games import (
+from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.games import (
     AsymmetricVotingGame,
     Game,
     MinerGame,
     ShoesGame,
     SymmetricVotingGame,
 )
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.utility import Utility
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 from ..conftest import num_workers

@@ -30,7 +30,7 @@ def test_montecarlo_least_core(
         progress=False,
         seed=seed,
     )
-    valuation.fit(data=test_game.u.data)
+    valuation.fit(data=test_game.data)
     values = valuation.values()
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
@@ -62,8 +62,10 @@ def test_naive_least_core(test_game, non_negative_subsidy):
         progress=False,
         mode=LeastCoreMode.Exact,
     )
-    valuation.fit(data=test_game.u.data)
+    valuation.fit(data=test_game.data)
     values = valuation.values()
+    # HACK because check_total_value expects u with data
+    test_game.u = test_game.u.with_dataset(test_game.data)
     check_total_value(test_game.u, values)
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:

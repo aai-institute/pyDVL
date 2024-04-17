@@ -6,9 +6,14 @@ import numpy as np
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
-from pydvl.utils import Utility, powerset
-from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
-from pydvl.value.result import ValuationResult
+from pydvl.utils import powerset
+from pydvl.valuation.methods._least_core_solving import (
+    LeastCoreProblem,
+    lc_solve_problem,
+)
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility import Utility
 
 __all__ = ["exact_least_core", "lc_prepare_problem"]
 
@@ -56,7 +61,7 @@ def exact_least_core(
     Returns:
         Object with the data values and the least core value.
     """
-    n = len(u.data)
+    n = len(u.training_data)
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
@@ -79,7 +84,7 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
     See [exact_least_core()][pydvl.value.least_core.naive.exact_least_core] for argument
     descriptions.
     """
-    n = len(u.data)
+    n = len(u.training_data)
 
     logger.debug("Building vectors and matrices for linear programming problem")
     powerset_size = 2**n
@@ -89,7 +94,7 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
     utility_values = np.zeros(powerset_size)
     for i, subset in enumerate(  # type: ignore
         tqdm(
-            powerset(u.data.indices),
+            powerset(u.training_data.indices),
             disable=not progress,
             total=powerset_size - 1,
             position=0,
@@ -98,6 +103,6 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
-        utility_values[i] = u(subset)  # type: ignore
+        utility_values[i] = u(Sample(idx=0, subset=subset))  # type: ignore
 
     return LeastCoreProblem(utility_values, A_lb)

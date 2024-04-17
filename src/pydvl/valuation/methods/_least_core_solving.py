@@ -14,8 +14,10 @@ from pydvl.parallel import (
     ParallelConfig,
     _maybe_init_parallel_backend,
 )
-from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.utils import Status
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility import Utility
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -50,7 +52,7 @@ def lc_solve_problem(
     [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
     argument descriptions.
     """
-    n = len(u.data)
+    n = len(u.training_data)
 
     if np.any(np.isnan(problem.utility_values)):
         warnings.warn(
@@ -82,7 +84,7 @@ def lc_solve_problem(
     # This is the index of the row(s) in A_lb with all ones.
     total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
     if len(total_utility_indices) == 0:
-        b_eq = np.array([u(u.data.indices)])
+        b_eq = np.array([u(Sample(idx=None, subset=u.training_data.indices))])
     else:
         b_eq = b_lb[total_utility_indices]
         # Remove the row(s) corresponding to the total utility
@@ -148,7 +150,7 @@ def lc_solve_problem(
         values=values,
         subsidy=subsidy,
         stderr=None,
-        data_names=u.data.data_names,
+        data_names=u.training_data.data_names,
     )
 
 

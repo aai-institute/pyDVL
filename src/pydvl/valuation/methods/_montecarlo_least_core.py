@@ -15,9 +15,13 @@ from pydvl.parallel import (
 )
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.types import Seed
-from pydvl.utils.utility import Utility
-from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
-from pydvl.value.result import ValuationResult
+from pydvl.valuation.methods._least_core_solving import (
+    LeastCoreProblem,
+    lc_solve_problem,
+)
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility import Utility
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +140,7 @@ def mclc_prepare_problem(
         argument to allow users to pass the Parallel Backend instance
         directly.
     """
-    n = len(u.data)
+    n = len(u.training_data)
 
     if n_iterations < n:
         warnings.warn(
@@ -192,13 +196,15 @@ def _montecarlo_least_core(
     Returns:
         A solution
     """
-    n = len(u.data)
+    n = len(u.training_data)
 
     utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
     rng = np.random.default_rng(seed)
-    power_set = random_powerset(u.data.indices, n_samples=n_iterations, seed=rng)
+    power_set = random_powerset(
+        u.training_data.indices, n_samples=n_iterations, seed=rng
+    )
 
     A_lb = np.zeros((n_iterations, n))
 
@@ -208,7 +214,7 @@ def _montecarlo_least_core(
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
-        utility_values[i] = u(subset)
+        utility_values[i] = u(Sample(idx=None, subset=subset))
 
     return LeastCoreProblem(utility_values, A_lb)
 

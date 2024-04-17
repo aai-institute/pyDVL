@@ -4,12 +4,9 @@ from enum import Enum
 
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.samplers.powerset import PowersetSampler
+from pydvl.valuation.methods._montecarlo_least_core import montecarlo_least_core
+from pydvl.valuation.methods._naive_least_core import exact_least_core
 from pydvl.valuation.utility.base import UtilityBase
-
-# Imports from old value folder
-from pydvl.value.least_core.montecarlo import montecarlo_least_core
-from pydvl.value.least_core.naive import exact_least_core
 
 __all__ = ["LeastCoreValuation"]
 
@@ -27,7 +24,6 @@ class LeastCoreValuation(Valuation):
         utility: UtilityBase,
         n_jobs: int = 1,
         n_iterations: int | None = None,
-        # sampler: PowersetSampler,
         mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
@@ -46,6 +42,8 @@ class LeastCoreValuation(Valuation):
         self.kwargs = kwargs
 
     def fit(self, data: Dataset) -> None:
+
+        self.utility = self.utility.with_dataset(data)
 
         if self.mode == LeastCoreMode.MonteCarlo:
             # TODO fix progress showing in remote case
