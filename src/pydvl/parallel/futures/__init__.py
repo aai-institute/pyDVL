@@ -21,7 +21,7 @@ __all__ = ["init_executor"]
 )
 def init_executor(
     max_workers: Optional[int] = None,
-    config: ParallelConfig = ParallelConfig(),
+    config: Optional[ParallelConfig] = None,
     **kwargs,
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor for the given parallel configuration.
@@ -50,6 +50,10 @@ def init_executor(
         assert results == [1, 2, 3, 4, 5]
         ```
     """
+
+    if config is None:
+        config = ParallelConfig()
+
     try:
         cls = ParallelBackend.BACKENDS[config.backend]
         with cls.executor(max_workers=max_workers, config=config, **kwargs) as e:
