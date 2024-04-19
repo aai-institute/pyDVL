@@ -11,8 +11,10 @@ benchmarking purposes.
       Computers & Operations Research, 36(5), pp.1726-1730.
 
 """
+
 from __future__ import annotations
 
+import itertools
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Iterable, Optional, Tuple
@@ -24,9 +26,9 @@ from numpy.typing import NDArray
 from pydvl.utils import Status
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.methods._least_core_solving import LeastCoreProblem
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.scorers.supervised import SupervisedScorer
-from pydvl.valuation.utility import Utility
+from pydvl.valuation.types import Sample
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -90,8 +92,8 @@ class DummyGameUtility(UtilityBase):
         self.score = score
 
     def __call__(self, sample: SampleT) -> float:
+        idxs = np.array(sample.subset, dtype=np.int32)
         try:
-            idxs = np.array(sample.subset, dtype=np.int32)
             score = self.score(self.training_data.x[idxs])
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -437,6 +439,47 @@ class ShoesGame(Game):
         )
         return result
 
+    def least_core_problem(self) -> LeastCoreProblem:
+        if self.left == 1 and self.right == 1:
+            a_lb = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
+            utilities = np.array([0, 0, 0, 1])
+        elif self.left == 2 and self.right == 1:
+            a_lb = np.array(
+                [
+                    [0, 0, 0],
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 0],
+                    [1, 0, 1],
+                    [0, 1, 1],
+                    [1, 1, 1],
+                ]
+            )
+            utilities = np.array([0] * 5 + [1] * 3)
+        elif self.left == 1 and self.right == 2:
+            a_lb = np.array(
+                [
+                    [0, 0, 0],
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 0],
+                    [1, 0, 1],
+                    [0, 1, 1],
+                    [1, 1, 1],
+                ]
+            )
+            utilities = np.array([0, 0, 0, 0, 1, 1, 0, 1])
+        else:
+            raise ValueError(
+                f"Unsupported game with left={self.left} and right={self.right}"
+            )
+
+        return LeastCoreProblem(
+            A_lb=a_lb.astype(float), utility_values=utilities.astype(float)
+        )
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(L={self.left}, R={self.right})"
 
@@ -649,6 +692,52 @@ class MinerGame(Game):
             counts=np.zeros_like(self.data.x),
         )
         return result
+
+    def least_core_problem(self) -> LeastCoreProblem:
+        if self.n_players == 3:
+            a_lb = np.array(
+                [
+                    [0, 0, 0],
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 0],
+                    [1, 0, 1],
+                    [0, 1, 1],
+                    [1, 1, 1],
+                ]
+            )
+            utilities = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+        elif self.n_players == 4:
+            a_lb = np.array(
+                [
+                    [0, 0, 0, 0],
+                    [1, 0, 0, 0],
+                    [0, 1, 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1],
+                    [1, 1, 0, 0],
+                    [1, 0, 1, 0],
+                    [1, 0, 0, 1],
+                    [0, 1, 1, 0],
+                    [0, 1, 0, 1],
+                    [0, 0, 1, 1],
+                    [1, 1, 1, 0],
+                    [1, 1, 0, 1],
+                    [1, 0, 1, 1],
+                    [0, 1, 1, 1],
+                    [1, 1, 1, 1],
+                ]
+            )
+            utilities = np.array([0] * 5 + [1] * 10 + [2])
+        else:
+            raise NotImplementedError(
+                f"Least core problem not implemented for {self.n_players=}"
+            )
+
+        return LeastCoreProblem(
+            utility_values=utilities.astype(float), A_lb=a_lb.astype(float)
+        )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n={self.n_players})"

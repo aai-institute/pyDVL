@@ -1,8 +1,9 @@
 import logging
 
 import pytest
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
+from pydvl.valuation.methods._naive_least_core import lc_prepare_problem
 from pydvl.valuation.methods.least_core import LeastCoreMode, LeastCoreValuation
 from tests.valuation import check_total_value, check_values
 
@@ -76,3 +77,21 @@ def test_naive_least_core(test_game, non_negative_subsidy):
             assert_almost_equal(values.subsidy, 0.0, decimal=5)
     else:
         check_values(values, exact_values, extra_values_names=["subsidy"])
+
+
+@pytest.mark.parametrize(
+    "test_game",
+    [
+        ("miner", {"n_players": 3}),
+        ("miner", {"n_players": 4}),
+        ("shoes", {"left": 1, "right": 1}),
+        ("shoes", {"left": 2, "right": 1}),
+        ("shoes", {"left": 1, "right": 2}),
+    ],
+    indirect=True,
+)
+def test_prepare_problem_for_exact_least_core(test_game):
+    problem = lc_prepare_problem(test_game.u.with_dataset(test_game.data))
+    expected = test_game.least_core_problem()
+    assert_array_almost_equal(problem.utility_values, expected.utility_values)
+    assert_array_almost_equal(problem.A_lb, expected.A_lb)
