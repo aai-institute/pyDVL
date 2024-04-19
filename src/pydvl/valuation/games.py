@@ -440,36 +440,12 @@ class ShoesGame(Game):
         return result
 
     def least_core_problem(self) -> LeastCoreProblem:
+        a_lb = _exact_a_lb(self.left + self.right)
         if self.left == 1 and self.right == 1:
-            a_lb = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
             utilities = np.array([0, 0, 0, 1])
         elif self.left == 2 and self.right == 1:
-            a_lb = np.array(
-                [
-                    [0, 0, 0],
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [1, 1, 0],
-                    [1, 0, 1],
-                    [0, 1, 1],
-                    [1, 1, 1],
-                ]
-            )
             utilities = np.array([0] * 5 + [1] * 3)
         elif self.left == 1 and self.right == 2:
-            a_lb = np.array(
-                [
-                    [0, 0, 0],
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [1, 1, 0],
-                    [1, 0, 1],
-                    [0, 1, 1],
-                    [1, 1, 1],
-                ]
-            )
             utilities = np.array([0, 0, 0, 0, 1, 1, 0, 1])
         else:
             raise ValueError(
@@ -694,50 +670,62 @@ class MinerGame(Game):
         return result
 
     def least_core_problem(self) -> LeastCoreProblem:
+        a_lb = _exact_a_lb(self.n_players)
         if self.n_players == 3:
-            a_lb = np.array(
-                [
-                    [0, 0, 0],
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [1, 1, 0],
-                    [1, 0, 1],
-                    [0, 1, 1],
-                    [1, 1, 1],
-                ]
-            )
             utilities = np.array([0, 0, 0, 0, 1, 1, 1, 1])
         elif self.n_players == 4:
-            a_lb = np.array(
-                [
-                    [0, 0, 0, 0],
-                    [1, 0, 0, 0],
-                    [0, 1, 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1],
-                    [1, 1, 0, 0],
-                    [1, 0, 1, 0],
-                    [1, 0, 0, 1],
-                    [0, 1, 1, 0],
-                    [0, 1, 0, 1],
-                    [0, 0, 1, 1],
-                    [1, 1, 1, 0],
-                    [1, 1, 0, 1],
-                    [1, 0, 1, 1],
-                    [0, 1, 1, 1],
-                    [1, 1, 1, 1],
-                ]
-            )
             utilities = np.array([0] * 5 + [1] * 10 + [2])
         else:
             raise NotImplementedError(
                 f"Least core problem not implemented for {self.n_players=}"
             )
 
-        return LeastCoreProblem(
-            utility_values=utilities.astype(float), A_lb=a_lb.astype(float)
-        )
+        return LeastCoreProblem(utility_values=utilities.astype(float), A_lb=a_lb)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n={self.n_players})"
+
+
+def _exact_a_lb(n_players):
+    """Hardcoded exact A_lb matrix for testing least-core problem generation."""
+    if n_players == 2:
+        a_lb = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
+    elif n_players == 3:
+        a_lb = np.array(
+            [
+                [0, 0, 0],
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1],
+                [1, 1, 0],
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1],
+            ]
+        )
+    elif n_players == 4:
+        a_lb = np.array(
+            [
+                [0, 0, 0, 0],
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+                [1, 1, 0, 0],
+                [1, 0, 1, 0],
+                [1, 0, 0, 1],
+                [0, 1, 1, 0],
+                [0, 1, 0, 1],
+                [0, 0, 1, 1],
+                [1, 1, 1, 0],
+                [1, 1, 0, 1],
+                [1, 0, 1, 1],
+                [0, 1, 1, 1],
+                [1, 1, 1, 1],
+            ]
+        )
+    else:
+        raise NotImplementedError(
+            f"Exact A_lb matrix is not implemented for more than 4 players."
+        )
+    return a_lb.astype(float)
