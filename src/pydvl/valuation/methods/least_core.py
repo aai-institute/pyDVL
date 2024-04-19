@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from enum import Enum
+from itertools import islice
+
+import numpy as np
 
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.methods._least_core_solving import LeastCoreProblem
 from pydvl.valuation.methods._montecarlo_least_core import montecarlo_least_core
 from pydvl.valuation.methods._naive_least_core import exact_least_core
+from pydvl.valuation.samplers.base import IndexSampler
+from pydvl.valuation.utility import Utility
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["LeastCoreValuation"]
@@ -73,3 +79,18 @@ class LeastCoreValuation(Valuation):
             raise ValueError(f"Invalid value encountered in {mode=}")
 
         self.result = values
+
+
+def create_least_core_problem(u: UtilityBase, sampler: IndexSampler, n_iterations: int):
+    n_obs = len(u.training_data)
+
+    A_lb = np.zeros((n_iterations, n_obs))
+    utility_values = np.zeros(n_iterations)
+
+    generator = sampler.from_indices(u.training_data.indices)
+    for i, batch in enumerate(islice(generator, n_iterations)):
+        sample = list(batch)[0]
+        A_lb[i, sample.subset.astype(int)] = 1
+        utility_values[i] = u(sample)
+
+    return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
