@@ -9,7 +9,7 @@ from pydvl.valuation.methods.least_core import (
     LeastCoreValuation,
     create_least_core_problem,
 )
-from pydvl.valuation.samplers import DeterministicUniformSampler
+from pydvl.valuation.samplers import DeterministicUniformSampler, UniformSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration
 from tests.valuation import check_total_value, check_values
 
@@ -24,18 +24,15 @@ logger = logging.getLogger(__name__)
     ],
     indirect=["test_game"],
 )
-@pytest.mark.parametrize("n_jobs", [1, -1])
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
-def test_montecarlo_least_core(
-    test_game, n_iterations, n_jobs, non_negative_subsidy, seed
-):
+def test_montecarlo_least_core(test_game, n_iterations, non_negative_subsidy, seed):
+    sampler = UniformSampler(index_iteration=NoIndexIteration, seed=seed)
+
     valuation = LeastCoreValuation(
         utility=test_game.u,
-        n_jobs=n_jobs,
+        sampler=sampler,
         n_iterations=n_iterations,
         non_negative_subsidy=non_negative_subsidy,
-        progress=False,
-        seed=seed,
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
@@ -63,11 +60,17 @@ def test_montecarlo_least_core(
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_naive_least_core(test_game, non_negative_subsidy):
+    sampler = DeterministicUniformSampler(
+        index_iteration=NoIndexIteration,
+    )
+
+    powerset_size = 2 ** len(test_game.data)
+
     valuation = LeastCoreValuation(
         utility=test_game.u,
+        sampler=sampler,
         non_negative_subsidy=non_negative_subsidy,
-        progress=False,
-        mode=LeastCoreMode.Exact,
+        n_iterations=powerset_size,
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()

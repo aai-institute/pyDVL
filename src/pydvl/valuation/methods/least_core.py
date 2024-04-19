@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from enum import Enum
 from itertools import islice
 
@@ -7,9 +8,13 @@ import numpy as np
 
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.methods._least_core_solving import LeastCoreProblem
+from pydvl.valuation.methods._least_core_solving import (
+    LeastCoreProblem,
+    lc_solve_problem,
+)
 from pydvl.valuation.methods._montecarlo_least_core import montecarlo_least_core
 from pydvl.valuation.methods._naive_least_core import exact_least_core
+from pydvl.valuation.samplers import DeterministicUniformSampler
 from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.utility import Utility
 from pydvl.valuation.utility.base import UtilityBase
@@ -28,57 +33,50 @@ class LeastCoreValuation(Valuation):
     def __init__(
         self,
         utility: UtilityBase,
-        n_jobs: int = 1,
+        sampler: IndexSampler,
         n_iterations: int | None = None,
-        mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
-        progress: bool = False,
-        **kwargs,
     ):
         super().__init__()
-        self.utility = utility
-        self.n_jobs = n_jobs
-        self.n_iterations = n_iterations
-        # self.sampler = sampler
-        self.mode = mode
-        self.non_negative_subsidy = non_negative_subsidy
-        self.solver_options = solver_options
-        self.progress = progress
-        self.kwargs = kwargs
+        self._utility = utility
+        self._sampler = sampler
+        self._non_negative_subsidy = non_negative_subsidy
+        self._solver_options = solver_options
+        self._n_iterations = n_iterations
 
     def fit(self, data: Dataset) -> None:
 
-        self.utility = self.utility.with_dataset(data)
+        self._utility = self._utility.with_dataset(data)
 
-        if self.mode == LeastCoreMode.MonteCarlo:
-            # TODO fix progress showing in remote case
-            self.progress = False
-            if self.n_iterations is None:
-                raise ValueError(
-                    "n_iterations cannot be None for Monte Carlo Least Core"
+        # ==============================================================================
+        # Things that should not exist
+        algorithm = "placeholder"
+
+        if isinstance(self._sampler, DeterministicUniformSampler):
+            _correct_n_iterations = 2 ** len(self._utility.training_data)
+            if self._n_iterations != _correct_n_iterations:
+                warnings.warn(
+                    "Incorrect number of iterations for exact least core: "
+                    f"{n_iterations}. Setting to {_correct_n_iterations}."
                 )
-            values = montecarlo_least_core(  # type: ignore
-                u=self.utility,
-                n_iterations=self.n_iterations,
-                n_jobs=self.n_jobs,
-                progress=self.progress,
-                non_negative_subsidy=self.non_negative_subsidy,
-                solver_options=self.solver_options,
-                **self.kwargs,
-            )
-        elif self.mode == LeastCoreMode.Exact:
-            values = exact_least_core(
-                u=self.utility,
-                progress=self.progress,
-                non_negative_subsidy=self.non_negative_subsidy,
-                solver_options=self.solver_options,
-            )
+                self._n_iterations = _correct_n_iterations
 
-        else:
-            raise ValueError(f"Invalid value encountered in {mode=}")
+        # ==============================================================================
 
-        self.result = values
+        problem = create_least_core_problem(
+            u=self._utility, sampler=self._sampler, n_iterations=self._n_iterations
+        )
+
+        solution = lc_solve_problem(
+            problem=problem,
+            u=self._utility,
+            algorithm=algorithm,
+            non_negative_subsidy=self._non_negative_subsidy,
+            solver_options=self._solver_options,
+        )
+
+        self.result = solution
 
 
 def create_least_core_problem(u: UtilityBase, sampler: IndexSampler, n_iterations: int):
