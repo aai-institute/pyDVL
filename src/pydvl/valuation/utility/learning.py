@@ -44,13 +44,13 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     ??? Example
         ``` pycon
         >>> from pydvl.valuation.dataset import Dataset
-        >>> from pydvl.valuation.utility import Utility, DataUtilityLearning
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
         >>> from pydvl.valuation.types import Sample
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
         >>>
         >>> train, test = Dataset.from_sklearn(load_iris())
-        >>> u = Utility(LogisticRegression())
+        >>> u = ModelUtility(LogisticRegression())
         >>> u.training_data = train
         >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
         ... # First 3 calls will be computed normally

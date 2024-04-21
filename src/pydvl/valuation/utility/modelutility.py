@@ -8,11 +8,11 @@ import numpy as np
 from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
-from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.scorers.supervised import SupervisedScorer
+from pydvl.utils.types import BaseModel
+from pydvl.valuation.scorers import Scorer
 from pydvl.valuation.types import Sample, SampleT
 
-__all__ = ["Utility"]
+__all__ = ["ModelUtility"]
 
 from pydvl.valuation.utility.base import UtilityBase
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 # Need a generic because subclasses might use subtypes of Sample
-class Utility(UtilityBase[SampleT]):
+class ModelUtility(UtilityBase[SampleT]):
     """Convenience wrapper with configurable memoization of the scoring
     function.
 
@@ -30,7 +30,7 @@ class Utility(UtilityBase[SampleT]):
     [Shapley values][pydvl.valuation.shapley] and [the Least
     Core][pydvl.valuation.least_core].
 
-    The Utility expect the model to fulfill the [SupervisedModel][pydvl.utils.types.SupervisedModel]
+    The Utility expect the model to fulfill the [BaseModel][pydvl.utils.types.BaseModel]
     interface i.e. to have a `fit()` method.
 
     When calling the utility, the model will be
@@ -41,8 +41,9 @@ class Utility(UtilityBase[SampleT]):
     Since evaluating the scoring function requires retraining the model and that
     can be time-consuming, this class wraps it and caches the results of each
     execution. Caching is available both locally and across nodes, but must
-    always be enabled for your project first, see [the documentation][getting-started-cache]
-    and the [module documentation][pydvl.utils.caching].
+    always be enabled for your project first, see [the
+    documentation][getting-started-cache] and the [module
+    documentation][pydvl.utils.caching].
 
     Attributes:
         model: The supervised model.
@@ -101,13 +102,13 @@ class Utility(UtilityBase[SampleT]):
 
     """
 
-    model: SupervisedModel
-    scorer: SupervisedScorer
+    model: BaseModel
+    scorer: Scorer
 
     def __init__(
         self,
-        model: SupervisedModel,
-        scorer: SupervisedScorer,
+        model: BaseModel,
+        scorer: Scorer,
         *,
         catch_errors: bool = True,
         show_warnings: bool = False,
@@ -195,7 +196,7 @@ class Utility(UtilityBase[SampleT]):
                 raise
 
     @staticmethod
-    def _clone_model(model: SupervisedModel) -> SupervisedModel:
+    def _clone_model(model: BaseModel) -> BaseModel:
         """Clones the passed model to avoid the possibility
         of reusing a fitted estimator
 
@@ -209,7 +210,7 @@ class Utility(UtilityBase[SampleT]):
             # This happens if the passed model is not an sklearn model
             # In this case, we just make a deepcopy of the model.
             model = clone(model, safe=False)
-        return cast(SupervisedModel, model)
+        return cast(BaseModel, model)
 
     @property
     def cache_stats(self) -> CacheStats | None:

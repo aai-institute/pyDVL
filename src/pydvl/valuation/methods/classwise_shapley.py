@@ -78,6 +78,7 @@ from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.types import BatchGenerator, IndexSetT
 from pydvl.valuation.utility.base import UtilityBase
 from pydvl.valuation.utility.classwise import CSSample
+from pydvl.valuation.utility.modelutility import ModelUtility
 from pydvl.valuation.utils import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
@@ -152,7 +153,7 @@ class ClasswiseSampler(IndexSampler):
 class ClasswiseShapley(Valuation):
     def __init__(
         self,
-        utility: UtilityBase,
+        utility: ModelUtility,
         sampler: ClasswiseSampler,
         is_done: StoppingCriterion,
         progress: bool = False,

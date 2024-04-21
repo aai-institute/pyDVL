@@ -17,7 +17,7 @@ class Valuation(ABC):
     def fit(self, data: Dataset) -> Valuation:
         ...
 
-    def values(self) -> ValuationResult:
+    def values(self, sort: bool) -> ValuationResult:
         """Returns the valuation result.
 
         The valuation must have been run with `fit()` before calling this method.
@@ -29,6 +29,8 @@ class Valuation(ABC):
             raise RuntimeError("Valuation is not fitted")
         assert self.result is not None
 
+        if sort:
+            self.result.sort()
         return self.result
 
     @property

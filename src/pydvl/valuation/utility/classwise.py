@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.types import IndexT, Sample
-from pydvl.valuation.utility import Utility
+from pydvl.valuation.utility import ModelUtility
 
 __all__ = ["CSSample", "ClasswiseUtility"]
 
@@ -28,7 +28,7 @@ class CSSample(Sample):
         return int(sha256_hash, base=16)
 
 
-class ClasswiseUtility(Utility[CSSample]):
+class ClasswiseUtility(ModelUtility[CSSample]):
     """
     FIXME: probably unnecessary, just a test
     """
