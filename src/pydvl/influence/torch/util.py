@@ -21,6 +21,7 @@ import torch
 from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
 
@@ -398,7 +399,11 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     function. Concatenation is done along the first dimension of the chunks.
     """
 
-    def __call__(self, tensor_generator: Generator[torch.Tensor, None, None]):
+    def __call__(
+        self,
+        tensor_generator: Generator[torch.Tensor, None, None],
+        len_generator: Optional[int] = None,
+    ):
         """
         Aggregates tensors from a single-level generator into a single tensor by
         concatenating them. This method is a straightforward way to combine a sequence
@@ -406,12 +411,20 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
 
         Args:
             tensor_generator: A generator that yields `torch.Tensor` objects.
+            len_generator: if the number of elements from the generator is
+                known, this optional parameter can be used to improve logging
+                by adding a progressbar.
 
         Returns:
             A single tensor formed by concatenating all tensors from the generator.
                 The concatenation is performed along the default dimension (0).
         """
-        return torch.cat(list(tensor_generator))
+        t_gen = tensor_generator
+
+        if len_generator is not None:
+            t_gen = tqdm(t_gen, total=len_generator, desc="Blocks")
+
+        return torch.cat(list(t_gen))
 
 
 class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
@@ -425,6 +438,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         nested_generators_of_tensors: Generator[
             Generator[torch.Tensor, None, None], None, None
         ],
+        len_outer_generator: Optional[int] = None,
     ):
         """
         Aggregates tensors from a nested generator structure into a single tensor by
@@ -435,17 +449,26 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         Args:
             nested_generators_of_tensors: A generator of generators, where each inner
                 generator yields `torch.Tensor` objects.
+            len_outer_generator: if the number of elements from the outer generator is
+                known from the context, this optional parameter can be used to improve
+                logging by adding a progressbar.
 
         Returns:
             A single tensor formed by concatenating all tensors from the nested
             generators.
 
         """
+
+        outer_gen = nested_generators_of_tensors
+
+        if len_outer_generator is not None:
+            outer_gen = tqdm(outer_gen, total=len_outer_generator, desc="Row blocks")
+
         return torch.cat(
             list(
                 map(
                     lambda tensor_gen: torch.cat(list(tensor_gen), dim=1),
-                    nested_generators_of_tensors,
+                    outer_gen,
                 )
             )
         )

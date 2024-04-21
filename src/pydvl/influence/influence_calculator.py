@@ -619,8 +619,14 @@ class SequentialInfluenceCalculator:
         Returns:
             A lazy data structure representing the chunks of the resulting tensor
         """
+        try:
+            len_iterable = len(data_iterable)
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of data iterable: {e}")
+            len_iterable = None
+
         tensors_gen_factory = partial(self._influence_factors_gen, data_iterable)
-        return LazyChunkSequence(tensors_gen_factory)
+        return LazyChunkSequence(tensors_gen_factory, len_generator=len_iterable)
 
     def _influences_gen(
         self,
@@ -677,7 +683,15 @@ class SequentialInfluenceCalculator:
             mode,
         )
 
-        return NestedLazyChunkSequence(nested_tensor_gen_factory)
+        try:
+            len_iterable = len(test_data_iterable)
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of test data iterable: {e}")
+            len_iterable = None
+
+        return NestedLazyChunkSequence(
+            nested_tensor_gen_factory, len_outer_generator=len_iterable
+        )
 
     def _influences_from_factors_gen(
         self,
@@ -735,4 +749,13 @@ class SequentialInfluenceCalculator:
             train_data_iterable,
             mode,
         )
-        return NestedLazyChunkSequence(nested_tensor_gen)
+
+        try:
+            len_iterable = len(z_test_factors)
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of factors iterable: {e}")
+            len_iterable = None
+
+        return NestedLazyChunkSequence(
+            nested_tensor_gen, len_outer_generator=len_iterable
+        )
