@@ -7,12 +7,14 @@ from typing import (
     Dict,
     Generator,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import dask
@@ -37,6 +39,8 @@ __all__ = [
     "TorchCatAggregator",
     "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
+    "EkfacRepresentation",
+    "empirical_cross_entropy_loss_fn",
 ]
 
 
@@ -297,11 +301,11 @@ def torch_dataset_to_dask_array(
                 return total_size
             else:
                 logger.warning(
-                    err_msg + f" Infer the number of samples from the dataset, "
-                    f"via iterating the dataset once. "
-                    f"This might induce severe overhead, so consider"
-                    f"providing total_size, if you know the number of samples "
-                    f"beforehand."
+                    err_msg + " Infer the number of samples from the dataset, "
+                    "via iterating the dataset once. "
+                    "This might induce severe overhead, so consider"
+                    "providing total_size, if you know the number of samples "
+                    "beforehand."
                 )
                 idx = 0
                 while True:
@@ -419,10 +423,12 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
             A single tensor formed by concatenating all tensors from the generator.
                 The concatenation is performed along the default dimension (0).
         """
-        t_gen = tensor_generator
+        t_gen = cast(Iterator[torch.Tensor], tensor_generator)
 
         if len_generator is not None:
-            t_gen = tqdm(t_gen, total=len_generator, desc="Blocks")
+            t_gen = cast(
+                Iterator[torch.Tensor], tqdm(t_gen, total=len_generator, desc="Blocks")
+            )
 
         return torch.cat(list(t_gen))
 
@@ -459,10 +465,13 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
 
         """
 
-        outer_gen = nested_generators_of_tensors
+        outer_gen = cast(Iterator[Iterator[torch.Tensor]], nested_generators_of_tensors)
 
         if len_outer_generator is not None:
-            outer_gen = tqdm(outer_gen, total=len_outer_generator, desc="Row blocks")
+            outer_gen = cast(
+                Iterator[Iterator[torch.Tensor]],
+                tqdm(outer_gen, total=len_outer_generator, desc="Row blocks"),
+            )
 
         return torch.cat(
             list(

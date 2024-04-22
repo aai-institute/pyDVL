@@ -41,6 +41,15 @@ from .util import (
     flatten_dimensions,
 )
 
+__all__ = [
+    "DirectInfluence",
+    "CgInfluence",
+    "LissaInfluence",
+    "ArnoldiInfluence",
+    "EkfacInfluence",
+    "NystroemSketchInfluence",
+]
+
 logger = logging.getLogger(__name__)
 
 

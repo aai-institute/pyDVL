@@ -8,7 +8,17 @@ using the Zarr library.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Generic, List, Optional, Tuple, Union
+from typing import (
+    Callable,
+    Generator,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import zarr
 from numpy.typing import NDArray
@@ -67,10 +77,13 @@ class ListAggregator(SequenceAggregator):
         Returns:
             A list containing all the tensors provided by the tensor_generator.
         """
-        gen: Union[tqdm[TensorType], ] = tensor_generator
+
+        gen = cast(Iterator[TensorType], tensor_generator)
 
         if len_generator is not None:
-            gen = tqdm(gen, total=len_generator, desc="Blocks")
+            gen = cast(
+                Iterator[TensorType], tqdm(gen, total=len_generator, desc="Blocks")
+            )
 
         return [t for t in gen]
 
@@ -117,15 +130,18 @@ class NestedListAggregator(NestedSequenceAggregator):
             A list of lists, where each inner list contains tensors returned from one
                 of the inner generators.
         """
-        outer_gen = nested_generators_of_tensors
+        outer_gen = cast(Iterator[Iterator[TensorType]], nested_generators_of_tensors)
 
         if len_outer_generator is not None:
-            outer_gen = tqdm(outer_gen, total=len_outer_generator, desc="Row blocks")
+            outer_gen = cast(
+                Iterator[Iterator[TensorType]],
+                tqdm(outer_gen, total=len_outer_generator, desc="Row blocks"),
+            )
 
         return [list(tensor_gen) for tensor_gen in outer_gen]
 
 
-class LazyChunkSequence:
+class LazyChunkSequence(Generic[TensorType]):
     """
     A class representing a chunked, and lazily evaluated array,
     where the chunking is restricted to the first dimension
@@ -202,10 +218,12 @@ class LazyChunkSequence:
         row_idx = 0
         z = None
 
-        gen = self.generator_factory()
+        gen = cast(Iterator[TensorType], self.generator_factory())
 
         if self.len_generator is not None:
-            gen = tqdm(gen, total=self.len_generator, desc="Blocks")
+            gen = cast(
+                Iterator[TensorType], tqdm(gen, total=self.len_generator, desc="Blocks")
+            )
 
         for block in gen:
             numpy_block = converter.to_numpy(block)
@@ -240,7 +258,7 @@ class LazyChunkSequence:
         )
 
 
-class NestedLazyChunkSequence:
+class NestedLazyChunkSequence(Generic[TensorType]):
     """
     A class representing chunked, and lazily evaluated array, where the chunking is
     restricted to the first two dimensions.
@@ -323,11 +341,14 @@ class NestedLazyChunkSequence:
         row_idx = 0
         z = None
         numpy_block = None
-        block_generator = self.generator_factory()
+        block_generator = cast(Iterator[Iterator[TensorType]], self.generator_factory())
 
         if self.len_outer_generator is not None:
-            block_generator = tqdm(
-                block_generator, total=self.len_outer_generator, desc="Row blocks"
+            block_generator = cast(
+                Iterator[Iterator[TensorType]],
+                tqdm(
+                    block_generator, total=self.len_outer_generator, desc="Row blocks"
+                ),
             )
 
         for row_blocks in block_generator:
