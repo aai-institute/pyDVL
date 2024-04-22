@@ -363,6 +363,7 @@ class DirectInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> DirectInfluence:
         """
         Compute the hessian matrix based on a provided dataloader.
@@ -500,6 +501,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> CgInfluence:
         self.train_dataloader = data
         if self.pre_conditioner is not None:
@@ -816,6 +818,7 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> LissaInfluence:
         self.train_dataloader = data
         return self
@@ -948,6 +951,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> ArnoldiInfluence:
         r"""
         Fitting corresponds to the computation of the low rank decomposition
@@ -1204,6 +1208,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
         return forward_x, grad_y
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> EkfacInfluence:
         """
         Compute the KFAC blocks for each layer of the model, using the provided data.
@@ -1712,6 +1717,7 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader):
         self.low_rank_representation = model_hessian_nystroem_approximation(
             self.model, self.loss, data, self.rank

@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.9.0 🆕 New methods, better docs and bugfixes 📚🐞
+## Unreleased
+
+### Fixed
+
+- `FutureWarning` for `ParallelConfig` constantly raised without actually 
+  instantiating the object
+  [PR #562](https://github.com/aai-institute/pyDVL/pull/562)
+
+## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
 
 ### Added
 
