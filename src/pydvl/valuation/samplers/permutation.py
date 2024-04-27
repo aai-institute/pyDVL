@@ -74,14 +74,6 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         super().__init__(seed=seed)
         self.truncation = truncation or NoTruncation()
 
-    @property
-    def batch_size(self) -> int:
-        return self._batch_size
-
-    @batch_size.setter
-    def batch_size(self, value: int):
-        raise AttributeError("Cannot change batch size for PermutationSampler")
-
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
 
@@ -94,9 +86,7 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         if len(indices) == 0:
             return
         while True:
-            permutation = self._rng.permutation(indices)
-            for i, idx in enumerate(permutation):
-                yield Sample(idx, permutation[: i + 1])
+            yield self._rng.permutation(indices)
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -124,12 +114,10 @@ class AntitheticPermutationSampler(PermutationSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             permutation = self._rng.permutation(indices)
-            for perm in permutation, permutation[::-1]:
-                for i, idx in enumerate(perm):
-                    yield Sample(idx, perm[: i + 1])
-                    self._n_samples += 1
-            if self._n_samples == 0:  # Empty index set
-                break
+            yield Sample(-1, permutation)
+            self._n_samples += 1
+            yield Sample(-1, permutation[::-1])
+            self._n_samples += 1
 
 
 class DeterministicPermutationSampler(PermutationSampler):
@@ -140,9 +128,8 @@ class DeterministicPermutationSampler(PermutationSampler):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
-            for i, idx in enumerate(permutation):
-                yield Sample(idx, permutation[: i + 1])
-                self._n_samples += 1
+            yield Sample(-1, permutation)
+            self._n_samples += 1
 
 
 class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
@@ -167,18 +154,19 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
     ) -> list[ValueUpdate]:
         self.truncation.reset(self.utility)  # Reset before every batch (must be cached)
         r = []
-        truncated = False
-        curr = prev = self.utility.scorer.default
         for sample in batch:
-            assert sample.idx is not None
-            if not truncated:
-                curr = self.utility(sample)
-            marginal = curr - prev
-            marginal *= self.coefficient(self.n_indices, len(sample.subset))
-            r.append(ValueUpdate(sample.idx, marginal))
-            prev = curr
-            if not truncated and self.truncation(sample.idx, curr, self.n_indices):
-                truncated = True
-            if is_interrupted():
-                break
+            truncated = False
+            curr = prev = self.utility.scorer.default
+            permutation = sample.subset
+            for i, idx in enumerate(permutation):
+                if not truncated:
+                    curr = self.utility(permutation[: i + 1])
+                marginal = curr - prev
+                marginal *= self.coefficient(self.n_indices, i + 1)
+                r.append(ValueUpdate(idx, marginal))
+                prev = curr
+                if not truncated and self.truncation(idx, curr, self.n_indices):
+                    truncated = True
+                if is_interrupted():
+                    break
         return r
