@@ -1,9 +1,11 @@
 from itertools import takewhile
+from typing import Iterator, List, Type, Union
 
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from pydvl.utils import Seed
 from pydvl.utils.numeric import powerset
 from pydvl.valuation.samplers.permutation import (
     AntitheticPermutationSampler,
@@ -17,6 +19,16 @@ from pydvl.valuation.samplers.powerset import (
     UniformSampler,
     UniformStratifiedSampler,
 )
+
+# TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
+# See https://github.com/python/typing/issues/213
+StochasticSampler = Union[
+    UniformSampler,
+    PermutationSampler,
+    AntitheticSampler,
+    UniformStratifiedSampler,
+    AntitheticPermutationSampler,
+]
 
 
 def test_deterministic_uniform_sampler_batch_size_1():
@@ -182,3 +194,57 @@ def test_sample_counter(sampler_class, indices):
         )
     )
     assert sampler.n_samples == len(samples)
+
+
+@pytest.mark.parametrize(
+    "sampler_class",
+    [
+        # UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+        UniformStratifiedSampler,
+        AntitheticPermutationSampler,
+    ],
+)
+@pytest.mark.parametrize("indices", [(list(range(100)))])
+def test_proper_reproducible(sampler_class, indices, seed):
+    """Test that the sampler is reproducible."""
+    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    for batch_1, batch_2 in zip(samples_1, samples_2):
+        assert set(batch_1[0].subset) == set(batch_2[0].subset)
+
+
+@pytest.mark.parametrize(
+    "sampler_class",
+    [
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+        UniformStratifiedSampler,
+        AntitheticPermutationSampler,
+    ],
+)
+@pytest.mark.parametrize("indices", [(list(range(100)))])
+def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
+    """Test that the sampler is reproducible."""
+    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed_alt)
+
+    for batch_1, batch_2 in zip(samples_1, samples_2):
+        subset_1 = list(batch_1)[0].subset
+        subset_2 = list(batch_2)[0].subset
+        assert len(subset_1) == 0 or set(subset_1) != set(subset_2)
+
+
+def _create_seeded_sample_iter(
+    sampler_t: Type[StochasticSampler],
+    indices: List,
+    seed: Seed,
+) -> Iterator:
+    max_iterations = len(indices)
+    sampler = sampler_t(seed=seed)
+    sample_stream = takewhile(
+        lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+    )
+    return sample_stream
