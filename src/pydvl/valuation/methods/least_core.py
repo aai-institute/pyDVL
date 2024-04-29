@@ -34,7 +34,7 @@ class LeastCoreValuation(Valuation):
         self,
         utility: UtilityBase,
         sampler: IndexSampler,
-        n_iterations: int | None = None,
+        max_samples: int | None = None,
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
     ):
@@ -43,7 +43,7 @@ class LeastCoreValuation(Valuation):
         self._sampler = sampler
         self._non_negative_subsidy = non_negative_subsidy
         self._solver_options = solver_options
-        self._n_iterations = n_iterations
+        self._max_samples = max_samples
 
     def fit(self, data: Dataset) -> None:
 
@@ -51,21 +51,24 @@ class LeastCoreValuation(Valuation):
 
         # ==============================================================================
         # Things that should not exist
+        # - Put deterministic uniform specific warnings into the sampler (from data?)
+        # - Replace the current max_samples handling using length of sampler
+        # - Do other checks for all samplers
         algorithm = "placeholder"
 
         if isinstance(self._sampler, DeterministicUniformSampler):
-            _correct_n_iterations = 2 ** len(self._utility.training_data)
-            if self._n_iterations != _correct_n_iterations:
+            _correct_max_samples = 2 ** len(self._utility.training_data)
+            if self._max_samples != _correct_max_samples:
                 warnings.warn(
-                    "Incorrect number of iterations for exact least core: "
-                    f"{n_iterations}. Setting to {_correct_n_iterations}."
+                    "Invalid value for max_samples for exact least core: "
+                    f"{self._max_samples}. Setting to {_correct_max_samples}."
                 )
-                self._n_iterations = _correct_n_iterations
+                self._max_samples = _correct_max_samples
 
         # ==============================================================================
 
         problem = create_least_core_problem(
-            u=self._utility, sampler=self._sampler, n_iterations=self._n_iterations
+            u=self._utility, sampler=self._sampler, max_samples=self._max_samples
         )
 
         solution = lc_solve_problem(
@@ -79,14 +82,14 @@ class LeastCoreValuation(Valuation):
         self.result = solution
 
 
-def create_least_core_problem(u: UtilityBase, sampler: IndexSampler, n_iterations: int):
+def create_least_core_problem(u: UtilityBase, sampler: IndexSampler, max_samples: int):
     n_obs = len(u.training_data)
 
-    A_lb = np.zeros((n_iterations, n_obs))
-    utility_values = np.zeros(n_iterations)
+    A_lb = np.zeros((max_samples, n_obs))
+    utility_values = np.zeros(max_samples)
 
     generator = sampler.from_indices(u.training_data.indices)
-    for i, batch in enumerate(islice(generator, n_iterations)):
+    for i, batch in enumerate(islice(generator, max_samples)):
         sample = list(batch)[0]
         A_lb[i, sample.subset.astype(int)] = 1
         utility_values[i] = u(sample)

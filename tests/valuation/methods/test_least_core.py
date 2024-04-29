@@ -31,7 +31,7 @@ def test_montecarlo_least_core(test_game, n_iterations, non_negative_subsidy, se
     valuation = LeastCoreValuation(
         utility=test_game.u,
         sampler=sampler,
-        n_iterations=n_iterations,
+        max_samples=n_iterations,
         non_negative_subsidy=non_negative_subsidy,
     )
     valuation.fit(data=test_game.data)
@@ -70,7 +70,7 @@ def test_naive_least_core(test_game, non_negative_subsidy):
         utility=test_game.u,
         sampler=sampler,
         non_negative_subsidy=non_negative_subsidy,
-        n_iterations=powerset_size,
+        max_samples=powerset_size,
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
@@ -127,7 +127,7 @@ def test_prepare_problem_for_exact_least_core_using_samplers(test_game):
     problem = create_least_core_problem(
         u=utility,
         sampler=sampler,
-        n_iterations=powerset_size,
+        max_samples=powerset_size,
     )
 
     expected = test_game.least_core_problem()
