@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import islice
-from typing import Any, Generator, Iterable, Iterator, TypeVar
+from typing import Any, Generator, Iterable, List, TypeVar
 
 import numpy as np
 
@@ -10,7 +10,7 @@ from pydvl.utils import Seed
 T = TypeVar("T")
 
 
-def take_n(it: Iterable[T], size: int = 2) -> Generator[Iterator[T], Any, None]:
+def take_n(it: Iterable[T], size: int = 2) -> Generator[List[T], Any, None]:
     """Takes tuples of `size` items from an iterator at a time.
 
     Args:
@@ -20,7 +20,7 @@ def take_n(it: Iterable[T], size: int = 2) -> Generator[Iterator[T], Any, None]:
         A generator yielding tuples of n items.
     """
 
-    while batch := islice(it, size):
+    while batch := list(islice(it, size)):
         yield batch
 
 

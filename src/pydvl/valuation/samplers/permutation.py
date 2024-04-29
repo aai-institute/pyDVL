@@ -24,6 +24,8 @@ from copy import copy
 from itertools import permutations
 from typing import Callable
 
+import numpy as np
+
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
@@ -96,7 +98,7 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         while True:
             permutation = self._rng.permutation(indices)
             for i, idx in enumerate(permutation):
-                yield Sample(idx, permutation[: i + 1])
+                yield Sample(idx, np.array(permutation[:i]))
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -126,8 +128,7 @@ class AntitheticPermutationSampler(PermutationSampler):
             permutation = self._rng.permutation(indices)
             for perm in permutation, permutation[::-1]:
                 for i, idx in enumerate(perm):
-                    yield Sample(idx, perm[: i + 1])
-                    self._n_samples += 1
+                    yield Sample(idx, np.array(perm[:i]))
             if self._n_samples == 0:  # Empty index set
                 break
 
@@ -141,8 +142,7 @@ class DeterministicPermutationSampler(PermutationSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
             for i, idx in enumerate(permutation):
-                yield Sample(idx, permutation[: i + 1])
-                self._n_samples += 1
+                yield Sample(idx, np.array(permutation[:i]))
 
 
 class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):

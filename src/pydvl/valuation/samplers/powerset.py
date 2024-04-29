@@ -83,7 +83,7 @@ class SequentialIndexIteration(IndexIteration):
 
 
 class RandomIndexIteration(IndexIteration):
-    def __init__(self, indices: NDArray[IndexT], seed: Seed):
+    def __init__(self, indices: NDArray[IndexT], seed: Seed = None):
         super().__init__(indices)
         self._rng = np.random.default_rng(seed)
 
@@ -293,14 +293,23 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
         ```
     """
 
+    def __init__(
+        self,
+        batch_size: int = 1,
+        index_iteration: Type[IndexIteration] = RandomIndexIteration,
+        seed: Seed | None = None,
+    ):
+        super().__init__(
+            batch_size=batch_size, index_iteration=index_iteration, seed=seed
+        )
+
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        while True:
-            for idx in self.index_iterator(indices):
-                subset = random_subset(
-                    complement(indices, [idx] if idx is not None else []),
-                    seed=self._rng,
-                )
-                yield Sample(idx, subset)
+        for idx in self.index_iterator(indices):
+            subset = random_subset(
+                complement(indices, [idx] if idx is not None else []),
+                seed=self._rng,
+            )
+            yield Sample(idx, subset)
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
