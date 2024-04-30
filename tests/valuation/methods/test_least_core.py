@@ -5,7 +5,6 @@ from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from pydvl.valuation.methods._naive_least_core import lc_prepare_problem
 from pydvl.valuation.methods.least_core import (
-    LeastCoreMode,
     LeastCoreValuation,
     create_least_core_problem,
 )
