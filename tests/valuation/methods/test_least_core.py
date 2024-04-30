@@ -3,7 +3,6 @@ import logging
 import pytest
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
-from pydvl.valuation.methods._naive_least_core import lc_prepare_problem
 from pydvl.valuation.methods.least_core import (
     LeastCoreValuation,
     create_least_core_problem,
@@ -32,6 +31,7 @@ def test_montecarlo_least_core(test_game, n_iterations, non_negative_subsidy, se
         sampler=sampler,
         max_samples=n_iterations,
         non_negative_subsidy=non_negative_subsidy,
+        progress=False,
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
@@ -70,6 +70,7 @@ def test_naive_least_core(test_game, non_negative_subsidy):
         sampler=sampler,
         non_negative_subsidy=non_negative_subsidy,
         max_samples=powerset_size,
+        progress=False,
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
@@ -99,24 +100,6 @@ def test_naive_least_core(test_game, non_negative_subsidy):
     indirect=True,
 )
 def test_prepare_problem_for_exact_least_core(test_game):
-    problem = lc_prepare_problem(test_game.u.with_dataset(test_game.data))
-    expected = test_game.least_core_problem()
-    assert_array_almost_equal(problem.utility_values, expected.utility_values)
-    assert_array_almost_equal(problem.A_lb, expected.A_lb)
-
-
-@pytest.mark.parametrize(
-    "test_game",
-    [
-        ("miner", {"n_players": 3}),
-        ("miner", {"n_players": 4}),
-        ("shoes", {"left": 1, "right": 1}),
-        ("shoes", {"left": 2, "right": 1}),
-        ("shoes", {"left": 1, "right": 2}),
-    ],
-    indirect=True,
-)
-def test_prepare_problem_for_exact_least_core_using_samplers(test_game):
     sampler = DeterministicUniformSampler(
         index_iteration=NoIndexIteration,
     )
@@ -127,6 +110,7 @@ def test_prepare_problem_for_exact_least_core_using_samplers(test_game):
         u=utility,
         sampler=sampler,
         max_samples=powerset_size,
+        progress=False,
     )
 
     expected = test_game.least_core_problem()
