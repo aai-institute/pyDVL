@@ -6,12 +6,13 @@ from typing import cast
 
 import numpy as np
 from sklearn.base import clone
+from typing_extensions import Self
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import SupervisedScorer
-from pydvl.valuation.types import Sample, SampleT
+from pydvl.valuation.types import SampleT
 
 __all__ = ["Utility"]
 
@@ -131,7 +132,7 @@ class Utility(UtilityBase[SampleT]):
         self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
 
-    def with_dataset(self, dataset: Dataset):
+    def with_dataset(self, dataset: Dataset) -> Self:
         copy = type(self)(
             model=self.model,
             scorer=self.scorer,
