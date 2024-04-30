@@ -17,7 +17,7 @@ from pydvl.parallel import (
 from pydvl.utils import Status
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import Sample
-from pydvl.valuation.utility import Utility
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -38,7 +38,7 @@ class LeastCoreProblem(NamedTuple):
 def lc_solve_problem(
     problem: LeastCoreProblem,
     *,
-    u: Utility,
+    u: UtilityBase,
     algorithm: str,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
@@ -162,7 +162,7 @@ def lc_solve_problem(
 )
 def lc_solve_problems(
     problems: Sequence[LeastCoreProblem],
-    u: Utility,
+    u: UtilityBase,
     algorithm: str,
     parallel_backend: Optional[ParallelBackend] = None,
     config: Optional[ParallelConfig] = None,

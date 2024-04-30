@@ -12,6 +12,7 @@ from pydvl.valuation.methods._least_core_solving import (
     LeastCoreProblem,
     lc_solve_problem,
 )
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration
 from pydvl.valuation.utility.base import UtilityBase
@@ -67,7 +68,7 @@ class LeastCoreValuation(Valuation):
         self._max_samples = max_samples
         self._progress = progress
 
-    def fit(self, data: Dataset) -> None:
+    def fit(self, data: Dataset) -> Valuation:
 
         self._utility = self._utility.with_dataset(data)
 
@@ -97,6 +98,7 @@ class LeastCoreValuation(Valuation):
         )
 
         self.result = solution
+        return self
 
 
 def create_least_core_problem(
@@ -169,7 +171,7 @@ def _process_max_samples(candidate: int | None, sampler_length: int | None) -> i
     return out
 
 
-def _check_sampler(sampler: IndexSampler) -> IndexSampler:
+def _check_sampler(sampler: IndexSampler):
     """Check that the sampler is compatible with the Least Core valuation."""
     if sampler.batch_size != 1:
         raise ValueError("Least core valuation only supports batch_size=1 samplers.")

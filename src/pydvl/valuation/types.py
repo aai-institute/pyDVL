@@ -36,7 +36,7 @@ class ValueUpdate:
 
 @dataclass(frozen=True)
 class Sample:
-    idx: IndexT
+    idx: IndexT | None
     subset: NDArray[IndexT]
 
     # Make the unpacking operator work
