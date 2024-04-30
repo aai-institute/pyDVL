@@ -16,6 +16,7 @@ from pydvl.valuation.samplers.powerset import (
     AntitheticSampler,
     DeterministicUniformSampler,
     LOOSampler,
+    NoIndexIteration,
     UniformSampler,
     UniformStratifiedSampler,
 )
@@ -194,6 +195,21 @@ def test_sample_counter(sampler_class, indices):
         )
     )
     assert sampler.n_samples == len(samples)
+
+
+@pytest.mark.parametrize(
+    "sampler, expected_length",
+    [
+        (DeterministicUniformSampler(), 12),
+        # (DeterministicUniformSampler(index_iteration=NoIndexIteration), 8),
+        (DeterministicPermutationSampler(), 18),
+        (LOOSampler(), 3),
+    ],
+)
+def test_length_for_finite_samplers(sampler, expected_length):
+    indices = np.array([0, 1, 2])
+    assert sampler.length(indices) == expected_length
+    assert len(list(sampler.from_indices(indices))) == expected_length
 
 
 @pytest.mark.parametrize(

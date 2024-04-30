@@ -144,6 +144,9 @@ class DeterministicPermutationSampler(PermutationSampler):
             for i, idx in enumerate(permutation):
                 yield Sample(idx, np.array(permutation[:i]))
 
+    def length(self, indices: IndexSetT) -> int:
+        return math.factorial(len(indices)) * len(indices)
+
 
 class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
     """Computes marginal values for permutation sampling schemes.

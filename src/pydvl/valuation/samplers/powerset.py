@@ -211,6 +211,9 @@ class LOOSampler(IndexSampler):
     ) -> EvaluationStrategy:
         return LOOEvaluationStrategy(self, utility, coefficient)
 
+    def length(self, indices: IndexSetT) -> int:
+        return len(indices)
+
 
 class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
     """Computes marginal values for LOO."""
@@ -270,6 +273,16 @@ class DeterministicUniformSampler(PowersetSampler):
                 complement(indices, [idx] if idx is not None else [])
             ):
                 yield Sample(idx, np.array(subset))
+
+    def length(self, indices: IndexSetT) -> int:
+        if self._index_iteration == NoIndexIteration:
+            return 2 ** len(indices)
+        elif self._index_iteration == SequentialIndexIteration:
+            return 2 ** (len(indices) - 1) * len(indices)
+        elif self._index_iteration == RandomIndexIteration:
+            return None
+        else:
+            raise TypeError(f"Unknown index iteration type: {self._index_iteration}")
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
