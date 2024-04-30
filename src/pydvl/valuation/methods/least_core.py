@@ -20,6 +20,34 @@ __all__ = ["LeastCoreValuation"]
 
 
 class LeastCoreValuation(Valuation):
+    """Umbrella class to calculate Least Core values with multiple sampling methods.
+
+    See [Data valuation][data-valuation] for an overview.
+
+    Different samplers correspond to different least-core methods from the literature:
+
+    - `DeterministicUniformSampler`: Exact (naive) method. This yields the most precise
+        results but is only feasible for tiny datasets (<= 20 observations).
+    - `UniformSampler`: Monte Carlo method. This is the most practical method for
+        larger datasets.
+
+    Other samplers allow you to create your own method and might yield computational
+    gains over a standard Monte Carlo method.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        sampler: The sampler to use for the valuation.
+        max_samples: The maximum number of samples to use for the valuation. Can be set
+            to None if deterministic samplers with known number of samples (e.g.
+            DeterministicUniformSampler) are used.
+        If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Optional dictionary of options passed to the solvers.
+        progress: Whether to show a progress bar during the construction of the
+            least-core problem.
+
+    """
+
     def __init__(
         self,
         utility: UtilityBase,
@@ -73,7 +101,20 @@ class LeastCoreValuation(Valuation):
 
 def create_least_core_problem(
     u: UtilityBase, sampler: IndexSampler, max_samples: int, progress: bool
-):
+) -> LeastCoreProblem:
+    """Create a Least Core problem from a utility and a sampler.
+
+    Args:
+        u: Utility object with model, data and scoring function.
+        sampler: The sampler to use for the valuation.
+        max_samples: The maximum number of samples to use for the valuation.
+        progress (bool): Whether to show a progress bar during the construction of the
+            least-core problem.
+
+    Returns:
+        LeastCoreProblem: The least core problem to solve.
+
+    """
     n_obs = len(u.training_data)
 
     A_lb = np.zeros((max_samples, n_obs))
@@ -95,9 +136,17 @@ def create_least_core_problem(
     return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
 
 
-def _process_max_samples(
-    candidate: int | None, sampler_length: int | None
-) -> int | None:
+def _process_max_samples(candidate: int | None, sampler_length: int | None) -> int:
+    """Process the max_samples parameter.
+
+    Args:
+        candidate: The user provided value for max_samples.
+        sampler_length: The length of the sampler which is None for infinite samplers.
+
+    Returns:
+        int: The number of samples to use for the valuation.
+
+    """
     if sampler_length is not None:
         if candidate is not None and candidate != sampler_length:
             warnings.warn(
@@ -111,12 +160,17 @@ def _process_max_samples(
                 "lead to slow performance. Consider using randomized samplers."
             )
     else:
+        if candidate is None:
+            raise ValueError(
+                "max_samples must be set if a sampler with infinite length is used."
+            )
         out = candidate
 
     return out
 
 
 def _check_sampler(sampler: IndexSampler) -> IndexSampler:
+    """Check that the sampler is compatible with the Least Core valuation."""
     if sampler.batch_size != 1:
         raise ValueError("Least core valuation only supports batch_size=1 samplers.")
     if sampler._index_iteration != NoIndexIteration:
