@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Fixed missing move of tensors to model device in `EkfacInfluence` 
+  implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
+
 ## 0.9.1 - Bug fixes, logging improvement
 
 ### Fixed
