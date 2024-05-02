@@ -6,6 +6,8 @@ lazy arrays. Concrete implementations are provided for handling chunked lazy arr
 (chunked in one resp. two dimensions), with support for efficient storage and retrieval
 using the Zarr library.
 """
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from typing import (
@@ -47,11 +49,10 @@ class SequenceAggregator(Generic[TensorType], ABC):
     @abstractmethod
     def __call__(
         self,
-        tensor_generator: Generator[TensorType, None, None],
-        len_generator: Optional[int] = None,
+        tensor_sequence: LazyChunkSequence,
     ):
         """
-        Aggregates tensors from a generator.
+        Aggregates tensors from a sequence.
 
         Implement this method to define how a sequence of tensors, provided by a
         generator, should be combined.
@@ -61,28 +62,26 @@ class SequenceAggregator(Generic[TensorType], ABC):
 class ListAggregator(SequenceAggregator):
     def __call__(
         self,
-        tensor_generator: Generator[TensorType, None, None],
-        len_generator: Optional[int] = None,
+        tensor_sequence: LazyChunkSequence,
     ) -> List[TensorType]:
         """
         Aggregates tensors from a single-level generator into a list. This method simply
         collects each tensor emitted by the generator into a single list.
 
         Args:
-            tensor_generator: A generator that yields TensorType objects.
-            len_generator: if the number of elements from the generator is
-                known, this optional parameter can be used to improve logging
-                by adding a progressbar.
+            tensor_sequence: Object wrapping a generator that yields `TensorType`
+                objects.
 
         Returns:
             A list containing all the tensors provided by the tensor_generator.
         """
 
-        gen = cast(Iterator[TensorType], tensor_generator)
+        gen = cast(Iterator[TensorType], tensor_sequence.generator_factory())
 
-        if len_generator is not None:
+        if tensor_sequence.len_generator is not None:
             gen = cast(
-                Iterator[TensorType], tqdm(gen, total=len_generator, desc="Blocks")
+                Iterator[TensorType],
+                tqdm(gen, total=tensor_sequence.len_generator, desc="Blocks"),
             )
 
         return [t for t in gen]
@@ -90,15 +89,9 @@ class ListAggregator(SequenceAggregator):
 
 class NestedSequenceAggregator(Generic[TensorType], ABC):
     @abstractmethod
-    def __call__(
-        self,
-        nested_generators_of_tensors: Generator[
-            Generator[TensorType, None, None], None, None
-        ],
-        len_outer_generator: Optional[int] = None,
-    ):
+    def __call__(self, nested_sequence_of_tensors: NestedLazyChunkSequence):
         """
-        Aggregates tensors from a generator of generators.
+        Aggregates tensors from a nested sequence of tensors.
 
         Implement this method to specify how tensors, nested in two layers of
         generators, should be combined. Useful for complex data structures where tensors
@@ -109,10 +102,7 @@ class NestedSequenceAggregator(Generic[TensorType], ABC):
 class NestedListAggregator(NestedSequenceAggregator):
     def __call__(
         self,
-        nested_generators_of_tensors: Generator[
-            Generator[TensorType, None, None], None, None
-        ],
-        len_outer_generator: Optional[int] = None,
+        nested_sequence_of_tensors: NestedLazyChunkSequence,
     ) -> List[List[TensorType]]:
         """
          Aggregates tensors from a nested generator structure into a list of lists.
@@ -120,22 +110,22 @@ class NestedListAggregator(NestedSequenceAggregator):
          list structure.
 
          Args:
-             nested_generators_of_tensors: A generator of generators, where each inner
-                generator yields TensorType objects.
-             len_outer_generator: if the number of elements from the outer generator is
-                known from the context, this optional parameter can be used to improve
-                logging by adding a progressbar.
+             nested_sequence_of_tensors: Object wrapping a generator of generators,
+                where each inner generator yields TensorType objects.
 
         Returns:
             A list of lists, where each inner list contains tensors returned from one
                 of the inner generators.
         """
-        outer_gen = cast(Iterator[Iterator[TensorType]], nested_generators_of_tensors)
-
-        if len_outer_generator is not None:
+        outer_gen = cast(
+            Iterator[Iterator[TensorType]],
+            nested_sequence_of_tensors.generator_factory(),
+        )
+        len_outer_gen = nested_sequence_of_tensors.len_outer_generator
+        if len_outer_gen is not None:
             outer_gen = cast(
                 Iterator[Iterator[TensorType]],
-                tqdm(outer_gen, total=len_outer_generator, desc="Row blocks"),
+                tqdm(outer_gen, total=len_outer_gen, desc="Row blocks"),
             )
 
         return [list(tensor_gen) for tensor_gen in outer_gen]
@@ -186,7 +176,7 @@ class LazyChunkSequence(Generic[TensorType]):
         """
         if aggregator is None:
             aggregator = ListAggregator()
-        return aggregator(self.generator_factory(), len_generator=self.len_generator)
+        return aggregator(self)
 
     @log_duration(log_level=logging.INFO)
     def to_zarr(
@@ -306,9 +296,7 @@ class NestedLazyChunkSequence(Generic[TensorType]):
         """
         if aggregator is None:
             aggregator = NestedListAggregator()
-        return aggregator(
-            self.generator_factory(), len_outer_generator=self.len_outer_generator
-        )
+        return aggregator(self)
 
     @log_duration(log_level=logging.INFO)
     def to_zarr(

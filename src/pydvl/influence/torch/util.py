@@ -25,7 +25,13 @@ from numpy.typing import NDArray
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
+from ..array import (
+    LazyChunkSequence,
+    NestedLazyChunkSequence,
+    NestedSequenceAggregator,
+    NumpyConverter,
+    SequenceAggregator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -405,8 +411,7 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
 
     def __call__(
         self,
-        tensor_generator: Generator[torch.Tensor, None, None],
-        len_generator: Optional[int] = None,
+        tensor_sequence: LazyChunkSequence[torch.Tensor],
     ):
         """
         Aggregates tensors from a single-level generator into a single tensor by
@@ -414,17 +419,15 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
         of tensors into one larger tensor.
 
         Args:
-            tensor_generator: A generator that yields `torch.Tensor` objects.
-            len_generator: if the number of elements from the generator is
-                known, this optional parameter can be used to improve logging
-                by adding a progressbar.
+            tensor_sequence: Object wrapping a generator that yields `torch.Tensor`
+                objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the generator.
                 The concatenation is performed along the default dimension (0).
         """
-        t_gen = cast(Iterator[torch.Tensor], tensor_generator)
-
+        t_gen = cast(Iterator[torch.Tensor], tensor_sequence.generator_factory())
+        len_generator = tensor_sequence.len_generator
         if len_generator is not None:
             t_gen = cast(
                 Iterator[torch.Tensor], tqdm(t_gen, total=len_generator, desc="Blocks")
@@ -440,11 +443,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
     """
 
     def __call__(
-        self,
-        nested_generators_of_tensors: Generator[
-            Generator[torch.Tensor, None, None], None, None
-        ],
-        len_outer_generator: Optional[int] = None,
+        self, nested_sequence_of_tensors: NestedLazyChunkSequence[torch.Tensor]
     ):
         """
         Aggregates tensors from a nested generator structure into a single tensor by
@@ -453,11 +452,8 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         form the final tensor.
 
         Args:
-            nested_generators_of_tensors: A generator of generators, where each inner
-                generator yields `torch.Tensor` objects.
-            len_outer_generator: if the number of elements from the outer generator is
-                known from the context, this optional parameter can be used to improve
-                logging by adding a progressbar.
+            nested_sequence_of_tensors: Object wrapping a generator of generators,
+                where each inner generator yields `torch.Tensor` objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the nested
@@ -465,8 +461,11 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
 
         """
 
-        outer_gen = cast(Iterator[Iterator[torch.Tensor]], nested_generators_of_tensors)
-
+        outer_gen = cast(
+            Iterator[Iterator[torch.Tensor]],
+            nested_sequence_of_tensors.generator_factory(),
+        )
+        len_outer_generator = nested_sequence_of_tensors.len_outer_generator
         if len_outer_generator is not None:
             outer_gen = cast(
                 Iterator[Iterator[torch.Tensor]],
