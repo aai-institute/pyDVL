@@ -3158,18 +3158,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
-      Fixed
+      Added
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
-      Added
+      Fixed
     </span>
   </a>
   
@@ -3584,18 +3584,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
-      Fixed
+      Added
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
-      Added
+      Fixed
     </span>
   </a>
   
@@ -3956,16 +3956,18 @@
 
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Fixed missing move of tensors to model device in <code>EkfacInfluence</code> 
-  implementation <a href="https://github.com/aai-institute/pyDVL/pull/570">PR #570</a></li>
-</ul>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Add a device fixture for <code>pytest</code>, which depending on the availability and 
   user input (<code>pytest --with-cuda</code>) resolves to cuda device
   <a href="https://github.com/aai-institute/pyDVL/pull/574">PR #574</a></li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed missing move of tensors to model device in <code>EkfacInfluence</code> 
+  implementation <a href="https://github.com/aai-institute/pyDVL/pull/570">PR #570</a></li>
+<li>Missing move to device of <code>preconditioner</code> in <code>CgInfluence</code> implementation
+  <a href="https://github.com/aai-institute/pyDVL/pull/572">PR #572</a></li>
 </ul>
 <h2 id="091-bug-fixes-logging-improvement">0.9.1 - Bug fixes, logging improvement<a class="headerlink" href="#091-bug-fixes-logging-improvement" title="Permanent link">&para;</a></h2>
 <h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
