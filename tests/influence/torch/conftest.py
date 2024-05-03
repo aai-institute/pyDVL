@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import pytest
 import torch
 from numpy.typing import NDArray
 from torch.optim import LBFGS
@@ -59,3 +60,14 @@ def minimal_training(
 def torch_linear_model_to_numpy(model: torch.nn.Linear) -> Tuple[NDArray, NDArray]:
     model.eval()
     return model.weight.data.numpy(), model.bias.data.numpy()
+
+
+@pytest.fixture(scope="session")
+def device(request):
+    import torch
+
+    use_cuda = request.config.getoption("--with-cuda")
+    if use_cuda and torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cpu")
