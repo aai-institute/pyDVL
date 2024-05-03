@@ -303,13 +303,13 @@ class TorchInfluenceFunctionModel(
         """
         if mode == InfluenceMode.Up:
             return (
-                z_test_factors
+                z_test_factors.to(self.model_device)
                 @ self._loss_grad(x.to(self.model_device), y.to(self.model_device)).T
             )
         elif mode == InfluenceMode.Perturbation:
             return torch.einsum(
                 "ia,j...a->ij...",
-                z_test_factors,
+                z_test_factors.to(self.model_device),
                 self._flat_loss_mixed_grad(
                     x.to(self.model_device), y.to(self.model_device)
                 ),
