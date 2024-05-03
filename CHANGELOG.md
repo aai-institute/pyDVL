@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Fixed missing move of tensors to model device in `EkfacInfluence` 
+  implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
+
 ### Added
 
 - Add a device fixture for `pytest`, which depending on the availability and 
