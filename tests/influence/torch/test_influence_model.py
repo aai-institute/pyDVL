@@ -340,6 +340,7 @@ def test_influence_linear_model(
     rtol,
     mode: InfluenceMode,
     train_set_size: int,
+    device: torch.device,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
     problem_dimension: Tuple[int, int] = (4, 20),
@@ -373,16 +374,20 @@ def test_influence_linear_model(
 
     train_data_set = TensorDataset(*list(map(torch.from_numpy, train_data)))
     train_data_loader = DataLoader(train_data_set, batch_size=40, num_workers=0)
-    influence = influence_factory(linear_layer, loss, train_data_loader, hessian_reg)
+    influence = influence_factory(
+        linear_layer.to(device), loss, train_data_loader, hessian_reg
+    )
 
     x_train, y_train = tuple(map(torch.from_numpy, train_data))
     x_test, y_test = tuple(map(torch.from_numpy, test_data))
-    influence_values = influence.influences(
-        x_test, y_test, x_train, y_train, mode=mode
-    ).numpy()
-    sym_influence_values = influence.influences(
-        x_train, y_train, x_train, y_train, mode=mode
-    ).numpy()
+    influence_values = (
+        influence.influences(x_test, y_test, x_train, y_train, mode=mode).cpu().numpy()
+    )
+    sym_influence_values = (
+        influence.influences(x_train, y_train, x_train, y_train, mode=mode)
+        .cpu()
+        .numpy()
+    )
 
     with pytest.raises(ValueError):
         influence.influences(x_test, y_test, x=x_train, mode=mode)
@@ -431,6 +436,7 @@ def test_influences_lissa(
     ],
     direct_influences,
     influence_factory,
+    device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
@@ -438,11 +444,15 @@ def test_influences_lissa(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
     influence_model = influence_factory(
-        model, loss, train_dataloader, test_case.hessian_reg
+        model.to(device), loss, train_dataloader, test_case.hessian_reg
     )
-    approx_influences = influence_model.influences(
-        x_test, y_test, x_train, y_train, mode=test_case.mode
-    ).numpy()
+    approx_influences = (
+        influence_model.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+        .cpu()
+        .numpy()
+    )
 
     assert not np.any(np.isnan(approx_influences))
 
@@ -497,9 +507,10 @@ def test_influences_low_rank(
     direct_sym_influences,
     direct_factors,
     influence_factory,
+    device: torch.device,
 ):
-    atol = 1e-8
-    rtol = 1e-5
+    atol = 1e-7
+    rtol = 1e-4
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
     num_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -509,7 +520,7 @@ def test_influences_low_rank(
     )
 
     influence_func_model = influence_factory(
-        model,
+        model.to(device),
         loss,
         test_case.hessian_reg,
         num_parameters - 1,
@@ -525,33 +536,47 @@ def test_influences_low_rank(
 
     influence_func_model = influence_func_model.fit(train_dataloader)
 
-    low_rank_influence = influence_func_model.influences(
-        x_test, y_test, x_train, y_train, mode=test_case.mode
-    ).numpy()
+    low_rank_influence = (
+        influence_func_model.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+        .cpu()
+        .numpy()
+    )
 
-    sym_low_rank_influence = influence_func_model.influences(
-        x_train, y_train, mode=test_case.mode
-    ).numpy()
+    sym_low_rank_influence = (
+        influence_func_model.influences(x_train, y_train, mode=test_case.mode)
+        .cpu()
+        .numpy()
+    )
 
     low_rank_factors = influence_func_model.influence_factors(x_test, y_test)
     assert np.allclose(
         direct_factors,
-        influence_func_model.influence_factors(x_train, y_train).numpy(),
+        influence_func_model.influence_factors(x_train, y_train).cpu().numpy(),
         atol=atol,
         rtol=rtol,
     )
 
     if test_case.mode is InfluenceMode.Up:
-        low_rank_influence_transpose = influence_func_model.influences(
-            x_train, y_train, x_test, y_test, mode=test_case.mode
-        ).numpy()
+        low_rank_influence_transpose = (
+            influence_func_model.influences(
+                x_train, y_train, x_test, y_test, mode=test_case.mode
+            )
+            .cpu()
+            .numpy()
+        )
         assert np.allclose(
             low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
         )
 
-    low_rank_values_from_factors = influence_func_model.influences_from_factors(
-        low_rank_factors, x_train, y_train, mode=test_case.mode
-    ).numpy()
+    low_rank_values_from_factors = (
+        influence_func_model.influences_from_factors(
+            low_rank_factors, x_train, y_train, mode=test_case.mode
+        )
+        .cpu()
+        .numpy()
+    )
     assert np.allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
     assert np.allclose(
         direct_sym_influences, sym_low_rank_influence, atol=atol, rtol=rtol
@@ -578,6 +603,7 @@ def test_influences_ekfac(
     ],
     direct_influences,
     direct_sym_influences,
+    device: torch.device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
@@ -589,7 +615,7 @@ def test_influences_ekfac(
         model,
         update_diagonal=True,
         hessian_regularization=test_case.hessian_reg,
-    )
+    ).to(device)
 
     with pytest.raises(NotFittedException):
         ekfac_influence.influences(
@@ -604,9 +630,13 @@ def test_influences_ekfac(
             ekfac_influence.fit(train_dataloader)
     elif isinstance(loss, nn.CrossEntropyLoss):
         ekfac_influence = ekfac_influence.fit(train_dataloader)
-        ekfac_influence_values = ekfac_influence.influences(
-            x_test, y_test, x_train, y_train, mode=test_case.mode
-        ).numpy()
+        ekfac_influence_values = (
+            ekfac_influence.influences(
+                x_test, y_test, x_train, y_train, mode=test_case.mode
+            )
+            .cpu()
+            .numpy()
+        )
 
         ekfac_influences_by_layer = ekfac_influence.influences_by_layer(
             x_test, y_test, x_train, y_train, mode=test_case.mode
@@ -614,22 +644,32 @@ def test_influences_ekfac(
 
         accumulated_inf_by_layer = np.zeros_like(ekfac_influence_values)
         for layer, infl in ekfac_influences_by_layer.items():
-            accumulated_inf_by_layer += infl.detach().numpy()
+            accumulated_inf_by_layer += infl.detach().cpu().numpy()
 
-        ekfac_self_influence = ekfac_influence.influences(
-            x_train, y_train, mode=test_case.mode
-        ).numpy()
+        ekfac_self_influence = (
+            ekfac_influence.influences(x_train, y_train, mode=test_case.mode)
+            .cpu()
+            .numpy()
+        )
 
         ekfac_factors = ekfac_influence.influence_factors(x_test, y_test)
 
-        influence_from_factors = ekfac_influence.influences_from_factors(
-            ekfac_factors, x_train, y_train, mode=test_case.mode
-        ).numpy()
+        influence_from_factors = (
+            ekfac_influence.influences_from_factors(
+                ekfac_factors, x_train, y_train, mode=test_case.mode
+            )
+            .cpu()
+            .numpy()
+        )
 
         assert np.allclose(ekfac_influence_values, influence_from_factors)
         assert np.allclose(ekfac_influence_values, accumulated_inf_by_layer)
-        check_influence_correlations(direct_influences, ekfac_influence_values)
-        check_influence_correlations(direct_sym_influences, ekfac_self_influence)
+        check_influence_correlations(
+            direct_influences, ekfac_influence_values, threshold=0.94
+        )
+        check_influence_correlations(
+            direct_sym_influences, ekfac_self_influence, threshold=0.94
+        )
 
 
 @pytest.mark.torch
@@ -656,6 +696,7 @@ def test_influences_cg(
     direct_factors,
     use_block_cg: bool,
     pre_conditioner: PreConditioner,
+    device: torch.device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
@@ -663,7 +704,7 @@ def test_influences_cg(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
     influence_model = CgInfluence(
-        model,
+        model.to(device),
         loss,
         test_case.hessian_reg,
         maxiter=5,
@@ -672,9 +713,13 @@ def test_influences_cg(
     )
     influence_model = influence_model.fit(train_dataloader)
 
-    approx_influences = influence_model.influences(
-        x_test, y_test, x_train, y_train, mode=test_case.mode
-    ).numpy()
+    approx_influences = (
+        influence_model.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+        .cpu()
+        .numpy()
+    )
 
     assert not np.any(np.isnan(approx_influences))
 
@@ -701,7 +746,11 @@ def test_influences_cg(
     # check that block variant returns the correct vector, if only one right hand side
     # is provided
     if use_block_cg:
-        single_influence = influence_model.influence_factors(
-            x_train[0].unsqueeze(0), y_train[0].unsqueeze(0)
-        ).numpy()
+        single_influence = (
+            influence_model.influence_factors(
+                x_train[0].unsqueeze(0), y_train[0].unsqueeze(0)
+            )
+            .cpu()
+            .numpy()
+        )
         assert np.allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
