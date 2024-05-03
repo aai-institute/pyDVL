@@ -48,6 +48,12 @@ def pytest_addoption(parser):
         default=False,
         help="Disable reporting. Verbose mode takes precedence.",
     )
+    parser.addoption(
+        "--with-cuda",
+        action="store_true",
+        default=False,
+        help="Set device fixture to 'cuda' if available",
+    )
 
 
 @pytest.fixture

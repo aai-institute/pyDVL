@@ -303,13 +303,13 @@ class TorchInfluenceFunctionModel(
         """
         if mode == InfluenceMode.Up:
             return (
-                z_test_factors
+                z_test_factors.to(self.model_device)
                 @ self._loss_grad(x.to(self.model_device), y.to(self.model_device)).T
             )
         elif mode == InfluenceMode.Perturbation:
             return torch.einsum(
                 "ia,j...a->ij...",
-                z_test_factors,
+                z_test_factors.to(self.model_device),
                 self._flat_loss_mixed_grad(
                     x.to(self.model_device), y.to(self.model_device)
                 ),
@@ -1202,7 +1202,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             data, disable=not self.progress, desc="K-FAC blocks - batch progress"
         ):
             data_len += x.shape[0]
-            pred_y = self.model(x)
+            pred_y = self.model(x.to(self.model_device))
             loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
@@ -1326,7 +1326,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             data, disable=not self.progress, desc="Update Diagonal - batch progress"
         ):
             data_len += x.shape[0]
-            pred_y = self.model(x)
+            pred_y = self.model(x.to(self.model_device))
             loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
@@ -1533,7 +1533,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             influences = {}
             for layer_id, layer_z_test in z_test_factors.items():
                 end_idx = start_idx + layer_z_test.shape[1]
-                influences[layer_id] = layer_z_test @ total_grad[:, start_idx:end_idx].T
+                influences[layer_id] = (
+                    layer_z_test.to(self.model_device)
+                    @ total_grad[:, start_idx:end_idx].T
+                )
                 start_idx = end_idx
             return influences
         elif mode == InfluenceMode.Perturbation:
@@ -1546,7 +1549,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 end_idx = start_idx + layer_z_test.shape[1]
                 influences[layer_id] = torch.einsum(
                     "ia,j...a->ij...",
-                    layer_z_test,
+                    layer_z_test.to(self.model_device),
                     total_mixed_grad[:, start_idx:end_idx],
                 )
                 start_idx = end_idx
@@ -1633,7 +1636,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             being dictionaries containing the influences for each layer of the model,
             with the layer name as key.
         """
-        grad = self._loss_grad(x, y)
+        grad = self._loss_grad(x.to(self.model_device), y.to(self.model_device))
         influences_by_reg_value = {}
         for reg_value in regularization_values:
             reg_factors = self._solve_hvp_by_layer(
