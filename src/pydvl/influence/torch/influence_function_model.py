@@ -706,7 +706,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
         R = (rhs - mat_mat(X)).T
         Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
         P, _, _ = torch.linalg.svd(Z, full_matrices=False)
-        active_indices = torch.as_tensor(list(range(X.shape[-1])), dtype=torch.long)
+        active_indices = torch.as_tensor(
+            list(range(X.shape[-1])), dtype=torch.long, device=self.model_device
+        )
 
         maxiter = self.maxiter if self.maxiter is not None else len(rhs) * 10
         y_norm = torch.linalg.norm(rhs, dim=1)
@@ -757,6 +759,11 @@ class CgInfluence(TorchInfluenceFunctionModel):
             P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
 
         return X.T
+
+    def to(self, device: torch.device):
+        if self.pre_conditioner is not None:
+            self.pre_conditioner = self.pre_conditioner.to(device)
+        return super().to(device)
 
 
 class LissaInfluence(TorchInfluenceFunctionModel):
