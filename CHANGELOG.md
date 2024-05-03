@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Missing move to device of `preconditioner` in `CgInfluence` implementation
+  [PR #572](https://github.com/aai-institute/pyDVL/pull/572)
+
 ## 0.9.1 - Bug fixes, logging improvement
 
 ### Fixed
