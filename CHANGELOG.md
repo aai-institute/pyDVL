@@ -7,6 +7,12 @@
 - Fixed missing move of tensors to model device in `EkfacInfluence` 
   implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
 
+### Added
+
+- Add a device fixture for `pytest`, which depending on the availability and 
+  user input (`pytest --with-cuda`) resolves to cuda device
+  [PR #574](https://github.com/aai-institute/pyDVL/pull/574)
+
 ## 0.9.1 - Bug fixes, logging improvement
 
 ### Fixed
