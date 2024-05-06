@@ -16,6 +16,7 @@ Objects of both types are used to construct a [Utility][pydvl.utils.utility.Util
 object.
 
 """
+
 import logging
 from collections import OrderedDict
 from typing import Any, Iterable, List, Optional, Sequence, Tuple, Union
@@ -124,8 +125,8 @@ class Dataset:
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
-        self._indices = np.arange(len(self.x_train), dtype=np.int_)
-        self._data_names = (
+        self._indices: NDArray[np.int_] = np.arange(len(self.x_train), dtype=np.int_)
+        self._data_names: NDArray[np.object_] = (
             np.array(data_names, dtype=object)
             if data_names is not None
             else self._indices.astype(object)

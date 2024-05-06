@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 import numpy as np
 from sklearn.base import clone
@@ -18,9 +18,11 @@ from pydvl.valuation.utility.base import UtilityBase
 
 logger = logging.getLogger(__name__)
 
+ModelT = TypeVar("ModelT", bound=BaseModel)
+
 
 # Need a generic because subclasses might use subtypes of Sample
-class ModelUtility(UtilityBase[SampleT]):
+class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
     """Convenience wrapper with configurable memoization of the scoring
     function.
 
@@ -30,8 +32,8 @@ class ModelUtility(UtilityBase[SampleT]):
     [Shapley values][pydvl.valuation.shapley] and [the Least
     Core][pydvl.valuation.least_core].
 
-    The Utility expect the model to fulfill the [BaseModel][pydvl.utils.types.BaseModel]
-    interface i.e. to have a `fit()` method.
+    The Utility expects the model to fulfill at least the
+    [BaseModel][pydvl.utils.types.BaseModel] interface i.e. to have a `fit()` method.
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
@@ -102,12 +104,12 @@ class ModelUtility(UtilityBase[SampleT]):
 
     """
 
-    model: BaseModel
+    model: ModelT
     scorer: Scorer
 
     def __init__(
         self,
-        model: BaseModel,
+        model: ModelT,
         scorer: Scorer,
         *,
         catch_errors: bool = True,
@@ -139,7 +141,7 @@ class ModelUtility(UtilityBase[SampleT]):
         else:
             self._utility_wrapper = self._utility
 
-    def __call__(self, sample: SampleT) -> float:
+    def __call__(self, sample: SampleT | None) -> float:
         """
         Args:
             sample: contains a subset of valid indices for the
@@ -197,7 +199,7 @@ class ModelUtility(UtilityBase[SampleT]):
                 raise
 
     @staticmethod
-    def _clone_model(model: BaseModel) -> BaseModel:
+    def _clone_model(model: ModelT) -> ModelT:
         """Clones the passed model to avoid the possibility
         of reusing a fitted estimator
 
@@ -211,7 +213,7 @@ class ModelUtility(UtilityBase[SampleT]):
             # This happens if the passed model is not an sklearn model
             # In this case, we just make a deepcopy of the model.
             model = clone(model, safe=False)
-        return cast(BaseModel, model)
+        return cast(ModelT, model)
 
     @property
     def cache_stats(self) -> CacheStats | None:

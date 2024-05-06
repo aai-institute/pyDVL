@@ -20,10 +20,11 @@ from __future__ import annotations
 
 import logging
 import math
-import numpy as np
 from copy import copy
 from itertools import permutations
 from typing import Callable, cast
+
+import numpy as np
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler

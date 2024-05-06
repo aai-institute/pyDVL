@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from multiprocessing import shared_memory
 
 from joblib._parallel_backends import (
     LokyBackend,
@@ -9,7 +10,6 @@ from joblib._parallel_backends import (
     ThreadingBackend,
 )
 from joblib.parallel import _get_active_backend
-from multiprocessing import shared_memory
 
 
 def ensure_backend_has_generator_return():

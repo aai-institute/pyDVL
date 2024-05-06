@@ -45,6 +45,7 @@ from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.utility.base import UtilityBase
 

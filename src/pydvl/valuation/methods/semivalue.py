@@ -73,7 +73,9 @@ class SemivalueValuation(Valuation):
         self.utility = utility
         self.sampler = sampler
         self.is_done = is_done
-        self.tqdm_args = {"desc": f"{self.__class__.__name__}: {str(is_done)}"}
+        self.tqdm_args: dict[str, Any] = {
+            "desc": f"{self.__class__.__name__}: {str(is_done)}"
+        }
         # HACK: parse additional args for the progress bar if any (we probably want
         #  something better)
         if isinstance(progress, bool):
@@ -94,7 +96,7 @@ class SemivalueValuation(Valuation):
     def fit(self, data: Dataset):
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.utility.model}-{self.is_done}",
+            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
             indices=data.indices,
             data_names=data.data_names,
         )

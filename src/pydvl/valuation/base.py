@@ -10,11 +10,11 @@ __all__ = ["Valuation", "ModelFreeValuation"]
 
 
 class Valuation(ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self.result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset) -> Valuation: ...
+    def fit(self, data: Dataset): ...
 
     def values(self, sort: bool = False) -> ValuationResult:
         """Returns a copy of the valuation result.

@@ -24,5 +24,5 @@ class LeastCoreValuation(Valuation):
         self.non_negative_subsidy = non_negative_subsidy
         self.solver_options = solver_options
 
-    def fit(self, data: Dataset) -> None:
+    def fit(self, data: Dataset):
         pass

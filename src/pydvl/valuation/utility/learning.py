@@ -16,6 +16,7 @@ href="#wang_improving_2022">1</a></sup>.
 """
 
 from __future__ import annotations
+
 from typing import Dict, Iterable, Tuple
 
 import numpy as np
