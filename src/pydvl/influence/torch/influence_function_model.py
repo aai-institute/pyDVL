@@ -802,6 +802,9 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         h0: Initial guess for hvp.
         rtol: tolerance to use for early stopping
         progress: If True, display progress bars.
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
     """
 
     def __init__(
@@ -815,8 +818,10 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         h0: Optional[torch.Tensor] = None,
         rtol: float = 1e-4,
         progress: bool = False,
+        warn_on_max_iteration: bool = True,
     ):
         super().__init__(model, loss)
+        self.warn_on_max_iteration = warn_on_max_iteration
         self.maxiter = maxiter
         self.hessian_regularization = hessian_regularization
         self.progress = progress
@@ -871,7 +876,9 @@ class LissaInfluence(TorchInfluenceFunctionModel):
             create_batch_hvp_function(self.model, self.loss),
             in_dims=(None, None, None, 0),
         )
-        for _ in tqdm(range(self.maxiter), disable=not self.progress, desc="Lissa"):
+        for k in tqdm(
+            range(self.maxiter), disable=not self.progress, desc="Lissa iteration"
+        ):
             x, y = next(iter(shuffled_training_data))
             x = x.to(self.model_device)
             y = y.to(self.model_device)
@@ -884,14 +891,23 @@ class LissaInfluence(TorchInfluenceFunctionModel):
                 raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
             max_residual = torch.max(torch.abs(residual / h_estimate))
             if max_residual < self.rtol:
+                mean_residual = torch.mean(torch.abs(residual / h_estimate))
+                logger.debug(
+                    f"Terminated Lissa after {k} iterations with "
+                    f"{max_residual*100:.2f} % max residual and"
+                    f" mean residual {mean_residual*100:.5f} %"
+                )
                 break
-
-        mean_residual = torch.mean(torch.abs(residual / h_estimate))
-
-        logger.info(
-            f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-            f" Mean residual: {mean_residual*100:.5f} %"
-        )
+        else:
+            mean_residual = torch.mean(torch.abs(residual / h_estimate))
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {self.maxiter} without "
+                f"achieving the desired tolerance {self.rtol}.\n "
+                f"Achieved max residual {max_residual*100:.2f} % and"
+                f" {mean_residual*100:.5f} % mean residual",
+            )
         return h_estimate / self.scale
 
 
