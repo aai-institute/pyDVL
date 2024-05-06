@@ -23,27 +23,26 @@ def catch_and_raise_exception(
     ??? Example
 
         ```python
-            @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
-            def safe_torch_linalg_eigh(*args, **kwargs):
-                '''
-                A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
-                by raising a custom `TorchLinalgEighException` with more context,
-                especially related to the issues reported in
-                https://github.com/pytorch/pytorch/issues/92141.
+        @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
+        def safe_torch_linalg_eigh(*args, **kwargs):
+            '''
+            A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
+            by raising a custom `TorchLinalgEighException` with more context,
+            especially related to the issues reported in
+            https://github.com/pytorch/pytorch/issues/92141.
 
-                Args:
-                *args: Positional arguments passed to `torch.linalg.eigh`.
-                **kwargs: Keyword arguments passed to `torch.linalg.eigh`.
+            Args:
+            *args: Positional arguments passed to `torch.linalg.eigh`.
+            **kwargs: Keyword arguments passed to `torch.linalg.eigh`.
 
-                Returns:
-                The result of calling `torch.linalg.eigh` with the provided arguments.
+            Returns:
+            The result of calling `torch.linalg.eigh` with the provided arguments.
 
-                Raises:
-                TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
-                `torch.linalg.eigh`.
-                '''
-                return torch.linalg.eigh(*args, **kwargs)
-
+            Raises:
+            TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
+            `torch.linalg.eigh`.
+            '''
+            return torch.linalg.eigh(*args, **kwargs)
         ```
     """
 

@@ -530,7 +530,8 @@ def safe_torch_linalg_eigh(*args, **kwargs):
     A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
     by raising a custom `TorchLinalgEighException` with more context,
     especially related to the issues reported in
-    https://github.com/pytorch/pytorch/issues/92141.
+    [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141).
 
     Args:
         *args: Positional arguments passed to `torch.linalg.eigh`.
@@ -549,7 +550,9 @@ def safe_torch_linalg_eigh(*args, **kwargs):
 class TorchLinalgEighException(Exception):
     """
     Exception to wrap a RunTimeError raised by torch.linalg.eigh, when used
-    with large matrices, see https://github.com/pytorch/pytorch/issues/92141
+    with large matrices,
+    see [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141)
     """
 
     def __init__(self, original_exception: RuntimeError):
