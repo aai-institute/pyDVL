@@ -40,7 +40,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler, SamplerT
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -73,8 +73,7 @@ class IndexIteration(ABC):
         self._indices = indices
 
     @abstractmethod
-    def __iter__(self) -> Generator[IndexT | None, None, None]:
-        ...
+    def __iter__(self) -> Generator[IndexT | None, None, None]: ...
 
 
 class SequentialIndexIteration(IndexIteration):
@@ -251,7 +250,7 @@ class DeterministicUniformSampler(PowersetSampler):
     ??? Example
         ``` pycon
         >>> sampler = DeterministicUniformSampler()
-        >>> for idx, s in sampler.from_indices([1,2]):
+        >>> for idx, s in sampler.from_indices(np.arange(2)):
         >>>    print(f"{idx} - {s}", end=", ")
         1 - [], 1 - [2], 2 - [], 2 - [1],
         ```
@@ -263,7 +262,7 @@ class DeterministicUniformSampler(PowersetSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             for subset in powerset(
-                self.complement(indices, [idx] if idx is not None else [])
+                complement(indices, [idx] if idx is not None else [])
             ):
                 yield Sample(idx, np.array(subset))
 
