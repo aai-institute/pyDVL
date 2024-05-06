@@ -66,7 +66,8 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from pydvl.utils import Progress, SupervisedModel
+from pydvl.utils.progress import Progress
+from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult

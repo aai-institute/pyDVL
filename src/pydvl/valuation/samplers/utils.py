@@ -5,7 +5,7 @@ from typing import Any, Generator, Iterable, Iterator, TypeVar
 
 import numpy as np
 
-from pydvl.utils import Seed
+from pydvl.utils.types import Seed
 
 T = TypeVar("T")
 

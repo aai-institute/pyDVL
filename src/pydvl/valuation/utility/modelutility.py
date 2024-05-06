@@ -79,11 +79,12 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
     ??? Example
         ``` pycon
-        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
+        >>> from pydvl.valuation.dataset import Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
-        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
-        >>> u = Utility(LogisticRegression(random_state=16), dataset)
+        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"))
         >>> u(Sample(subset=dataset.indices))
         0.9
         ```
@@ -91,14 +92,15 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         With caching enabled:
 
         ```pycon
-        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
+        >>> from pydvl.valuation.dataset import Dataset
         >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
-        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
         >>> cache_backend = InMemoryCacheBackend()
-        >>> u = Utility(LogisticRegression(random_state=16), dataset, cache_backend=cache_backend)
-        >>> u(Sample(subset=dataset.indices))
+        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"), cache_backend=cache_backend)
+        >>> u(Sample(subset=train.indices))
         0.9
         ```
 

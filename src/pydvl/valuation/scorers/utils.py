@@ -2,7 +2,7 @@ from typing import Callable, Tuple, Type
 
 from scipy.special import expit
 
-from pydvl.utils import SupervisedModel
+from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import SupervisedScorer
 

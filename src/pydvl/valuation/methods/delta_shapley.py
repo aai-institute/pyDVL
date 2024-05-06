@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 
-from pydvl.utils import Seed
+from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers import TruncatedUniformStratifiedSampler
 from pydvl.valuation.stopping import StoppingCriterion

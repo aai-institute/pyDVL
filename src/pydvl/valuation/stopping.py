@@ -127,7 +127,7 @@ from typing import Callable, Optional, Protocol, Type, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Status
+from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
 
 __all__ = [
@@ -147,8 +147,7 @@ logger = logging.getLogger(__name__)
 class StoppingCriterionCallable(Protocol):
     """Signature for a stopping criterion"""
 
-    def __call__(self, result: ValuationResult) -> Status:
-        ...
+    def __call__(self, result: ValuationResult) -> Status: ...
 
 
 class StoppingCriterion(abc.ABC):

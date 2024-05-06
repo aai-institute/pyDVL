@@ -22,7 +22,7 @@ from typing import Dict, Iterable, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import SupervisedModel
+from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.types import IndexT, Sample, SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
