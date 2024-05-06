@@ -158,7 +158,7 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
         r = []
         for sample in batch:
             truncated = False
-            curr = prev = self.utility(Sample(-1, np.array([])))
+            curr = prev = self.utility(None)
             permutation = sample.subset
             for i, idx in enumerate(permutation):
                 # FIXME: type checker claims this could be Any (?)

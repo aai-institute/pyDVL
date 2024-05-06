@@ -35,7 +35,10 @@ class ClasswiseUtility(ModelUtility[CSSample]):
 
     scorer: ClasswiseSupervisedScorer
 
-    def __call__(self, sample: CSSample) -> float:
+    def __call__(self, sample: CSSample | None) -> float:
+        if sample is None or len(sample.subset) == 0:
+            return self.scorer.default
+
         return cast(float, self._utility_wrapper(sample))
 
     def _utility(self, sample: CSSample) -> float:

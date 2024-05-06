@@ -145,6 +145,9 @@ class ModelUtility(UtilityBase[SampleT]):
             sample: contains a subset of valid indices for the
                 `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
         """
+        if sample is None or len(sample.subset) == 0:
+            return self.scorer.default
+
         return cast(float, self._utility_wrapper(sample))
 
     def _utility(self, sample: SampleT) -> float:
@@ -166,8 +169,6 @@ class ModelUtility(UtilityBase[SampleT]):
                 model or the scorer returns [numpy.NaN][]. Otherwise, the score
                 of the model.
         """
-        if len(sample.subset) == 0:
-            return self.scorer.default
 
         if self.training_data is None:
             raise ValueError("No training data provided")
