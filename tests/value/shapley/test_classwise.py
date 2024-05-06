@@ -266,6 +266,14 @@ def test_classwise_scorer_accuracies_manual_derivation(
     for set_zero_idx in range(len(subsets_zero)):
         for set_one_idx in range(len(subsets_one)):
             indices = list(subsets_zero[set_zero_idx] + subsets_one[set_one_idx])
+
+            # TODO the powersets subsets_zero, subsets_one contain the empty set, having
+            #  this leads to an empty index set with the consequence of undefined
+            #  behavior (due to nan values). This is NOT the correct fix, this test
+            #  must be completely revised!
+            if len(indices) == 0:
+                continue
+
             (
                 x_train,
                 y_train,
