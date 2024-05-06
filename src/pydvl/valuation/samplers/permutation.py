@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import logging
 import math
+import numpy as np
 from copy import copy
 from itertools import permutations
-from typing import Callable
+from typing import Callable, cast
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
@@ -30,6 +31,7 @@ from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
+    IndexT,
     NullaryPredicate,
     Sample,
     SampleBatch,
@@ -86,7 +88,7 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         if len(indices) == 0:
             return
         while True:
-            yield self._rng.permutation(indices)
+            yield Sample(-1, self._rng.permutation(indices))
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
@@ -128,7 +130,7 @@ class DeterministicPermutationSampler(PermutationSampler):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
-            yield Sample(-1, permutation)
+            yield Sample(-1, np.array(permutation, copy=False))
             self._n_samples += 1
 
 
@@ -156,11 +158,13 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
         r = []
         for sample in batch:
             truncated = False
-            curr = prev = self.utility.scorer.default
+            curr = prev = self.utility(Sample(-1, np.array([])))
             permutation = sample.subset
             for i, idx in enumerate(permutation):
+                # FIXME: type checker claims this could be Any (?)
+                idx = cast(IndexT, idx)
                 if not truncated:
-                    curr = self.utility(permutation[: i + 1])
+                    curr = self.utility(Sample(idx, permutation[: i + 1]))
                 marginal = curr - prev
                 marginal *= self.coefficient(self.n_indices, i + 1)
                 r.append(ValueUpdate(idx, marginal))
