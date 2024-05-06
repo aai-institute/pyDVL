@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Optional, Tuple
 
@@ -264,3 +265,7 @@ def pytest_terminal_summary(
 ):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
+
+
+def is_osx_arm64():
+    return platform.system() == "Darwin" and platform.machine() == "arm64"

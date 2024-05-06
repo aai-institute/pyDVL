@@ -22,6 +22,7 @@ from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
 
+from ...utils.exceptions import catch_and_raise_exception
 from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
 
 logger = logging.getLogger(__name__)
@@ -521,3 +522,46 @@ def empirical_cross_entropy_loss_fn(
         torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
     )
     return torch.sum(log_probs_ * probs_.detach() ** 0.5)
+
+
+@catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
+def safe_torch_linalg_eigh(*args, **kwargs):
+    """
+    A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
+    by raising a custom `TorchLinalgEighException` with more context,
+    especially related to the issues reported in
+    https://github.com/pytorch/pytorch/issues/92141.
+
+    Args:
+        *args: Positional arguments passed to `torch.linalg.eigh`.
+        **kwargs: Keyword arguments passed to `torch.linalg.eigh`.
+
+    Returns:
+        The result of calling `torch.linalg.eigh` with the provided arguments.
+
+    Raises:
+        TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
+            `torch.linalg.eigh`.
+    """
+    return torch.linalg.eigh(*args, **kwargs)
+
+
+class TorchLinalgEighException(Exception):
+    """
+    Exception to wrap a RunTimeError raised by torch.linalg.eigh, when used
+    with large matrices, see https://github.com/pytorch/pytorch/issues/92141
+    """
+
+    def __init__(self, original_exception: RuntimeError):
+        func = torch.linalg.eigh
+        err_msg = (
+            f"A RunTimeError occurred in '{func.__module__}.{func.__qualname__}'. "
+            "This might be related to known issues with "
+            "[torch.linalg.eigh][torch.linalg.eigh] on certain matrix sizes.\n "
+            "For more details, refer to "
+            "https://github.com/pytorch/pytorch/issues/92141. \n"
+            "In this case, consider to use a different implementation, which does not "
+            "depend on the usage of [torch.linalg.eigh][torch.linalg.eigh].\n"
+            f" Inspect the original exception message: \n{str(original_exception)}"
+        )
+        super().__init__(err_msg)

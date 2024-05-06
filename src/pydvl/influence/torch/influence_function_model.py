@@ -39,6 +39,7 @@ from .util import (
     EkfacRepresentation,
     empirical_cross_entropy_loss_fn,
     flatten_dimensions,
+    safe_torch_linalg_eigh,
 )
 
 logger = logging.getLogger(__name__)
@@ -1227,8 +1228,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         layers_evect_g = {}
         layers_diags = {}
         for key in self.active_layers.keys():
-            evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
-            evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
+            evals_a, evecs_a = safe_torch_linalg_eigh(forward_x[key])
+            evals_g, evecs_g = safe_torch_linalg_eigh(grad_y[key])
             layers_evecs_a[key] = evecs_a
             layers_evect_g[key] = evecs_g
             layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
