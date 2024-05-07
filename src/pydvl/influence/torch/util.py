@@ -5,14 +5,15 @@ from functools import partial
 from typing import (
     Collection,
     Dict,
-    Generator,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import dask
@@ -21,8 +22,16 @@ import torch
 from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
-from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
+from ...utils.exceptions import catch_and_raise_exception
+from ..array import (
+    LazyChunkSequence,
+    NestedLazyChunkSequence,
+    NestedSequenceAggregator,
+    NumpyConverter,
+    SequenceAggregator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +45,8 @@ __all__ = [
     "TorchCatAggregator",
     "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
+    "EkfacRepresentation",
+    "empirical_cross_entropy_loss_fn",
 ]
 
 
@@ -296,11 +307,11 @@ def torch_dataset_to_dask_array(
                 return total_size
             else:
                 logger.warning(
-                    err_msg + f" Infer the number of samples from the dataset, "
-                    f"via iterating the dataset once. "
-                    f"This might induce severe overhead, so consider"
-                    f"providing total_size, if you know the number of samples "
-                    f"beforehand."
+                    err_msg + " Infer the number of samples from the dataset, "
+                    "via iterating the dataset once. "
+                    "This might induce severe overhead, so consider"
+                    "providing total_size, if you know the number of samples "
+                    "beforehand."
                 )
                 idx = 0
                 while True:
@@ -398,20 +409,31 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     function. Concatenation is done along the first dimension of the chunks.
     """
 
-    def __call__(self, tensor_generator: Generator[torch.Tensor, None, None]):
+    def __call__(
+        self,
+        tensor_sequence: LazyChunkSequence[torch.Tensor],
+    ):
         """
         Aggregates tensors from a single-level generator into a single tensor by
         concatenating them. This method is a straightforward way to combine a sequence
         of tensors into one larger tensor.
 
         Args:
-            tensor_generator: A generator that yields `torch.Tensor` objects.
+            tensor_sequence: Object wrapping a generator that yields `torch.Tensor`
+                objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the generator.
                 The concatenation is performed along the default dimension (0).
         """
-        return torch.cat(list(tensor_generator))
+        t_gen = cast(Iterator[torch.Tensor], tensor_sequence.generator_factory())
+        len_generator = tensor_sequence.len_generator
+        if len_generator is not None:
+            t_gen = cast(
+                Iterator[torch.Tensor], tqdm(t_gen, total=len_generator, desc="Blocks")
+            )
+
+        return torch.cat(list(t_gen))
 
 
 class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
@@ -421,10 +443,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
     """
 
     def __call__(
-        self,
-        nested_generators_of_tensors: Generator[
-            Generator[torch.Tensor, None, None], None, None
-        ],
+        self, nested_sequence_of_tensors: NestedLazyChunkSequence[torch.Tensor]
     ):
         """
         Aggregates tensors from a nested generator structure into a single tensor by
@@ -433,19 +452,31 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         form the final tensor.
 
         Args:
-            nested_generators_of_tensors: A generator of generators, where each inner
-                generator yields `torch.Tensor` objects.
+            nested_sequence_of_tensors: Object wrapping a generator of generators,
+                where each inner generator yields `torch.Tensor` objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the nested
             generators.
 
         """
+
+        outer_gen = cast(
+            Iterator[Iterator[torch.Tensor]],
+            nested_sequence_of_tensors.generator_factory(),
+        )
+        len_outer_generator = nested_sequence_of_tensors.len_outer_generator
+        if len_outer_generator is not None:
+            outer_gen = cast(
+                Iterator[Iterator[torch.Tensor]],
+                tqdm(outer_gen, total=len_outer_generator, desc="Row blocks"),
+            )
+
         return torch.cat(
             list(
                 map(
                     lambda tensor_gen: torch.cat(list(tensor_gen), dim=1),
-                    nested_generators_of_tensors,
+                    outer_gen,
                 )
             )
         )
@@ -521,3 +552,49 @@ def empirical_cross_entropy_loss_fn(
         torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
     )
     return torch.sum(log_probs_ * probs_.detach() ** 0.5)
+
+
+@catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
+def safe_torch_linalg_eigh(*args, **kwargs):
+    """
+    A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
+    by raising a custom `TorchLinalgEighException` with more context,
+    especially related to the issues reported in
+    [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141).
+
+    Args:
+        *args: Positional arguments passed to `torch.linalg.eigh`.
+        **kwargs: Keyword arguments passed to `torch.linalg.eigh`.
+
+    Returns:
+        The result of calling `torch.linalg.eigh` with the provided arguments.
+
+    Raises:
+        TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
+            `torch.linalg.eigh`.
+    """
+    return torch.linalg.eigh(*args, **kwargs)
+
+
+class TorchLinalgEighException(Exception):
+    """
+    Exception to wrap a RunTimeError raised by torch.linalg.eigh, when used
+    with large matrices,
+    see [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141)
+    """
+
+    def __init__(self, original_exception: RuntimeError):
+        func = torch.linalg.eigh
+        err_msg = (
+            f"A RunTimeError occurred in '{func.__module__}.{func.__qualname__}'. "
+            "This might be related to known issues with "
+            "[torch.linalg.eigh][torch.linalg.eigh] on certain matrix sizes.\n "
+            "For more details, refer to "
+            "https://github.com/pytorch/pytorch/issues/92141. \n"
+            "In this case, consider to use a different implementation, which does not "
+            "depend on the usage of [torch.linalg.eigh][torch.linalg.eigh].\n"
+            f" Inspect the original exception message: \n{str(original_exception)}"
+        )
+        super().__init__(err_msg)

@@ -17,11 +17,14 @@ from pydvl.influence.torch.functional import (
     lanzcos_low_rank_hessian_approx,
 )
 from pydvl.influence.torch.util import (
+    TorchLinalgEighException,
     TorchTensorContainerType,
     align_structure,
     flatten_dimensions,
+    safe_torch_linalg_eigh,
     torch_dataset_to_dask_array,
 )
+from tests.conftest import is_osx_arm64
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
@@ -297,3 +300,21 @@ def are_active_layers_linear(model):
                 if any(param_requires_grad):
                     return False
     return True
+
+
+@pytest.mark.torch
+def test_safe_torch_linalg_eigh():
+    t = torch.randn([10, 10])
+    t = t @ t.t()
+    safe_eigs, safe_eigvec = safe_torch_linalg_eigh(t)
+    eigs, eigvec = torch.linalg.eigh(t)
+    assert torch.allclose(safe_eigs, eigs)
+    assert torch.allclose(safe_eigvec, eigvec)
+
+
+@pytest.mark.torch
+@pytest.mark.slow
+@pytest.mark.skipif(not is_osx_arm64(), reason="Requires macOS ARM64.")
+def test_safe_torch_linalg_eigh_exception():
+    with pytest.raises(TorchLinalgEighException):
+        safe_torch_linalg_eigh(torch.randn([53000, 53000]))

@@ -49,13 +49,11 @@ def log_duration(_func=None, *, log_level=logging.DEBUG):
         @wraps(func)
         def wrapper_log_duration(*args, **kwargs):
             func_name = func.__qualname__
-            duration_logger = logging.getLogger(func_name)
-            duration_logger.setLevel(log_level)
-            duration_logger.log(log_level, f"Function '{func_name}' is starting.")
+            logger.log(log_level, f"Function '{func_name}' is starting.")
             start_time = time()
             result = func(*args, **kwargs)
             duration = time() - start_time
-            duration_logger.log(
+            logger.log(
                 log_level,
                 f"Function '{func_name}' completed. " f"Duration: {duration:.2f} sec",
             )
