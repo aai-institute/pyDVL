@@ -1,0 +1,18 @@
+{% set site_domain = config.site_url | replace('https://', '') | replace('http://', '') | trim('/')  %}
+{% set dev_domain = config.dev_addr | replace('https://', '') | replace('http://', '')  | trim('/') %}
+{% set develop = site_domain.startswith(dev_domain) %}
+{% if not develop %}
+    {% set hostname = config.extra.analytics.hostname | default(site_domain) %}
+    {% set script_domain = config.extra.analytics.script_domain | default('scripts.simpleanalyticscdn.com') %}
+    {% set noscript_domain = config.extra.analytics.noscript_domain | default('queue.simpleanalyticscdn.com') %}
+    {% set collect_dnt = config.extra.analytics.collect_dnt | default('false') %}
+    <script async defer
+            src="https://{{ script_domain }}/latest.js"
+            data-collect-dnt="true"
+            data-hostname="{{ hostname }}"></script>
+    <noscript>
+        <img src="https://{{ noscript_domain }}/noscript.gif?collect-dnt={{ collect_dnt }}&hostname={{ hostname }}&path={{ page.url }}"
+             alt=""
+             referrerpolicy="no-referrer-when-downgrade">
+    </noscript>
+{% endif %}
