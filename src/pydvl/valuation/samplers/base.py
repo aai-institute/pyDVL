@@ -3,6 +3,7 @@ Base classes for samplers and evaluation strategies.
 
 See [pydvl.valuation.samplers][pydvl.valuation.samplers] for details.
 """
+
 from __future__ import annotations
 
 import logging
@@ -63,7 +64,7 @@ class IndexSampler(ABC):
         ``` pycon
         >>>from pydvl.valuation.samplers import DeterministicUniformSampler
         >>>sampler = DeterministicUniformSampler()
-        >>>for idx, s in sampler.from_indices([1, 2]):
+        >>>for idx, s in sampler.from_indices(np.arange(2)):
         >>>    print(s, end="")
         [][2,][][1,]
         ```
@@ -173,7 +174,7 @@ class IndexSampler(ABC):
         self,
         utility: UtilityBase,
         coefficient: Callable[[int, int], float] | None = None,
-    ) -> EvaluationStrategy[IndexSampler]:
+    ) -> EvaluationStrategy:
         """Returns the strategy for this sampler."""
         ...  # return SomeEvaluationStrategy(self)
 

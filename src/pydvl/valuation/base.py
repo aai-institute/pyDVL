@@ -10,18 +10,19 @@ __all__ = ["Valuation", "ModelFreeValuation"]
 
 
 class Valuation(ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self.result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset) -> Valuation:
-        ...
+    def fit(self, data: Dataset): ...
 
-    def values(self) -> ValuationResult:
-        """Returns the valuation result.
+    def values(self, sort: bool = False) -> ValuationResult:
+        """Returns a copy of the valuation result.
 
         The valuation must have been run with `fit()` before calling this method.
 
+        Args:
+            sort: Whether to sort the valuation result before returning it.
         Returns:
             The result of the valuation.
         """
@@ -29,7 +30,12 @@ class Valuation(ABC):
             raise RuntimeError("Valuation is not fitted")
         assert self.result is not None
 
-        return self.result
+        from copy import copy
+
+        r = copy(self.result)
+        if sort:
+            r.sort()
+        return r
 
     @property
     def is_fitted(self) -> bool:
@@ -38,7 +44,7 @@ class Valuation(ABC):
 
 class ModelFreeValuation(Valuation, ABC):
     """
-    TODO: Just a stub
+    TODO: Just a stub, probably should not inherit from Valuation.
     """
 
     def __init__(self, references: Iterable[Dataset]):

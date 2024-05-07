@@ -15,16 +15,18 @@ href="#wang_improving_2022">1</a></sup>.
 
 """
 
-__all__ = ["DataUtilityLearning"]
+from __future__ import annotations
 
 from typing import Dict, Iterable, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import SupervisedModel
+from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.types import IndexT, Sample, SampleT
 from pydvl.valuation.utility.base import UtilityBase
+
+__all__ = ["DataUtilityLearning"]
 
 
 class DataUtilityLearning(UtilityBase[SampleT]):
@@ -44,13 +46,13 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     ??? Example
         ``` pycon
         >>> from pydvl.valuation.dataset import Dataset
-        >>> from pydvl.valuation.utility import Utility, DataUtilityLearning
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
         >>> from pydvl.valuation.types import Sample
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
         >>>
         >>> train, test = Dataset.from_sklearn(load_iris())
-        >>> u = Utility(LogisticRegression())
+        >>> u = ModelUtility(LogisticRegression())
         >>> u.training_data = train
         >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
         ... # First 3 calls will be computed normally
@@ -83,9 +85,11 @@ class DataUtilityLearning(UtilityBase[SampleT]):
             boolean_vector[:, tuple(x)] = True
         return boolean_vector
 
-    def __call__(self, sample: Sample) -> float:
+    def __call__(self, sample: Sample | None) -> float:
         if self.training_data is None:
             raise ValueError("No training data set for utility")
+        if sample is None or len(sample.subset) == 0:
+            return self.utility(None)
 
         indices_boolean_vector = self._convert_indices_to_boolean_vector(sample.subset)
         if len(self._utility_samples) < self.training_budget:

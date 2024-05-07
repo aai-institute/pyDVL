@@ -40,7 +40,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler, SamplerT
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -178,6 +178,7 @@ class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler]):
     ) -> list[ValueUpdate]:
         r = []
         for sample in batch:
+            assert sample.idx is not None
             u_i = self.utility(
                 Sample(sample.idx, np.array(list({sample.idx}.union(sample.subset))))
             )
@@ -225,7 +226,8 @@ class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
         coefficient: Callable[[int, int], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
-        self.total_utility = utility(Sample(-1, utility.training_data.indices))
+        assert utility.training_data is not None
+        self.total_utility = utility(Sample(None, utility.training_data.indices))
 
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
@@ -254,7 +256,7 @@ class DeterministicUniformSampler(PowersetSampler):
     ??? Example
         ``` pycon
         >>> sampler = DeterministicUniformSampler()
-        >>> for idx, s in sampler.from_indices([1,2]):
+        >>> for idx, s in sampler.from_indices(np.arange(2)):
         >>>    print(f"{idx} - {s}", end=", ")
         1 - [], 1 - [2], 2 - [], 2 - [1],
         ```
@@ -423,7 +425,7 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self.samples_per_setsize = samples_per_setsize
         # HACK: closure around the argument to avoid weight() being an instance method
         # FIXME: is this the correct weight anyway?
-        self.weight = lambda n, subset_len: samples_per_setsize(subset_len)
+        self.weight = lambda n, subset_len: samples_per_setsize(subset_len)  # type: ignore
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:

@@ -20,7 +20,7 @@ from pydvl.valuation.games import (
     SymmetricVotingGame,
 )
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.utility import Utility
+from pydvl.valuation.utility import ModelUtility
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 from ..conftest import num_workers
@@ -65,7 +65,7 @@ def polynomial_pipeline(coefficients):
 
 
 @pytest.fixture(scope="function")
-def dummy_utility(num_samples):
+def dummy_Model(num_samples):
     # Indices match values
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
@@ -93,7 +93,7 @@ def dummy_utility(num_samples):
         def score(self, x: NDArray, y: NDArray) -> float:
             return self.utility
 
-    return Utility(
+    return ModelUtility(
         DummyModel(data),
         data,
         score_range=(0, x.sum() / x.max()),
@@ -151,7 +151,7 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
         raise
 
     if u is None:
-        u = Utility(
+        u = ModelUtility(
             LinearRegression(),
             data=linear_dataset,
             scorer=scorer,

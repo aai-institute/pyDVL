@@ -27,6 +27,7 @@ goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
       Value](https://proceedings.mlr.press/v202/kwon23e.html). In Proceedings of the
       40th International Conference on Machine Learning, 18135–52. PMLR, 2023.
 """
+
 from __future__ import annotations
 
 import logging
@@ -37,7 +38,7 @@ from numpy.typing import NDArray
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 
-from pydvl.utils import Seed, SupervisedModel
+from pydvl.utils.types import Seed, SupervisedModel
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult

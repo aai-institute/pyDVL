@@ -19,4 +19,4 @@ compute the score.
 """
 
 from .learning import *
-from .utility import *
+from .modelutility import *

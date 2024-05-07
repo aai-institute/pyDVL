@@ -40,11 +40,11 @@ from pydvl.parallel import (
     ParallelConfig,
     _maybe_init_parallel_backend,
 )
-from pydvl.utils import Utility
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.utility.base import UtilityBase
 
@@ -188,7 +188,7 @@ def _group_testing_shapley(
     remove_in="0.10.0",
 )
 def group_testing_shapley(
-    u: Utility,
+    u: UtilityBase,
     n_samples: int,
     epsilon: float,
     delta: float,

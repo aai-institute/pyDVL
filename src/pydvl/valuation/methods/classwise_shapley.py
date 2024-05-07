@@ -66,7 +66,8 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from pydvl.utils import Progress
+from pydvl.utils.progress import Progress
+from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
@@ -78,6 +79,7 @@ from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.types import BatchGenerator, IndexSetT
 from pydvl.valuation.utility.base import UtilityBase
 from pydvl.valuation.utility.classwise import CSSample
+from pydvl.valuation.utility.modelutility import ModelUtility
 from pydvl.valuation.utils import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
@@ -152,7 +154,7 @@ class ClasswiseSampler(IndexSampler):
 class ClasswiseShapley(Valuation):
     def __init__(
         self,
-        utility: UtilityBase,
+        utility: ModelUtility[CSSample, SupervisedModel],
         sampler: ClasswiseSampler,
         is_done: StoppingCriterion,
         progress: bool = False,
@@ -209,10 +211,11 @@ class ClasswiseShapley(Valuation):
         Returns:
             Normalized ValuationResult object.
         """
-        assert self.result is not None
-        assert self.utility.training_data is not None
-
         u = self.utility
+
+        assert self.result is not None
+        assert self.labels is not None
+        assert u.training_data is not None
 
         logger.info("Normalizing valuation result.")
         u.model.fit(u.training_data.x, u.training_data.y)

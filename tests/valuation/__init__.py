@@ -5,7 +5,7 @@ from scipy.stats import spearmanr
 
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import Sample
-from pydvl.valuation.utility import Utility
+from pydvl.valuation.utility import ModelUtility
 
 
 def polynomial(coefficients, x):
@@ -14,7 +14,7 @@ def polynomial(coefficients, x):
 
 
 def check_total_value(
-    u: Utility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
+    u: ModelUtility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
 ):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""

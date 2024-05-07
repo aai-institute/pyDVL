@@ -11,6 +11,7 @@ from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
+    "BaseModel",
     "IndexT",
     "LossFunction",
     "MapFunction",
@@ -40,6 +41,20 @@ class ReduceFunction(Protocol[R]):
 class LossFunction(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
         ...
+
+
+@runtime_checkable
+class BaseModel(Protocol):
+    """This is the minimal model protocol with the method `fit()`"""
+
+    def fit(self, x: NDArray, y: NDArray | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
 
 
 @runtime_checkable

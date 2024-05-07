@@ -30,13 +30,13 @@ NullaryPredicate = Callable[[], bool]
 
 @dataclass(frozen=True)
 class ValueUpdate:
-    idx: IndexT
+    idx: int | IndexT
     update: float
 
 
 @dataclass(frozen=True)
 class Sample:
-    idx: IndexT | None
+    idx: int | IndexT | None
     subset: NDArray[IndexT]
 
     # Make the unpacking operator work
@@ -57,7 +57,7 @@ SampleT = TypeVar("SampleT", bound=Sample)
 
 SampleBatch = Iterable[Sample]
 SampleGenerator = Generator[Sample, None, None]
-BatchGenerator = Generator[SampleBatch, bool, None]
+BatchGenerator = Generator[SampleBatch, None, None]
 
 
 @dataclass(frozen=True)

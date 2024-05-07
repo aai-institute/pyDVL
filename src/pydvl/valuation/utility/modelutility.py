@@ -2,25 +2,27 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 import numpy as np
 from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
-from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.scorers.supervised import SupervisedScorer
-from pydvl.valuation.types import SampleT
+from pydvl.utils.types import BaseModel
+from pydvl.valuation.scorers import Scorer
+from pydvl.valuation.types import Sample, SampleT
 
-__all__ = ["Utility"]
+__all__ = ["ModelUtility"]
 
 from pydvl.valuation.utility.base import UtilityBase
 
 logger = logging.getLogger(__name__)
 
+ModelT = TypeVar("ModelT", bound=BaseModel)
+
 
 # Need a generic because subclasses might use subtypes of Sample
-class Utility(UtilityBase[SampleT]):
+class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
     """Convenience wrapper with configurable memoization of the scoring
     function.
 
@@ -30,8 +32,8 @@ class Utility(UtilityBase[SampleT]):
     [Shapley values][pydvl.valuation.shapley] and [the Least
     Core][pydvl.valuation.least_core].
 
-    The Utility expect the model to fulfill the [SupervisedModel][pydvl.utils.types.SupervisedModel]
-    interface i.e. to have a `fit()` method.
+    The Utility expects the model to fulfill at least the
+    [BaseModel][pydvl.utils.types.BaseModel] interface i.e. to have a `fit()` method.
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
@@ -41,8 +43,9 @@ class Utility(UtilityBase[SampleT]):
     Since evaluating the scoring function requires retraining the model and that
     can be time-consuming, this class wraps it and caches the results of each
     execution. Caching is available both locally and across nodes, but must
-    always be enabled for your project first, see [the documentation][getting-started-cache]
-    and the [module documentation][pydvl.utils.caching].
+    always be enabled for your project first, see [the
+    documentation][getting-started-cache] and the [module
+    documentation][pydvl.utils.caching].
 
     Attributes:
         model: The supervised model.
@@ -76,11 +79,12 @@ class Utility(UtilityBase[SampleT]):
 
     ??? Example
         ``` pycon
-        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
+        >>> from pydvl.valuation.dataset import Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
-        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
-        >>> u = Utility(LogisticRegression(random_state=16), dataset)
+        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"))
         >>> u(Sample(subset=dataset.indices))
         0.9
         ```
@@ -88,26 +92,27 @@ class Utility(UtilityBase[SampleT]):
         With caching enabled:
 
         ```pycon
-        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
+        >>> from pydvl.valuation.dataset import Dataset
         >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
-        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
         >>> cache_backend = InMemoryCacheBackend()
-        >>> u = Utility(LogisticRegression(random_state=16), dataset, cache_backend=cache_backend)
-        >>> u(Sample(subset=dataset.indices))
+        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"), cache_backend=cache_backend)
+        >>> u(Sample(subset=train.indices))
         0.9
         ```
 
     """
 
-    model: SupervisedModel
-    scorer: SupervisedScorer
+    model: ModelT
+    scorer: Scorer
 
     def __init__(
         self,
-        model: SupervisedModel,
-        scorer: SupervisedScorer,
+        model: ModelT,
+        scorer: Scorer,
         *,
         catch_errors: bool = True,
         show_warnings: bool = False,
@@ -138,12 +143,15 @@ class Utility(UtilityBase[SampleT]):
         else:
             self._utility_wrapper = self._utility
 
-    def __call__(self, sample: SampleT) -> float:
+    def __call__(self, sample: SampleT | None) -> float:
         """
         Args:
             sample: contains a subset of valid indices for the
                 `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
         """
+        if sample is None or len(sample.subset) == 0:
+            return self.scorer.default
+
         return cast(float, self._utility_wrapper(sample))
 
     def _utility(self, sample: SampleT) -> float:
@@ -165,8 +173,6 @@ class Utility(UtilityBase[SampleT]):
                 model or the scorer returns [numpy.NaN][]. Otherwise, the score
                 of the model.
         """
-        if len(sample.subset) == 0:
-            return self.scorer.default
 
         if self.training_data is None:
             raise ValueError("No training data provided")
@@ -195,7 +201,7 @@ class Utility(UtilityBase[SampleT]):
                 raise
 
     @staticmethod
-    def _clone_model(model: SupervisedModel) -> SupervisedModel:
+    def _clone_model(model: ModelT) -> ModelT:
         """Clones the passed model to avoid the possibility
         of reusing a fitted estimator
 
@@ -209,7 +215,7 @@ class Utility(UtilityBase[SampleT]):
             # This happens if the passed model is not an sklearn model
             # In this case, we just make a deepcopy of the model.
             model = clone(model, safe=False)
-        return cast(SupervisedModel, model)
+        return cast(ModelT, model)
 
     @property
     def cache_stats(self) -> CacheStats | None:

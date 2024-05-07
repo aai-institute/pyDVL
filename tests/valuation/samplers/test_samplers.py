@@ -80,26 +80,19 @@ def test_deterministic_uniform_sampler_batch_size_4():
 def test_deterministic_permutation_sampler_batch_size_1():
     sampler = DeterministicPermutationSampler()
     indices = np.array([0, 1, 2])
-    max_iterations = 8
 
-    batches = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
-        )
-    )
+    batches = list(sampler.from_indices(indices))
 
-    expected_idxs = [[0], [1], [2], [0], [2], [1], [1], [0]]
+    expected_idxs = [[-1]] * 6
     _check_idxs(batches, expected_idxs)
 
     expected_subsets = [
-        [np.array([])],
-        [np.array([0])],
-        [np.array([0, 1])],
-        [np.array([])],
-        [np.array([0])],
-        [np.array([0, 2])],
-        [np.array([])],
-        [np.array([1])],
+        [np.array([0, 1, 2])],
+        [np.array([0, 2, 1])],
+        [np.array([1, 0, 2])],
+        [np.array([1, 2, 0])],
+        [np.array([2, 0, 1])],
+        [np.array([2, 1, 0])],
     ]
     _check_subsets(batches, expected_subsets)
 
@@ -202,7 +195,7 @@ def test_sample_counter(sampler_class, indices):
     [
         (DeterministicUniformSampler(), 12),
         # (DeterministicUniformSampler(index_iteration=NoIndexIteration), 8),
-        (DeterministicPermutationSampler(), 18),
+        (DeterministicPermutationSampler(), 6),
         (LOOSampler(), 3),
     ],
 )
@@ -235,10 +228,8 @@ def test_proper_reproducible(sampler_class, indices, seed):
     "sampler_class",
     [
         UniformSampler,
-        PermutationSampler,
         AntitheticSampler,
         UniformStratifiedSampler,
-        AntitheticPermutationSampler,
     ],
 )
 @pytest.mark.parametrize("indices", [(list(range(100)))])

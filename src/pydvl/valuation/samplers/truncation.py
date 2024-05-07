@@ -21,12 +21,13 @@ computation when the main process determines that values have converged.
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
+
 import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
 
-from pydvl.utils import running_moments
+from pydvl.utils.numeric import running_moments
 from pydvl.valuation.types import Sample
 from pydvl.valuation.utility.base import UtilityBase
 
