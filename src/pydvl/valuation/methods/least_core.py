@@ -12,9 +12,7 @@ from pydvl.valuation.methods._least_core_solving import (
     LeastCoreProblem,
     lc_solve_problem,
 )
-from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import IndexSampler
-from pydvl.valuation.samplers.powerset import NoIndexIteration
+from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["LeastCoreValuation"]
@@ -38,7 +36,7 @@ class LeastCoreValuation(Valuation):
     Args:
         utility: Utility object with model, data and scoring function.
         sampler: The sampler to use for the valuation.
-        max_samples: The maximum number of samples to use for the valuation. Can be set
+        n_samples: The number of samples to use for the valuation. Can be set
             to None if deterministic samplers with known number of samples (e.g.
             DeterministicUniformSampler) are used.
         If True, the least core subsidy $e$ is constrained
@@ -52,8 +50,8 @@ class LeastCoreValuation(Valuation):
     def __init__(
         self,
         utility: UtilityBase,
-        sampler: IndexSampler,
-        max_samples: int | None = None,
+        sampler: PowersetSampler,
+        n_samples: int | None = None,
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
         progress: bool = True,
@@ -65,7 +63,7 @@ class LeastCoreValuation(Valuation):
         self._sampler = sampler
         self._non_negative_subsidy = non_negative_subsidy
         self._solver_options = solver_options
-        self._max_samples = max_samples
+        self._max_samples = n_samples
         self._progress = progress
 
     def fit(self, data: Dataset) -> Valuation:
