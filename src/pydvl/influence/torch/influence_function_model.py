@@ -41,6 +41,15 @@ from .util import (
     flatten_dimensions,
 )
 
+__all__ = [
+    "DirectInfluence",
+    "CgInfluence",
+    "LissaInfluence",
+    "ArnoldiInfluence",
+    "EkfacInfluence",
+    "NystroemSketchInfluence",
+]
+
 logger = logging.getLogger(__name__)
 
 
@@ -455,7 +464,8 @@ class CgInfluence(TorchInfluenceFunctionModel):
         rtol: Maximum relative tolerance of result.
         atol: Absolute tolerance of result.
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
-        progress: If True, display progress bars.
+        progress: If True, display progress bars for computing in the non-block mode
+            (use_block_cg=False).
         precompute_grad: If True, the full data gradient is precomputed and kept
             in memory, which can speed up the hessian vector product computation.
             Set this to False, if you can't afford to keep the full computation graph
@@ -464,6 +474,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
             gradient method
         use_block_cg: If True, use block variant of conjugate gradient method, which
             solves several right hand sides simultaneously
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
 
     """
 
@@ -480,8 +493,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
         precompute_grad: bool = False,
         pre_conditioner: Optional[PreConditioner] = None,
         use_block_cg: bool = False,
+        warn_on_max_iteration: bool = True,
     ):
         super().__init__(model, loss)
+        self.warn_on_max_iteration = warn_on_max_iteration
         self.use_block_cg = use_block_cg
         self.pre_conditioner = pre_conditioner
         self.precompute_grad = precompute_grad
@@ -652,6 +667,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
 
         for k in range(maxiter):
             if torch.norm(r0) < tol:
+                logger.debug(f"Terminated cg after {k} iterations with residuum={r0}")
                 break
             Ap = hvp(p)
             alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
@@ -668,6 +684,16 @@ class CgInfluence(TorchInfluenceFunctionModel):
             r0 = r
             p = z + beta * p
             z0 = z
+        else:
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {maxiter=} without "
+                f"achieving the desired tolerance {tol}. \n"
+                f"Achieved residuum is {torch.norm(r0)}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or the "
+                f"parameter 'hessian_regularization'.",
+            )
 
         return x
 
@@ -736,6 +762,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
                 non_finished_indices = non_finished_indices.unsqueeze(-1)
 
             if num_remaining_indices == 0:
+                logger.debug(
+                    f"Terminated block cg after {k} iterations with max "
+                    f"residuum={B.max()}"
+                )
                 break
 
             # Reduce problem size by removing finished columns from the iteration
@@ -757,6 +787,17 @@ class CgInfluence(TorchInfluenceFunctionModel):
             # Orthogonalization search directions to stabilize the action of
             # (P^tAP)^{-1}
             P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
+        else:
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {maxiter=} of block cg "
+                f"without achieving the desired tolerance {tol.min()}. \n"
+                f"Achieved max residuum is "
+                f"{torch.linalg.norm(R, dim=0).max()}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or "
+                f"the parameter 'hessian_regularization'.",
+            )
 
         return X.T
 
@@ -793,6 +834,9 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         h0: Initial guess for hvp.
         rtol: tolerance to use for early stopping
         progress: If True, display progress bars.
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
     """
 
     def __init__(
@@ -806,8 +850,10 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         h0: Optional[torch.Tensor] = None,
         rtol: float = 1e-4,
         progress: bool = False,
+        warn_on_max_iteration: bool = True,
     ):
         super().__init__(model, loss)
+        self.warn_on_max_iteration = warn_on_max_iteration
         self.maxiter = maxiter
         self.hessian_regularization = hessian_regularization
         self.progress = progress
@@ -862,7 +908,9 @@ class LissaInfluence(TorchInfluenceFunctionModel):
             create_batch_hvp_function(self.model, self.loss),
             in_dims=(None, None, None, 0),
         )
-        for _ in tqdm(range(self.maxiter), disable=not self.progress, desc="Lissa"):
+        for k in tqdm(
+            range(self.maxiter), disable=not self.progress, desc="Lissa iteration"
+        ):
             x, y = next(iter(shuffled_training_data))
             x = x.to(self.model_device)
             y = y.to(self.model_device)
@@ -875,14 +923,23 @@ class LissaInfluence(TorchInfluenceFunctionModel):
                 raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
             max_residual = torch.max(torch.abs(residual / h_estimate))
             if max_residual < self.rtol:
+                mean_residual = torch.mean(torch.abs(residual / h_estimate))
+                logger.debug(
+                    f"Terminated Lissa after {k} iterations with "
+                    f"{max_residual*100:.2f} % max residual and"
+                    f" mean residual {mean_residual*100:.5f} %"
+                )
                 break
-
-        mean_residual = torch.mean(torch.abs(residual / h_estimate))
-
-        logger.info(
-            f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-            f" Mean residual: {mean_residual*100:.5f} %"
-        )
+        else:
+            mean_residual = torch.mean(torch.abs(residual / h_estimate))
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {self.maxiter} without "
+                f"achieving the desired tolerance {self.rtol}.\n "
+                f"Achieved max residual {max_residual*100:.2f} % and"
+                f" {mean_residual*100:.5f} % mean residual",
+            )
         return h_estimate / self.scale
 
 
