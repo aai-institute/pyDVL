@@ -19,6 +19,10 @@
   implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
 - Missing move to device of `preconditioner` in `CgInfluence` implementation
   [PR #572](https://github.com/aai-institute/pyDVL/pull/572)
+- Raise a more specific error message, when a `RunTimeError` occurs in 
+  `torch.linalg.eigh`, so the user can check if it is related to a known
+  issue
+  [PR #578](https://github.com/aai-institute/pyDVL/pull/578)
 
 ### Changed
 
