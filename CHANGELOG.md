@@ -23,6 +23,11 @@
   `torch.linalg.eigh`, so the user can check if it is related to a known
   issue
   [PR #578](https://github.com/aai-institute/pyDVL/pull/578)
+- Fix an edge case (empty train data) in the test 
+  `test_classwise_scorer_accuracies_manual_derivation`, which resulted
+  in undefined behavior (`np.nan` to `int` conversion with different results
+  depending on OS)
+  [PR #579](https://github.com/aai-institute/pyDVL/pull/579)
 
 ### Changed
 
