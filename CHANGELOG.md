@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.2 - 🏗  Bug fixes, logging improvement
 
 ### Added
 
