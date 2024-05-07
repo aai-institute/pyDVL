@@ -147,7 +147,8 @@ logger = logging.getLogger(__name__)
 class StoppingCriterionCallable(Protocol):
     """Signature for a stopping criterion"""
 
-    def __call__(self, result: ValuationResult) -> Status: ...
+    def __call__(self, result: ValuationResult) -> Status:
+        ...
 
 
 class StoppingCriterion(abc.ABC):
