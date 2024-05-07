@@ -86,12 +86,12 @@ class SequentialIndexIteration(IndexIteration):
         return len(indices)
 
 
-class RandomIndexIteration(IndexIteration):
-    def __init__(self, indices: NDArray[IndexT], seed: Seed = None):
-        super().__init__(indices)
-        self._rng = np.random.default_rng(seed)
+class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
+    def __init__(self, indices: NDArray[IndexT], seed: Seed):
+        super().__init__(indices, seed=seed)
 
     def __iter__(self) -> Generator[IndexT, None, None]:
+        breakpoint()
         while True:
             yield self._rng.choice(self._indices, size=1).item()
 
@@ -154,7 +154,13 @@ class PowersetSampler(IndexSampler, ABC):
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
-        yield from self._index_iteration(indices)
+        if isinstance(self._index_iteration, StochasticSamplerMixin):
+            breakpoint()
+            # To-Do: Need to do something more elegant here
+            seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()
+            return self._index_iteration(indices, seed)
+        else:
+            yield from self._index_iteration(indices)
 
     def make_strategy(
         self,

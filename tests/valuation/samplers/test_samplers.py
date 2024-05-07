@@ -15,8 +15,12 @@ from pydvl.valuation.samplers.permutation import (
 from pydvl.valuation.samplers.powerset import (
     AntitheticSampler,
     DeterministicUniformSampler,
+    IndexIteration,
     LOOSampler,
     NoIndexIteration,
+    PowersetSampler,
+    RandomIndexIteration,
+    SequentialIndexIteration,
     UniformSampler,
     UniformStratifiedSampler,
 )
@@ -194,7 +198,7 @@ def test_sample_counter(sampler_class, indices):
     "sampler, expected_length",
     [
         (DeterministicUniformSampler(), 12),
-        # (DeterministicUniformSampler(index_iteration=NoIndexIteration), 8),
+        (DeterministicUniformSampler(index_iteration=NoIndexIteration), 8),
         (DeterministicPermutationSampler(), 6),
         (LOOSampler(), 3),
     ],
@@ -208,18 +212,25 @@ def test_length_for_finite_samplers(sampler, expected_length):
 @pytest.mark.parametrize(
     "sampler_class",
     [
-        # UniformSampler,
+        UniformSampler,
         PermutationSampler,
         AntitheticSampler,
         UniformStratifiedSampler,
         AntitheticPermutationSampler,
     ],
 )
+@pytest.mark.parametrize(
+    "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
+)
 @pytest.mark.parametrize("indices", [(list(range(100)))])
-def test_proper_reproducible(sampler_class, indices, seed):
+def test_proper_reproducible(sampler_class, index_iteration, indices, seed):
     """Test that the sampler is reproducible."""
-    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
-    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    samples_1 = _create_seeded_sample_iter(
+        sampler_class, index_iteration, indices, seed
+    )
+    samples_2 = _create_seeded_sample_iter(
+        sampler_class, index_iteration, indices, seed
+    )
     for batch_1, batch_2 in zip(samples_1, samples_2):
         assert set(batch_1[0].subset) == set(batch_2[0].subset)
 
@@ -233,10 +244,17 @@ def test_proper_reproducible(sampler_class, indices, seed):
     ],
 )
 @pytest.mark.parametrize("indices", [(list(range(100)))])
-def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
+@pytest.mark.parametrize(
+    "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
+)
+def test_proper_stochastic(sampler_class, index_iteration, indices, seed, seed_alt):
     """Test that the sampler is reproducible."""
-    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
-    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed_alt)
+    samples_1 = _create_seeded_sample_iter(
+        sampler_class, index_iteration, indices, seed
+    )
+    samples_2 = _create_seeded_sample_iter(
+        sampler_class, index_iteration, indices, seed_alt
+    )
 
     for batch_1, batch_2 in zip(samples_1, samples_2):
         subset_1 = list(batch_1)[0].subset
@@ -246,11 +264,15 @@ def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
 
 def _create_seeded_sample_iter(
     sampler_t: Type[StochasticSampler],
+    index_iteration: Type[IndexIteration],
     indices: List,
     seed: Seed,
 ) -> Iterator:
     max_iterations = len(indices)
-    sampler = sampler_t(seed=seed)
+    if isinstance(sampler_t, PowersetSampler):
+        sampler = sampler_t(index_iteration=index_iteration, seed=seed)
+    else:
+        sampler = sampler_t(seed=seed)
     sample_stream = takewhile(
         lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
     )
