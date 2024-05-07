@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Optional, Tuple
 
@@ -47,6 +48,12 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Disable reporting. Verbose mode takes precedence.",
+    )
+    parser.addoption(
+        "--with-cuda",
+        action="store_true",
+        default=False,
+        help="Set device fixture to 'cuda' if available",
     )
 
 
@@ -258,3 +265,7 @@ def pytest_terminal_summary(
 ):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
+
+
+def is_osx_arm64():
+    return platform.system() == "Darwin" and platform.machine() == "arm64"

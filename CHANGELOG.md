@@ -1,6 +1,43 @@
 # Changelog
 
-## Unreleased
+## 0.9.2 - 🏗  Bug fixes, logging improvement
+
+### Added
+
+- Add progress bars to the computation of `LazyChunkSequence` and
+  `NestedLazyChunkSequence` 
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+- Add a device fixture for `pytest`, which depending on the availability and 
+  user input (`pytest --with-cuda`) resolves to cuda device
+  [PR #574](https://github.com/aai-institute/pyDVL/pull/574)
+
+### Fixed
+
+- Fixed logging issue in decorator `log_duration`
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+- Fixed missing move of tensors to model device in `EkfacInfluence` 
+  implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
+- Missing move to device of `preconditioner` in `CgInfluence` implementation
+  [PR #572](https://github.com/aai-institute/pyDVL/pull/572)
+- Raise a more specific error message, when a `RunTimeError` occurs in 
+  `torch.linalg.eigh`, so the user can check if it is related to a known
+  issue
+  [PR #578](https://github.com/aai-institute/pyDVL/pull/578)
+- Fix an edge case (empty train data) in the test 
+  `test_classwise_scorer_accuracies_manual_derivation`, which resulted
+  in undefined behavior (`np.nan` to `int` conversion with different results
+  depending on OS)
+  [PR #579](https://github.com/aai-institute/pyDVL/pull/579)
+
+### Changed
+
+- Changed logging behavior of iterative methods `LissaInfluence` and
+  `CgInfluence` to warn on not achieving desired tolerance within `maxiter`,
+  add parameter `warn_on_max_iteration` to set the level for this information
+  to `logging.DEBUG`
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+
+## 0.9.1 - Bug fixes, logging improvement
 
 ### Fixed
 

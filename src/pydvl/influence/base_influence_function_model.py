@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
 
+__all__ = ["InfluenceMode"]
+
 
 class InfluenceMode(str, Enum):
     """
