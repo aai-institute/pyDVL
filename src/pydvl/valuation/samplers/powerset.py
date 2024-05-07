@@ -102,21 +102,11 @@ class RandomIndexIteration(IndexIteration):
 
 class NoIndexIteration(IndexIteration):
     def __iter__(self) -> Generator[None, None, None]:
-        while True:
-            yield None
-
-    @staticmethod
-    def length(indices: IndexSetT) -> None:
-        return None
-
-
-class FiniteNoIndexIteration(IndexIteration):
-    def __iter__(self) -> Generator[None, None, None]:
         yield None
 
     @staticmethod
-    def length(indices: IndexSetT) -> int:
-        return 1
+    def length(indices: IndexSetT) -> None:
+        return 0
 
 
 def complement(include: IndexSetT, exclude: Iterable[IndexT]) -> NDArray[IndexT]:
@@ -301,6 +291,8 @@ class DeterministicUniformSampler(PowersetSampler):
         len_outer = self._index_iteration.length(indices)
         if len_outer is None:
             out = None
+        elif len_outer == 0:
+            out = 2 ** len(indices)
         else:
             out = len_outer * 2 ** (len(indices) - 1)
         return out

@@ -69,7 +69,6 @@ class LeastCoreValuation(Valuation):
         self._progress = progress
 
     def fit(self, data: Dataset) -> Valuation:
-
         self._utility = self._utility.with_dataset(data)
 
         self._max_samples = _process_max_samples(
