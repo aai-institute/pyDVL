@@ -136,22 +136,24 @@ def _check_subsets(batches, expected):
 
 
 @pytest.mark.parametrize(
-    "sampler_class",
+    "sampler",
     [
-        DeterministicUniformSampler,
-        UniformSampler,
-        DeterministicPermutationSampler,
-        PermutationSampler,
-        AntitheticSampler,
-        UniformStratifiedSampler,
-        AntitheticPermutationSampler,
-        LOOSampler,
+        DeterministicUniformSampler(),
+        UniformSampler(),
+        DeterministicPermutationSampler(),
+        PermutationSampler(),
+        AntitheticSampler(),
+        UniformStratifiedSampler(),
+        AntitheticPermutationSampler(),
+        LOOSampler(),
+        UniformSampler(index_iteration=RandomIndexIteration),
+        UniformStratifiedSampler(index_iteration=RandomIndexIteration),
+        AntitheticSampler(index_iteration=RandomIndexIteration),
     ],
 )
 @pytest.mark.parametrize("indices", [np.array([]), np.array([0, 1, 2])])
-def test_proper(sampler_class, indices):
+def test_proper(sampler, indices):
     """Test that the sampler generates subsets of the correct sets"""
-    sampler = sampler_class()
     max_iterations = 2 ** (len(indices))
     samples = takewhile(
         lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
@@ -164,19 +166,22 @@ def test_proper(sampler_class, indices):
 
 
 @pytest.mark.parametrize(
-    "sampler_class",
+    "sampler",
     [
-        DeterministicUniformSampler,
-        UniformSampler,
-        DeterministicPermutationSampler,
-        PermutationSampler,
-        AntitheticSampler,
-        UniformStratifiedSampler,
-        AntitheticPermutationSampler,
-        LOOSampler,
+        DeterministicUniformSampler(),
+        UniformSampler(),
+        DeterministicPermutationSampler(),
+        PermutationSampler(),
+        AntitheticSampler(),
+        UniformStratifiedSampler(),
+        AntitheticPermutationSampler(),
+        LOOSampler(),
+        UniformSampler(index_iteration=RandomIndexIteration),
+        UniformStratifiedSampler(index_iteration=RandomIndexIteration),
+        AntitheticSampler(index_iteration=RandomIndexIteration),
     ],
 )
-def test_sample_counter(sampler_class):
+def test_sample_counter(sampler):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
@@ -184,7 +189,6 @@ def test_sample_counter(sampler_class):
 
     """
     indices = np.array([0, 1, 2])
-    sampler = sampler_class()
     max_iterations = 2 ** (len(indices))
     samples = list(
         takewhile(
@@ -207,6 +211,27 @@ def test_length_for_finite_samplers(sampler, expected_length):
     indices = np.array([0, 1, 2])
     assert sampler.length(indices) == expected_length
     assert len(list(sampler.from_indices(indices))) == expected_length
+
+
+@pytest.mark.parametrize(
+    "sampler",
+    [
+        UniformSampler(),
+        PermutationSampler(),
+        AntitheticSampler(),
+        UniformStratifiedSampler(),
+        AntitheticPermutationSampler(),
+    ],
+)
+def test_length_of_infinite_samplers(sampler):
+    indices = np.array([0, 1, 2])
+    max_iter = 2 ** len(indices) * 10
+    assert sampler.length(indices) is None
+    # check that we can generate samples that are longer than size of powerset
+    samples = list(
+        takewhile(lambda _: sampler.n_samples < max_iter, sampler.from_indices(indices))
+    )
+    assert len(samples) == max_iter
 
 
 @pytest.mark.parametrize(
@@ -269,7 +294,7 @@ def _create_seeded_sample_iter(
     seed: Seed,
 ) -> Iterator:
     max_iterations = len(indices)
-    if isinstance(sampler_t, PowersetSampler):
+    if issubclass(sampler_t, PowersetSampler):
         sampler = sampler_t(index_iteration=index_iteration, seed=seed)
     else:
         sampler = sampler_t(seed=seed)

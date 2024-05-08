@@ -160,10 +160,10 @@ class PowersetSampler(IndexSampler, ABC):
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
-        if isinstance(self._index_iteration, StochasticSamplerMixin):
+        if issubclass(self._index_iteration, StochasticSamplerMixin):
             # To-Do: Need to do something more elegant here
             seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()
-            return self._index_iteration(indices, seed)
+            yield from self._index_iteration(indices, seed)
         else:
             yield from self._index_iteration(indices)
 
