@@ -63,6 +63,10 @@ __all__ = [
     "UniformSampler",
     "UniformStratifiedSampler",
     "VarianceReducedStratifiedSampler",
+    "IndexIteration",
+    "SequentialIndexIteration",
+    "RandomIndexIteration",
+    "NoIndexIteration",
 ]
 
 
