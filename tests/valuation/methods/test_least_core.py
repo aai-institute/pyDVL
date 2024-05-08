@@ -119,7 +119,7 @@ def test_prepare_problem_for_exact_least_core(test_game):
     problem = create_least_core_problem(
         u=utility,
         sampler=sampler,
-        max_samples=powerset_size,
+        n_samples=powerset_size,
         progress=False,
     )
 

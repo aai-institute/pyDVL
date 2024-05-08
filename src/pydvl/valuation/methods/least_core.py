@@ -63,14 +63,14 @@ class LeastCoreValuation(Valuation):
         self._sampler = sampler
         self._non_negative_subsidy = non_negative_subsidy
         self._solver_options = solver_options
-        self._max_samples = n_samples
+        self._n_samples = n_samples
         self._progress = progress
 
     def fit(self, data: Dataset) -> Valuation:
         self._utility = self._utility.with_dataset(data)
 
-        self._max_samples = _process_max_samples(
-            candidate=self._max_samples,
+        self._n_samples = _correct_n_samples(
+            candidate=self._n_samples,
             sampler_length=self._sampler.length(data.indices),
         )
 
@@ -82,7 +82,7 @@ class LeastCoreValuation(Valuation):
         problem = create_least_core_problem(
             u=self._utility,
             sampler=self._sampler,
-            max_samples=self._max_samples,
+            n_samples=self._n_samples,
             progress=self._progress,
         )
 
@@ -99,14 +99,14 @@ class LeastCoreValuation(Valuation):
 
 
 def create_least_core_problem(
-    u: UtilityBase, sampler: IndexSampler, max_samples: int, progress: bool
+    u: UtilityBase, sampler: IndexSampler, n_samples: int, progress: bool
 ) -> LeastCoreProblem:
     """Create a Least Core problem from a utility and a sampler.
 
     Args:
         u: Utility object with model, data and scoring function.
         sampler: The sampler to use for the valuation.
-        max_samples: The maximum number of samples to use for the valuation.
+        n_samples: The maximum number of samples to use for the valuation.
         progress (bool): Whether to show a progress bar during the construction of the
             least-core problem.
 
@@ -116,15 +116,15 @@ def create_least_core_problem(
     """
     n_obs = len(u.training_data)
 
-    A_lb = np.zeros((max_samples, n_obs))
-    utility_values = np.zeros(max_samples)
+    A_lb = np.zeros((n_samples, n_obs))
+    utility_values = np.zeros(n_samples)
 
     generator = sampler.from_indices(u.training_data.indices)
     for i, batch in enumerate(  # type: ignore
         tqdm(
-            islice(generator, max_samples),
+            islice(generator, n_samples),
             disable=not progress,
-            total=max_samples - 1,
+            total=n_samples - 1,
             position=0,
         )
     ):
@@ -135,11 +135,11 @@ def create_least_core_problem(
     return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
 
 
-def _process_max_samples(candidate: int | None, sampler_length: int | None) -> int:
-    """Process the max_samples parameter.
+def _correct_n_samples(candidate: int | None, sampler_length: int | None) -> int:
+    """Correct a user provided n_samples parameter
 
     Args:
-        candidate: The user provided value for max_samples.
+        candidate: The user provided value for n_samples.
         sampler_length: The length of the sampler which is None for infinite samplers.
 
     Returns:
@@ -149,7 +149,7 @@ def _process_max_samples(candidate: int | None, sampler_length: int | None) -> i
     if sampler_length is not None:
         if candidate is not None and candidate != sampler_length:
             warnings.warn(
-                f"Invalid value for max_samples: {candidate}. Setting to {sampler_length}."
+                f"Invalid value for n_samples: {candidate}. Setting to {sampler_length}."
             )
         out = sampler_length
 
@@ -161,7 +161,7 @@ def _process_max_samples(candidate: int | None, sampler_length: int | None) -> i
     else:
         if candidate is None:
             raise ValueError(
-                "max_samples must be set if a sampler with infinite length is used."
+                "n_samples must be set if a sampler with infinite length is used."
             )
         out = candidate
 
