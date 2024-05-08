@@ -52,7 +52,10 @@ def lc_solve_problem(
     [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
     argument descriptions.
     """
-    n = len(u.training_data)
+    if u.training_data is not None:
+        n_obs = len(u.training_data)
+    else:
+        raise ValueError("Utility object must have a training dataset.")
 
     if np.any(np.isnan(problem.utility_values)):
         warnings.warn(
@@ -79,10 +82,10 @@ def lc_solve_problem(
     b_lb = b_lb[unique_indices]
 
     logger.debug("Building equality constraint")
-    A_eq = np.ones((1, n))
+    A_eq = np.ones((1, n_obs))
     # We might have already computed the total utility one or more times.
     # This is the index of the row(s) in A_lb with all ones.
-    total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
+    total_utility_indices = np.where(A_lb.sum(axis=1) == n_obs)[0]
     if len(total_utility_indices) == 0:
         b_eq = np.array([u(Sample(idx=None, subset=u.training_data.indices))])
     else:
@@ -122,7 +125,7 @@ def lc_solve_problem(
     if subsidy is None:
         logger.debug("No values were found")
         status = Status.Failed
-        values = np.empty(n)
+        values = np.empty(n_obs)
         values[:] = np.nan
         subsidy = np.nan
     else:
@@ -138,7 +141,7 @@ def lc_solve_problem(
         if values is None:
             logger.debug("No values were found")
             status = Status.Failed
-            values = np.empty(n)
+            values = np.empty(n_obs)
             values[:] = np.nan
             subsidy = np.nan
         else:

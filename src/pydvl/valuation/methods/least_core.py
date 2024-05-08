@@ -12,6 +12,7 @@ from pydvl.valuation.methods._least_core_solving import (
     LeastCoreProblem,
     lc_solve_problem,
 )
+from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
 from pydvl.valuation.utility.base import UtilityBase
 
@@ -99,7 +100,7 @@ class LeastCoreValuation(Valuation):
 
 
 def create_least_core_problem(
-    u: UtilityBase, sampler: IndexSampler, n_samples: int, progress: bool
+    u: UtilityBase, sampler: PowersetSampler, n_samples: int, progress: bool
 ) -> LeastCoreProblem:
     """Create a Least Core problem from a utility and a sampler.
 
@@ -114,7 +115,10 @@ def create_least_core_problem(
         LeastCoreProblem: The least core problem to solve.
 
     """
-    n_obs = len(u.training_data)
+    if u.training_data is not None:
+        n_obs = len(u.training_data)
+    else:
+        raise ValueError("Utility object must have a training dataset.")
 
     A_lb = np.zeros((n_samples, n_obs))
     utility_values = np.zeros(n_samples)
@@ -168,7 +172,7 @@ def _correct_n_samples(candidate: int | None, sampler_length: int | None) -> int
     return out
 
 
-def _check_sampler(sampler: IndexSampler):
+def _check_sampler(sampler: PowersetSampler):
     """Check that the sampler is compatible with the Least Core valuation."""
     if sampler.batch_size != 1:
         raise ValueError("Least core valuation only supports batch_size=1 samplers.")

@@ -77,6 +77,11 @@ class IndexIteration(ABC):
     def __iter__(self) -> Generator[IndexT | None, None, None]:
         ...
 
+    @staticmethod
+    @abstractmethod
+    def length(indices: IndexSetT) -> int | None:
+        ...
+
 
 class SequentialIndexIteration(IndexIteration):
     def __iter__(self) -> Generator[IndexT, None, None]:
@@ -93,13 +98,13 @@ class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
 
     def __iter__(self) -> Generator[IndexT, None, None]:
         if len(self._indices) == 0:
-            return iter(())
+            return
 
         while True:
             yield self._rng.choice(self._indices, size=1).item()
 
     @staticmethod
-    def length(indices: IndexSetT) -> None:
+    def length(indices: IndexSetT) -> int | None:
         if len(indices) == 0:
             out = 0
         else:
@@ -112,7 +117,7 @@ class NoIndexIteration(IndexIteration):
         yield None
 
     @staticmethod
-    def length(indices: IndexSetT) -> None:
+    def length(indices: IndexSetT) -> int:
         return 0
 
 
@@ -163,8 +168,8 @@ class PowersetSampler(IndexSampler, ABC):
         """Iterates over indices with the method specified at construction."""
         if issubclass(self._index_iteration, StochasticSamplerMixin):
             # To-Do: Need to do something more elegant here
-            seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()
-            yield from self._index_iteration(indices, seed)
+            seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()  # type: ignore
+            yield from self._index_iteration(indices, seed)  # type: ignore
         else:
             yield from self._index_iteration(indices)
 
@@ -301,7 +306,7 @@ class DeterministicUniformSampler(PowersetSampler):
             ):
                 yield Sample(idx, np.array(subset))
 
-    def length(self, indices: IndexSetT) -> int:
+    def length(self, indices: IndexSetT) -> int | None:
         len_outer = self._index_iteration.length(indices)
         # empty index set
         if len(indices) == 0:

@@ -117,7 +117,7 @@ class IndexSampler(ABC):
         # early return for empty indices. Necessary because some samplers use a
         # while True loop to generate infinite samples.
         if len(indices) == 0:
-            return iter(())
+            return
 
         self._interrupted = False
         for batch in take_n(self._generate(indices), self.batch_size):
