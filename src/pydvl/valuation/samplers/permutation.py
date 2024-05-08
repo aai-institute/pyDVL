@@ -132,7 +132,11 @@ class DeterministicPermutationSampler(PermutationSampler):
             yield Sample(-1, np.array(permutation, copy=False))
 
     def length(self, indices: IndexSetT) -> int:
-        return math.factorial(len(indices))
+        if len(indices) == 0:
+            out = 0
+        else:
+            out = math.factorial(len(indices))
+        return out
 
 
 class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):

@@ -148,7 +148,7 @@ def _check_subsets(batches, expected):
         LOOSampler,
     ],
 )
-@pytest.mark.parametrize("indices", [np.array([0, 1, 2])])
+@pytest.mark.parametrize("indices", [np.array([]), np.array([0, 1, 2])])
 def test_proper(sampler_class, indices):
     """Test that the sampler generates subsets of the correct sets"""
     sampler = sampler_class()
@@ -176,14 +176,14 @@ def test_proper(sampler_class, indices):
         LOOSampler,
     ],
 )
-@pytest.mark.parametrize("indices", [np.array([0, 1, 2])])
-def test_sample_counter(sampler_class, indices):
+def test_sample_counter(sampler_class):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
     that was not caused by existing tests.
 
     """
+    indices = np.array([0, 1, 2])
     sampler = sampler_class()
     max_iterations = 2 ** (len(indices))
     samples = list(
@@ -222,7 +222,7 @@ def test_length_for_finite_samplers(sampler, expected_length):
 @pytest.mark.parametrize(
     "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
 )
-@pytest.mark.parametrize("indices", [(list(range(100)))])
+@pytest.mark.parametrize("indices", [np.array([]), np.array(list(range(100)))])
 def test_proper_reproducible(sampler_class, index_iteration, indices, seed):
     """Test that the sampler is reproducible."""
     samples_1 = _create_seeded_sample_iter(
@@ -243,7 +243,7 @@ def test_proper_reproducible(sampler_class, index_iteration, indices, seed):
         UniformStratifiedSampler,
     ],
 )
-@pytest.mark.parametrize("indices", [(list(range(100)))])
+@pytest.mark.parametrize("indices", [np.array([]), np.array(list(range(100)))])
 @pytest.mark.parametrize(
     "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
 )

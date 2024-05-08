@@ -91,13 +91,19 @@ class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
         super().__init__(indices, seed=seed)
 
     def __iter__(self) -> Generator[IndexT, None, None]:
-        breakpoint()
+        if len(self._indices) == 0:
+            return iter(())
+
         while True:
             yield self._rng.choice(self._indices, size=1).item()
 
     @staticmethod
     def length(indices: IndexSetT) -> None:
-        return None
+        if len(indices) == 0:
+            out = 0
+        else:
+            out = None
+        return out
 
 
 class NoIndexIteration(IndexIteration):
@@ -155,7 +161,6 @@ class PowersetSampler(IndexSampler, ABC):
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
         if isinstance(self._index_iteration, StochasticSamplerMixin):
-            breakpoint()
             # To-Do: Need to do something more elegant here
             seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()
             return self._index_iteration(indices, seed)
@@ -297,10 +302,17 @@ class DeterministicUniformSampler(PowersetSampler):
 
     def length(self, indices: IndexSetT) -> int:
         len_outer = self._index_iteration.length(indices)
-        if len_outer is None:
+        # empty index set
+        if len(indices) == 0:
+            out = 0
+        # infinite index iteration
+        elif len_outer is None:
             out = None
+        # NoIndexIteration, i.e. sampling from all indices and not just the complement
+        # of the current outer index
         elif len_outer == 0:
             out = 2 ** len(indices)
+        # SequentialIndexIteration or other finite index iteration
         else:
             out = len_outer * 2 ** (len(indices) - 1)
         return out
