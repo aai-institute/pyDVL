@@ -21,8 +21,10 @@ from pydvl.valuation.samplers.powerset import (
     PowersetSampler,
     RandomIndexIteration,
     SequentialIndexIteration,
+    TruncatedUniformStratifiedSampler,
     UniformSampler,
     UniformStratifiedSampler,
+    VarianceReducedStratifiedSampler,
 )
 
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
@@ -149,6 +151,8 @@ def _check_subsets(batches, expected):
         UniformSampler(index_iteration=RandomIndexIteration),
         UniformStratifiedSampler(index_iteration=RandomIndexIteration),
         AntitheticSampler(index_iteration=RandomIndexIteration),
+        TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
+        VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
     ],
 )
 @pytest.mark.parametrize("indices", [np.array([]), np.array([0, 1, 2])])
@@ -179,6 +183,8 @@ def test_proper(sampler, indices):
         UniformSampler(index_iteration=RandomIndexIteration),
         UniformStratifiedSampler(index_iteration=RandomIndexIteration),
         AntitheticSampler(index_iteration=RandomIndexIteration),
+        TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
+        VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
     ],
 )
 def test_sample_counter(sampler):
@@ -221,6 +227,8 @@ def test_length_for_finite_samplers(sampler, expected_length):
         AntitheticSampler(),
         UniformStratifiedSampler(),
         AntitheticPermutationSampler(),
+        TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
+        VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
     ],
 )
 def test_length_of_infinite_samplers(sampler):
