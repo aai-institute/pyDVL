@@ -62,6 +62,7 @@ __all__ = [
     "TruncatedUniformStratifiedSampler",
     "UniformSampler",
     "UniformStratifiedSampler",
+    "VarianceReducedStratifiedSampler",
 ]
 
 

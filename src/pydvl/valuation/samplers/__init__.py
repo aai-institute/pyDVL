@@ -92,4 +92,5 @@ StochasticSampler = Union[
     AntitheticSampler,
     UniformStratifiedSampler,
     TruncatedUniformStratifiedSampler,
+    VarianceReducedStratifiedSampler,
 ]

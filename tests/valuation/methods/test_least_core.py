@@ -10,8 +10,10 @@ from pydvl.valuation.methods.least_core import (
 from pydvl.valuation.samplers import (
     AntitheticSampler,
     DeterministicUniformSampler,
+    TruncatedUniformStratifiedSampler,
     UniformSampler,
     UniformStratifiedSampler,
+    VarianceReducedStratifiedSampler,
 )
 from pydvl.valuation.samplers.powerset import NoIndexIteration
 from tests.valuation import check_total_value, check_values
@@ -28,14 +30,23 @@ logger = logging.getLogger(__name__)
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler_class", [UniformSampler, AntitheticSampler, UniformStratifiedSampler]
+    "sampler",
+    [
+        UniformSampler(index_iteration=NoIndexIteration),
+        AntitheticSampler(index_iteration=NoIndexIteration),
+        UniformStratifiedSampler(index_iteration=NoIndexIteration),
+        TruncatedUniformStratifiedSampler(
+            lower_bound=1, upper_bound=2, index_iteration=NoIndexIteration
+        ),
+        VarianceReducedStratifiedSampler(
+            samples_per_setsize=lambda _: 2, index_iteration=NoIndexIteration
+        ),
+    ],
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_montecarlo_least_core(
-    test_game, max_samples, sampler_class, non_negative_subsidy, seed
+    test_game, max_samples, sampler, non_negative_subsidy, seed
 ):
-    sampler = sampler_class(index_iteration=NoIndexIteration, seed=seed)
-
     valuation = LeastCoreValuation(
         utility=test_game.u,
         sampler=sampler,
