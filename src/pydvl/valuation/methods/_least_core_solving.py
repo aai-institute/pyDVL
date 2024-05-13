@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
-from deprecate import deprecated
 from numpy.typing import NDArray
 
 from pydvl.parallel import (
@@ -41,7 +42,7 @@ def lc_solve_problem(
     u: UtilityBase,
     algorithm: str,
     non_negative_subsidy: bool = False,
-    solver_options: Optional[dict] = None,
+    solver_options: dict | None = None,
 ) -> ValuationResult:
     """Solves a linear problem as prepared by
     [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
@@ -120,7 +121,7 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: Optional[NDArray[np.float_]]
+    values: NDArray[np.float_] | None
 
     if subsidy is None:
         logger.debug("No values were found")
@@ -157,21 +158,15 @@ def lc_solve_problem(
     )
 
 
-@deprecated(
-    target=True,
-    args_mapping={"config": "config"},
-    deprecated_in="0.9.0",
-    remove_in="0.10.0",
-)
 def lc_solve_problems(
     problems: Sequence[LeastCoreProblem],
     u: UtilityBase,
     algorithm: str,
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
+    parallel_backend: ParallelBackend | None = None,
+    config: ParallelConfig | None = None,
     n_jobs: int = 1,
     non_negative_subsidy: bool = True,
-    solver_options: Optional[dict] = None,
+    solver_options: dict | None = None,
     **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
@@ -232,7 +227,7 @@ def _solve_least_core_linear_program(
     b_lb: NDArray[np.float_],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+) -> Tuple[NDArray[np.float_] | None, float | None]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -309,7 +304,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
     solver_options: dict,
-) -> Optional[NDArray[np.float_]]:
+) -> NDArray[np.float_] | None:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$

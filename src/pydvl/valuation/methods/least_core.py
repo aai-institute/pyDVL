@@ -12,7 +12,6 @@ from pydvl.valuation.methods._least_core_solving import (
     LeastCoreProblem,
     lc_solve_problem,
 )
-from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
 from pydvl.valuation.utility.base import UtilityBase
 

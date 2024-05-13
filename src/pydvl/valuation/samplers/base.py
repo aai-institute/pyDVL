@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, TypeVar
+from typing import Callable, Generic, TypeVar
 
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.utils import take_n
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
-    IndexT,
     NullaryPredicate,
     SampleBatch,
     SampleGenerator,
@@ -127,7 +126,7 @@ class IndexSampler(ABC):
             if self._interrupted:
                 break
 
-    def length(self, indices: IndexSetT) -> Optional[int]:
+    def length(self, indices: IndexSetT) -> int | None:
         """Number of samples that can be generated from the indices.
 
         Returns None if the number of samples is infinite, which is the case for most

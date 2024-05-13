@@ -14,10 +14,9 @@ benchmarking purposes.
 
 from __future__ import annotations
 
-import itertools
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Tuple
 
 import numpy as np
 import scipy as sp
@@ -28,7 +27,6 @@ from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods._least_core_solving import LeastCoreProblem
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.types import Sample
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -56,7 +54,7 @@ class DummyGameDataset(Dataset):
         description: Optional description of the dataset.
     """
 
-    def __init__(self, n_players: int, description: Optional[str] = None) -> None:
+    def __init__(self, n_players: int, description: str | None = None) -> None:
         x = np.arange(0, n_players, 1).reshape(-1, 1)
         nil = np.zeros_like(x)
         super().__init__(
@@ -67,9 +65,7 @@ class DummyGameDataset(Dataset):
             description=description,
         )
 
-    def get_data(
-        self, indices: Optional[Iterable[int]] = None
-    ) -> Tuple[NDArray, NDArray]:
+    def get_data(self, indices: Iterable[int] | None = None) -> Tuple[NDArray, NDArray]:
         """Returns the subsets of the train set instead of the test set.
 
         Args:
@@ -149,7 +145,7 @@ class Game(ABC):
         self,
         n_players: int,
         score_range: Tuple[float, float] = (-np.inf, np.inf),
-        description: Optional[str] = None,
+        description: str | None = None,
     ):
         self.n_players = n_players
         self.data = DummyGameDataset(self.n_players, description)

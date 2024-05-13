@@ -122,7 +122,7 @@ from __future__ import annotations
 import abc
 import logging
 from time import time
-from typing import Callable, Optional, Protocol, Type, cast
+from typing import Callable, Protocol, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -385,7 +385,7 @@ class MaxChecks(StoppingCriterion):
             `Pending`.
     """
 
-    def __init__(self, n_checks: Optional[int], modify_result: bool = True):
+    def __init__(self, n_checks: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         if n_checks is not None and n_checks < 1:
             raise ValueError("n_iterations must be at least 1 or None")
@@ -432,7 +432,7 @@ class MaxUpdates(StoppingCriterion):
             `Pending`.
     """
 
-    def __init__(self, n_updates: Optional[int], modify_result: bool = True):
+    def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         if n_updates is not None and n_updates < 1:
             raise ValueError("n_updates must be at least 1 or None")
@@ -474,7 +474,7 @@ class MinUpdates(StoppingCriterion):
             `Pending`.
     """
 
-    def __init__(self, n_updates: Optional[int], modify_result: bool = True):
+    def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         self.n_updates = n_updates
         self.last_min = 0
@@ -511,7 +511,7 @@ class MaxTime(StoppingCriterion):
             that always returns `Pending`.
     """
 
-    def __init__(self, seconds: Optional[float], modify_result: bool = True):
+    def __init__(self, seconds: float | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         self.max_seconds = seconds or np.inf
         if self.max_seconds <= 0:
