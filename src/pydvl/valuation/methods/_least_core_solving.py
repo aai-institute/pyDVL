@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import itertools
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
-from deprecate import deprecated
 from numpy.typing import NDArray
 
 from pydvl.parallel import (
@@ -14,8 +15,10 @@ from pydvl.parallel import (
     ParallelConfig,
     _maybe_init_parallel_backend,
 )
-from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.utils import Status
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -36,10 +39,10 @@ class LeastCoreProblem(NamedTuple):
 def lc_solve_problem(
     problem: LeastCoreProblem,
     *,
-    u: Utility,
+    u: UtilityBase,
     algorithm: str,
     non_negative_subsidy: bool = False,
-    solver_options: Optional[dict] = None,
+    solver_options: dict | None = None,
 ) -> ValuationResult:
     """Solves a linear problem as prepared by
     [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
@@ -50,7 +53,10 @@ def lc_solve_problem(
     [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
     argument descriptions.
     """
-    n = len(u.data)
+    if u.training_data is not None:
+        n_obs = len(u.training_data)
+    else:
+        raise ValueError("Utility object must have a training dataset.")
 
     if np.any(np.isnan(problem.utility_values)):
         warnings.warn(
@@ -77,12 +83,12 @@ def lc_solve_problem(
     b_lb = b_lb[unique_indices]
 
     logger.debug("Building equality constraint")
-    A_eq = np.ones((1, n))
+    A_eq = np.ones((1, n_obs))
     # We might have already computed the total utility one or more times.
     # This is the index of the row(s) in A_lb with all ones.
-    total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
+    total_utility_indices = np.where(A_lb.sum(axis=1) == n_obs)[0]
     if len(total_utility_indices) == 0:
-        b_eq = np.array([u(u.data.indices)])
+        b_eq = np.array([u(Sample(idx=None, subset=u.training_data.indices))])
     else:
         b_eq = b_lb[total_utility_indices]
         # Remove the row(s) corresponding to the total utility
@@ -115,12 +121,12 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: Optional[NDArray[np.float_]]
+    values: NDArray[np.float_] | None
 
     if subsidy is None:
         logger.debug("No values were found")
         status = Status.Failed
-        values = np.empty(n)
+        values = np.empty(n_obs)
         values[:] = np.nan
         subsidy = np.nan
     else:
@@ -136,7 +142,7 @@ def lc_solve_problem(
         if values is None:
             logger.debug("No values were found")
             status = Status.Failed
-            values = np.empty(n)
+            values = np.empty(n_obs)
             values[:] = np.nan
             subsidy = np.nan
         else:
@@ -148,25 +154,19 @@ def lc_solve_problem(
         values=values,
         subsidy=subsidy,
         stderr=None,
-        data_names=u.data.data_names,
+        data_names=u.training_data.data_names,
     )
 
 
-@deprecated(
-    target=True,
-    args_mapping={"config": "config"},
-    deprecated_in="0.9.0",
-    remove_in="0.10.0",
-)
 def lc_solve_problems(
     problems: Sequence[LeastCoreProblem],
-    u: Utility,
+    u: UtilityBase,
     algorithm: str,
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
+    parallel_backend: ParallelBackend | None = None,
+    config: ParallelConfig | None = None,
     n_jobs: int = 1,
     non_negative_subsidy: bool = True,
-    solver_options: Optional[dict] = None,
+    solver_options: dict | None = None,
     **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
@@ -227,7 +227,7 @@ def _solve_least_core_linear_program(
     b_lb: NDArray[np.float_],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+) -> Tuple[NDArray[np.float_] | None, float | None]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -304,7 +304,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
     solver_options: dict,
-) -> Optional[NDArray[np.float_]]:
+) -> NDArray[np.float_] | None:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$
