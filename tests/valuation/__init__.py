@@ -3,8 +3,9 @@ from typing import Sequence
 import numpy as np
 from scipy.stats import spearmanr
 
-from pydvl.utils import Utility
-from pydvl.value import ValuationResult
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility import ModelUtility
 
 
 def polynomial(coefficients, x):
@@ -13,11 +14,11 @@ def polynomial(coefficients, x):
 
 
 def check_total_value(
-    u: Utility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
+    u: ModelUtility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
 ):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = u(u.data.indices)
+    total_utility = u(Sample(idx=None, subset=u.training_data.indices))
     # We can use relative tolerances if we don't have the range of the scorer.
     np.testing.assert_allclose(
         np.sum(values.values), total_utility, rtol=rtol, atol=atol
