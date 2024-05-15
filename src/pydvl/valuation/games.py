@@ -25,7 +25,7 @@ from numpy.typing import NDArray
 from pydvl.utils import Status
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.methods._least_core_solving import LeastCoreProblem
+from pydvl.valuation.methods._solve_least_core_problems import LeastCoreProblem
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.utility.base import UtilityBase
 

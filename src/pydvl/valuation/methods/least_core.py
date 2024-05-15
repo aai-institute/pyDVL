@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.methods._least_core_solving import (
+from pydvl.valuation.methods._solve_least_core_problems import (
     LeastCoreProblem,
     lc_solve_problem,
 )
