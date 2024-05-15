@@ -120,9 +120,11 @@ def test_naive_least_core(test_game, non_negative_subsidy):
     ],
     indirect=True,
 )
-def test_prepare_problem_for_exact_least_core(test_game):
+@pytest.mark.parametrize("batch_size", [1, 2])
+def test_prepare_problem_for_exact_least_core(test_game, batch_size):
     sampler = DeterministicUniformSampler(
         index_iteration=NoIndexIteration,
+        batch_size=batch_size,
     )
     utility = test_game.u.with_dataset(test_game.data)
     powerset_size = 2 ** len(utility.training_data)

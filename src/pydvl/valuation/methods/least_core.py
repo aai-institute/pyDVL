@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import math
 import warnings
 from itertools import islice
+from typing import Iterable, List
 
 import numpy as np
+from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
 from pydvl.valuation.base import Valuation
@@ -13,7 +16,10 @@ from pydvl.valuation.methods._solve_least_core_problems import (
     lc_solve_problem,
 )
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
+from pydvl.valuation.types import SampleT
 from pydvl.valuation.utility.base import UtilityBase
+
+BoolDType = np.bool_
 
 __all__ = ["LeastCoreValuation"]
 
@@ -115,25 +121,44 @@ def create_least_core_problem(
 
     """
     if u.training_data is not None:
-        n_obs = len(u.training_data)
+        n_indices = len(u.training_data.indices)
     else:
         raise ValueError("Utility object must have a training dataset.")
 
-    A_lb = np.zeros((n_samples, n_obs))
-    utility_values = np.zeros(n_samples)
+    batch_size = sampler.batch_size
+    n_batches = math.ceil(n_samples / batch_size)
 
-    generator = sampler.from_indices(u.training_data.indices)
-    for i, batch in enumerate(  # type: ignore
-        tqdm(
-            islice(generator, n_samples),
-            disable=not progress,
-            total=n_samples - 1,
-            position=0,
-        )
-    ):
-        sample = list(batch)[0]
-        A_lb[i, sample.subset.astype(int)] = 1
-        utility_values[i] = u(sample)
+    def _process(
+        batch: Iterable[SampleT],
+    ) -> tuple[List[NDArray[BoolDType]], List[float]]:
+        masks: List[NDArray[BoolDType]] = []
+        u_values: List[float] = []
+        for sample in batch:
+            m = np.full(n_indices, False)
+            m[sample.subset.astype(int)] = True
+            masks.append(m)
+            u_values.append(u(sample))
+
+        return masks, u_values
+
+    masks: List[NDArray[BoolDType]] = []
+    u_values: List[float] = []
+
+    generator = islice(sampler.from_indices(u.training_data.indices), n_batches)
+    generator_with_progress = tqdm(  # type: ignore
+        generator,
+        disable=not progress,
+        total=n_batches - 1,
+        position=0,
+    )
+
+    for batch in generator_with_progress:
+        m, v = _process(batch)
+        masks.extend(m)
+        u_values.extend(v)
+
+    utility_values = np.array(u_values)
+    A_lb = np.row_stack(masks).astype(float)
 
     return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
 
@@ -173,8 +198,6 @@ def _correct_n_samples(candidate: int | None, sampler_length: int | None) -> int
 
 def _check_sampler(sampler: PowersetSampler):
     """Check that the sampler is compatible with the Least Core valuation."""
-    if sampler.batch_size != 1:
-        raise ValueError("Least core valuation only supports batch_size=1 samplers.")
     if sampler._index_iteration != NoIndexIteration:
         raise ValueError(
             "Least core valuation only supports samplers with NoIndexIteration."
