@@ -119,6 +119,7 @@ class IndexSampler(ABC):
             return
 
         self._interrupted = False
+        self._n_samples = 0
         for batch in take_n(self._generate(indices), self.batch_size):
             yield batch
             # FIXME, BUG: this could be wrong if the batch is not full. Just use lists

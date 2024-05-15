@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import math
 import warnings
-from itertools import islice
+from itertools import islice, takewhile
 from typing import Iterable, List
 
 import numpy as np
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
@@ -141,10 +142,11 @@ def create_least_core_problem(
 
         return masks, u_values
 
-    masks: List[NDArray[BoolDType]] = []
-    u_values: List[float] = []
+    generator = takewhile(
+        lambda _: sampler.n_samples < n_samples,
+        sampler.from_indices(u.training_data.indices),
+    )
 
-    generator = islice(sampler.from_indices(u.training_data.indices), n_batches)
     generator_with_progress = tqdm(  # type: ignore
         generator,
         disable=not progress,
@@ -152,8 +154,12 @@ def create_least_core_problem(
         position=0,
     )
 
-    for batch in generator_with_progress:
-        m, v = _process(batch)
+    parallel = Parallel(return_as="generator")
+    results = parallel(delayed(_process)(batch) for batch in generator_with_progress)
+
+    masks: List[NDArray[BoolDType]] = []
+    u_values: List[float] = []
+    for m, v in results:
         masks.extend(m)
         u_values.extend(v)
 

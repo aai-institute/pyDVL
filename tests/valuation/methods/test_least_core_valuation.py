@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from joblib import parallel_config
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from pydvl.valuation.methods.least_core import (
@@ -120,8 +121,9 @@ def test_naive_least_core(test_game, non_negative_subsidy):
     ],
     indirect=True,
 )
-@pytest.mark.parametrize("batch_size", [1, 2])
-def test_prepare_problem_for_exact_least_core(test_game, batch_size):
+@pytest.mark.parametrize("batch_size", [1, 2, 3])
+@pytest.mark.parametrize("n_cores", [1, 3])
+def test_prepare_problem_for_exact_least_core(test_game, batch_size, n_cores):
     sampler = DeterministicUniformSampler(
         index_iteration=NoIndexIteration,
         batch_size=batch_size,
@@ -129,12 +131,13 @@ def test_prepare_problem_for_exact_least_core(test_game, batch_size):
     utility = test_game.u.with_dataset(test_game.data)
     powerset_size = 2 ** len(utility.training_data)
 
-    problem = create_least_core_problem(
-        u=utility,
-        sampler=sampler,
-        n_samples=powerset_size,
-        progress=False,
-    )
+    with parallel_config(n_jobs=n_cores):
+        problem = create_least_core_problem(
+            u=utility,
+            sampler=sampler,
+            n_samples=powerset_size,
+            progress=False,
+        )
 
     expected = test_game.least_core_problem()
     assert_array_almost_equal(problem.utility_values, expected.utility_values)
