@@ -1,20 +1,15 @@
 from __future__ import annotations
 
-import itertools
 import logging
 import warnings
+from functools import partial
 from typing import List, NamedTuple, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from pydvl.parallel import (
-    MapReduceJob,
-    ParallelBackend,
-    ParallelConfig,
-    _maybe_init_parallel_backend,
-)
 from pydvl.utils import Status
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import Sample
@@ -162,28 +157,16 @@ def lc_solve_problems(
     problems: Sequence[LeastCoreProblem],
     u: UtilityBase,
     algorithm: str,
-    parallel_backend: ParallelBackend | None = None,
-    config: ParallelConfig | None = None,
-    n_jobs: int = 1,
     non_negative_subsidy: bool = True,
     solver_options: dict | None = None,
-    **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
 
     Args:
-        u: Utility.
         problems: Least Core problems to solve, as returned by
             [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
+        u: Utility.
         algorithm: Name of the valuation algorithm.
-        parallel_backend: Parallel backend instance to use
-            for parallelizing computations. If `None`,
-            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
-            See the [Parallel Backends][pydvl.parallel.backends] package
-            for available options.
-        config: (**DEPRECATED**) Object configuring parallel computation,
-            with cluster address, number of cpus, etc.
-        n_jobs: Number of parallel jobs to run.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         solver_options: Additional options to pass to the solver.
@@ -192,32 +175,17 @@ def lc_solve_problems(
         List of solutions.
     """
 
-    def _map_func(
-        problems: List[LeastCoreProblem], *args, **kwargs
-    ) -> List[ValuationResult]:
-        return [lc_solve_problem(p, *args, **kwargs) for p in problems]
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
-
-    map_reduce_job: MapReduceJob[
-        "LeastCoreProblem", "List[ValuationResult]"
-    ] = MapReduceJob(
-        inputs=problems,
-        map_func=_map_func,
-        map_kwargs=dict(
-            u=u,
-            algorithm=algorithm,
-            non_negative_subsidy=non_negative_subsidy,
-            solver_options=solver_options,
-            **options,
-        ),
-        reduce_func=lambda x: list(itertools.chain(*x)),
-        parallel_backend=parallel_backend,
-        n_jobs=n_jobs,
+    _solve_func = partial(
+        lc_solve_problem,
+        u=u,
+        algorithm=algorithm,
+        non_negative_subsidy=non_negative_subsidy,
+        solver_options=solver_options,
     )
-    solutions = map_reduce_job()
 
-    return solutions
+    parallel = Parallel()
+    out: List[ValuationResult] = parallel(delayed(_solve_func)(p) for p in problems)
+    return out
 
 
 def _solve_least_core_linear_program(

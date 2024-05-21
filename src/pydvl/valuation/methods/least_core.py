@@ -81,10 +81,7 @@ class LeastCoreValuation(Valuation):
             sampler_length=self._sampler.length(data.indices),
         )
 
-        # ==============================================================================
-        # Things that should not exist
-        algorithm = "placeholder"
-        # ==============================================================================
+        algorithm = str(self._sampler)
 
         problem = create_least_core_problem(
             u=self._utility,

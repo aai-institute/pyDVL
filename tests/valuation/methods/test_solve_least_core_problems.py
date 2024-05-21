@@ -1,4 +1,5 @@
 import pytest
+from joblib import parallel_config
 
 from pydvl.utils import Status
 from pydvl.valuation.methods._solve_least_core_problems import (
@@ -14,19 +15,20 @@ from .. import check_values
     [("miner", {"n_players": 4})],
     indirect=True,
 )
-def test_lc_solve_problems(test_game, n_jobs, parallel_backend):
+@pytest.mark.parametrize("n_jobs", [1, 2, 3])
+def test_lc_solve_problems(test_game, n_jobs):
     """Test solving LeastCoreProblems in parallel."""
 
     test_game.u = test_game.u.with_dataset(test_game.data)
     n_problems = n_jobs
     problem = test_game.least_core_problem()
-    solutions = lc_solve_problems(
-        [problem] * n_problems,
-        test_game.u,
-        algorithm="test_lc",
-        n_jobs=n_jobs,
-        parallel_backend=parallel_backend,
-    )
+
+    with parallel_config(n_jobs=n_jobs):
+        solutions = lc_solve_problems(
+            [problem] * n_problems,
+            test_game.u,
+            algorithm="test_lc",
+        )
     assert len(solutions) == n_problems
 
     exact_values = test_game.least_core_values()
