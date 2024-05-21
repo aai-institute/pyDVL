@@ -41,7 +41,7 @@ from .operator.gradient_provider import (
     TorchPerSampleAutoGrad,
     TorchPerSampleGradientProvider,
 )
-from .operator.solve import InverseHarmonicMeanOperator, LowRankOperator
+from .operator.solve import InverseHarmonicMeanOperator
 from .pre_conditioner import PreConditioner
 from .util import (
     BlockMode,
@@ -1851,7 +1851,7 @@ class TorchComposableInfluence(
         block_structure: Union[
             BlockMode, OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]
         ] = BlockMode.FULL,
-        regularization: Optional[Union[float, Dict[str, float]]] = None,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
     ):
         if isinstance(block_structure, BlockMode):
             self.parameter_dict = ModelParameterDictBuilder(model).build(
@@ -1865,20 +1865,12 @@ class TorchComposableInfluence(
         super().__init__(model)
 
     @property
-    def regularization(self) -> Dict[str, float]:
-        return self._regularization_dict
-
-    @regularization.setter
-    def regularization(self, value: Union[float, Dict[str, float]]):
-        self._regularization_dict = self._build_regularization_dict(value)
-
-    @property
     def block_names(self) -> List[str]:
         return list(self.parameter_dict.keys())
 
     @abstractmethod
     def with_regularization(
-        self, regularization: Union[float, Dict[str, float]]
+        self, regularization: Union[float, Dict[str, Optional[float]]]
     ) -> TorchComposableInfluence:
         pass
 
@@ -1948,7 +1940,7 @@ class InverseHarmonicMeanInfluence(TorchComposableInfluence):
         self,
         model: torch.nn.Module,
         loss: LossType,
-        regularization: Union[float, Dict[str, float]],
+        regularization: Union[float, Dict[str, Optional[float]]],
         block_structure: Union[
             BlockMode, OrderedDict[str, OrderedDict[str, torch.Tensor]]
         ] = BlockMode.FULL,
@@ -1974,6 +1966,7 @@ class InverseHarmonicMeanInfluence(TorchComposableInfluence):
         data: DataLoader,
         regularization: Optional[float],
     ) -> TorchOperatorGradientComposition:
+        assert regularization is not None
         op = InverseHarmonicMeanOperator(
             self.model,
             self.loss,
@@ -1988,7 +1981,7 @@ class InverseHarmonicMeanInfluence(TorchComposableInfluence):
         return TorchOperatorGradientComposition(op, gp)
 
     def with_regularization(
-        self, regularization: Union[float, Dict[str, float]]
+        self, regularization: Union[float, Dict[str, Optional[float]]]
     ) -> TorchComposableInfluence:
         self._regularization_dict = self._build_regularization_dict(regularization)
         for k, reg in self._regularization_dict.items():
