@@ -1,24 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Callable, Optional
+from typing import Callable, Dict, Optional
 
 import torch
 from torch.func import functional_call
 
+from ...types import PerSampleGradientProvider
 from ..functional import (
+    create_matrix_jacobian_product_function,
     create_per_sample_gradient_function,
     create_per_sample_mixed_derivative_function,
-    create_matrix_jacobian_product_function,
 )
-
 from ..util import (
-    flatten_dimensions,
-    LossType,
-    TorchBatch,
-    ModelParameterDictBuilder,
     BlockMode,
+    LossType,
+    ModelParameterDictBuilder,
+    TorchBatch,
+    flatten_dimensions,
 )
-
-from ...types import PerSampleGradientProvider
 
 
 class TorchPerSampleGradientProvider(
