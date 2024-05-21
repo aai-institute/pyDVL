@@ -598,3 +598,22 @@ class TorchLinalgEighException(Exception):
             f" Inspect the original exception message: \n{str(original_exception)}"
         )
         super().__init__(err_msg)
+class ModelInfoMixin:
+    """
+    A mixin class for classes that contain information about a model.
+    """
+
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.parameters()).device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return next(self.model.parameters()).dtype
+
+    @property
+    def n_parameters(self) -> int:
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
