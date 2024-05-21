@@ -1,18 +1,19 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from collections import OrderedDict
 from typing import (
-    TypeVar,
-    Iterable,
-    Generic,
-    Optional,
-    Generator,
-    Union,
     Collection,
-    cast,
     Dict,
+    Generator,
+    Generic,
+    Iterable,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
 )
 
 
