@@ -32,6 +32,7 @@ from ..array import (
     NumpyConverter,
     SequenceAggregator,
 )
+from ..types import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ __all__ = [
     "torch_dataset_to_dask_array",
     "EkfacRepresentation",
     "empirical_cross_entropy_loss_fn",
+    "TorchBatch",
 ]
 
 
@@ -598,6 +600,34 @@ class TorchLinalgEighException(Exception):
             f" Inspect the original exception message: \n{str(original_exception)}"
         )
         super().__init__(err_msg)
+@dataclass(frozen=True)
+class TorchBatch(Batch):
+    """
+    A convenience class for handling batches of data. Validates, the alignment
+    of the first dimension (batch dimension) of the input and target tensor
+
+    Attributes:
+        x: The input tensor that contains features or data points.
+        y: The target tensor that contains labels corresponding to the inputs.
+
+    """
+
+    x: torch.Tensor
+    y: torch.Tensor
+
+    def __post_init__(self):
+        if self.x.shape[0] != self.y.shape[0]:
+            raise ValueError(
+                f"The first dimension of x and y must be the same, "
+                f"got {self.x.shape[0]} and {self.y.shape[0]}"
+            )
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def to(self, device: torch.device):
+        return TorchBatch(self.x.to(device), self.y.to(device))
+
 class ModelInfoMixin:
     """
     A mixin class for classes that contain information about a model.
