@@ -1,9 +1,12 @@
-import pytest
-import torch
 from dataclasses import astuple
 
-from pydvl.influence.torch.operator.batch_operation import (HessianBatchOperation,
-                                                            GaussNewtonBatchOperation)
+import pytest
+import torch
+
+from pydvl.influence.torch.operator.batch_operation import (
+    GaussNewtonBatchOperation,
+    HessianBatchOperation,
+)
 from pydvl.influence.torch.util import TorchBatch
 
 from ..test_util import model_data, test_parameters
@@ -20,8 +23,9 @@ def test_hessian_batch_operation(model_data, tol: float):
 
     params = dict(torch_model.named_parameters())
 
-    hessian_op = HessianBatchOperation(torch_model, torch.nn.functional.mse_loss,
-                                       restrict_to=params)
+    hessian_op = HessianBatchOperation(
+        torch_model, torch.nn.functional.mse_loss, restrict_to=params
+    )
     hvp_autograd = hessian_op.apply_to_vec(TorchBatch(x, y), vec)
 
     assert torch.allclose(hvp_autograd, h_analytical @ vec, rtol=tol)
@@ -44,13 +48,17 @@ def test_gauss_newton_batch_operation(model_data, tol: float):
     dl_db = torch.vmap(lambda s, t: 2 / float(out_features) * (s - t))(y_pred, y)
     grad_analytical = torch.cat([dl_dw.reshape(x.shape[0], -1), dl_db], dim=-1)
     gn_mat_analytical = torch.sum(
-        torch.func.vmap(lambda t: t.unsqueeze(-1) * t.unsqueeze(-1).t())
-        (grad_analytical), dim=0)
+        torch.func.vmap(lambda t: t.unsqueeze(-1) * t.unsqueeze(-1).t())(
+            grad_analytical
+        ),
+        dim=0,
+    )
 
     params = dict(torch_model.named_parameters())
 
-    gn_op = GaussNewtonBatchOperation(torch_model, torch.nn.functional.mse_loss,
-                                      restrict_to=params)
+    gn_op = GaussNewtonBatchOperation(
+        torch_model, torch.nn.functional.mse_loss, restrict_to=params
+    )
     gn_autograd = gn_op.apply_to_vec(TorchBatch(x, y), vec)
 
     gn_analytical = gn_mat_analytical @ vec

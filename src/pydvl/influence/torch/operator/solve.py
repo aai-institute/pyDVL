@@ -1,14 +1,16 @@
-from typing import Callable, Union, Type, Optional, Dict
+from typing import Callable, Dict, Optional, Type, Union
+
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
+
 from ..util import TorchPointAverageAggregator
-from .base import TorchOperator, AggregateBatchOperator
+from .base import AggregateBatchOperator, TorchOperator
 from .batch_operation import InverseHarmonicMeanBatchOperation
 from .gradient_provider import (
     GradientProviderFactoryType,
-    TorchPerSampleGradientProvider,
     TorchPerSampleAutoGrad,
+    TorchPerSampleGradientProvider,
 )
 
 __all__ = ["InverseHarmonicMeanOperator"]
@@ -36,4 +38,3 @@ class InverseHarmonicMeanOperator(AggregateBatchOperator):
         )
         aggregator = TorchPointAverageAggregator(weighted=False)
         super().__init__(batch_op, dataloader, aggregator)
-

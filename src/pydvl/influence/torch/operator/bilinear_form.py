@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING, Optional, cast
+
 import torch
 
-from .gradient_provider import TorchPerSampleGradientProvider
-from ..util import TorchBatch
 from ...types import BilinearForm
+from ..util import TorchBatch
+from .gradient_provider import TorchPerSampleGradientProvider
 
 if TYPE_CHECKING:
     from .base import TorchOperator
+
 
 class OperatorBilinearForm(
     BilinearForm[torch.Tensor, TorchBatch, TorchPerSampleGradientProvider]
@@ -33,4 +35,3 @@ class OperatorBilinearForm(
             return left_result @ right.T
 
         return torch.einsum("ia,j...a->ij...", left_result, right)
-

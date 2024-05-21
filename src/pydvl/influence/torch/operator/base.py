@@ -1,27 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Union, Type, Optional, Dict
+from typing import Callable, Dict, Generator, Optional, Type, Union
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ...array import SequenceAggregator, LazyChunkSequence
-from ..util import TorchPointAverageAggregator, TorchChunkAverageAggregator, TorchBatch
-
+from ...array import LazyChunkSequence, SequenceAggregator
+from ...types import Operator
+from ..util import TorchBatch, TorchChunkAverageAggregator, TorchPointAverageAggregator
 from .batch_operation import (
     BatchOperation,
     GaussNewtonBatchOperation,
     HessianBatchOperation,
 )
-
 from .bilinear_form import OperatorBilinearForm
 from .gradient_provider import (
-    TorchPerSampleGradientProvider,
     GradientProviderFactoryType,
     TorchPerSampleAutoGrad,
+    TorchPerSampleGradientProvider,
 )
-
-from ...types import Operator
 
 
 class TorchOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):

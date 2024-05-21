@@ -1,20 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Dict, Union, Type
+from typing import Callable, Dict, Optional, Type, Union
 
 import torch
 
 from ..functional import create_batch_hvp_function
-from ..util import (
-    inverse_rank_one_update,
-    rank_one_mvp,
-    LossType,
-    TorchBatch,
-)
-
+from ..util import LossType, TorchBatch, inverse_rank_one_update, rank_one_mvp
 from .gradient_provider import (
-    TorchPerSampleGradientProvider,
-    TorchPerSampleAutoGrad,
     GradientProviderFactoryType,
+    TorchPerSampleAutoGrad,
+    TorchPerSampleGradientProvider,
 )
 
 
