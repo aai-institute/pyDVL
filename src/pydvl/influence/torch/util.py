@@ -627,6 +627,36 @@ class TorchLinalgEighException(Exception):
             f" Inspect the original exception message: \n{str(original_exception)}"
         )
         super().__init__(err_msg)
+
+
+def rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+    r"""
+    Computes the matrix-vector product of xx^T and v for each row in X and V without
+    forming xx^T and sums the result. Here, X and V are matrices where each row
+    represents an individual vector. Effectively it is computing
+
+    $$ V@(\sum_i^N x[i]x[i]^T) $$
+
+    Args:
+        x: Matrix of vectors of size `(N, M)`.
+        v: Matrix of vectors of size `(B, M)` to be multiplied by the corresponding
+            $xx^T$.
+
+    Returns:
+        A matrix of size `(B, N)` where each column is the result of xx^T v for
+            corresponding rows in x and v.
+    """
+    return torch.einsum("ij,kj->ki", x, v) @ x
+
+
+def inverse_rank_one_update(
+    x: torch.Tensor, v: torch.Tensor, regularization: float
+) -> torch.Tensor:
+    nominator = torch.einsum("ij,kj->ki", x, v)
+    denominator = x.shape[0] * (regularization + torch.sum(x**2, dim=1))
+    return (v - (nominator / denominator) @ x) / regularization
+
+
 @dataclass(frozen=True)
 class TorchBatch(Batch):
     """
