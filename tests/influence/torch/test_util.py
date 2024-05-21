@@ -17,10 +17,14 @@ from pydvl.influence.torch.functional import (
     lanzcos_low_rank_hessian_approx,
 )
 from pydvl.influence.torch.util import (
+    BlockMode,
+    ModelParameterDictBuilder,
     TorchLinalgEighException,
     TorchTensorContainerType,
     align_structure,
     flatten_dimensions,
+    inverse_rank_one_update,
+    rank_one_mvp,
     safe_torch_linalg_eigh,
     torch_dataset_to_dask_array,
 )
@@ -318,3 +322,86 @@ def test_safe_torch_linalg_eigh():
 def test_safe_torch_linalg_eigh_exception():
     with pytest.raises(TorchLinalgEighException):
         safe_torch_linalg_eigh(torch.randn([53000, 53000]))
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_0, x_dim_1, v_dim_0",
+    [(10, 1, 12), (3, 2, 5), (4, 5, 30), (6, 6, 6), (1, 7, 7)],
+)
+def test_rank_one_mvp(x_dim_0, x_dim_1, v_dim_0):
+    X = torch.randn(x_dim_0, x_dim_1)
+    V = torch.randn(v_dim_0, x_dim_1)
+
+    expected = (
+        (torch.vmap(lambda x: x.unsqueeze(-1) * x.unsqueeze(-1).t())(X) @ V.t())
+        .sum(dim=0)
+        .t()
+    )
+
+    result = rank_one_mvp(X, V)
+
+    assert result.shape == V.shape
+    assert torch.allclose(result, expected, atol=1e-5, rtol=1e-4)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_0, x_dim_1, v_dim_0",
+    [(10, 1, 12), (3, 2, 5), (4, 5, 10), (6, 6, 6), (1, 7, 7)],
+)
+@pytest.mark.parametrize("reg", [0.1, 100, 1.0, 10])
+def test_inverse_rank_one_update(x_dim_0, x_dim_1, v_dim_0, reg):
+    X = torch.randn(x_dim_0, x_dim_1)
+    V = torch.randn(v_dim_0, x_dim_1)
+
+    inverse_result = torch.zeros_like(V)
+
+    for x in X:
+        rank_one_matrix = x.unsqueeze(-1) * x.unsqueeze(-1).t()
+        inverse_result += torch.linalg.solve(
+            rank_one_matrix + reg * torch.eye(rank_one_matrix.shape[0]), V, left=False
+        )
+
+    inverse_result /= X.shape[0]
+    result = inverse_rank_one_update(X, V, reg)
+
+    assert torch.allclose(result, inverse_result, atol=1e-5)
+
+
+class TestModelParameterDictBuilder:
+    class SimpleModel(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.fc1 = torch.nn.Linear(5, 10)
+            self.fc2 = torch.nn.Linear(10, 5)
+            self.fc1.weight.requires_grad = False
+
+    @pytest.fixture
+    def model(self):
+        return TestModelParameterDictBuilder.SimpleModel()
+
+    @pytest.mark.parametrize("block_mode", [mode for mode in BlockMode])
+    def test_build(self, block_mode, model):
+        builder = ModelParameterDictBuilder(
+            model=model,
+            detach=True,
+        )
+        param_dict = builder.build(block_mode)
+
+        if block_mode is BlockMode.FULL:
+            assert "" in param_dict
+            assert "fc1.weight" not in param_dict[""]
+        elif block_mode is BlockMode.PARAMETER_WISE:
+            assert "fc2.bias" in param_dict
+            assert len(param_dict["fc2.bias"]) > 0
+            assert "fc1.weight" not in param_dict
+        elif block_mode is BlockMode.LAYER_WISE:
+            assert "fc2" in param_dict
+            assert "fc2.bias" in param_dict["fc2"]
+            assert "fc1.weight" not in param_dict["fc1"]
+            assert "fc1.bias" in param_dict["fc1"]
+
+        assert all(
+            (not p.requires_grad for q in param_dict.values() for p in q.values())
+        )

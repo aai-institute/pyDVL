@@ -658,6 +658,9 @@ def rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
         A matrix of size `(B, N)` where each column is the result of xx^T v for
             corresponding rows in x and v.
     """
+    if v.ndim == 1:
+        result = torch.einsum("ij,kj->ki", x, v.unsqueeze(0)) @ x
+        return result.squeeze()
     return torch.einsum("ij,kj->ki", x, v) @ x
 
 
