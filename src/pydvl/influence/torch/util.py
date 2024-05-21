@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import logging
 import math
+from collections import OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import (
+    Callable,
     Collection,
     Dict,
     Iterable,
@@ -48,7 +53,14 @@ __all__ = [
     "torch_dataset_to_dask_array",
     "EkfacRepresentation",
     "empirical_cross_entropy_loss_fn",
+    "rank_one_mvp",
+    "inverse_rank_one_update",
+    "TorchPointAverageAggregator",
+    "TorchChunkAverageAggregator",
     "TorchBatch",
+    "LossType",
+    "ModelParameterDictBuilder",
+    "BlockMode",
 ]
 
 
@@ -657,6 +669,9 @@ def inverse_rank_one_update(
     return (v - (nominator / denominator) @ x) / regularization
 
 
+LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+
+
 @dataclass(frozen=True)
 class TorchBatch(Batch):
     """
@@ -684,6 +699,54 @@ class TorchBatch(Batch):
 
     def to(self, device: torch.device):
         return TorchBatch(self.x.to(device), self.y.to(device))
+
+
+class BlockMode(Enum):
+    LAYER_WISE: str = "layer_wise"
+    PARAMETER_WISE: str = "parameter_wise"
+    FULL: str = "full"
+
+
+@dataclass
+class ModelParameterDictBuilder:
+    model: torch.nn.Module
+    detach: bool = True
+
+    def _optional_detach(self, p: torch.nn.Parameter):
+        if self.detach:
+            return p.detach()
+        return p
+
+    def build(
+        self, block_mode: BlockMode
+    ) -> OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]:
+        parameter_dict = OrderedDict()
+
+        if block_mode is BlockMode.FULL:
+            inner_ordered_dict = OrderedDict()
+            for k, v in self.model.named_parameters():
+                if v.requires_grad:
+                    inner_ordered_dict[k] = self._optional_detach(v)
+            parameter_dict[""] = inner_ordered_dict
+
+        elif block_mode is BlockMode.PARAMETER_WISE:
+            for k, v in self.model.named_parameters():
+                if v.requires_grad:
+                    parameter_dict[k] = OrderedDict({k: self._optional_detach(v)})
+
+        if block_mode is BlockMode.LAYER_WISE:
+            for name, submodule in self.model.named_children():
+                inner_ordered_dict = OrderedDict()
+                for param_name, param in submodule.named_parameters():
+                    if param.requires_grad:
+                        inner_ordered_dict[
+                            f"{name}.{param_name}"
+                        ] = self._optional_detach(param)
+                if inner_ordered_dict:
+                    parameter_dict[name] = inner_ordered_dict
+
+        return parameter_dict
+
 
 class ModelInfoMixin:
     """
