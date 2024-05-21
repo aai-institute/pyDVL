@@ -438,6 +438,33 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
         return torch.cat(list(t_gen))
 
 
+class TorchChunkAverageAggregator(SequenceAggregator[torch.Tensor]):
+    def __call__(self, tensor_sequence: LazyChunkSequence):
+        t_gen = tensor_sequence.generator_factory()
+        result = next(t_gen)
+        n_chunks = 1
+        for t in t_gen:
+            result += t
+            n_chunks += 1
+        return result / n_chunks
+
+
+class TorchPointAverageAggregator(SequenceAggregator[torch.Tensor]):
+    def __init__(self, batch_dim: int = 0, weighted: bool = True):
+        self.weighted = weighted
+        self.batch_dim = batch_dim
+
+    def __call__(self, tensor_sequence: LazyChunkSequence):
+        tensor_generator = tensor_sequence.generator_factory()
+        result = next(tensor_generator)
+        n_points = result.shape[self.batch_dim]
+        for tensor in tensor_generator:
+            n_points_in_batch = tensor.shape[self.batch_dim]
+            result += n_points_in_batch * tensor if self.weighted else tensor
+            n_points += n_points_in_batch
+        return result / n_points
+
+
 class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
     """
     An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat]
