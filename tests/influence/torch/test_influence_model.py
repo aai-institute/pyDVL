@@ -4,6 +4,7 @@ from typing import Callable, NamedTuple, Tuple
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+from scipy.stats import pearsonr, spearmanr
 
 from pydvl.influence.base_influence_function_model import (
     NotFittedException,
@@ -14,6 +15,7 @@ from pydvl.influence.torch.influence_function_model import (
     CgInfluence,
     DirectInfluence,
     EkfacInfluence,
+    InverseHarmonicMeanInfluence,
     LissaInfluence,
     NystroemSketchInfluence,
 )
@@ -22,6 +24,7 @@ from pydvl.influence.torch.pre_conditioner import (
     NystroemPreConditioner,
     PreConditioner,
 )
+from pydvl.influence.torch.util import BlockMode
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
@@ -754,3 +757,55 @@ def test_influences_cg(
             .numpy()
         )
         assert np.allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
+
+
+composable_influence_factories = [InverseHarmonicMeanInfluence]
+
+
+@pytest.mark.parametrize("composable_influence_factory", composable_influence_factories)
+@pytest.mark.parametrize("block_mode", [mode for mode in BlockMode])
+@pytest.mark.torch
+def test_composable_influence(
+    test_case: TestCase,
+    model_and_data: Tuple[
+        torch.nn.Module,
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ],
+    direct_influences,
+    direct_sym_influences,
+    device: torch.device,
+    block_mode,
+    composable_influence_factory,
+):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+
+    harmonic_mean_influence = composable_influence_factory(
+        model, loss, test_case.hessian_reg, block_structure=block_mode
+    ).to(device)
+    harmonic_mean_influence = harmonic_mean_influence.fit(train_dataloader)
+    harmonic_mean_influence_values = (
+        harmonic_mean_influence.influences(
+            x_test, y_test, x_train, y_train, mode=test_case.mode
+        )
+        .cpu()
+        .numpy()
+    )
+
+    threshold = 0.999
+    flat_direct_influences = direct_influences.reshape(-1)
+    flat_harmonic_influences = harmonic_mean_influence_values.reshape(-1)
+    assert np.all(
+        pearsonr(flat_direct_influences, flat_harmonic_influences).statistic > threshold
+    )
+    assert np.all(
+        spearmanr(flat_direct_influences, flat_harmonic_influences).statistic
+        > threshold
+    )

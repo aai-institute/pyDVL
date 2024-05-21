@@ -8,21 +8,23 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Tuple
+from collections import OrderedDict
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from pydvl.utils.progress import log_duration
-
+from ...utils.progress import log_duration
+from .. import InfluenceMode
 from ..base_influence_function_model import (
+    ComposableInfluence,
     InfluenceFunctionModel,
-    InfluenceMode,
     NotImplementedLayerRepresentationException,
     UnsupportedInfluenceModeException,
 )
+from ..types import BlockMapper, OperatorGradientComposition
 from .functional import (
     LowRankProductRepresentation,
     create_batch_hvp_function,
@@ -34,9 +36,20 @@ from .functional import (
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
 )
+from .operator.base import TorchOperator
+from .operator.gradient_provider import (
+    TorchPerSampleAutoGrad,
+    TorchPerSampleGradientProvider,
+)
+from .operator.solve import InverseHarmonicMeanOperator, LowRankOperator
 from .pre_conditioner import PreConditioner
 from .util import (
+    BlockMode,
     EkfacRepresentation,
+    LossType,
+    ModelInfoMixin,
+    ModelParameterDictBuilder,
+    TorchBatch,
     empirical_cross_entropy_loss_fn,
     flatten_dimensions,
     safe_torch_linalg_eigh,
@@ -986,6 +999,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             Set this to False, if you can't afford to keep the full computation graph
             in memory.
     """
+
     low_rank_representation: LowRankProductRepresentation
 
     def __init__(
@@ -1790,4 +1804,193 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
         self.low_rank_representation = model_hessian_nystroem_approximation(
             self.model, self.loss, data, self.rank
         )
+        return self
+
+
+class TorchOperatorGradientComposition(
+    OperatorGradientComposition[
+        torch.Tensor, TorchBatch, TorchOperator, TorchPerSampleGradientProvider
+    ]
+):
+    def to(self, device: torch.device):
+        self.gp = self.gp.to(device)
+        self.op = self.op.to(device)
+        return self
+
+
+class TorchBlockMapper(
+    BlockMapper[torch.Tensor, TorchBatch, TorchOperatorGradientComposition]
+):
+    def _split_to_blocks(
+        self, z: torch.Tensor, dim: int = -1
+    ) -> OrderedDict[str, torch.Tensor]:
+        block_sizes = [bi.op.input_size for bi in self.composable_block_dict.values()]
+
+        block_dict = OrderedDict(
+            zip(
+                list(self.composable_block_dict.keys()),
+                torch.split(z, block_sizes, dim=dim),
+            )
+        )
+        return block_dict
+
+    def to(self, device: torch.device):
+        self.composable_block_dict = OrderedDict(
+            [(k, bi.to(device)) for k, bi in self.composable_block_dict.items()]
+        )
+        return self
+
+
+class TorchComposableInfluence(
+    ComposableInfluence[torch.Tensor, TorchBatch, DataLoader, TorchBlockMapper],
+    ModelInfoMixin,
+):
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        block_structure: Union[
+            BlockMode, OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]
+        ] = BlockMode.FULL,
+        regularization: Optional[Union[float, Dict[str, float]]] = None,
+    ):
+        if isinstance(block_structure, BlockMode):
+            self.parameter_dict = ModelParameterDictBuilder(model).build(
+                block_structure
+            )
+        else:
+            self.parameter_dict = block_structure
+
+        self._regularization_dict = self._build_regularization_dict(regularization)
+
+        super().__init__(model)
+
+    @property
+    def regularization(self) -> Dict[str, float]:
+        return self._regularization_dict
+
+    @regularization.setter
+    def regularization(self, value: Union[float, Dict[str, float]]):
+        self._regularization_dict = self._build_regularization_dict(value)
+
+    @property
+    def block_names(self) -> List[str]:
+        return list(self.parameter_dict.keys())
+
+    @abstractmethod
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, float]]
+    ) -> TorchComposableInfluence:
+        pass
+
+    def _build_regularization_dict(
+        self, regularization: Optional[Union[float, Dict[str, Optional[float]]]]
+    ) -> Dict[str, Optional[float]]:
+        if regularization is None or isinstance(regularization, float):
+            return {
+                k: self._validate_regularization(k, regularization)
+                for k in self.block_names
+            }
+
+        if set(regularization.keys()).issubset(set(self.block_names)):
+            raise ValueError(
+                f"The regularization must be a float or the keys of the regularization"
+                f"dictionary must match a subset of"
+                f"block names: \n {self.block_names}.\n Found not in block names: \n"
+                f"{set(regularization.keys()).difference(set(self.block_names))}"
+            )
+        return {
+            k: self._validate_regularization(k, regularization.get(k, None))
+            for k in self.block_names
+        }
+
+    @staticmethod
+    def _validate_regularization(
+        block_name: str, value: Optional[float]
+    ) -> Optional[float]:
+        if isinstance(value, float) and value < 0.0:
+            raise ValueError(
+                f"The regularization for block '{block_name}' must be non-negative, "
+                f"but found {value=}"
+            )
+        return value
+
+    @abstractmethod
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        pass
+
+    def _create_block_mapper(self, data: DataLoader) -> TorchBlockMapper:
+        block_influence_dict = OrderedDict()
+        for k, p in self.parameter_dict.items():
+            reg = self._regularization_dict.get(k, None)
+            reg = self._validate_regularization(k, reg)
+            block_influence_dict[k] = self._create_block(p, data, reg).to(self.device)
+
+        return TorchBlockMapper(block_influence_dict)
+
+    @staticmethod
+    def _create_batch(x: torch.Tensor, y: torch.Tensor) -> TorchBatch:
+        return TorchBatch(x, y)
+
+    def to(self, device: torch.device):
+        self.model = self.model.to(device)
+        if hasattr(self, "block_mapper") and self.block_mapper is not None:
+            self.block_mapper = self.block_mapper.to(device)
+        return self
+
+
+class InverseHarmonicMeanInfluence(TorchComposableInfluence):
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        loss: LossType,
+        regularization: Union[float, Dict[str, float]],
+        block_structure: Union[
+            BlockMode, OrderedDict[str, OrderedDict[str, torch.Tensor]]
+        ] = BlockMode.FULL,
+    ):
+        super().__init__(model, block_structure, regularization=regularization)
+        self.gradient_provider_factory = TorchPerSampleAutoGrad
+        self.loss = loss
+
+    @staticmethod
+    def _validate_regularization(
+        block_name: str, value: Optional[float]
+    ) -> Optional[float]:
+        if value is None or value <= 0.0:
+            raise ValueError(
+                f"The regularization for block '{block_name}' must be a positive float,"
+                f"but found {value=}"
+            )
+        return value
+
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        op = InverseHarmonicMeanOperator(
+            self.model,
+            self.loss,
+            data,
+            regularization,
+            self.gradient_provider_factory,
+            restrict_to=block_params,
+        )
+        gp = self.gradient_provider_factory(
+            self.model, self.loss, restrict_to=block_params
+        )
+        return TorchOperatorGradientComposition(op, gp)
+
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, float]]
+    ) -> TorchComposableInfluence:
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self
