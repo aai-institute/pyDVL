@@ -632,6 +632,10 @@ class LowRankProductRepresentation:
             else torch.device("cpu")
         )
 
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.projections.dtype
+
     def to(self, device: torch.device):
         """
         Move the representing tensors to a device
