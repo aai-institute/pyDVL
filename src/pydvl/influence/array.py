@@ -28,7 +28,7 @@ from tqdm import tqdm
 from zarr.storage import StoreLike
 
 from ..utils import log_duration
-from .base_influence_function_model import TensorType
+from .types import TensorType
 
 
 class NumpyConverter(Generic[TensorType], ABC):
@@ -400,3 +400,23 @@ class NestedLazyChunkSequence(Generic[TensorType]):
             chunks=chunk_size,
             dtype=block.dtype,
         )
+
+
+class SumAggregator(SequenceAggregator):
+    def __call__(self, tensor_sequence: LazyChunkSequence):
+        """
+        Aggregates tensors from a single-level generator by summing up. This method simply
+        collects each tensor emitted by the generator into a single list.
+
+        Args:
+            tensor_sequence: Object wrapping a generator that yields `TensorType`
+                objects.
+
+        Returns:
+            A single tensor representing the sum of all tensors from the generator.
+        """
+        tensor_generator = tensor_sequence.generator_factory()
+        result = next(tensor_generator)
+        for tensor in tensor_generator:
+            result += tensor
+        return result

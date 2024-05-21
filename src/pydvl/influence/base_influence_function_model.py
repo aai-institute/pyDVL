@@ -1,26 +1,14 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
+from collections import OrderedDict
+from functools import partial, wraps
+from typing import Generic, Optional, Type
 
-__all__ = ["InfluenceMode"]
-
-
-class InfluenceMode(str, Enum):
-    """
-    Enum representation for the types of influence.
-
-    Attributes:
-        Up: [Approximating the influence of a point]
-            [approximating-the-influence-of-a-point]
-        Perturbation: [Perturbation definition of the influence score]
-            [perturbation-definition-of-the-influence-score]
-
-    """
-
-    Up = "up"
-    Perturbation = "perturbation"
+from ..utils.progress import log_duration
+from .array import LazyChunkSequence, SumAggregator
+from .types import BatchType, BlockMapperType, DataLoaderType, InfluenceMode, TensorType
 
 
 class UnsupportedInfluenceModeException(ValueError):
@@ -44,11 +32,6 @@ class NotImplementedLayerRepresentationException(ValueError):
     def __init__(self, module_id: str):
         message = f"Only Linear layers are supported, but found module {module_id} requiring grad."
         super().__init__(message)
-
-
-"""Type variable for tensors, i.e. sequences of numbers"""
-TensorType = TypeVar("TensorType", bound=Collection)
-DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 
 class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
@@ -86,6 +69,18 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
             The fitted instance
         """
 
+    @staticmethod
+    def fit_required(method):
+        """Decorator to enforce the fitted check"""
+
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if not self.is_fitted:
+                raise NotFittedException(type(self))
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
     def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         if not self.is_fitted:
             raise NotFittedException(type(self))
@@ -119,6 +114,19 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     ) -> TensorType:
         if not self.is_fitted:
             raise NotFittedException(type(self))
+
+        if x is None and y is not None:
+            raise ValueError(
+                "Providing labels y, without providing model input x "
+                "is not supported"
+            )
+
+        if x is not None and y is None:
+            raise ValueError(
+                "Providing model input x, without providing labels y "
+                "is not supported"
+            )
+
         return self._influences(x_test, y_test, x, y, mode)
 
     @abstractmethod
@@ -199,3 +207,144 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
             Tensor representing the element-wise scalar products for the provided batch
 
         """
+
+
+class ComposableInfluence(
+    InfluenceFunctionModel,
+    Generic[TensorType, BatchType, DataLoaderType, BlockMapperType],
+    ABC,
+):
+
+    block_mapper: BlockMapperType
+
+    @property
+    def n_parameters(self):
+        return super().n_parameters()
+
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
+
+    @property
+    def is_fitted(self):
+        try:
+            return self.block_mapper is not None
+        except AttributeError:
+            return False
+
+    @log_duration(log_level=logging.INFO)
+    def fit(self, data: DataLoaderType) -> InfluenceFunctionModel:
+        self.block_mapper = self._create_block_mapper(data)
+        return self
+
+    @abstractmethod
+    def _create_block_mapper(self, data: DataLoaderType) -> BlockMapperType:
+        pass
+
+    @InfluenceFunctionModel.fit_required
+    def influences_by_block(
+        self,
+        x_test: TensorType,
+        y_test: TensorType,
+        x: Optional[TensorType] = None,
+        y: Optional[TensorType] = None,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> OrderedDict[str, TensorType]:
+        left_batch = self._create_batch(x_test, y_test)
+
+        if x is None:
+            if y is not None:
+                raise ValueError(
+                    "Providing labels y, without providing model input x "
+                    "is not supported"
+                )
+            right_batch = left_batch
+        else:
+            if y is None:
+                raise ValueError(
+                    "Providing model input x, without providing labels y "
+                    "is not supported"
+                )
+            right_batch = self._create_batch(x, y)
+
+        return self.block_mapper.block_interactions(left_batch, right_batch, mode)
+
+    @InfluenceFunctionModel.fit_required
+    def influence_factors_by_block(
+        self, x: TensorType, y: TensorType
+    ) -> OrderedDict[str, TensorType]:
+        return self.block_mapper.block_transformed_gradients(self._create_batch(x, y))
+
+    @InfluenceFunctionModel.fit_required
+    def influences_from_factors_by_block(
+        self,
+        z_test_factors: OrderedDict[str, TensorType],
+        x: TensorType,
+        y: TensorType,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> OrderedDict[str, TensorType]:
+        return self.block_mapper.block_interactions_from_transformed_gradients(
+            z_test_factors, self._create_batch(x, y), mode
+        )
+
+    def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
+        tensor_gen_factory = partial(
+            self.block_mapper.generate_transformed_gradients, self._create_batch(x, y)
+        )
+        aggregator = SumAggregator()
+        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
+        return result
+
+    def _influences(
+        self,
+        x_test: TensorType,
+        y_test: TensorType,
+        x: Optional[TensorType] = None,
+        y: Optional[TensorType] = None,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> TensorType:
+        left_batch = self._create_batch(x_test, y_test)
+
+        if x is None:
+            right_batch = left_batch
+        elif y is None:
+            raise ValueError(
+                "Providing model input x, without providing labels y "
+                "is not supported"
+            )
+        else:
+            right_batch = self._create_batch(x, y)
+
+        tensor_gen_factory = partial(
+            self.block_mapper.generate_gradient_interactions,
+            left_batch,
+            right_batch,
+            mode,
+        )
+        aggregator = SumAggregator()
+        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
+        return result
+
+    @InfluenceFunctionModel.fit_required
+    def influences_from_factors(
+        self,
+        z_test_factors: TensorType,
+        x: TensorType,
+        y: TensorType,
+        mode: InfluenceMode = InfluenceMode.Up,
+    ) -> TensorType:
+        tensor_gen_factory = partial(
+            self.block_mapper.generate_interactions_from_transformed_gradients,
+            z_test_factors,
+            self._create_batch(x, y),
+            mode,
+        )
+
+        aggregator = SumAggregator()
+        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
+        return result
+
+    @staticmethod
+    @abstractmethod
+    def _create_batch(x: TensorType, y: TensorType) -> BatchType:
+        pass
