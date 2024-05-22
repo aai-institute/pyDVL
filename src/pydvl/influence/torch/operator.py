@@ -1,16 +1,24 @@
-from typing import Callable, Generator, Union, Type, Optional, Dict
+from typing import Callable, Dict, Generator, Optional, Type, Union
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ..array import SequenceAggregator, LazyChunkSequence
-from .base import TorchOperator, TorchBatch, \
-    GradientProviderFactoryType, TorchPerSampleGradientProvider, TorchPerSampleAutoGrad
-from .batch_operation import BatchOperation, \
-    GaussNewtonBatchOperation, HessianBatchOperation, InverseHarmonicMeanBatchOperation
-from .util import TorchPointAverageAggregator, \
-    TorchChunkAverageAggregator
+from ..array import LazyChunkSequence, SequenceAggregator
+from .base import (
+    GradientProviderFactoryType,
+    TorchBatch,
+    TorchOperator,
+    TorchPerSampleAutoGrad,
+    TorchPerSampleGradientProvider,
+)
+from .batch_operation import (
+    BatchOperation,
+    GaussNewtonBatchOperation,
+    HessianBatchOperation,
+    InverseHarmonicMeanBatchOperation,
+)
+from .util import TorchChunkAverageAggregator, TorchPointAverageAggregator
 
 
 class AggregateBatchOperator(TorchOperator):

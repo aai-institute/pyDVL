@@ -3,19 +3,33 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Optional, Dict, Callable, Union, List
+from typing import Callable, Dict, List, Optional, Union
 
 import torch
 from torch.func import functional_call
 from torch.utils.data import DataLoader
 
-from .functional import create_per_sample_gradient_function, \
-    create_per_sample_mixed_derivative_function, create_matrix_jacobian_product_function
-from .util import LossType, ModelParameterDictBuilder, \
-    BlockMode, flatten_dimensions, ModelInfoMixin
 from ..base_influence_function_model import ComposableInfluence
-from ..types import PerSampleGradientProvider, Operator, BilinearForm, Batch, \
-    OperatorGradientComposition, BlockMapper
+from ..types import (
+    Batch,
+    BilinearForm,
+    BlockMapper,
+    Operator,
+    OperatorGradientComposition,
+    PerSampleGradientProvider,
+)
+from .functional import (
+    create_matrix_jacobian_product_function,
+    create_per_sample_gradient_function,
+    create_per_sample_mixed_derivative_function,
+)
+from .util import (
+    BlockMode,
+    LossType,
+    ModelInfoMixin,
+    ModelParameterDictBuilder,
+    flatten_dimensions,
+)
 
 
 @dataclass(frozen=True)
