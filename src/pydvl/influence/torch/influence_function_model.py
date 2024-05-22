@@ -1812,6 +1812,19 @@ class TorchOperatorGradientComposition(
         torch.Tensor, TorchBatch, TorchOperator, TorchPerSampleGradientProvider
     ]
 ):
+    """
+    Representing a composable block that integrates an [TorchOperator]
+    [pydvl.influence.torch.operator.base.TorchOperator] and
+    a [TorchPerSampleGradientProvider]
+    [pydvl.influence.torch.operator.gradient_provider.TorchPerSampleGradientProvider]
+
+    This block is designed to be flexible, handling different computational modes via
+    an abstract operator and gradient provider.
+    """
+
+    def __init__(self, op: TorchOperator, gp: TorchPerSampleGradientProvider):
+        super().__init__(op, gp)
+
     def to(self, device: torch.device):
         self.gp = self.gp.to(device)
         self.op = self.op.to(device)
@@ -1821,6 +1834,20 @@ class TorchOperatorGradientComposition(
 class TorchBlockMapper(
     BlockMapper[torch.Tensor, TorchBatch, TorchOperatorGradientComposition]
 ):
+    """
+    Class for mapping operations across multiple compositional blocks represented by
+    instances of [TorchOperatorGradientComposition]
+    [pydvl.influence.torch.influence_function_model.TorchOperatorGradientComposition].
+
+    This class takes a dictionary of compositional blocks and applies their methods to
+    batches or tensors, and aggregates the results.
+    """
+
+    def __init__(
+        self, composable_block_dict: OrderedDict[str, TorchOperatorGradientComposition]
+    ):
+        super().__init__(composable_block_dict)
+
     def _split_to_blocks(
         self, z: torch.Tensor, dim: int = -1
     ) -> OrderedDict[str, torch.Tensor]:
@@ -1844,6 +1871,7 @@ class TorchBlockMapper(
 class TorchComposableInfluence(
     ComposableInfluence[torch.Tensor, TorchBatch, DataLoader, TorchBlockMapper],
     ModelInfoMixin,
+    ABC,
 ):
     def __init__(
         self,
@@ -1948,6 +1976,14 @@ class InverseHarmonicMeanInfluence(TorchComposableInfluence):
         super().__init__(model, block_structure, regularization=regularization)
         self.gradient_provider_factory = TorchPerSampleAutoGrad
         self.loss = loss
+
+    @property
+    def n_parameters(self):
+        return super().n_parameters()
+
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
     @staticmethod
     def _validate_regularization(

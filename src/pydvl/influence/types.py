@@ -230,7 +230,6 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         Returns:
             A tensor representing the inner product.
         """
-        pass
 
     def gradient_inner_product(
         self,
@@ -359,7 +358,7 @@ class OperatorGradientComposition(
 ):
     """
     Generic base class representing a composable block that integrates an operator and
-    a gradient provider to compute influences between batches of data.
+    a gradient provider to compute interactions between batches of data.
 
     This block is designed to be flexible, handling different computational modes via
     an abstract operator and gradient provider.

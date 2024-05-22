@@ -218,14 +218,6 @@ class ComposableInfluence(
     block_mapper: BlockMapperType
 
     @property
-    def n_parameters(self):
-        return super().n_parameters()
-
-    @property
-    def is_thread_safe(self) -> bool:
-        return False
-
-    @property
     def is_fitted(self):
         try:
             return self.block_mapper is not None
