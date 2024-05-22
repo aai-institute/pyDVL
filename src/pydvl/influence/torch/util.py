@@ -37,7 +37,6 @@ from ..array import (
     NumpyConverter,
     SequenceAggregator,
 )
-from ..types import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,6 @@ __all__ = [
     "inverse_rank_one_update",
     "TorchPointAverageAggregator",
     "TorchChunkAverageAggregator",
-    "TorchBatch",
     "LossType",
     "ModelParameterDictBuilder",
     "BlockMode",
@@ -673,35 +671,6 @@ def inverse_rank_one_update(
 
 
 LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-
-
-@dataclass(frozen=True)
-class TorchBatch(Batch):
-    """
-    A convenience class for handling batches of data. Validates, the alignment
-    of the first dimension (batch dimension) of the input and target tensor
-
-    Attributes:
-        x: The input tensor that contains features or data points.
-        y: The target tensor that contains labels corresponding to the inputs.
-
-    """
-
-    x: torch.Tensor
-    y: torch.Tensor
-
-    def __post_init__(self):
-        if self.x.shape[0] != self.y.shape[0]:
-            raise ValueError(
-                f"The first dimension of x and y must be the same, "
-                f"got {self.x.shape[0]} and {self.y.shape[0]}"
-            )
-
-    def __len__(self):
-        return self.x.shape[0]
-
-    def to(self, device: torch.device):
-        return TorchBatch(self.x.to(device), self.y.to(device))
 
 
 class BlockMode(Enum):

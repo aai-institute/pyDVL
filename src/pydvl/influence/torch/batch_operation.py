@@ -3,13 +3,14 @@ from typing import Callable, Dict, Optional, Type, Union
 
 import torch
 
-from ..functional import create_batch_hvp_function
-from ..util import LossType, TorchBatch, inverse_rank_one_update, rank_one_mvp
-from .gradient_provider import (
+from .base import (
     GradientProviderFactoryType,
+    TorchBatch,
     TorchPerSampleAutoGrad,
     TorchPerSampleGradientProvider,
 )
+from .functional import create_batch_hvp_function
+from .util import LossType, inverse_rank_one_update, rank_one_mvp
 
 
 class BatchOperation(ABC):

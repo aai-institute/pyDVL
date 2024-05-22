@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from pydvl.influence.torch.operator.gradient_provider import TorchPerSampleAutoGrad
-from pydvl.influence.torch.util import TorchBatch
+from pydvl.influence.torch.base import TorchBatch, TorchPerSampleAutoGrad
 
 from ...conftest import linear_mixed_second_derivative_analytical, linear_model
 from ..conftest import DATA_OUTPUT_NOISE, linear_mvp_model

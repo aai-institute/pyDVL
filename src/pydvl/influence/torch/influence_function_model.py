@@ -19,12 +19,15 @@ from tqdm.auto import tqdm
 from ...utils.progress import log_duration
 from .. import InfluenceMode
 from ..base_influence_function_model import (
-    ComposableInfluence,
     InfluenceFunctionModel,
     NotImplementedLayerRepresentationException,
     UnsupportedInfluenceModeException,
 )
-from ..types import BlockMapper, OperatorGradientComposition
+from .base import (
+    TorchComposableInfluence,
+    TorchOperatorGradientComposition,
+    TorchPerSampleAutoGrad,
+)
 from .functional import (
     LowRankProductRepresentation,
     create_batch_hvp_function,
@@ -36,20 +39,12 @@ from .functional import (
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
 )
-from .operator.base import TorchOperator
-from .operator.gradient_provider import (
-    TorchPerSampleAutoGrad,
-    TorchPerSampleGradientProvider,
-)
-from .operator.solve import InverseHarmonicMeanOperator
+from .operator import InverseHarmonicMeanOperator
 from .pre_conditioner import PreConditioner
 from .util import (
     BlockMode,
     EkfacRepresentation,
     LossType,
-    ModelInfoMixin,
-    ModelParameterDictBuilder,
-    TorchBatch,
     empirical_cross_entropy_loss_fn,
     flatten_dimensions,
     safe_torch_linalg_eigh,
@@ -1804,162 +1799,6 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
         self.low_rank_representation = model_hessian_nystroem_approximation(
             self.model, self.loss, data, self.rank
         )
-        return self
-
-
-class TorchOperatorGradientComposition(
-    OperatorGradientComposition[
-        torch.Tensor, TorchBatch, TorchOperator, TorchPerSampleGradientProvider
-    ]
-):
-    """
-    Representing a composable block that integrates an [TorchOperator]
-    [pydvl.influence.torch.operator.base.TorchOperator] and
-    a [TorchPerSampleGradientProvider]
-    [pydvl.influence.torch.operator.gradient_provider.TorchPerSampleGradientProvider]
-
-    This block is designed to be flexible, handling different computational modes via
-    an abstract operator and gradient provider.
-    """
-
-    def __init__(self, op: TorchOperator, gp: TorchPerSampleGradientProvider):
-        super().__init__(op, gp)
-
-    def to(self, device: torch.device):
-        self.gp = self.gp.to(device)
-        self.op = self.op.to(device)
-        return self
-
-
-class TorchBlockMapper(
-    BlockMapper[torch.Tensor, TorchBatch, TorchOperatorGradientComposition]
-):
-    """
-    Class for mapping operations across multiple compositional blocks represented by
-    instances of [TorchOperatorGradientComposition]
-    [pydvl.influence.torch.influence_function_model.TorchOperatorGradientComposition].
-
-    This class takes a dictionary of compositional blocks and applies their methods to
-    batches or tensors, and aggregates the results.
-    """
-
-    def __init__(
-        self, composable_block_dict: OrderedDict[str, TorchOperatorGradientComposition]
-    ):
-        super().__init__(composable_block_dict)
-
-    def _split_to_blocks(
-        self, z: torch.Tensor, dim: int = -1
-    ) -> OrderedDict[str, torch.Tensor]:
-        block_sizes = [bi.op.input_size for bi in self.composable_block_dict.values()]
-
-        block_dict = OrderedDict(
-            zip(
-                list(self.composable_block_dict.keys()),
-                torch.split(z, block_sizes, dim=dim),
-            )
-        )
-        return block_dict
-
-    def to(self, device: torch.device):
-        self.composable_block_dict = OrderedDict(
-            [(k, bi.to(device)) for k, bi in self.composable_block_dict.items()]
-        )
-        return self
-
-
-class TorchComposableInfluence(
-    ComposableInfluence[torch.Tensor, TorchBatch, DataLoader, TorchBlockMapper],
-    ModelInfoMixin,
-    ABC,
-):
-    def __init__(
-        self,
-        model: torch.nn.Module,
-        block_structure: Union[
-            BlockMode, OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]
-        ] = BlockMode.FULL,
-        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
-    ):
-        if isinstance(block_structure, BlockMode):
-            self.parameter_dict = ModelParameterDictBuilder(model).build(
-                block_structure
-            )
-        else:
-            self.parameter_dict = block_structure
-
-        self._regularization_dict = self._build_regularization_dict(regularization)
-
-        super().__init__(model)
-
-    @property
-    def block_names(self) -> List[str]:
-        return list(self.parameter_dict.keys())
-
-    @abstractmethod
-    def with_regularization(
-        self, regularization: Union[float, Dict[str, Optional[float]]]
-    ) -> TorchComposableInfluence:
-        pass
-
-    def _build_regularization_dict(
-        self, regularization: Optional[Union[float, Dict[str, Optional[float]]]]
-    ) -> Dict[str, Optional[float]]:
-        if regularization is None or isinstance(regularization, float):
-            return {
-                k: self._validate_regularization(k, regularization)
-                for k in self.block_names
-            }
-
-        if set(regularization.keys()).issubset(set(self.block_names)):
-            raise ValueError(
-                f"The regularization must be a float or the keys of the regularization"
-                f"dictionary must match a subset of"
-                f"block names: \n {self.block_names}.\n Found not in block names: \n"
-                f"{set(regularization.keys()).difference(set(self.block_names))}"
-            )
-        return {
-            k: self._validate_regularization(k, regularization.get(k, None))
-            for k in self.block_names
-        }
-
-    @staticmethod
-    def _validate_regularization(
-        block_name: str, value: Optional[float]
-    ) -> Optional[float]:
-        if isinstance(value, float) and value < 0.0:
-            raise ValueError(
-                f"The regularization for block '{block_name}' must be non-negative, "
-                f"but found {value=}"
-            )
-        return value
-
-    @abstractmethod
-    def _create_block(
-        self,
-        block_params: Dict[str, torch.nn.Parameter],
-        data: DataLoader,
-        regularization: Optional[float],
-    ) -> TorchOperatorGradientComposition:
-        pass
-
-    def _create_block_mapper(self, data: DataLoader) -> TorchBlockMapper:
-        block_influence_dict = OrderedDict()
-        for k, p in self.parameter_dict.items():
-            reg = self._regularization_dict.get(k, None)
-            reg = self._validate_regularization(k, reg)
-            block_influence_dict[k] = self._create_block(p, data, reg).to(self.device)
-
-        return TorchBlockMapper(block_influence_dict)
-
-    @staticmethod
-    def _create_batch(x: torch.Tensor, y: torch.Tensor) -> TorchBatch:
-        return TorchBatch(x, y)
-
-    def to(self, device: torch.device):
-        self.model = self.model.to(device)
-        if hasattr(self, "block_mapper") and self.block_mapper is not None:
-            self.block_mapper = self.block_mapper.to(device)
         return self
 
 

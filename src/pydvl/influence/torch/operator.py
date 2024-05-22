@@ -1,78 +1,16 @@
-from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generator, Optional, Type, Union
+from typing import Callable, Generator, Union, Type, Optional, Dict
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ...array import LazyChunkSequence, SequenceAggregator
-from ...types import Operator
-from ..util import TorchBatch, TorchChunkAverageAggregator, TorchPointAverageAggregator
-from .batch_operation import (
-    BatchOperation,
-    GaussNewtonBatchOperation,
-    HessianBatchOperation,
-)
-from .bilinear_form import OperatorBilinearForm
-from .gradient_provider import (
-    GradientProviderFactoryType,
-    TorchPerSampleAutoGrad,
-    TorchPerSampleGradientProvider,
-)
-
-
-class TorchOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
-    def __init__(self, regularization: float = 0.0):
-        """
-        Initializes the Operator with an optional regularization parameter.
-
-        Args:
-            regularization: A non-negative float that represents the regularization
-                strength (default is 0.0).
-
-        Raises:
-            ValueError: If the regularization parameter is negative.
-        """
-        if regularization < 0:
-            raise ValueError("regularization must be non-negative")
-        self._regularization = regularization
-
-    @property
-    def regularization(self):
-        return self._regularization
-
-    @regularization.setter
-    def regularization(self, value: float):
-        if value < 0:
-            raise ValueError("regularization must be non-negative")
-        self._regularization = value
-
-    @property
-    @abstractmethod
-    def device(self):
-        pass
-
-    @property
-    @abstractmethod
-    def dtype(self):
-        pass
-
-    @abstractmethod
-    def to(self, device: torch.device):
-        pass
-
-    @abstractmethod
-    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-        pass
-
-    def as_bilinear_form(self):
-        return OperatorBilinearForm(self)
-
-    def apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-        return self._apply_to_vec(vec.to(self.device))
-
-    def apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-        return torch.func.vmap(self.apply_to_vec, in_dims=0, randomness="same")(mat)
+from ..array import SequenceAggregator, LazyChunkSequence
+from .base import TorchOperator, TorchBatch, \
+    GradientProviderFactoryType, TorchPerSampleGradientProvider, TorchPerSampleAutoGrad
+from .batch_operation import BatchOperation, \
+    GaussNewtonBatchOperation, HessianBatchOperation, InverseHarmonicMeanBatchOperation
+from .util import TorchPointAverageAggregator, \
+    TorchChunkAverageAggregator
 
 
 class AggregateBatchOperator(TorchOperator):
@@ -172,4 +110,28 @@ class HessianOperator(AggregateBatchOperator):
             model, loss, restrict_to=restrict_to, reverse_only=reverse_only
         )
         aggregator = TorchChunkAverageAggregator()
+        super().__init__(batch_op, dataloader, aggregator)
+
+
+class InverseHarmonicMeanOperator(AggregateBatchOperator):
+    def __init__(
+        self,
+        model: nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        dataloader: DataLoader,
+        regularization: float,
+        gradient_provider_factory: Union[
+            GradientProviderFactoryType,
+            Type[TorchPerSampleGradientProvider],
+        ] = TorchPerSampleAutoGrad,
+        restrict_to: Optional[Dict[str, nn.Parameter]] = None,
+    ):
+        batch_op = InverseHarmonicMeanBatchOperation(
+            model,
+            loss,
+            regularization,
+            gradient_provider_factory=gradient_provider_factory,
+            restrict_to=restrict_to,
+        )
+        aggregator = TorchPointAverageAggregator(weighted=False)
         super().__init__(batch_op, dataloader, aggregator)
