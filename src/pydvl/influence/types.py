@@ -1,3 +1,45 @@
+"""
+This module offers a set of generic types, which can be used to build modular and
+flexible components for influence computation for different tensor frameworks.
+
+
+Key components include:
+
+1. [GradientProvider][pydvl.influence.types.GradientProvider]: A generic
+    abstract base class designed to provide methods for computing per-sample
+    gradients and other related computations for given data batches.
+
+2. [BilinearForm][pydvl.influence.types.BilinearForm]: A generic abstract base class
+    for representing bilinear forms for computing inner products involving gradients.
+
+3. [Operator][pydvl.influence.types.Operator]: A generic abstract base class for
+    operators that can apply transformations to vectors and matrices and can be
+    represented as bilinear forms.
+
+4. [OperatorGradientComposition][pydvl.influence.types.OperatorGradientComposition]: A
+    generic abstract composition class that integrates an operator with a gradient
+    provider to compute interactions between batches of data.
+
+5. [BlockMapper][pydvl.influence.types.BlockMapper]: A generic abstract base class
+    for mapping operations across multiple compositional blocks, given by objects
+    of type
+    [OperatorGradientComposition][pydvl.influence.types.OperatorGradientComposition],
+    and aggregating the results.
+
+To see the usage of these types, see the implementation
+[ComposableInfluence][pydvl.influence.base_influence_function_model.ComposableInfluence]
+. Using these components allows the straightforward implementation of various
+combinations of approximations of inverse Hessian applications
+(or Gauss-Newton approximations), different blocking strategies
+(e.g. layer-wise or block-wise) and different ways to
+compute gradients.
+
+For the usage with a specific tensor framework, these types must be subclassed. An
+example for [torch][torch] is provided in the module
+[pydvl.influence.torch.base][pydvl.influence.torch.base] and the base class
+[TorchComposableInfluence][pydvl.influence.torch.base.TorchComposableInfluence].
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -55,7 +97,7 @@ class Batch(Generic[TensorType]):
 BatchType = TypeVar("BatchType", bound=Batch)
 
 
-class PerSampleGradientProvider(Generic[BatchType, TensorType], ABC):
+class GradientProvider(Generic[BatchType, TensorType], ABC):
     r"""
     Provides an interface for calculating per-sample gradients and other related
     computations for a given batch of data.
@@ -196,7 +238,7 @@ class PerSampleGradientProvider(Generic[BatchType, TensorType], ABC):
         """
 
 
-GradientProviderType = TypeVar("GradientProviderType", bound=PerSampleGradientProvider)
+GradientProviderType = TypeVar("GradientProviderType", bound=GradientProvider)
 
 
 class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
