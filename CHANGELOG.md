@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0
+
+### Added
+
+- Refactoring of least-core data valuation methods with more supported sampling methods
+  and consistent interface.
+  [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
+
 ## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
 
 ### Added
@@ -12,7 +20,7 @@
 - New preconditioned block variant of conjugate gradient
   [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 - Improvements to documentation: fixes, links, text, example gallery, LFS and
-  more [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
+  more [PR #532](https://github.com/aai-institute/pyDVL/pull/532),
   [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
 - Glossary of data valuation and influence terms in the documentation
   [PR #537](https://github.com/aai-institute/pyDVL/pull/537
@@ -25,11 +33,11 @@
   [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
 - Memory issue with `CgInfluence` and `ArnoldiInfluence`
   [PR #498](https://github.com/aai-institute/pyDVL/pull/498)
-- Raising specific error message with install instruction, when trying to load 
+- Raising specific error message with install instruction, when trying to load
   `pydvl.utils.cache.memcached` without `pymemcache` installed.
-  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached` 
+  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached`
   are available through `pydvl.utils.cache`
-  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
+  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)
 
 ### Changed
 
@@ -58,9 +66,9 @@
 ### Fixed
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
-  for single dimensional arrays 
+  for single dimensional arrays
   [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
-- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` 
+- Fix implementations of `to` methods of `TorchInfluenceFunctionModel`
   implementations [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 - Fixed bug with checking for converged values in semivalues
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
@@ -80,15 +88,15 @@
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
-- Sequential batch-wise computation and write to disk with 
-  `SequentialInfluenceCalculator` 
+- Sequential batch-wise computation and write to disk with
+  `SequentialInfluenceCalculator`
   [PR #377](https://github.com/aai-institute/pyDVL/issues/377)
 - Adapt notebooks to new influence abstractions
   [PR #430](https://github.com/aai-institute/pyDVL/issues/430)
 
 ### Changed
 
-- Refactor and simplify caching implementation 
+- Refactor and simplify caching implementation
   [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 - Simplify display of computation progress
   [PR #466](https://github.com/aai-institute/pyDVL/pull/466)
@@ -113,8 +121,8 @@
 
 - New method: Class-wise Shapley values
   [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
-- New method: Data-OOB by @BastienZim 
-  [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
+- New method: Data-OOB by @BastienZim
+  [PR #426](https://github.com/aai-institute/pyDVL/pull/426),
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
 - Added `AntitheticPermutationSampler`
   [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
@@ -153,7 +161,7 @@ randomness.
 - Added more abbreviations to documentation
   [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
 - Added seed to functions from `pydvl.utils.numeric`, `pydvl.value.shapley` and
-  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
+  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function
   `ensure_seed_sequence`.
   [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
 - Added `batch_size` parameter to `compute_banzhaf_semivalues`,
@@ -170,7 +178,7 @@ randomness.
   [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend
   [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
-- Decoupled `ray.init` from `ParallelConfig` 
+- Decoupled `ray.init` from `ParallelConfig`
   [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
 - **Breaking Changes**
   - Signature change: return information about Hessian inversion from
@@ -212,7 +220,7 @@ randomness.
   (TMCS) starting too many processes and dying, plus other small changes
   [PR #329](https://github.com/aai-institute/pyDVL/pull/329)
 - Fix creation of GroupedDataset objects using the `from_arrays`
-  and `from_sklearn` class methods 
+  and `from_sklearn` class methods
   [PR #324](https://github.com/aai-institute/pyDVL/pull/334)
 - Fix release job not triggering on CI when a new tag is pushed
   [PR #331](https://github.com/aai-institute/pyDVL/pull/331)
@@ -269,13 +277,13 @@ randomness.
   [PR #268](https://github.com/aai-institute/pyDVL/pull/268)
 - Splitting of problem preparation and solution in Least-Core computation.
   Umbrella function for LC methods.
-  [PR #257](https://github.com/aai-institute/pyDVL/pull/257) 
+  [PR #257](https://github.com/aai-institute/pyDVL/pull/257)
 - Operations on `ValuationResult` and `Status` and some cleanup
   [PR #248](https://github.com/aai-institute/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
-  inside `Utility` before fitting by default, with flag `clone_before_fit` 
-  to disable it, catches all warnings in `Utility` when `show_warnings` is 
+  inside `Utility` before fitting by default, with flag `clone_before_fit`
+  to disable it, catches all warnings in `Utility` when `show_warnings` is
   `False`. Adds Miner and Gloves toy games utilities
   [PR #247](https://github.com/aai-institute/pyDVL/pull/247)
 
@@ -285,7 +293,7 @@ randomness.
   [PR #201](https://github.com/aai-institute/pyDVL/pull/201)
 - Disabled caching of Utility values as well as repeated evaluations by default
   [PR #211](https://github.com/aai-institute/pyDVL/pull/211)
-- Test and officially support Python version 3.9 and 3.10 
+- Test and officially support Python version 3.9 and 3.10
   [PR #208](https://github.com/aai-institute/pyDVL/pull/208)
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
