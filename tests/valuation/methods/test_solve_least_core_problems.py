@@ -1,5 +1,4 @@
 import pytest
-from joblib import parallel_config
 
 from pydvl.utils import Status
 from pydvl.valuation.methods._solve_least_core_problems import lc_solve_problem

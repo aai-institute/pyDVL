@@ -47,9 +47,9 @@ class LeastCoreValuation(Valuation):
     Args:
         utility: Utility object with model, data and scoring function.
         sampler: The sampler to use for the valuation.
-        n_samples: The number of samples to use for the valuation. Can be set
-            to None if deterministic samplers with known number of samples (e.g.
-            DeterministicUniformSampler) are used.
+        n_samples: The number of samples to use for the valuation. If None, it will be
+            set to the sample limit of the chosen sampler (for finite samplers) or
+            `1000 * len(data)` (for infinite samplers).
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         solver_options: Optional dictionary containing a CVXPY solver and options to
@@ -196,9 +196,8 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
 
     Args:
         utility: Utility object with model, data and scoring function.
-        n_samples: The number of samples to use for the valuation. Can be set
-            to None if deterministic samplers with known number of samples (e.g.
-            DeterministicUniformSampler) are used.
+        n_samples: The number of samples to use for the valuation. If None, it will be
+            set to `1000 * len(data)`.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         solver_options: Optional dictionary containing a CVXPY solver and options to
