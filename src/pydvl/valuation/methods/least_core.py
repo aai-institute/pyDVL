@@ -50,9 +50,12 @@ class LeastCoreValuation(Valuation):
         n_samples: The number of samples to use for the valuation. Can be set
             to None if deterministic samplers with known number of samples (e.g.
             DeterministicUniformSampler) are used.
-        If True, the least core subsidy $e$ is constrained
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
-        solver_options: Optional dictionary of options passed to the solvers.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         progress: Whether to show a progress bar during the construction of the
             least-core problem.
 
@@ -139,6 +142,17 @@ class ExactLeastCoreValuation(LeastCoreValuation):
 
     Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
+    Args:
+        utility: Utility object with model, data and scoring function.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+        progress: Whether to show a progress bar during the construction of the
+            least-core problem.
+
     """
 
     def __init__(
@@ -179,6 +193,21 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
     * $U(2^N)$ is the uniform distribution over the powerset of $N$.
     * $m$ is the number of subsets that will be sampled and whose utility will
       be computed and used to compute the data values.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        n_samples: The number of samples to use for the valuation. Can be set
+            to None if deterministic samplers with known number of samples (e.g.
+            DeterministicUniformSampler) are used.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+        progress: Whether to show a progress bar during the construction of the
+            least-core problem.
+
 
     """
 

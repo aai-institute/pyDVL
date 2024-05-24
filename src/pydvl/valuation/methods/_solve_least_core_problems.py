@@ -47,13 +47,21 @@ def lc_solve_problem(
     solver_options: dict | None = None,
 ) -> ValuationResult:
     """Solves a linear problem as prepared by
-    [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
+    [mclc_prepare_problem()][pydvl.valuation.create_least_core_problem].
     Useful for parallel execution of multiple experiments by running this as a
     remote task.
 
-    See [exact_least_core()][pydvl.value.least_core.naive.exact_least_core] or
-    [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
-    argument descriptions.
+    Args:
+        problem: LeastCoreProblem to solve.
+        u: Utility object with model, data and scoring function.
+        algorithm: Name of the least-core valuation algorithm.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+
     """
     if u.training_data is not None:
         n_obs = len(u.training_data)
@@ -158,41 +166,6 @@ def lc_solve_problem(
         stderr=None,
         data_names=u.training_data.data_names,
     )
-
-
-def lc_solve_problems(
-    problems: Sequence[LeastCoreProblem],
-    u: UtilityBase,
-    algorithm: str,
-    non_negative_subsidy: bool = True,
-    solver_options: dict | None = None,
-) -> List[ValuationResult]:
-    """Solves a list of linear problems in parallel.
-
-    Args:
-        problems: Least Core problems to solve, as returned by
-            [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
-        u: Utility.
-        algorithm: Name of the valuation algorithm.
-        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-            to be non-negative.
-        solver_options: Additional options to pass to the solver.
-
-    Returns:
-        List of solutions.
-    """
-
-    _solve_func = partial(
-        lc_solve_problem,
-        u=u,
-        algorithm=algorithm,
-        non_negative_subsidy=non_negative_subsidy,
-        solver_options=solver_options,
-    )
-
-    parallel = Parallel()
-    out: List[ValuationResult] = parallel(delayed(_solve_func)(p) for p in problems)
-    return out
 
 
 def _solve_least_core_linear_program(
