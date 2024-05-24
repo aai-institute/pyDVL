@@ -27,7 +27,11 @@ from pydvl.valuation.utility.base import UtilityBase
 
 BoolDType = np.bool_
 
-__all__ = ["LeastCoreValuation"]
+__all__ = [
+    "LeastCoreValuation",
+    "ExactLeastCoreValuation",
+    "MonteCarloLeastCoreValuation",
+]
 
 
 class LeastCoreValuation(Valuation):
