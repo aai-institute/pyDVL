@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import math
+import typing
 import warnings
-from itertools import islice, takewhile
+from itertools import takewhile
 from typing import Iterable, List
 
 import numpy as np
@@ -17,7 +18,7 @@ from pydvl.valuation.methods._solve_least_core_problems import (
     lc_solve_problem,
 )
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
-from pydvl.valuation.types import SampleT
+from pydvl.valuation.types import BatchGenerator, SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
 BoolDType = np.bool_
@@ -74,6 +75,22 @@ class LeastCoreValuation(Valuation):
         self._progress = progress
 
     def fit(self, data: Dataset) -> Valuation:
+        """Calculate the least core valuation on a dataset.
+
+        This method has to be called before calling `values()`.
+
+        Calculating the least core valuation is a computationally expensive task that
+        can be parallelized. To do so, call the `fit()` method inside a
+        `joblib.parallel_config` context manager as follows:
+
+        ```python
+        from joblib import parallel_config
+
+        with parallel_config(n_jobs=4):
+            valuation.fit(data)
+        ```
+
+        """
         self._utility = self._utility.with_dataset(data)
 
         self._n_samples = _correct_n_samples(
@@ -111,7 +128,7 @@ def create_least_core_problem(
         u: Utility object with model, data and scoring function.
         sampler: The sampler to use for the valuation.
         n_samples: The maximum number of samples to use for the valuation.
-        progress (bool): Whether to show a progress bar during the construction of the
+        progress: Whether to show a progress bar during the construction of the
             least-core problem.
 
     Returns:
@@ -126,9 +143,11 @@ def create_least_core_problem(
     batch_size = sampler.batch_size
     n_batches = math.ceil(n_samples / batch_size)
 
-    def _process(
+    def _create_mask_and_utility_values(
         batch: Iterable[SampleT],
     ) -> tuple[List[NDArray[BoolDType]], List[float]]:
+        """Convert sampled indices to boolean masks and calculate utility on each
+        sample in batch."""
         masks: List[NDArray[BoolDType]] = []
         u_values: List[float] = []
         for sample in batch:
@@ -144,15 +163,21 @@ def create_least_core_problem(
         sampler.from_indices(u.training_data.indices),
     )
 
-    generator_with_progress = tqdm(  # type: ignore
-        generator,
-        disable=not progress,
-        total=n_batches - 1,
-        position=0,
+    generator_with_progress = typing.cast(
+        BatchGenerator,
+        tqdm(
+            generator,
+            disable=not progress,
+            total=n_batches - 1,
+            position=0,
+        ),
     )
 
     parallel = Parallel(return_as="generator")
-    results = parallel(delayed(_process)(batch) for batch in generator_with_progress)
+    results = parallel(
+        delayed(_create_mask_and_utility_values)(batch)
+        for batch in generator_with_progress
+    )
 
     masks: List[NDArray[BoolDType]] = []
     u_values: List[float] = []
