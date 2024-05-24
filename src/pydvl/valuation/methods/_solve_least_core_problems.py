@@ -27,6 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 class LeastCoreProblem(NamedTuple):
+    """The linear programming problem that defines the least-core valuation.
+
+    See [LeastCoreValuation](pydvl.valuation.methods.least_core.LeastCoreValuation) for
+    details.
+
+    """
+
     utility_values: NDArray[np.float_]
     A_lb: NDArray[np.float_]
 

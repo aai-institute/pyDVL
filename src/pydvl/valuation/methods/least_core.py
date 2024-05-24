@@ -33,10 +33,35 @@ class LeastCoreValuation(Valuation):
 
     Different samplers correspond to different least-core methods from the literature:
 
-    - `DeterministicUniformSampler`: Exact (naive) method. This yields the most precise
-        results but is only feasible for tiny datasets (<= 20 observations).
-    - `UniformSampler`: Monte Carlo method. This is the most practical method for
-        larger datasets.
+    **`DeterministicUniformSampler** corresponds to exact least-core values defined as
+
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
+    \end{array}
+    $$
+
+    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
+
+
+    **`UniformSampler`** corresponds to the Monte Carlo method defined as
+
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
+    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
+    \end{array}
+    $$
+
+    Where:
+
+    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
+    * $m$ is the number of subsets that will be sampled and whose utility will
+      be computed and used to compute the data values.
 
     Other samplers allow you to create your own method and might yield computational
     gains over a standard Monte Carlo method.
