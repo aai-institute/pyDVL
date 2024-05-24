@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 import typing
-import warnings
 from itertools import takewhile
 from typing import Iterable, List
 
@@ -17,8 +16,13 @@ from pydvl.valuation.methods._solve_least_core_problems import (
     LeastCoreProblem,
     lc_solve_problem,
 )
-from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
-from pydvl.valuation.types import BatchGenerator, SampleT
+from pydvl.valuation.samplers.powerset import (
+    DeterministicUniformSampler,
+    NoIndexIteration,
+    PowersetSampler,
+    UniformSampler,
+)
+from pydvl.valuation.types import BatchGenerator, IndexSetT, SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
 BoolDType = np.bool_
@@ -27,41 +31,15 @@ __all__ = ["LeastCoreValuation"]
 
 
 class LeastCoreValuation(Valuation):
-    """Umbrella class to calculate Least Core values with multiple sampling methods.
+    """Umbrella class to calculate least-core values with multiple sampling methods.
 
     See [Data valuation][data-valuation] for an overview.
 
-    Different samplers correspond to different least-core methods from the literature:
+    Different samplers correspond to different least-core methods from the literature.
+    For those, we provide convenience subclasses of LeastCoreValuation. See
 
-    **`DeterministicUniformSampler** corresponds to exact least-core values defined as
-
-    $$
-    \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
-    \end{array}
-    $$
-
-    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
-
-
-    **`UniformSampler`** corresponds to the Monte Carlo method defined as
-
-    $$
-    \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
-    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
-    \end{array}
-    $$
-
-    Where:
-
-    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
-    * $m$ is the number of subsets that will be sampled and whose utility will
-      be computed and used to compute the data values.
+    - [ExactLeastCoreValuation][pydvl.valuation.methods.least_core.ExactLeastCoreValuation]
+    - [MonteCarloLeastCoreValuation][pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation]
 
     Other samplers allow you to create your own method and might yield computational
     gains over a standard Monte Carlo method.
@@ -117,11 +95,10 @@ class LeastCoreValuation(Valuation):
 
         """
         self._utility = self._utility.with_dataset(data)
-
-        self._n_samples = _correct_n_samples(
-            candidate=self._n_samples,
-            sampler_length=self._sampler.sample_limit(data.indices),
-        )
+        if self._n_samples is None:
+            self._n_samples = _get_default_n_samples(
+                sampler=self._sampler, indices=data.indices
+            )
 
         algorithm = str(self._sampler)
 
@@ -142,6 +119,85 @@ class LeastCoreValuation(Valuation):
 
         self.result = solution
         return self
+
+
+class ExactLeastCoreValuation(LeastCoreValuation):
+    """Class to calculate exact least-core values.
+
+    Equivalent to calling `LeastCoreValuation` with a `DeterministicUniformSampler`
+    and `n_samples=None`.
+
+    The definition of the exact least-core valuation is:
+
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
+    \end{array}
+    $$
+
+    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
+
+    """
+
+    def __init__(
+        self,
+        utility: UtilityBase,
+        non_negative_subsidy: bool = False,
+        solver_options: dict | None = None,
+        progress: bool = True,
+    ):
+        super().__init__(
+            utility=utility,
+            sampler=DeterministicUniformSampler(index_iteration=NoIndexIteration),
+            n_samples=None,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+            progress=progress,
+        )
+
+
+class MonteCarloLeastCoreValuation(LeastCoreValuation):
+    """Class to calculate exact least-core values.
+
+    Equivalent to calling `LeastCoreValuation` with a `UniformSampler`.
+
+    The definition of the Monte Carlo least-core valuation is:
+
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
+    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
+    \end{array}
+    $$
+
+    Where:
+
+    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
+    * $m$ is the number of subsets that will be sampled and whose utility will
+      be computed and used to compute the data values.
+
+    """
+
+    def __init__(
+        self,
+        utility: UtilityBase,
+        n_samples: int,
+        non_negative_subsidy: bool = False,
+        solver_options: dict | None = None,
+        progress: bool = True,
+    ):
+        super().__init__(
+            utility=utility,
+            sampler=UniformSampler(index_iteration=NoIndexIteration),
+            n_samples=n_samples,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+            progress=progress,
+        )
 
 
 def create_least_core_problem(
@@ -216,35 +272,26 @@ def create_least_core_problem(
     return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
 
 
-def _correct_n_samples(candidate: int | None, sampler_length: int | None) -> int:
-    """Correct a user provided n_samples parameter
+def _get_default_n_samples(sampler: PowersetSampler, indices: IndexSetT) -> int:
+    """Get a default value for n_samples based on the sampler's sample limit.
 
     Args:
-        candidate: The user provided value for n_samples.
-        sampler_length: The length of the sampler which is None for infinite samplers.
+        sampler: The sampler to use for the valuation.
+        indices: The indices of the dataset.
 
     Returns:
         int: The number of samples to use for the valuation.
 
     """
-    if sampler_length is not None:
-        if candidate is not None and candidate != sampler_length:
-            warnings.warn(
-                f"Invalid value for n_samples: {candidate}. Setting to {sampler_length}."
-            )
-        out = sampler_length
-
-        if sampler_length >= 2**20:
-            warnings.warn(
-                "PerformanceWarning: Your combination of sampler and dataset size may "
-                "lead to slow performance. Consider using randomized samplers."
-            )
+    sample_limit = sampler.sample_limit(indices)
+    if sample_limit is not None:
+        out = sample_limit
     else:
-        if candidate is None:
-            raise ValueError(
-                "n_samples must be set if a sampler with infinite length is used."
-            )
-        out = candidate
+        # TODO: This is a rather arbitrary rule of thumb. The value was chosen to be
+        # larger than the number of samples used by Yan and Procaccia
+        # https://ojs.aaai.org/index.php/AAAI/article/view/16721 in a low resource
+        # setting but linear in the dataset size to avoid exploding runtimes.
+        out = 1000 * len(indices)
 
     return out
 
