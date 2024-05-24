@@ -160,7 +160,7 @@ def create_least_core_problem(
 
     generator = takewhile(
         lambda _: sampler.n_samples < n_samples,
-        sampler.from_indices(u.training_data.indices),
+        sampler.generate_batches(u.training_data.indices),
     )
 
     generator_with_progress = typing.cast(

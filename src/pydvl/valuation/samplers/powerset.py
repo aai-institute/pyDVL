@@ -288,7 +288,7 @@ class DeterministicUniformSampler(PowersetSampler):
     ??? Example
         ``` pycon
         >>> sampler = DeterministicUniformSampler()
-        >>> for idx, s in sampler.from_indices(np.arange(2)):
+        >>> for idx, s in sampler.generate_batches(np.arange(2)):
         >>>    print(f"{idx} - {s}", end=", ")
         1 - [], 1 - [2], 2 - [], 2 - [1],
         ```

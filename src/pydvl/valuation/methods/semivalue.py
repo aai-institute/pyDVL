@@ -112,7 +112,7 @@ class SemivalueValuation(Valuation):
         with make_parallel_flag() as flag:
             delayed_evals = parallel(
                 processor(batch=list(batch), is_interrupted=flag)
-                for batch in self.sampler.from_data(data)
+                for batch in self.sampler.generate_batches(data.indices)
             )
             for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                 for evaluation in batch:

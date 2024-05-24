@@ -63,7 +63,7 @@ class IndexSampler(ABC):
         ``` pycon
         >>>from pydvl.valuation.samplers import DeterministicUniformSampler
         >>>sampler = DeterministicUniformSampler()
-        >>>for idx, s in sampler.from_indices(np.arange(2)):
+        >>>for idx, s in sampler.generate_batches(np.arange(2)):
         >>>    print(s, end="")
         [][2,][][1,]
         ```
@@ -108,9 +108,9 @@ class IndexSampler(ABC):
         return f"{self.__class__.__name__}"
 
     def from_data(self, data: Dataset) -> BatchGenerator:
-        return self.from_indices(data.indices)
+        return self.generate_batches(data.indices)
 
-    def from_indices(self, indices: IndexSetT) -> BatchGenerator:
+    def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
 
         # early return for empty indices. Necessary because some samplers use a
@@ -143,8 +143,8 @@ class IndexSampler(ABC):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates single samples.
 
-        `IndexSampler.from_indices()` will batch these samples according to the batch
-        size set upon construction.
+        `IndexSampler.generate_batches()` will batch these samples according to the
+        batch size set upon construction.
 
         Args:
             indices:

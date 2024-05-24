@@ -43,12 +43,12 @@ def test_deterministic_uniform_sampler_batch_size_1():
     indices = np.array([1, 2, 3])
     max_iterations = 5
 
-    batches = []
-    for batch in sampler.from_indices(indices):
-        batches.append(batch)
-        if len(batches) >= max_iterations:
-            break
-    # batches = list(takewhile(lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)))
+    batches = list(
+        takewhile(
+            lambda _: sampler.n_samples < max_iterations,
+            sampler.generate_batches(indices),
+        )
+    )
     expected_idxs = [[1], [1], [1], [1], [2]]
     _check_idxs(batches, expected_idxs)
 
@@ -69,7 +69,8 @@ def test_deterministic_uniform_sampler_batch_size_4():
 
     batches = list(
         takewhile(
-            lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+            lambda _: sampler.n_samples < max_iterations,
+            sampler.generate_batches(indices),
         )
     )
 
@@ -87,7 +88,7 @@ def test_deterministic_permutation_sampler_batch_size_1():
     sampler = DeterministicPermutationSampler()
     indices = np.array([0, 1, 2])
 
-    batches = list(sampler.from_indices(indices))
+    batches = list(sampler.generate_batches(indices))
 
     expected_idxs = [[-1]] * 6
     _check_idxs(batches, expected_idxs)
@@ -110,7 +111,8 @@ def test_loo_sampler_batch_size_1():
 
     batches = list(
         takewhile(
-            lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+            lambda _: sampler.n_samples < max_iterations,
+            sampler.generate_batches(indices),
         )
     )
 
@@ -160,7 +162,7 @@ def test_proper(sampler, indices):
     """Test that the sampler generates subsets of the correct sets"""
     max_iterations = 2 ** (len(indices))
     samples = takewhile(
-        lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+        lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
     )
     for batch in samples:
         sample = list(batch)[0]
@@ -198,7 +200,8 @@ def test_sample_counter(sampler):
     max_iterations = 2 ** (len(indices))
     samples = list(
         takewhile(
-            lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+            lambda _: sampler.n_samples < max_iterations,
+            sampler.generate_batches(indices),
         )
     )
     assert sampler.n_samples == len(samples)
@@ -216,7 +219,7 @@ def test_sample_counter(sampler):
 def test_length_for_finite_samplers(sampler, expected_length):
     indices = np.array([0, 1, 2])
     assert sampler.length(indices) == expected_length
-    assert len(list(sampler.from_indices(indices))) == expected_length
+    assert len(list(sampler.generate_batches(indices))) == expected_length
 
 
 @pytest.mark.parametrize(
@@ -237,7 +240,9 @@ def test_length_of_infinite_samplers(sampler):
     assert sampler.length(indices) is None
     # check that we can generate samples that are longer than size of powerset
     samples = list(
-        takewhile(lambda _: sampler.n_samples < max_iter, sampler.from_indices(indices))
+        takewhile(
+            lambda _: sampler.n_samples < max_iter, sampler.generate_batches(indices)
+        )
     )
     assert len(samples) == max_iter
 
@@ -307,6 +312,6 @@ def _create_seeded_sample_iter(
     else:
         sampler = sampler_t(seed=seed)
     sample_stream = takewhile(
-        lambda _: sampler.n_samples < max_iterations, sampler.from_indices(indices)
+        lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
     )
     return sample_stream
