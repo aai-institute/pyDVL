@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 import torch
 
-from ..base_influence_function_model import NotFittedException
+from ...utils.exceptions import NotFittedException
 from .functional import LowRankProductRepresentation, randomized_nystroem_approximation
 
 __all__ = ["JacobiPreConditioner", "NystroemPreConditioner", "PreConditioner"]

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Collection, Generic, Iterable, Optional, Type, TypeVar
+from typing import Collection, Generic, Iterable, Optional, TypeVar
+
+from pydvl.utils.exceptions import NotFittedException
 
 
 class InfluenceMode(str, Enum):
@@ -26,15 +28,6 @@ class UnsupportedInfluenceModeException(ValueError):
         super().__init__(
             f"Provided {mode=} is not supported. Choose one of InfluenceMode.Up "
             f"and InfluenceMode.Perturbation"
-        )
-
-
-class NotFittedException(ValueError):
-    def __init__(self, object_type: Type):
-        super().__init__(
-            f"Objects of type {object_type} must be fitted before calling "
-            f"methods. "
-            f"Call method fit with appropriate input."
         )
 
 
