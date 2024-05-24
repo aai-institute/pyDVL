@@ -131,7 +131,7 @@ class DeterministicPermutationSampler(PermutationSampler):
         for permutation in permutations(indices):
             yield Sample(-1, np.array(permutation, copy=False))
 
-    def length(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int:
         if len(indices) == 0:
             out = 0
         else:

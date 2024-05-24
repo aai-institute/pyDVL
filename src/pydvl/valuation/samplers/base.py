@@ -127,7 +127,7 @@ class IndexSampler(ABC):
             if self._interrupted:
                 break
 
-    def length(self, indices: IndexSetT) -> int | None:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         """Number of samples that can be generated from the indices.
 
         Returns None if the number of samples is infinite, which is the case for most

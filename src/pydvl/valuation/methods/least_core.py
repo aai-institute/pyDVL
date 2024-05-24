@@ -95,7 +95,7 @@ class LeastCoreValuation(Valuation):
 
         self._n_samples = _correct_n_samples(
             candidate=self._n_samples,
-            sampler_length=self._sampler.length(data.indices),
+            sampler_length=self._sampler.sample_limit(data.indices),
         )
 
         algorithm = str(self._sampler)

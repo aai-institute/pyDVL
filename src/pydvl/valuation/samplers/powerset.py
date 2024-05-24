@@ -244,7 +244,7 @@ class LOOSampler(IndexSampler):
     ) -> EvaluationStrategy:
         return LOOEvaluationStrategy(self, utility, coefficient)
 
-    def length(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int:
         return len(indices)
 
 
@@ -310,7 +310,7 @@ class DeterministicUniformSampler(PowersetSampler):
             ):
                 yield Sample(idx, np.array(subset))
 
-    def length(self, indices: IndexSetT) -> int | None:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         len_outer = self._index_iteration.length(indices)
         # empty index set
         if len(indices) == 0:

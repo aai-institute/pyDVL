@@ -218,7 +218,7 @@ def test_sample_counter(sampler):
 )
 def test_length_for_finite_samplers(sampler, expected_length):
     indices = np.array([0, 1, 2])
-    assert sampler.length(indices) == expected_length
+    assert sampler.sample_limit(indices) == expected_length
     assert len(list(sampler.generate_batches(indices))) == expected_length
 
 
@@ -237,7 +237,7 @@ def test_length_for_finite_samplers(sampler, expected_length):
 def test_length_of_infinite_samplers(sampler):
     indices = np.array([0, 1, 2])
     max_iter = 2 ** len(indices) * 10
-    assert sampler.length(indices) is None
+    assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
     samples = list(
         takewhile(
