@@ -113,8 +113,10 @@ class IndexSampler(ABC):
     def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
 
-        # early return for empty indices. Necessary because some samplers use a
-        # while True loop to generate infinite samples.
+        # create an empty generator if the indices are empty. `generate_batches` is
+        # a generator function because it has a yield statement later in its body.
+        # Inside generator functionn, `return` acts like a `break`, which produces an
+        # empty generator function. See: https://stackoverflow.com/a/13243870
         if len(indices) == 0:
             return
 
