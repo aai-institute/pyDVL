@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+import warnings
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
@@ -59,6 +60,8 @@ __all__ = [
     "LossType",
     "ModelParameterDictBuilder",
     "BlockMode",
+    "ModelInfoMixin",
+    "safe_torch_linalg_eigh",
 ]
 
 
@@ -665,6 +668,29 @@ def rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
 def inverse_rank_one_update(
     x: torch.Tensor, v: torch.Tensor, regularization: float
 ) -> torch.Tensor:
+    r"""
+    Performs an inverse-rank one update on x and v. More precisely, it computes
+
+    $$ \sum_{i=1}^n \left(x[i]x[i]^t+\lambda \operatorname{I}\right)^{-1}v $$
+
+    where $\operatorname{I}$ is the identity matrix and $\lambda$ is positive
+    regularization parameter. The inverse matrices are not calculated explicitly,
+    but instead a vectorized version of the
+    [Sherman–Morrison formula](
+    https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula)
+    is applied.
+
+    Args:
+        x: Input matrix used for the rank one expressions. First dimension is
+            assumed to be the batch dimension.
+        v: Matrix to multiply with. First dimension is
+            assumed to be the batch dimension.
+        regularization: Regularization parameter to make the rank-one expressions
+            invertible, must be positive.
+
+    Returns:
+        Matrix of size $(D, M)$ for x having shape $(N, D)$ and v having shape $(M, D)$.
+    """
     nominator = torch.einsum("ij,kj->ki", x, v)
     denominator = x.shape[0] * (regularization + torch.sum(x**2, dim=1))
     return (v - (nominator / denominator) @ x) / regularization
@@ -674,6 +700,15 @@ LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 
 
 class BlockMode(Enum):
+    """
+    Enumeration for different modes of grouping model parameters.
+
+    Attributes:
+        LAYER_WISE: Groups parameters by layers of the model.
+        PARAMETER_WISE: Groups parameters individually.
+        FULL: Groups all parameters together.
+    """
+
     LAYER_WISE: str = "layer_wise"
     PARAMETER_WISE: str = "parameter_wise"
     FULL: str = "full"
@@ -681,6 +716,15 @@ class BlockMode(Enum):
 
 @dataclass
 class ModelParameterDictBuilder:
+    """
+    A builder class for creating ordered dictionaries of model parameters based on
+    specified block modes or custom blocking structures.
+
+    Attributes:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+    """
+
     model: torch.nn.Module
     detach: bool = True
 
@@ -689,9 +733,58 @@ class ModelParameterDictBuilder:
             return p.detach()
         return p
 
-    def build(
+    def build(self, block_structure: OrderedDict[str, List[str]]):
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        structure represented by an ordered dictionary, where the keys are block
+        identifiers and the values are lists of model parameter names contained in
+        this block.
+
+        Args:
+            block_structure: The block structure specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+        parameter_dict = OrderedDict()
+
+        for block_name, parameter_names in block_structure.items():
+            inner_ordered_dict = OrderedDict()
+            for parameter_name in parameter_names:
+                parameter = self.model.state_dict()[parameter_name]
+                if parameter.requires_grad:
+                    inner_ordered_dict[parameter_name] = self._optional_detach(
+                        parameter
+                    )
+                else:
+                    warnings.warn(
+                        f"The parameter {parameter_name} from the block "
+                        f"{block_name} is mark as not trainable in the model "
+                        f"and will be excluded from the computation."
+                    )
+            parameter_dict[block_name] = inner_ordered_dict
+
+        return parameter_dict
+
+    def build_from_block_mode(
         self, block_mode: BlockMode
     ) -> OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        mode or custom blocking structure represented by an ordered dictionary, where
+        the keys are block identifiers and the values are lists of model parameter names
+        contained in this block.
+
+        Args:
+            block_mode: The block mode specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
         parameter_dict = OrderedDict()
 
         if block_mode is BlockMode.FULL:

@@ -30,7 +30,10 @@ class NotFittedException(ValueError):
 
 class NotImplementedLayerRepresentationException(ValueError):
     def __init__(self, module_id: str):
-        message = f"Only Linear layers are supported, but found module {module_id} requiring grad."
+        message = (
+            f"Only Linear layers are supported, but found module {module_id} "
+            f"requiring grad."
+        )
         super().__init__(message)
 
 
@@ -82,6 +85,23 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         return wrapper
 
     def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
+        r"""
+        Computes the approximation of
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
+        where the gradient is meant to be per sample of the batch $(x, y)$.
+        For all input tensors it is assumed,
+        that the first dimension is the batch dimension.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            Tensor representing the element-wise inverse Hessian matrix vector products
+
+        """
         if not self.is_fitted:
             raise NotFittedException(type(self))
         return self._influence_factors(x, y)
@@ -112,6 +132,36 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         y: Optional[TensorType] = None,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
+        r"""
+        Computes the approximation of
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+            f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case.
+
+        Args:
+            x_test: model input to use in the gradient computations
+                of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations
+                $\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{test}$
+            y: optional label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch
+
+        """
         if not self.is_fitted:
             raise NotFittedException(type(self))
 
@@ -214,6 +264,11 @@ class ComposableInfluence(
     Generic[TensorType, BatchType, DataLoaderType, BlockMapperType],
     ABC,
 ):
+    """
+    Generic abstract base class, that allow for block-wise computation of influence
+    quantities. Inherit from this base class for specific influence algorithms and
+    tensor frameworks.
+    """
 
     block_mapper: BlockMapperType
 
@@ -226,11 +281,30 @@ class ComposableInfluence(
 
     @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoaderType) -> InfluenceFunctionModel:
+        """
+        Fitting to provided data, by internally creating a block mapper instance from
+        it.
+        Args:
+            data: iterable of tensors
+
+        Returns:
+            Fitted instance
+        """
         self.block_mapper = self._create_block_mapper(data)
         return self
 
     @abstractmethod
     def _create_block_mapper(self, data: DataLoaderType) -> BlockMapperType:
+        """
+        Override this method to create a block mapper instance, that can be used
+        to compute block-wise influence quantities.
+
+        Args:
+            data: iterable of tensors
+
+        Returns:
+            BlockMapper instance
+        """
         pass
 
     @InfluenceFunctionModel.fit_required
@@ -242,6 +316,39 @@ class ComposableInfluence(
         y: Optional[TensorType] = None,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> OrderedDict[str, TensorType]:
+        r"""
+        Compute the block-wise influence values for the provided data, i.e. an
+        approximation of
+
+        \[ \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}},
+            f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case.
+
+        Args:
+            x_test: model input to use in the gradient computations
+                of the approximation of
+                $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations
+                $\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{test}$
+            y: optional label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
+
+        Returns:
+            Ordered dictionary of tensors representing the element-wise scalar products
+            for the provided batch per block.
+
+        """
         left_batch = self._create_batch(x_test, y_test)
 
         if x is None:
@@ -259,13 +366,29 @@ class ComposableInfluence(
                 )
             right_batch = self._create_batch(x, y)
 
-        return self.block_mapper.block_interactions(left_batch, right_batch, mode)
+        return self.block_mapper.interactions(left_batch, right_batch, mode)
 
     @InfluenceFunctionModel.fit_required
     def influence_factors_by_block(
         self, x: TensorType, y: TensorType
     ) -> OrderedDict[str, TensorType]:
-        return self.block_mapper.block_transformed_gradients(self._create_batch(x, y))
+        r"""
+        Compute the block-wise approximation of
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
+        where the gradient is meant to be per sample of the batch $(x, y)$.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            Ordered dictionary of tensors representing the element-wise
+            approximate inverse Hessian matrix vector products per block.
+
+        """
+        return self.block_mapper.transformed_grads(self._create_batch(x, y))
 
     @InfluenceFunctionModel.fit_required
     def influences_from_factors_by_block(
@@ -275,13 +398,44 @@ class ComposableInfluence(
         y: TensorType,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> OrderedDict[str, TensorType]:
-        return self.block_mapper.block_interactions_from_transformed_gradients(
+        r"""
+        Block-wise computation of
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The gradient is meant to be per sample
+        of the batch $(x, y)$.
+
+        Args:
+            z_test_factors: pre-computed array, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{\text{test}}$
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
+
+        Returns:
+            Ordered dictionary of tensors representing the element-wise scalar products
+            for the provided batch per block
+
+        """
+        return self.block_mapper.interactions_from_transformed_grads(
             z_test_factors, self._create_batch(x, y), mode
         )
 
     def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         tensor_gen_factory = partial(
-            self.block_mapper.generate_transformed_gradients, self._create_batch(x, y)
+            self.block_mapper.generate_transformed_grads, self._create_batch(x, y)
         )
         aggregator = SumAggregator()
         result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
@@ -308,7 +462,7 @@ class ComposableInfluence(
             right_batch = self._create_batch(x, y)
 
         tensor_gen_factory = partial(
-            self.block_mapper.generate_gradient_interactions,
+            self.block_mapper.generate_interactions,
             left_batch,
             right_batch,
             mode,
@@ -325,8 +479,39 @@ class ComposableInfluence(
         y: TensorType,
         mode: InfluenceMode = InfluenceMode.Up,
     ) -> TensorType:
+        r"""
+        Computation of
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle z_{\text{test_factors}},
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The gradient is meant to be per sample
+        of the batch $(x, y)$.
+
+        Args:
+            z_test_factors: pre-computed array, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
+            x: model input to use in the gradient computations
+                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                if None, use $x=x_{\text{test}}$
+            y: label tensor to compute gradients
+            mode: enum value of [InfluenceMode]
+                [pydvl.influence.base_influence_function_model.InfluenceMode]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch
+
+        """
+
         tensor_gen_factory = partial(
-            self.block_mapper.generate_interactions_from_transformed_gradients,
+            self.block_mapper.generate_interactions_from_transformed_grads,
             z_test_factors,
             self._create_batch(x, y),
             mode,
@@ -339,4 +524,6 @@ class ComposableInfluence(
     @staticmethod
     @abstractmethod
     def _create_batch(x: TensorType, y: TensorType) -> BatchType:
-        pass
+        """Implement this method to provide the creation of a subtype of
+        [Batch][pydvl.influence.types.Batch] for a specific framework
+        """

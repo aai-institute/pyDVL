@@ -28,10 +28,6 @@ from pydvl.influence.torch import (
     EkfacInfluence,
 )
 from pydvl.influence.torch.influence_function_model import NystroemSketchInfluence
-from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
-)
 from pydvl.influence.torch.util import (
     NestedTorchCatAggregator,
     TorchCatAggregator,

@@ -387,7 +387,7 @@ class TestModelParameterDictBuilder:
             model=model,
             detach=True,
         )
-        param_dict = builder.build(block_mode)
+        param_dict = builder.build_from_block_mode(block_mode)
 
         if block_mode is BlockMode.FULL:
             assert "" in param_dict

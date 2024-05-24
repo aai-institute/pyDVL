@@ -3,6 +3,7 @@ from .influence_function_model import (
     CgInfluence,
     DirectInfluence,
     EkfacInfluence,
+    InverseHarmonicMeanInfluence,
     LissaInfluence,
     NystroemSketchInfluence,
 )

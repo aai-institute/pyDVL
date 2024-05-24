@@ -24,9 +24,9 @@ from ..base_influence_function_model import (
     UnsupportedInfluenceModeException,
 )
 from .base import (
+    TorchAutoGrad,
     TorchComposableInfluence,
     TorchOperatorGradientComposition,
-    TorchPerSampleAutoGrad,
 )
 from .functional import (
     LowRankProductRepresentation,
@@ -57,6 +57,7 @@ __all__ = [
     "ArnoldiInfluence",
     "EkfacInfluence",
     "NystroemSketchInfluence",
+    "InverseHarmonicMeanInfluence",
 ]
 
 logger = logging.getLogger(__name__)
@@ -1802,23 +1803,113 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
         return self
 
 
-class InverseHarmonicMeanInfluence(TorchComposableInfluence):
+class InverseHarmonicMeanInfluence(
+    TorchComposableInfluence[InverseHarmonicMeanOperator]
+):
+    r"""
+    This implementation replaces the inverse Hessian matrix in the influence computation
+    an approximation of the inverse Gauss-Newton vector product.
+
+    Viewing the damped Gauss-newton matrix
+
+    \begin{align*}
+        G_{\lambda}(\theta) &=
+        \frac{1}{N}\sum_{i}^N\nabla_{\theta}\ell (x_i,y_i; \theta)
+            \nabla_{\theta}\ell (x_i, y_i; \theta)^t + \lambda \operatorname{I}, \\\
+        \ell(x,y; \theta) &= \text{loss}(\text{model}(x; \theta), y)
+    \end{align*}
+
+    as an arithmetic mean of the rank-$1$ updates, this implementation replaces it with
+    the harmonic mean of the rank-$1$ updates, i.e.
+
+    $$ \tilde{G}_{\lambda}(\theta) =
+        \left(N \cdot \sum_{i=1}^N  \left( \nabla_{\theta}\ell (x_i,y_i; \theta)
+            \nabla_{\theta}\ell (x_i,y_i; \theta)^t +
+            \lambda \operatorname{I}\right)^{-1}
+            \right)^{-1}$$
+
+    and uses the matrix
+
+    $$ \tilde{G}_{\lambda}^{-1}(\theta)$$
+
+    instead of the inverse Hessian.
+
+    In other words, it switches the order of summation and inversion, which resolves
+    to the `inverse harmonic mean` of the rank-$1$ updates. The results are averaged
+    over the batches provided by the data loader.
+
+    The inverses of the rank-$1$ updates are not calculated explicitly,
+    but instead a vectorized version of the
+    [Sherman–Morrison formula](
+    https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula)
+    is applied.
+
+    For more information,
+    see [Inverse Harmonic Mean][inverse-harmonic-mean].
+
+    Block-mode:
+        This implementation is capable of using a block-matrix approximation. The
+        blocking structure can be specified via the `block_structure` parameter.
+        The `block_structure` parameter can either be a
+        [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
+        layer-wise or parameter-wise blocking) or a custom block structure defined
+        by an ordered dictionary with the keys being the block identifiers (arbitrary
+        strings) and the values being lists of parameter names contained in the block.
+
+        ```python
+        block_structure = OrderedDict(
+            (
+                ("custom_block1", ["0.weight", "1.bias"]),
+                ("custom_block2", ["1.weight", "0.bias"]),
+            )
+        )
+        ```
+
+        If you would like to apply a block-specific regularization, you can provide a
+        dictionary with the block names as keys and the regularization values as values.
+        In this case, the specification must be complete, i.e. every block must have
+        a positive regularization value.
+
+        ```python
+        regularization =  {
+            "custom_block1": 0.1,
+            "custom_block2": 0.2,
+        }
+        ```
+        Accordingly, if you choose a layer-wise or parameter-wise structure
+        (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
+        `block_structure`) the keys must be the layer names or parameter names,
+        respectively.
+
+        You can retrieve the block-wise influence information from the methods
+        with suffix `_by_block`. By default, `block_structure` is set to
+        `BlockMode.FULL` and in this case these methods will return a dictionary
+        with the empty string being the only key.
+
+
+    Args:
+        model: The model.
+        loss: The loss function.
+        regularization: The regularization parameter. In case a dictionary is provided,
+            the keys must match the blocking structure.
+        block_structure: The blocking structure, either a pre-defined enum or a
+            custom block structure, see the information regarding block-mode.
+    """
+
     def __init__(
         self,
         model: torch.nn.Module,
         loss: LossType,
         regularization: Union[float, Dict[str, Optional[float]]],
-        block_structure: Union[
-            BlockMode, OrderedDict[str, OrderedDict[str, torch.Tensor]]
-        ] = BlockMode.FULL,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
     ):
         super().__init__(model, block_structure, regularization=regularization)
-        self.gradient_provider_factory = TorchPerSampleAutoGrad
+        self.gradient_provider_factory = TorchAutoGrad
         self.loss = loss
 
     @property
     def n_parameters(self):
-        return super().n_parameters()
+        return sum(block.op.input_size for _, block in self.block_mapper.items())
 
     @property
     def is_thread_safe(self) -> bool:
@@ -1858,6 +1949,16 @@ class InverseHarmonicMeanInfluence(TorchComposableInfluence):
     def with_regularization(
         self, regularization: Union[float, Dict[str, Optional[float]]]
     ) -> TorchComposableInfluence:
+        """
+        Update the regularization parameter.
+        Args:
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
+
+        Returns:
+            The modified instance
+
+        """
         self._regularization_dict = self._build_regularization_dict(regularization)
         for k, reg in self._regularization_dict.items():
             self.block_mapper.composable_block_dict[k].op.regularization = reg

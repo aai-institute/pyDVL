@@ -120,7 +120,7 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
     """
 
     @abstractmethod
-    def per_sample_gradient_dict(self, batch: BatchType) -> Dict[str, TensorType]:
+    def grads(self, batch: BatchType) -> Dict[str, TensorType]:
         r"""
         Computes and returns a dictionary mapping gradient names to their respective
         per-sample gradients. Given the example in the class docstring, this means
@@ -141,7 +141,7 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
         """
 
     @abstractmethod
-    def per_sample_mixed_gradient_dict(self, batch: BatchType) -> Dict[str, TensorType]:
+    def mixed_grads(self, batch: BatchType) -> Dict[str, TensorType]:
         r"""
         Computes and returns a dictionary mapping gradient names to their respective
         per-sample mixed gradients. In this context, mixed gradients refer to computing
@@ -166,7 +166,7 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
         """
 
     @abstractmethod
-    def matrix_jacobian_product(
+    def jacobian_prod(
         self,
         batch: BatchType,
         g: TensorType,
@@ -193,7 +193,7 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
         """
 
     @abstractmethod
-    def per_sample_flat_gradient(self, batch: BatchType) -> TensorType:
+    def flat_grads(self, batch: BatchType) -> TensorType:
         r"""
         Computes and returns the flat per-sample gradients for the provided batch.
         Given the example in the class docstring, this means
@@ -215,7 +215,7 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
         """
 
     @abstractmethod
-    def per_sample_flat_mixed_gradient(self, batch: BatchType) -> TensorType:
+    def flat_mixed_grads(self, batch: BatchType) -> TensorType:
         r"""
         Computes and returns the flat per-sample mixed gradients for the provided batch.
         Given the example in the class docstring, this means
@@ -248,9 +248,7 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
     """
 
     @abstractmethod
-    def inner_product(
-        self, left: TensorType, right: Optional[TensorType]
-    ) -> TensorType:
+    def inner_prod(self, left: TensorType, right: Optional[TensorType]) -> TensorType:
         r"""
         Computes the inner product of two vectors, i.e.
 
@@ -273,7 +271,7 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
             A tensor representing the inner product.
         """
 
-    def gradient_inner_product(
+    def grads_inner_prod(
         self,
         left: BatchType,
         right: Optional[BatchType],
@@ -298,14 +296,14 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         Returns:
             A tensor representing the inner products of the per-sample gradients
         """
-        left_grad = gradient_provider.per_sample_flat_gradient(left)
+        left_grad = gradient_provider.flat_grads(left)
         if right is None:
             right_grad = left_grad
         else:
-            right_grad = gradient_provider.per_sample_flat_gradient(right)
-        return self.inner_product(left_grad, right_grad)
+            right_grad = gradient_provider.flat_grads(right)
+        return self.inner_prod(left_grad, right_grad)
 
-    def mixed_gradient_inner_product(
+    def mixed_grads_inner_prod(
         self, left: BatchType, right: BatchType, gradient_provider: GradientProviderType
     ) -> TensorType:
         r"""
@@ -327,9 +325,9 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         Returns:
             A tensor representing the inner products of the mixed per-sample gradients
         """
-        left_grad = gradient_provider.per_sample_flat_gradient(left)
-        right_mixed_grad = gradient_provider.per_sample_flat_mixed_gradient(right)
-        return self.inner_product(left_grad, right_mixed_grad)
+        left_grad = gradient_provider.flat_grads(left)
+        right_mixed_grad = gradient_provider.flat_mixed_grads(right)
+        return self.inner_prod(left_grad, right_mixed_grad)
 
 
 BilinearFormType = TypeVar("BilinearFormType", bound=BilinearForm)
@@ -414,7 +412,7 @@ class OperatorGradientComposition(
         self.gp = gp
         self.op = op
 
-    def gradient_interaction(
+    def interactions(
         self, left_batch: BatchType, right_batch: BatchType, mode: InfluenceMode
     ):
         r"""
@@ -445,14 +443,10 @@ class OperatorGradientComposition(
         """
         bilinear_form = self.op.as_bilinear_form()
         if mode is InfluenceMode.Up:
-            return bilinear_form.gradient_inner_product(
-                left_batch, right_batch, self.gp
-            )
-        return bilinear_form.mixed_gradient_inner_product(
-            left_batch, right_batch, self.gp
-        )
+            return bilinear_form.grads_inner_prod(left_batch, right_batch, self.gp)
+        return bilinear_form.mixed_grads_inner_prod(left_batch, right_batch, self.gp)
 
-    def transformed_gradients(self, batch: BatchType):
+    def transformed_grads(self, batch: BatchType):
         r"""
         Computes the gradients of a data batch, transformed by the operator application
         , i.e. the expressions
@@ -467,10 +461,10 @@ class OperatorGradientComposition(
             A tensor representing the application of the operator to the gradients.
 
         """
-        grads = self.gp.per_sample_flat_gradient(batch)
+        grads = self.gp.flat_grads(batch)
         return self.op.apply_to_mat(grads)
 
-    def interaction_from_transformed_gradients(
+    def interactions_from_transformed_grads(
         self, left_factors: TensorType, right_batch: BatchType, mode: InfluenceMode
     ):
         r"""
@@ -499,16 +493,18 @@ class OperatorGradientComposition(
                 batch gradients.
         """
         if mode is InfluenceMode.Up:
-            right_grads = self.gp.per_sample_flat_gradient(right_batch)
+            right_grads = self.gp.flat_grads(right_batch)
         else:
-            right_grads = self.gp.per_sample_flat_mixed_gradient(right_batch)
-        return self.op.as_bilinear_form().inner_product(left_factors, right_grads)
+            right_grads = self.gp.flat_mixed_grads(right_batch)
+        return self.op.as_bilinear_form().inner_prod(left_factors, right_grads)
 
 
-ComposableBlockType = TypeVar("ComposableBlockType", bound=OperatorGradientComposition)
+OperatorGradientCompositionType = TypeVar(
+    "OperatorGradientCompositionType", bound=OperatorGradientComposition
+)
 
 
-class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
+class BlockMapper(Generic[TensorType, BatchType, OperatorGradientCompositionType], ABC):
     """
     Abstract base class for mapping operations across multiple compositional blocks.
 
@@ -521,8 +517,16 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
             interactions.
     """
 
-    def __init__(self, composable_block_dict: OrderedDict[str, ComposableBlockType]):
+    def __init__(
+        self, composable_block_dict: OrderedDict[str, OperatorGradientCompositionType]
+    ):
         self.composable_block_dict = composable_block_dict
+
+    def __getitem__(self, item: str):
+        return self.composable_block_dict[item]
+
+    def items(self):
+        return self.composable_block_dict.items()
 
     def _to_ordered_dict(
         self, tensor_generator: Generator[TensorType, None, None]
@@ -539,7 +543,7 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
         """Must be implemented in a way to preserve the ordering defined by the
         `composable_block_dict` attribute"""
 
-    def block_transformed_gradients(
+    def transformed_grads(
         self,
         batch: BatchType,
     ) -> OrderedDict[str, TensorType]:
@@ -553,10 +557,10 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
         Returns:
             An ordered dictionary of transformed gradients by block.
         """
-        tensor_gen = self.generate_transformed_gradients(batch)
+        tensor_gen = self.generate_transformed_grads(batch)
         return self._to_ordered_dict(tensor_gen)
 
-    def block_interactions(
+    def interactions(
         self, left_batch: BatchType, right_batch: BatchType, mode: InfluenceMode
     ) -> OrderedDict[str, TensorType]:
         """
@@ -571,10 +575,10 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
         Returns:
             An ordered dictionary of gradient interactions by block.
         """
-        tensor_gen = self.generate_gradient_interactions(left_batch, right_batch, mode)
+        tensor_gen = self.generate_interactions(left_batch, right_batch, mode)
         return self._to_ordered_dict(tensor_gen)
 
-    def block_interactions_from_transformed_gradients(
+    def interactions_from_transformed_grads(
         self,
         left_factors: OrderedDict[str, TensorType],
         right_batch: BatchType,
@@ -594,12 +598,12 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
         Returns:
             An ordered dictionary of interactions from transformed gradients by block.
         """
-        tensor_gen = self.generate_interactions_from_transformed_gradients(
+        tensor_gen = self.generate_interactions_from_transformed_grads(
             left_factors, right_batch, mode
         )
         return self._to_ordered_dict(tensor_gen)
 
-    def generate_transformed_gradients(
+    def generate_transformed_grads(
         self, batch: BatchType
     ) -> Generator[TensorType, None, None]:
         """
@@ -613,9 +617,9 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
             Transformed gradients for each block.
         """
         for comp_block in self.composable_block_dict.values():
-            yield comp_block.transformed_gradients(batch)
+            yield comp_block.transformed_grads(batch)
 
-    def generate_gradient_interactions(
+    def generate_interactions(
         self, left_batch: BatchType, right_batch: BatchType, mode: InfluenceMode
     ) -> Generator[TensorType, None, None]:
         """
@@ -631,9 +635,9 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
             TensorType: Gradient interactions for each block.
         """
         for comp_block in self.composable_block_dict.values():
-            yield comp_block.gradient_interaction(left_batch, right_batch, mode)
+            yield comp_block.interactions(left_batch, right_batch, mode)
 
-    def generate_interactions_from_transformed_gradients(
+    def generate_interactions_from_transformed_grads(
         self,
         left_factors: Union[TensorType, OrderedDict[str, TensorType]],
         right_batch: BatchType,
@@ -657,7 +661,7 @@ class BlockMapper(Generic[TensorType, BatchType, ComposableBlockType], ABC):
         else:
             left_factors_dict = cast(OrderedDict[str, TensorType], left_factors)
         for k, comp_block in self.composable_block_dict.items():
-            yield comp_block.interaction_from_transformed_gradients(
+            yield comp_block.interactions_from_transformed_grads(
                 left_factors_dict[k], right_batch, mode
             )
 

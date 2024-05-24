@@ -405,8 +405,7 @@ class NestedLazyChunkSequence(Generic[TensorType]):
 class SumAggregator(SequenceAggregator):
     def __call__(self, tensor_sequence: LazyChunkSequence):
         """
-        Aggregates tensors from a single-level generator by summing up. This method simply
-        collects each tensor emitted by the generator into a single list.
+        Aggregates tensors from a single-level generator by summing up.
 
         Args:
             tensor_sequence: Object wrapping a generator that yields `TensorType`
@@ -418,5 +417,5 @@ class SumAggregator(SequenceAggregator):
         tensor_generator = tensor_sequence.generator_factory()
         result = next(tensor_generator)
         for tensor in tensor_generator:
-            result += tensor
+            result = result + tensor
         return result

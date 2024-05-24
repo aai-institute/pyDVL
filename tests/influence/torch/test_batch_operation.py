@@ -2,13 +2,14 @@ from dataclasses import astuple
 
 import pytest
 import torch
-from influence.torch.test_util import model_data, test_parameters
 
 from pydvl.influence.torch.base import TorchBatch
 from pydvl.influence.torch.batch_operation import (
     GaussNewtonBatchOperation,
     HessianBatchOperation,
 )
+
+from .test_util import model_data, test_parameters
 
 
 @pytest.mark.torch

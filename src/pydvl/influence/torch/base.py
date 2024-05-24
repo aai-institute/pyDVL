@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, TypeVar, Union
 
 import torch
 from torch.func import functional_call
@@ -14,9 +14,9 @@ from ..types import (
     Batch,
     BilinearForm,
     BlockMapper,
+    GradientProvider,
     Operator,
     OperatorGradientComposition,
-    PerSampleGradientProvider,
 )
 from .functional import (
     create_matrix_jacobian_product_function,
@@ -61,9 +61,7 @@ class TorchBatch(Batch):
         return TorchBatch(self.x.to(device), self.y.to(device))
 
 
-class TorchPerSampleGradientProvider(
-    PerSampleGradientProvider[TorchBatch, torch.Tensor], ABC
-):
+class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
     r"""
     Abstract base class for calculating per-sample gradients of a function defined by
     a [torch.nn.Module][torch.nn.Module] and a loss function.
@@ -97,7 +95,9 @@ class TorchPerSampleGradientProvider(
         self.model = model
 
         if restrict_to is None:
-            restrict_to = ModelParameterDictBuilder(model).build(BlockMode.FULL)
+            restrict_to = ModelParameterDictBuilder(model).build_from_block_mode(
+                BlockMode.FULL
+            )
 
         self.params_to_restrict_to = restrict_to
 
@@ -119,17 +119,15 @@ class TorchPerSampleGradientProvider(
         return next(self.model.parameters()).dtype
 
     @abstractmethod
-    def _per_sample_gradient_dict(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
+    def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         pass
 
     @abstractmethod
-    def _per_sample_mixed_gradient_dict(
-        self, batch: TorchBatch
-    ) -> Dict[str, torch.Tensor]:
+    def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         pass
 
     @abstractmethod
-    def _matrix_jacobian_product(
+    def _jacobian_prod(
         self,
         batch: TorchBatch,
         g: torch.Tensor,
@@ -140,9 +138,9 @@ class TorchPerSampleGradientProvider(
     def _detach_dict(tensor_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         return {k: g.detach() if g.requires_grad else g for k, g in tensor_dict.items()}
 
-    def per_sample_gradient_dict(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
+    def grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         r"""
-        Computes and returns a dictionary mapping gradient names to their respective
+        Computes and returns a dictionary mapping parameter names to their respective
         per-sample gradients. Given the example in the class docstring, this means
 
         $$ \text{result}[\omega_i] = \nabla_{\omega_{i}}\ell(\omega_1, \omega_2,
@@ -159,12 +157,10 @@ class TorchPerSampleGradientProvider(
             A dictionary where keys are gradient identifiers and values are the
                 gradients computed per sample.
         """
-        gradient_dict = self._per_sample_gradient_dict(batch.to(self.device))
+        gradient_dict = self._grads(batch.to(self.device))
         return self._detach_dict(gradient_dict)
 
-    def per_sample_mixed_gradient_dict(
-        self, batch: TorchBatch
-    ) -> Dict[str, torch.Tensor]:
+    def mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         r"""
         Computes and returns a dictionary mapping gradient names to their respective
         per-sample mixed gradients. In this context, mixed gradients refer to computing
@@ -187,10 +183,10 @@ class TorchPerSampleGradientProvider(
             A dictionary where keys are gradient identifiers and values are the
                 mixed gradients computed per sample.
         """
-        gradient_dict = self._per_sample_mixed_gradient_dict(batch.to(self.device))
+        gradient_dict = self._mixed_grads(batch.to(self.device))
         return self._detach_dict(gradient_dict)
 
-    def matrix_jacobian_product(
+    def jacobian_prod(
         self,
         batch: TorchBatch,
         g: torch.Tensor,
@@ -215,24 +211,22 @@ class TorchPerSampleGradientProvider(
         Returns:
             The resulting tensor from the matrix-Jacobian product computation.
         """
-        result = self._matrix_jacobian_product(batch.to(self.device), g.to(self.device))
+        result = self._jacobian_prod(batch.to(self.device), g.to(self.device))
         if result.requires_grad:
             result = result.detach()
         return result
 
-    def per_sample_flat_gradient(self, batch: TorchBatch) -> torch.Tensor:
+    def flat_grads(self, batch: TorchBatch) -> torch.Tensor:
         return flatten_dimensions(
-            self.per_sample_gradient_dict(batch).values(), shape=(batch.x.shape[0], -1)
+            self.grads(batch).values(), shape=(batch.x.shape[0], -1)
         )
 
-    def per_sample_flat_mixed_gradient(self, batch: TorchBatch) -> torch.Tensor:
+    def flat_mixed_grads(self, batch: TorchBatch) -> torch.Tensor:
         shape = (*batch.x.shape, -1)
-        return flatten_dimensions(
-            self.per_sample_mixed_gradient_dict(batch).values(), shape=shape
-        )
+        return flatten_dimensions(self.mixed_grads(batch).values(), shape=shape)
 
 
-class TorchPerSampleAutoGrad(TorchPerSampleGradientProvider):
+class TorchAutoGrad(TorchGradientProvider):
     r"""
     Compute per-sample gradients of a function defined by
     a [torch.nn.Module][torch.nn.Module] and a loss function using
@@ -273,19 +267,17 @@ class TorchPerSampleAutoGrad(TorchPerSampleGradientProvider):
         outputs = functional_call(self.model, params, (x.unsqueeze(0).to(self.device),))
         return self.loss(outputs, y.unsqueeze(0))
 
-    def _per_sample_gradient_dict(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
+    def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         return self._per_sample_gradient_function(
             self.params_to_restrict_to, batch.x, batch.y
         )
 
-    def _per_sample_mixed_gradient_dict(
-        self, batch: TorchBatch
-    ) -> Dict[str, torch.Tensor]:
+    def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
         return self._per_sample_mixed_gradient_func(
             self.params_to_restrict_to, batch.x, batch.y
         )
 
-    def _matrix_jacobian_product(
+    def _jacobian_prod(
         self,
         batch: TorchBatch,
         g: torch.Tensor,
@@ -300,12 +292,12 @@ class TorchPerSampleAutoGrad(TorchPerSampleGradientProvider):
 
 GradientProviderFactoryType = Callable[
     [torch.nn.Module, LossType, Optional[Dict[str, torch.nn.Parameter]]],
-    TorchPerSampleGradientProvider,
+    TorchGradientProvider,
 ]
 
 
 class OperatorBilinearForm(
-    BilinearForm[torch.Tensor, TorchBatch, TorchPerSampleGradientProvider]
+    BilinearForm[torch.Tensor, TorchBatch, TorchGradientProvider]
 ):
     r"""
     Base class for bilinear forms based on an instance of
@@ -322,13 +314,13 @@ class OperatorBilinearForm(
     ):
         self.operator = operator
 
-    def inner_product(
+    def inner_prod(
         self, left: torch.Tensor, right: Optional[torch.Tensor]
     ) -> torch.Tensor:
         r"""
         Computes the weighted inner product of two vectors, i.e.
 
-        $$ \langle x, y \rangle_{B} = \langle \operatorname{Op}(x), y \rangle $$
+        $$ \langle \operatorname{Op}(\text{left}), \text{right} \rangle $$
 
         Args:
             left: The first tensor in the inner product computation.
@@ -354,30 +346,10 @@ class OperatorBilinearForm(
 
 
 class TorchOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
-    def __init__(self, regularization: float = 0.0):
-        """
-        Initializes the Operator with an optional regularization parameter.
-
-        Args:
-            regularization: A non-negative float that represents the regularization
-                strength (default is 0.0).
-
-        Raises:
-            ValueError: If the regularization parameter is negative.
-        """
-        if regularization < 0:
-            raise ValueError("regularization must be non-negative")
-        self._regularization = regularization
-
-    @property
-    def regularization(self):
-        return self._regularization
-
-    @regularization.setter
-    def regularization(self, value: float):
-        if value < 0:
-            raise ValueError("regularization must be non-negative")
-        self._regularization = value
+    """
+    Abstract base class for operators that can be applied to instances of
+    [torch.Tensor][torch.Tensor].
+    """
 
     @property
     @abstractmethod
@@ -398,18 +370,46 @@ class TorchOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
         pass
 
     def as_bilinear_form(self):
+        """
+        Represent this operator as a
+        [OperatorBilinearForm][pydvl.influence.torch.base.OperatorBilinearForm].
+        """
         return OperatorBilinearForm(self)
 
     def apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+        """
+        Applies the operator to a single vector.
+        Args:
+            vec: A single vector consistent to the operator, i.e. it's length
+                must be equal to the property `input_size`.
+
+        Returns:
+            A single vector after applying the batch operation
+        """
         return self._apply_to_vec(vec.to(self.device))
 
     def apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+        """
+        Applies the operator to a matrix.
+        Args:
+            mat: A matrix to apply the operator to. The last dimension is
+                assumed to be consistent to the operation, i.e. it must equal
+                to the property `input_size`.
+
+        Returns:
+            A matrix of shape $(N, \text{input_size})$, given the shape of mat is
+                $(N, \text{input_size})$
+
+        """
         return torch.func.vmap(self.apply_to_vec, in_dims=0, randomness="same")(mat)
+
+
+TorchOperatorType = TypeVar("TorchOperatorType", bound=TorchOperator)
 
 
 class TorchOperatorGradientComposition(
     OperatorGradientComposition[
-        torch.Tensor, TorchBatch, TorchOperator, TorchPerSampleGradientProvider
+        torch.Tensor, TorchBatch, TorchOperatorType, TorchGradientProvider
     ]
 ):
     """
@@ -422,7 +422,7 @@ class TorchOperatorGradientComposition(
     an abstract operator and gradient provider.
     """
 
-    def __init__(self, op: TorchOperator, gp: TorchPerSampleGradientProvider):
+    def __init__(self, op: TorchOperatorType, gp: TorchGradientProvider):
         super().__init__(op, gp)
 
     def to(self, device: torch.device):
@@ -432,7 +432,9 @@ class TorchOperatorGradientComposition(
 
 
 class TorchBlockMapper(
-    BlockMapper[torch.Tensor, TorchBatch, TorchOperatorGradientComposition]
+    BlockMapper[
+        torch.Tensor, TorchBatch, TorchOperatorGradientComposition[TorchOperatorType]
+    ]
 ):
     """
     Class for mapping operations across multiple compositional blocks represented by
@@ -469,24 +471,31 @@ class TorchBlockMapper(
 
 
 class TorchComposableInfluence(
-    ComposableInfluence[torch.Tensor, TorchBatch, DataLoader, TorchBlockMapper],
+    ComposableInfluence[
+        torch.Tensor, TorchBatch, DataLoader, TorchBlockMapper[TorchOperatorType]
+    ],
     ModelInfoMixin,
     ABC,
 ):
+    """
+    Abstract base class, that allow for block-wise computation of influence
+    quantities with the [torch][torch] framework.
+    Inherit from this base class for specific influence algorithms.
+    """
+
     def __init__(
         self,
         model: torch.nn.Module,
-        block_structure: Union[
-            BlockMode, OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]
-        ] = BlockMode.FULL,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
         regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
     ):
+        parameter_dict_builder = ModelParameterDictBuilder(model)
         if isinstance(block_structure, BlockMode):
-            self.parameter_dict = ModelParameterDictBuilder(model).build(
+            self.parameter_dict = parameter_dict_builder.build_from_block_mode(
                 block_structure
             )
         else:
-            self.parameter_dict = block_structure
+            self.parameter_dict = parameter_dict_builder.build(block_structure)
 
         self._regularization_dict = self._build_regularization_dict(regularization)
 
