@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Iterable
 
+from pydvl.utils.exceptions import NotFittedException
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
 
@@ -14,7 +15,8 @@ class Valuation(ABC):
         self.result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset): ...
+    def fit(self, data: Dataset):
+        ...
 
     def values(self, sort: bool = False) -> ValuationResult:
         """Returns a copy of the valuation result.
@@ -27,7 +29,7 @@ class Valuation(ABC):
             The result of the valuation.
         """
         if not self.is_fitted:
-            raise RuntimeError("Valuation is not fitted")
+            raise NotFittedException(type(self))
         assert self.result is not None
 
         from copy import copy

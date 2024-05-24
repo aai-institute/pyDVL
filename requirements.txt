@@ -8,3 +8,4 @@ joblib @ git+https://github.com/joblib/joblib@c2087dbdeec9824c45822670395a8a0c45
 cloudpickle
 tqdm
 matplotlib
+typing_extensions

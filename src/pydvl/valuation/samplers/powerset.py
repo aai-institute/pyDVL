@@ -62,6 +62,11 @@ __all__ = [
     "TruncatedUniformStratifiedSampler",
     "UniformSampler",
     "UniformStratifiedSampler",
+    "VarianceReducedStratifiedSampler",
+    "IndexIteration",
+    "SequentialIndexIteration",
+    "RandomIndexIteration",
+    "NoIndexIteration",
 ]
 
 
@@ -73,28 +78,51 @@ class IndexIteration(ABC):
         self._indices = indices
 
     @abstractmethod
-    def __iter__(self) -> Generator[IndexT | None, None, None]: ...
+    def __iter__(self) -> Generator[IndexT | None, None, None]:
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def length(indices: IndexSetT) -> int | None:
+        ...
 
 
 class SequentialIndexIteration(IndexIteration):
     def __iter__(self) -> Generator[IndexT, None, None]:
         yield from self._indices
 
+    @staticmethod
+    def length(indices: IndexSetT) -> int:
+        return len(indices)
 
-class RandomIndexIteration(IndexIteration):
+
+class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
     def __init__(self, indices: NDArray[IndexT], seed: Seed):
-        super().__init__(indices)
-        self._rng = np.random.default_rng(seed)
+        super().__init__(indices, seed=seed)
 
     def __iter__(self) -> Generator[IndexT, None, None]:
+        if len(self._indices) == 0:
+            return
+
         while True:
             yield self._rng.choice(self._indices, size=1).item()
+
+    @staticmethod
+    def length(indices: IndexSetT) -> int | None:
+        if len(indices) == 0:
+            out = 0
+        else:
+            out = None
+        return out
 
 
 class NoIndexIteration(IndexIteration):
     def __iter__(self) -> Generator[None, None, None]:
-        while True:
-            yield None
+        yield None
+
+    @staticmethod
+    def length(indices: IndexSetT) -> int:
+        return 0
 
 
 def complement(include: IndexSetT, exclude: Iterable[IndexT]) -> NDArray[IndexT]:
@@ -142,7 +170,12 @@ class PowersetSampler(IndexSampler, ABC):
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
-        yield from self._index_iteration(indices)
+        if issubclass(self._index_iteration, StochasticSamplerMixin):
+            # To-Do: Need to do something more elegant here
+            seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()  # type: ignore
+            yield from self._index_iteration(indices, seed)  # type: ignore
+        else:
+            yield from self._index_iteration(indices)
 
     def make_strategy(
         self,
@@ -211,6 +244,9 @@ class LOOSampler(IndexSampler):
     ) -> EvaluationStrategy:
         return LOOEvaluationStrategy(self, utility, coefficient)
 
+    def sample_limit(self, indices: IndexSetT) -> int:
+        return len(indices)
+
 
 class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
     """Computes marginal values for LOO."""
@@ -252,14 +288,20 @@ class DeterministicUniformSampler(PowersetSampler):
     ??? Example
         ``` pycon
         >>> sampler = DeterministicUniformSampler()
-        >>> for idx, s in sampler.from_indices(np.arange(2)):
+        >>> for idx, s in sampler.generate_batches(np.arange(2)):
         >>>    print(f"{idx} - {s}", end=", ")
         1 - [], 1 - [2], 2 - [], 2 - [1],
         ```
     """
 
-    def __init__(self):
-        super().__init__(index_iteration=SequentialIndexIteration)
+    def __init__(
+        self,
+        index_iteration: Type[
+            SequentialIndexIteration | NoIndexIteration
+        ] = SequentialIndexIteration,
+        batch_size: int = 1,
+    ):
+        super().__init__(index_iteration=index_iteration, batch_size=batch_size)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
@@ -267,6 +309,23 @@ class DeterministicUniformSampler(PowersetSampler):
                 complement(indices, [idx] if idx is not None else [])
             ):
                 yield Sample(idx, np.array(subset))
+
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        len_outer = self._index_iteration.length(indices)
+        # empty index set
+        if len(indices) == 0:
+            out = 0
+        # infinite index iteration
+        elif len_outer is None:
+            out = None
+        # NoIndexIteration, i.e. sampling from all indices and not just the complement
+        # of the current outer index
+        elif len_outer == 0:
+            out = 2 ** len(indices)
+        # SequentialIndexIteration or other finite index iteration
+        else:
+            out = len_outer * 2 ** (len(indices) - 1)
+        return out
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
@@ -289,6 +348,16 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
         (...)
         ```
     """
+
+    def __init__(
+        self,
+        batch_size: int = 1,
+        index_iteration: Type[IndexIteration] = SequentialIndexIteration,
+        seed: Seed | None = None,
+    ):
+        super().__init__(
+            batch_size=batch_size, index_iteration=index_iteration, seed=seed
+        )
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:

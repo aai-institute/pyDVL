@@ -55,9 +55,7 @@ from typing import (
     Iterator,
     List,
     Literal,
-    Optional,
     Sequence,
-    Set,
     Union,
     cast,
     overload,
@@ -633,7 +631,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         )
         return self
 
-    def scale(self, factor: float, indices: Optional[NDArray[IndexT]] = None):
+    def scale(self, factor: float, indices: NDArray[IndexT] | None = None):
         """
         Scales the values and variances of the result by a coefficient.
 
@@ -665,7 +663,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         )
 
     def to_dataframe(
-        self, column: Optional[str] = None, use_names: bool = False
+        self, column: str | None = None, use_names: bool = False
     ) -> pd.DataFrame:
         """Returns values as a dataframe.
 

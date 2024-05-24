@@ -10,12 +10,12 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, TypeVar
 
+from more_itertools import chunked
+
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.samplers.utils import take_n
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
-    IndexT,
     NullaryPredicate,
     SampleBatch,
     SampleGenerator,
@@ -64,7 +64,7 @@ class IndexSampler(ABC):
         ``` pycon
         >>>from pydvl.valuation.samplers import DeterministicUniformSampler
         >>>sampler = DeterministicUniformSampler()
-        >>>for idx, s in sampler.from_indices(np.arange(2)):
+        >>>for idx, s in sampler.generate_batches(np.arange(2)):
         >>>    print(s, end="")
         [][2,][][1,]
         ```
@@ -109,24 +109,45 @@ class IndexSampler(ABC):
         return f"{self.__class__.__name__}"
 
     def from_data(self, data: Dataset) -> BatchGenerator:
-        return self.from_indices(data.indices)
+        return self.generate_batches(data.indices)
 
-    def from_indices(self, indices: IndexSetT) -> BatchGenerator:
+    def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
+
+        # create an empty generator if the indices are empty. `generate_batches` is
+        # a generator function because it has a yield statement later in its body.
+        # Inside generator functionn, `return` acts like a `break`, which produces an
+        # empty generator function. See: https://stackoverflow.com/a/13243870
+        if len(indices) == 0:
+            return
+
         self._interrupted = False
-        for batch in take_n(self._generate(indices), self.batch_size):
+        self._n_samples = 0
+        for batch in chunked(self._generate(indices), self.batch_size):
             yield batch
             # FIXME, BUG: this could be wrong if the batch is not full. Just use lists
             self._n_samples += self.batch_size
             if self._interrupted:
                 break
 
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        """Number of samples that can be generated from the indices.
+
+        Returns None if the number of samples is infinite, which is the case for most
+        stochastic samplers.
+        """
+        if len(indices) == 0:
+            out = 0
+        else:
+            out = None
+        return out
+
     @abstractmethod
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates single samples.
 
-        `IndexSampler.from_indices()` will batch these samples according to the batch
-        size set upon construction.
+        `IndexSampler.generate_batches()` will batch these samples according to the
+        batch size set upon construction.
 
         Args:
             indices:

@@ -1,21 +1,19 @@
-import itertools
+from __future__ import annotations
+
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from functools import partial
+from typing import List, NamedTuple, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
-from deprecate import deprecated
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from pydvl.parallel import (
-    MapReduceJob,
-    ParallelBackend,
-    ParallelConfig,
-    _maybe_init_parallel_backend,
-)
-from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.utils import Status
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import Sample
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -29,6 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 class LeastCoreProblem(NamedTuple):
+    """The linear programming problem that defines the least-core valuation.
+
+    See [LeastCoreValuation](pydvl.valuation.methods.least_core.LeastCoreValuation) for
+    details.
+
+    """
+
     utility_values: NDArray[np.float_]
     A_lb: NDArray[np.float_]
 
@@ -36,21 +41,32 @@ class LeastCoreProblem(NamedTuple):
 def lc_solve_problem(
     problem: LeastCoreProblem,
     *,
-    u: Utility,
+    u: UtilityBase,
     algorithm: str,
     non_negative_subsidy: bool = False,
-    solver_options: Optional[dict] = None,
+    solver_options: dict | None = None,
 ) -> ValuationResult:
     """Solves a linear problem as prepared by
-    [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
+    [mclc_prepare_problem()][pydvl.valuation.create_least_core_problem].
     Useful for parallel execution of multiple experiments by running this as a
     remote task.
 
-    See [exact_least_core()][pydvl.value.least_core.naive.exact_least_core] or
-    [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
-    argument descriptions.
+    Args:
+        problem: LeastCoreProblem to solve.
+        u: Utility object with model, data and scoring function.
+        algorithm: Name of the least-core valuation algorithm.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+
     """
-    n = len(u.data)
+    if u.training_data is not None:
+        n_obs = len(u.training_data)
+    else:
+        raise ValueError("Utility object must have a training dataset.")
 
     if np.any(np.isnan(problem.utility_values)):
         warnings.warn(
@@ -77,12 +93,12 @@ def lc_solve_problem(
     b_lb = b_lb[unique_indices]
 
     logger.debug("Building equality constraint")
-    A_eq = np.ones((1, n))
+    A_eq = np.ones((1, n_obs))
     # We might have already computed the total utility one or more times.
     # This is the index of the row(s) in A_lb with all ones.
-    total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
+    total_utility_indices = np.where(A_lb.sum(axis=1) == n_obs)[0]
     if len(total_utility_indices) == 0:
-        b_eq = np.array([u(u.data.indices)])
+        b_eq = np.array([u(Sample(idx=None, subset=u.training_data.indices))])
     else:
         b_eq = b_lb[total_utility_indices]
         # Remove the row(s) corresponding to the total utility
@@ -115,12 +131,12 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: Optional[NDArray[np.float_]]
+    values: NDArray[np.float_] | None
 
     if subsidy is None:
         logger.debug("No values were found")
         status = Status.Failed
-        values = np.empty(n)
+        values = np.empty(n_obs)
         values[:] = np.nan
         subsidy = np.nan
     else:
@@ -136,7 +152,7 @@ def lc_solve_problem(
         if values is None:
             logger.debug("No values were found")
             status = Status.Failed
-            values = np.empty(n)
+            values = np.empty(n_obs)
             values[:] = np.nan
             subsidy = np.nan
         else:
@@ -148,76 +164,8 @@ def lc_solve_problem(
         values=values,
         subsidy=subsidy,
         stderr=None,
-        data_names=u.data.data_names,
+        data_names=u.training_data.data_names,
     )
-
-
-@deprecated(
-    target=True,
-    args_mapping={"config": "config"},
-    deprecated_in="0.9.0",
-    remove_in="0.10.0",
-)
-def lc_solve_problems(
-    problems: Sequence[LeastCoreProblem],
-    u: Utility,
-    algorithm: str,
-    parallel_backend: Optional[ParallelBackend] = None,
-    config: Optional[ParallelConfig] = None,
-    n_jobs: int = 1,
-    non_negative_subsidy: bool = True,
-    solver_options: Optional[dict] = None,
-    **options,
-) -> List[ValuationResult]:
-    """Solves a list of linear problems in parallel.
-
-    Args:
-        u: Utility.
-        problems: Least Core problems to solve, as returned by
-            [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
-        algorithm: Name of the valuation algorithm.
-        parallel_backend: Parallel backend instance to use
-            for parallelizing computations. If `None`,
-            use [JoblibParallelBackend][pydvl.parallel.backends.JoblibParallelBackend] backend.
-            See the [Parallel Backends][pydvl.parallel.backends] package
-            for available options.
-        config: (**DEPRECATED**) Object configuring parallel computation,
-            with cluster address, number of cpus, etc.
-        n_jobs: Number of parallel jobs to run.
-        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-            to be non-negative.
-        solver_options: Additional options to pass to the solver.
-
-    Returns:
-        List of solutions.
-    """
-
-    def _map_func(
-        problems: List[LeastCoreProblem], *args, **kwargs
-    ) -> List[ValuationResult]:
-        return [lc_solve_problem(p, *args, **kwargs) for p in problems]
-
-    parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
-
-    map_reduce_job: MapReduceJob[
-        "LeastCoreProblem", "List[ValuationResult]"
-    ] = MapReduceJob(
-        inputs=problems,
-        map_func=_map_func,
-        map_kwargs=dict(
-            u=u,
-            algorithm=algorithm,
-            non_negative_subsidy=non_negative_subsidy,
-            solver_options=solver_options,
-            **options,
-        ),
-        reduce_func=lambda x: list(itertools.chain(*x)),
-        parallel_backend=parallel_backend,
-        n_jobs=n_jobs,
-    )
-    solutions = map_reduce_job()
-
-    return solutions
 
 
 def _solve_least_core_linear_program(
@@ -227,7 +175,7 @@ def _solve_least_core_linear_program(
     b_lb: NDArray[np.float_],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+) -> Tuple[NDArray[np.float_] | None, float | None]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -304,7 +252,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
     solver_options: dict,
-) -> Optional[NDArray[np.float_]]:
+) -> NDArray[np.float_] | None:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$

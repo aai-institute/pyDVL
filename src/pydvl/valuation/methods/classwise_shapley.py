@@ -41,9 +41,9 @@ $y_i$ and $-y_i$, respectively.
     $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
 
     in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
-    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
-    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
-    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
+    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy
+    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting
+    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and
     $\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
@@ -122,12 +122,12 @@ class ClasswiseSampler(IndexSampler):
         # HACK: the outer sampler is over full subsets of T_{-y_i}
         self.out_of_class._index_iteration = NoIndexIteration
 
-        for ooc_batch in self.out_of_class.from_indices(without_label):
+        for ooc_batch in self.out_of_class.generate_batches(without_label):
             # NOTE: The inner sampler can be a permutation sampler => we need to
             #  return batches of the same size as that sampler in order for the
             #  in_class strategy to work correctly.
             for ooc_sample in ooc_batch:
-                for ic_batch in self.in_class.from_indices(with_label):
+                for ic_batch in self.in_class.generate_batches(with_label):
                     # FIXME? this sends the same out_of_class_subset for all samples
                     #   maybe a few 10s of KB... probably irrelevant
                     yield [
@@ -140,7 +140,7 @@ class ClasswiseSampler(IndexSampler):
                         for ic_sample in ic_batch
                     ]
 
-    def from_indices(self, indices: IndexSetT) -> BatchGenerator:
+    def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         raise AttributeError("Cannot sample from indices directly.")
 
     def make_strategy(
@@ -191,7 +191,7 @@ class ClasswiseShapley(Valuation):
                 processor = delayed(strategy.process)
                 delayed_evals = parallel(
                     processor(batch=list(batch), is_interrupted=flag)
-                    for batch in sampler.from_data(data)
+                    for batch in sampler.generate_batches(data.indices)
                 )
                 for evaluation in Progress(delayed_evals, self.is_done):
                     self.result.update(evaluation.idx, evaluation.update)

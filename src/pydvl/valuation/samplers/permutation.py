@@ -118,9 +118,7 @@ class AntitheticPermutationSampler(PermutationSampler):
         while True:
             permutation = self._rng.permutation(indices)
             yield Sample(-1, permutation)
-            self._n_samples += 1
             yield Sample(-1, permutation[::-1])
-            self._n_samples += 1
 
 
 class DeterministicPermutationSampler(PermutationSampler):
@@ -132,7 +130,13 @@ class DeterministicPermutationSampler(PermutationSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
             yield Sample(-1, np.array(permutation, copy=False))
-            self._n_samples += 1
+
+    def sample_limit(self, indices: IndexSetT) -> int:
+        if len(indices) == 0:
+            out = 0
+        else:
+            out = math.factorial(len(indices))
+        return out
 
 
 class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):

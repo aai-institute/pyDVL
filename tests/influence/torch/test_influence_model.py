@@ -6,7 +6,6 @@ import pytest
 from numpy.typing import NDArray
 
 from pydvl.influence.base_influence_function_model import (
-    NotFittedException,
     NotImplementedLayerRepresentationException,
 )
 from pydvl.influence.torch.influence_function_model import (
@@ -22,6 +21,7 @@ from pydvl.influence.torch.pre_conditioner import (
     NystroemPreConditioner,
     PreConditioner,
 )
+from pydvl.utils.exceptions import NotFittedException
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
