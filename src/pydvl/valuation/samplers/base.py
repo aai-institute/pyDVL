@@ -10,8 +10,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, TypeVar
 
+from more_itertools import chunked
+
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.samplers.utils import take_n
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
@@ -122,7 +123,7 @@ class IndexSampler(ABC):
 
         self._interrupted = False
         self._n_samples = 0
-        for batch in take_n(self._generate(indices), self.batch_size):
+        for batch in chunked(self._generate(indices), self.batch_size):
             yield batch
             # FIXME, BUG: this could be wrong if the batch is not full. Just use lists
             self._n_samples += self.batch_size
