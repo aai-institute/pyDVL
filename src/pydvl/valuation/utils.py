@@ -84,7 +84,8 @@ class MultiprocessingFlag(Flag):
 
     @classmethod
     def create(cls):
-        uid = uuid.uuid4().hex
+        # limit uid to 30 instead of 32 characters to avoid OSError on MacOS
+        uid = uuid.uuid4().hex[:30]
         shared_memory.SharedMemory(uid, create=True, size=1)
         return cls(uid)
 
