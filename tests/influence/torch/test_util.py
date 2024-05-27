@@ -24,6 +24,7 @@ from pydvl.influence.torch.util import (
     align_structure,
     flatten_dimensions,
     inverse_rank_one_update,
+    inverse_rank_one_update_dict,
     rank_one_mvp,
     safe_torch_linalg_eigh,
     torch_dataset_to_dask_array,
@@ -367,6 +368,31 @@ def test_inverse_rank_one_update(x_dim_0, x_dim_1, v_dim_0, reg):
     result = inverse_rank_one_update(X, V, reg)
 
     assert torch.allclose(result, inverse_result, atol=1e-5)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_1",
+    [{"1": (4, 2, 3), "2": (5, 7), "3": ()}, {"1": (3, 6, 8, 9), "2": (1, 2)}, {"1": (1,)}],
+)
+@pytest.mark.parametrize(
+    "x_dim_0, v_dim_0",
+    [(10, 12), (3, 5), (4, 10), (6, 6), (1, 7)],
+)
+@pytest.mark.parametrize("reg", [0.5, 100, 1.0, 10])
+def test_inverse_rank_one_update(x_dim_0, x_dim_1, v_dim_0, reg):
+    X_dict = {k: torch.randn(x_dim_0, *d) for k, d in x_dim_1.items()}
+    V_dict = {k: torch.randn(v_dim_0, *d) for k, d in x_dim_1.items()}
+
+    X = flatten_dimensions(X_dict.values(), shape=(x_dim_0, -1))
+    V = flatten_dimensions(V_dict.values(), shape=(v_dim_0, -1))
+    result = inverse_rank_one_update(X, V, reg)
+
+    inverse_result = flatten_dimensions(
+        inverse_rank_one_update_dict(X_dict, V_dict, reg).values(), shape=(v_dim_0, -1)
+    )
+
+    assert torch.allclose(result, inverse_result, atol=1e-5, rtol=1e-3)
 
 
 class TestModelParameterDictBuilder:

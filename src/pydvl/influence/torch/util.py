@@ -696,6 +696,32 @@ def inverse_rank_one_update(
     return (v - (nominator / denominator) @ x) / regularization
 
 
+def inverse_rank_one_update_dict(
+    x: Dict[str, torch.Tensor], v: Dict[str, torch.Tensor], regularization: float
+) -> Dict[str, torch.Tensor]:
+
+    denominator = regularization
+    nominator = None
+    batch_size = None
+    for x_, v_ in zip(x.values(), v.values()):
+        if batch_size is None:
+            batch_size = x_.shape[0]
+        if nominator is None:
+            nominator = torch.einsum("i..., k...->ki", x_, v_)
+        else:
+            nominator += torch.einsum("i..., k...->ki", x_, v_)
+        denominator += torch.sum(x_.view(x_.shape[0], -1) ** 2, dim=1)
+    denominator = batch_size * denominator
+
+    result = {}
+    for key in x.keys():
+        result[key] = (
+            v[key] - torch.einsum("ji, i... -> j...", nominator / denominator, x[key])
+        ) / regularization
+
+    return result
+
+
 LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 
 
