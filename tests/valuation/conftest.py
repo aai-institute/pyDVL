@@ -20,6 +20,7 @@ from pydvl.valuation.games import (
     SymmetricVotingGame,
 )
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.scorers import SupervisedScorer
 from pydvl.valuation.utility import ModelUtility
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
@@ -65,13 +66,27 @@ def polynomial_pipeline(coefficients):
 
 
 @pytest.fixture(scope="function")
-def dummy_Model(num_samples):
-    # Indices match values
+def dummy_train_data(num_samples):
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
+    data = Dataset(x, nil, feature_names=["x"], target_names=["y"], description="dummy")
+    return data
+
+
+@pytest.fixture(scope="function")
+def dummy_test_data(num_samples):
+    nil = np.zeros((num_samples, 1))
     data = Dataset(
-        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
+        nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
     )
+    return data
+
+
+@pytest.fixture(scope="function")
+def dummy_utility(dummy_train_data, dummy_test_data):
+    # Indices match values
+    data = dummy_train_data
+    test_data = dummy_test_data
 
     class DummyModel(SupervisedModel):
         """Under this model each data point receives a score of index / max,
@@ -81,7 +96,7 @@ def dummy_Model(num_samples):
         """
 
         def __init__(self, data: Dataset):
-            self.m = max(data.x_train)
+            self.m = max(data.x)
             self.utility = 0
 
         def fit(self, x: NDArray, y: NDArray):
@@ -93,10 +108,15 @@ def dummy_Model(num_samples):
         def score(self, x: NDArray, y: NDArray) -> float:
             return self.utility
 
+    model = DummyModel(data)
+
+    scorer = SupervisedScorer(
+        model, test_data=test_data, default=0, range=(0, data.x.sum() / data.x.max())
+    )
+
     return ModelUtility(
         DummyModel(data),
-        data,
-        score_range=(0, x.sum() / x.max()),
+        scorer=scorer,
         catch_errors=False,
         show_warnings=True,
     )
@@ -106,7 +126,7 @@ def dummy_Model(num_samples):
 def analytic_shapley(dummy_utility):
     r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    m = float(max(dummy_utility.data.x_train))
+    m = float(max(dummy_utility.data.x))
     values = np.array([i / m for i in dummy_utility.data.indices])
     result = ValuationResult(
         algorithm="exact",
@@ -124,7 +144,7 @@ def analytic_banzhaf(dummy_utility):
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
 
-    m = float(max(dummy_utility.data.x_train))
+    m = float(max(dummy_utility.data.x))
     values = np.array([i / m for i in dummy_utility.data.indices])
     result = ValuationResult(
         algorithm="exact",

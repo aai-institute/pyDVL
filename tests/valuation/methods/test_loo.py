@@ -1,14 +1,37 @@
+import joblib
+import numpy as np
 import pytest
 
-from pydvl.value.loo import compute_loo
+from pydvl.utils.status import Status
+from pydvl.valuation import LOOValuation
+from pydvl.valuation.result import ValuationResult
 
 from .. import check_total_value, check_values
 
 
+@pytest.fixture(scope="function")
+def analytic_loo(dummy_train_data):
+    r"""Scores are i/m, so v(i) = U(D) - U(D\{i})] = i/m"""
+    m = float(max(dummy_train_data.x))
+    values = np.array([i / m for i in dummy_train_data.indices])
+    result = ValuationResult(
+        algorithm="exact",
+        values=values,
+        variances=np.zeros_like(values),
+        data_names=dummy_train_data.indices,
+        status=Status.Converged,
+    )
+    return result
+
+
+# num_samples indirectly parametrizes the fixtures
 @pytest.mark.parametrize("num_samples", [10, 100])
-def test_loo(num_samples: int, n_jobs: int, parallel_backend, analytic_loo):
+@pytest.mark.parametrize("n_jobs", [1, 2])
+def test_loo(dummy_utility, dummy_train_data, analytic_loo, n_jobs):
     """Compares LOO with analytic values in a dummy model"""
-    u, exact_values = analytic_loo
-    values = compute_loo(u, n_jobs=n_jobs, parallel_backend=parallel_backend)
-    check_total_value(u, values, rtol=0.1)
-    check_values(values, exact_values, rtol=0.1)
+    valuation = LOOValuation(utility=dummy_utility, progress=False)
+    with joblib.parallel_config(backend="loky", n_jobs=n_jobs):
+        valuation.fit(dummy_train_data)
+    got = valuation.values()
+    check_total_value(dummy_utility, got, rtol=0.1)
+    check_values(got, analytic_loo, rtol=0.1)
