@@ -67,6 +67,7 @@ def polynomial_pipeline(coefficients):
 
 @pytest.fixture(scope="function")
 def dummy_train_data(num_samples):
+    """Training data used in everything that uses dummy_utility."""
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
     data = Dataset(x, nil, feature_names=["x"], target_names=["y"], description="dummy")
@@ -75,6 +76,7 @@ def dummy_train_data(num_samples):
 
 @pytest.fixture(scope="function")
 def dummy_test_data(num_samples):
+    """Test data used in everything that uses dummy_utility."""
     nil = np.zeros((num_samples, 1))
     data = Dataset(
         nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
@@ -84,6 +86,7 @@ def dummy_test_data(num_samples):
 
 @pytest.fixture(scope="function")
 def dummy_utility(dummy_train_data, dummy_test_data):
+    """Dummy utility for which we get analytical solutions for several methods."""
     # Indices match values
     data = dummy_train_data
     test_data = dummy_test_data
