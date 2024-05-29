@@ -8,3 +8,4 @@ from .influence_function_model import (
     NystroemSketchInfluence,
 )
 from .pre_conditioner import JacobiPreConditioner, NystroemPreConditioner
+from .util import BlockMode

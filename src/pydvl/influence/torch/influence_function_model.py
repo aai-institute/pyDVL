@@ -1808,7 +1808,7 @@ class InverseHarmonicMeanInfluence(
 ):
     r"""
     This implementation replaces the inverse Hessian matrix in the influence computation
-    an approximation of the inverse Gauss-Newton vector product.
+    with an approximation of the inverse Gauss-Newton vector product.
 
     Viewing the damped Gauss-newton matrix
 
