@@ -31,12 +31,10 @@ def test_hessian_batch_operation(model_data, tol: float, pytorch_seed):
     batch_size = 10
     rand_mat_dict = {k: torch.randn(batch_size, *t.shape) for k, t in params.items()}
     flat_rand_mat = flatten_dimensions(rand_mat_dict.values(), shape=(batch_size, -1))
-    hvp_autograd_mat_dict = hessian_op.apply_to_tensor_dict(
-        TorchBatch(x, y), rand_mat_dict
-    )
+    hvp_autograd_mat_dict = hessian_op.apply_to_dict(TorchBatch(x, y), rand_mat_dict)
 
-    hvp_autograd = hessian_op.apply_to_vec(TorchBatch(x, y), vec)
-    hvp_autograd_dict = hessian_op.apply_to_tensor_dict(
+    hvp_autograd = hessian_op.apply(TorchBatch(x, y), vec)
+    hvp_autograd_dict = hessian_op.apply_to_dict(
         TorchBatch(x, y), align_structure(params, vec)
     )
     hvp_autograd_dict_flat = flatten_dimensions(hvp_autograd_dict.values())
@@ -56,7 +54,7 @@ def test_hessian_batch_operation(model_data, tol: float, pytorch_seed):
         rtol=tol,
     )
     assert torch.allclose(
-        hessian_op.apply_to_mat(TorchBatch(x, y), flat_rand_mat), op_then_flat
+        hessian_op._apply_to_mat(TorchBatch(x, y), flat_rand_mat), op_then_flat
     )
 
 
@@ -93,8 +91,8 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
     )
     batch_size = 10
 
-    gn_autograd = gn_op.apply_to_vec(TorchBatch(x, y), vec)
-    gn_autograd_dict = gn_op.apply_to_tensor_dict(
+    gn_autograd = gn_op.apply(TorchBatch(x, y), vec)
+    gn_autograd_dict = gn_op.apply_to_dict(
         TorchBatch(x, y), align_structure(params, vec)
     )
     gn_autograd_dict_flat = flatten_dimensions(gn_autograd_dict.values())
@@ -104,12 +102,12 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
 
     rand_mat_dict = {k: torch.randn(batch_size, *t.shape) for k, t in params.items()}
     flat_rand_mat = flatten_dimensions(rand_mat_dict.values(), shape=(batch_size, -1))
-    gn_autograd_mat_dict = gn_op.apply_to_tensor_dict(TorchBatch(x, y), rand_mat_dict)
+    gn_autograd_mat_dict = gn_op.apply_to_dict(TorchBatch(x, y), rand_mat_dict)
 
     op_then_flat = flatten_dimensions(
         gn_autograd_mat_dict.values(), shape=(batch_size, -1)
     )
-    flat_then_op = gn_op.apply_to_mat(TorchBatch(x, y), flat_rand_mat)
+    flat_then_op = gn_op._apply_to_mat(TorchBatch(x, y), flat_rand_mat)
 
     assert torch.allclose(
         op_then_flat,
@@ -167,8 +165,8 @@ def test_inverse_harmonic_mean_batch_operation(
     )
     batch_size = 10
 
-    gn_autograd = gn_op.apply_to_vec(TorchBatch(x, y), vec)
-    gn_autograd_dict = gn_op.apply_to_tensor_dict(
+    gn_autograd = gn_op.apply(TorchBatch(x, y), vec)
+    gn_autograd_dict = gn_op.apply_to_dict(
         TorchBatch(x, y), align_structure(params, vec)
     )
     gn_autograd_dict_flat = flatten_dimensions(gn_autograd_dict.values())
@@ -179,12 +177,12 @@ def test_inverse_harmonic_mean_batch_operation(
 
     rand_mat_dict = {k: torch.randn(batch_size, *t.shape) for k, t in params.items()}
     flat_rand_mat = flatten_dimensions(rand_mat_dict.values(), shape=(batch_size, -1))
-    gn_autograd_mat_dict = gn_op.apply_to_tensor_dict(TorchBatch(x, y), rand_mat_dict)
+    gn_autograd_mat_dict = gn_op.apply_to_dict(TorchBatch(x, y), rand_mat_dict)
 
     op_then_flat = flatten_dimensions(
         gn_autograd_mat_dict.values(), shape=(batch_size, -1)
     )
-    flat_then_op = gn_op.apply_to_mat(TorchBatch(x, y), flat_rand_mat)
+    flat_then_op = gn_op._apply_to_mat(TorchBatch(x, y), flat_rand_mat)
 
     assert torch.allclose(
         op_then_flat,

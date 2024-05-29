@@ -351,27 +351,40 @@ class Operator(Generic[TensorType, BilinearFormType], ABC):
         """
 
     @abstractmethod
-    def apply_to_vec(self, vec: TensorType) -> TensorType:
+    def _validate_tensor_input(self, tensor: TensorType) -> None:
         """
-        Applies the operator to a vector.
+        Validates the input tensor for the operator.
 
         Args:
-            vec: A tensor representing the vector to which the operator is applied,
-                must conform to the operator's input size.
+            tensor: A tensor to validate.
+
+        Raises:
+            ValueError: If the tensor is invalid for the operator.
+        """
+
+    def apply(self, tensor: TensorType) -> TensorType:
+        """
+        Applies the operator to a tensor.
+
+        Args:
+            tensor: A tensor, whose tailing dimension must conform to the
+                operator's input size
 
         Returns:
             A tensor representing the result of the operator application.
         """
+        self._validate_tensor_input(tensor)
+        return self._apply(tensor)
 
     @abstractmethod
-    def apply_to_mat(self, mat: TensorType) -> TensorType:
+    def _apply(self, tensor: TensorType) -> TensorType:
         """
-        Applies the operator to a matrix.
+        Applies the operator to a tensor. Implement this to handle
+        batched input.
 
         Args:
-            mat: A tensor representing the matrix to which the operator is applied,
-                where the first dimension is the batch dimension and last dimension
-                of the matrix must conform to the operator's input size
+            tensor: A tensor, whose tailing dimension must conform to the
+                operator's input size
 
         Returns:
             A tensor representing the result of the operator application.
@@ -462,7 +475,7 @@ class OperatorGradientComposition(
 
         """
         grads = self.gp.flat_grads(batch)
-        return self.op.apply_to_mat(grads)
+        return self.op.apply(grads)
 
     def interactions_from_transformed_grads(
         self, left_factors: TensorType, right_batch: BatchType, mode: InfluenceMode

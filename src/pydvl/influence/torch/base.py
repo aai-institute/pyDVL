@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
 
 import torch
 from torch.func import functional_call
@@ -13,7 +13,6 @@ from ..base_influence_function_model import ComposableInfluence
 from ..types import (
     Batch,
     BilinearForm,
-    BilinearFormType,
     BlockMapper,
     GradientProvider,
     Operator,
@@ -341,7 +340,7 @@ class OperatorBilinearForm(
         return self._inner_product(right, left).T
 
     def _inner_product(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
-        left_result = self.operator.apply_to_mat(left)
+        left_result = self.operator.apply(left)
 
         if left_result.ndim == right.ndim and left.shape[-1] == right.shape[-1]:
             return left_result @ right.T
@@ -405,10 +404,10 @@ class DictBilinearForm(OperatorBilinearForm):
         )
 
         if left_batch_size <= right_batch_size:
-            left_grads = operator.apply_to_mat_dict(left_grads)
+            left_grads = operator.apply_to_dict(left_grads)
             tensor_pairs = zip(left_grads.values(), right_grads.values())
         else:
-            right_grads = operator.apply_to_mat_dict(right_grads)
+            right_grads = operator.apply_to_dict(right_grads)
             tensor_pairs = zip(left_grads.values(), right_grads.values())
 
         tensors_to_reduce = (
@@ -445,7 +444,7 @@ class DictBilinearForm(OperatorBilinearForm):
         operator = cast(TensorDictOperator, self.operator)
         right_grads = gradient_provider.mixed_grads(right)
         left_grads = gradient_provider.grads(left)
-        left_grads = operator.apply_to_mat_dict(left_grads)
+        left_grads = operator.apply_to_dict(left_grads)
         left_grads_views = (t.reshape(t.shape[0], -1) for t in left_grads.values())
         right_grads_views = (
             t.reshape(*right.x.shape, -1) for t in right_grads.values()
@@ -490,11 +489,25 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
     def to(self, device: torch.device):
         pass
 
+    def _validate_tensor_input(self, tensor: torch.Tensor) -> None:
+        if not (1 <= tensor.ndim <= 2):
+            raise ValueError(
+                f"Expected a 1 or 2 dimensional tensor, got {tensor.ndim} dimensions."
+            )
+        if tensor.shape[-1] != self.input_size:
+            raise ValueError(
+                f"Expected the last dimension to be of size {self.input_size}."
+            )
+
+    def _apply(self, tensor: torch.Tensor) -> torch.Tensor:
+
+        if tensor.ndim == 2:
+            return self._apply_to_mat(tensor.to(self.device))
+
+        return self._apply_to_vec(tensor.to(self.device))
+
     @abstractmethod
     def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-        pass
-
-    def apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
         """
         Applies the operator to a single vector.
         Args:
@@ -504,9 +517,8 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
         Returns:
             A single vector after applying the batch operation
         """
-        return self._apply_to_vec(vec.to(self.device))
 
-    def apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
         """
         Applies the operator to a matrix.
         Args:
@@ -519,7 +531,7 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
                 $(N, \text{input_size})$
 
         """
-        return torch.func.vmap(self.apply_to_vec, in_dims=0, randomness="same")(mat)
+        return torch.func.vmap(self._apply_to_vec, in_dims=0, randomness="same")(mat)
 
     def as_bilinear_form(self) -> OperatorBilinearForm:
         return OperatorBilinearForm(self)
@@ -534,9 +546,7 @@ class TensorDictOperator(TensorOperator, ABC):
     to avoid intermediate flattening and concatenating of gradient inputs.
     """
 
-    def apply_to_mat_dict(
-        self, mat: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+    def apply_to_dict(self, mat: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """
         Applies the operator to a dictionary of tensors, compatible to the structure
         defined by the property `input_dict_structure`.
@@ -555,7 +565,7 @@ class TensorDictOperator(TensorOperator, ABC):
                 f"dimension): \n {self.input_dict_structure}"
             )
 
-        return self._apply_to_mat_dict(self._dict_to_device(mat))
+        return self._apply_to_dict(self._dict_to_device(mat))
 
     def _dict_to_device(self, mat: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         return {k: v.to(self.device) for k, v in mat.items()}
@@ -570,9 +580,7 @@ class TensorDictOperator(TensorOperator, ABC):
         """
 
     @abstractmethod
-    def _apply_to_mat_dict(
-        self, mat: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+    def _apply_to_dict(self, mat: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         pass
 
     def _validate_mat_dict(self, mat: Dict[str, torch.Tensor]) -> bool:

@@ -88,7 +88,7 @@ class _ModelBasedBatchOperation(ABC):
         }
         return self
 
-    def apply_to_tensor_dict(
+    def apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
 
@@ -98,11 +98,11 @@ class _ModelBasedBatchOperation(ABC):
                 "parameters to restrict to."
             )
 
-        return self._apply_to_tensor_dict(
+        return self._apply_to_dict(
             batch, {k: v.to(self.device) for k, v in mat_dict.items()}
         )
 
-    def _has_batch_dim(self, tensor_dict: Dict[str, torch.Tensor]):
+    def _has_batch_dim_dict(self, tensor_dict: Dict[str, torch.Tensor]):
         batch_dim_flags = [
             tensor_dict[key].shape == val.shape
             for key, val in self.params_to_restrict_to.items()
@@ -121,7 +121,7 @@ class _ModelBasedBatchOperation(ABC):
         return result
 
     @abstractmethod
-    def _apply_to_tensor_dict(
+    def _apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
         pass
@@ -130,20 +130,34 @@ class _ModelBasedBatchOperation(ABC):
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
         pass
 
-    def apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor):
+    def apply(self, batch: TorchBatch, tensor: torch.Tensor):
         """
-        Applies the batch operation to a single vector.
+        Applies the batch operation to a tensor.
         Args:
             batch: Batch of data for computation
-            vec: A single vector consistent to the operation, i.e. it's length
-                must be equal to the property `input_size`.
+            tensor: A tensor consistent to the operation, i.e. it must be
+                at most 2-dim, and it's tailing dimension must
+                be equal to the property `input_size`.
 
         Returns:
-            A single vector after applying the batch operation
+            A tensor after applying the batch operation
         """
-        return self._apply_to_vec(batch.to(self.device), vec.to(self.device))
 
-    def apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
+        if not tensor.ndim <= 2:
+            raise ValueError(
+                f"The input tensor must be at most 2-dimensional, got {tensor.ndim}"
+            )
+
+        if tensor.shape[-1] != self.input_size:
+            raise ValueError(
+                "The last dimension of the input tensor must be equal to the "
+                "property `input_size`."
+            )
+        if tensor.ndim == 2:
+            return self._apply_to_mat(batch.to(self.device), tensor.to(self.device))
+        return self._apply_to_vec(batch.to(self.device), tensor.to(self.device))
+
+    def _apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
         """
         Applies the batch operation to a matrix.
         Args:
@@ -204,13 +218,13 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
         return self._batch_hvp(self.params_to_restrict_to, batch.x, batch.y, vec)
 
-    def _apply_to_tensor_dict(
+    def _apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
 
         func = self._create_seq_func(*batch)
 
-        if self._has_batch_dim(mat_dict):
+        if self._has_batch_dim_dict(mat_dict):
             func = torch.func.vmap(
                 func, in_dims=tuple((0 for _ in self.params_to_restrict_to))
             )
@@ -274,7 +288,7 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
             model, loss, self.params_to_restrict_to
         )
 
-    def _apply_to_tensor_dict(
+    def _apply_to_dict(
         self, batch: TorchBatch, vec_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
         vec_values = list(self._add_batch_dim(vec_dict).values())
@@ -287,7 +301,7 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
         flat_grads = self.gradient_provider.flat_grads(batch)
         return self._rank_one_mvp(flat_grads, vec)
 
-    def apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
+    def _apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
         """
         Applies the batch operation to a matrix.
         Args:
@@ -301,7 +315,7 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
                 $(N, \text{input_size})$
 
         """
-        return self.apply_to_vec(batch, mat)
+        return self._apply_to_vec(batch, mat)
 
     def to(self, device: torch.device):
         self.gradient_provider = self.gradient_provider.to(device)
@@ -431,7 +445,7 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
             input_vec = vec
         return self._inverse_rank_one_update(grads, input_vec, self.regularization)
 
-    def apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
+    def _apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
         """
         Applies the batch operation to a matrix.
         Args:
@@ -445,14 +459,14 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
                 $(N, \text{input_size})$
 
         """
-        return self.apply_to_vec(batch, mat)
+        return self._apply_to_vec(batch, mat)
 
     def to(self, device: torch.device):
         super().to(device)
         self.gradient_provider.params_to_restrict_to = self.params_to_restrict_to
         return self
 
-    def _apply_to_tensor_dict(
+    def _apply_to_dict(
         self, batch: TorchBatch, vec_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
         vec_values = list(self._add_batch_dim(vec_dict).values())
@@ -488,7 +502,8 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
                 invertible, must be positive.
 
         Returns:
-            Matrix of size $(D, M)$ for x having shape $(N, D)$ and v having shape $(M, D)$.
+            Matrix of size $(D, M)$ for x having shape $(N, D)$ and v having shape
+                $(M, D)$.
         """
         nominator = torch.einsum("ij,kj->ki", x, v)
         denominator = x.shape[0] * (regularization + torch.sum(x**2, dim=1))

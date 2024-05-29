@@ -4,6 +4,7 @@ import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
+from ..types import TensorType
 from .base import (
     GradientProviderFactoryType,
     TensorDictOperator,
@@ -53,12 +54,10 @@ class _AveragingBatchOperator(
     def input_dict_structure(self) -> Dict[str, Tuple[int, ...]]:
         return self.batch_operation.input_dict_structure
 
-    def _apply_to_mat_dict(
-        self, mat: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+    def _apply_to_dict(self, mat: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
 
         tensor_dicts = (
-            self.batch_operation.apply_to_tensor_dict(TorchBatch(x, y), mat)
+            self.batch_operation.apply_to_dict(TorchBatch(x, y), mat)
             for x, y in self.dataloader
         )
         dict_averaging = self.averaging.as_dict_averaging()
@@ -81,33 +80,13 @@ class _AveragingBatchOperator(
     def input_size(self):
         return self.batch_operation.input_size
 
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+        return self._apply_to_vec(mat)
+
     def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-        return self._apply(vec, self.batch_operation.apply_to_vec)
-
-    def apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-        """
-        Applies the operator to a matrix.
-        Args:
-            mat: A matrix to apply the operator to. The last dimension is
-                assumed to be consistent to the operation, i.e. it must equal
-                to the property `input_size`.
-
-        Returns:
-            A matrix of shape $(N, \text{input_size})$, given the shape of mat is
-                $(N, \text{input_size})$
-
-        """
-        return self._apply(mat, self.batch_operation.apply_to_mat)
-
-    def _apply(
-        self,
-        z: torch.Tensor,
-        batch_ops: Callable[[TorchBatch, torch.Tensor], torch.Tensor],
-    ):
-
         tensors = (
-            batch_ops(
-                TorchBatch(x.to(self.device), y.to(self.device)), z.to(self.device)
+            self.batch_operation.apply(
+                TorchBatch(x.to(self.device), y.to(self.device)), vec.to(self.device)
             )
             for x, y in self.dataloader
         )
