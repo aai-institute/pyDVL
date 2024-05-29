@@ -38,13 +38,7 @@ from .base import (
     TorchGradientProvider,
 )
 from .functional import create_batch_hvp_function, create_batch_loss_function, hvp
-from .util import (
-    LossType,
-    generate_inverse_rank_one_updates,
-    generate_rank_one_mvp,
-    inverse_rank_one_update,
-    rank_one_mvp,
-)
+from .util import LossType
 
 
 class _ModelBasedBatchOperation(ABC):
@@ -286,12 +280,12 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
         vec_values = list(self._add_batch_dim(vec_dict).values())
         grads_dict = self.gradient_provider.grads(batch)
         grads_values = list(self._add_batch_dim(grads_dict).values())
-        gen_result = generate_rank_one_mvp(grads_values, vec_values)
+        gen_result = self._generate_rank_one_mvp(grads_values, vec_values)
         return dict(zip(vec_dict.keys(), gen_result))
 
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
         flat_grads = self.gradient_provider.flat_grads(batch)
-        return rank_one_mvp(flat_grads, vec)
+        return self._rank_one_mvp(flat_grads, vec)
 
     def apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
         """
@@ -312,6 +306,44 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
     def to(self, device: torch.device):
         self.gradient_provider = self.gradient_provider.to(device)
         return super().to(device)
+
+    @staticmethod
+    def _rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        r"""
+        Computes the matrix-vector product of xx^T and v for each row in X and V without
+        forming xx^T and sums the result. Here, X and V are matrices where each row
+        represents an individual vector. Effectively it is computing
+
+        $$ V@( \frac{1}{N}\sum_i^N x[i]x[i]^T) $$
+
+        Args:
+            x: Matrix of vectors of size `(N, M)`.
+            v: Matrix of vectors of size `(B, M)` to be multiplied by the corresponding
+                $xx^T$.
+
+        Returns:
+            A matrix of size `(B, N)` where each column is the result of xx^T v for
+                corresponding rows in x and v.
+        """
+        if v.ndim == 1:
+            result = torch.einsum("ij,kj->ki", x, v.unsqueeze(0)) @ x
+            return result.squeeze() / x.shape[0]
+        return (torch.einsum("ij,kj->ki", x, v) @ x) / x.shape[0]
+
+    @staticmethod
+    def _generate_rank_one_mvp(
+        x: List[torch.Tensor], v: List[torch.Tensor]
+    ) -> Generator[torch.Tensor, None, None]:
+        x_v_iterator = zip(x, v)
+        x_, v_ = next(x_v_iterator)
+
+        nominator = torch.einsum("i..., k...->ki", x_, v_)
+
+        for x_, v_ in x_v_iterator:
+            nominator += torch.einsum("i..., k...->ki", x_, v_)
+
+        for x_, v_ in zip(x, v):
+            yield torch.einsum("ji, i... -> j...", nominator, x_) / x_.shape[0]
 
 
 class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
@@ -397,7 +429,7 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
             input_vec = vec.unsqueeze(0)
         else:
             input_vec = vec
-        return inverse_rank_one_update(grads, input_vec, self.regularization)
+        return self._inverse_rank_one_update(grads, input_vec, self.regularization)
 
     def apply_to_mat(self, batch: TorchBatch, mat: torch.Tensor) -> torch.Tensor:
         """
@@ -426,10 +458,64 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
         vec_values = list(self._add_batch_dim(vec_dict).values())
         grads_dict = self.gradient_provider.grads(batch)
         grads_values = list(self._add_batch_dim(grads_dict).values())
-        gen_result = generate_inverse_rank_one_updates(
+        gen_result = self._generate_inverse_rank_one_updates(
             grads_values, vec_values, self.regularization
         )
         return dict(zip(vec_dict.keys(), gen_result))
+
+    @staticmethod
+    def _inverse_rank_one_update(
+        x: torch.Tensor, v: torch.Tensor, regularization: float
+    ) -> torch.Tensor:
+        r"""
+        Performs an inverse-rank one update on x and v. More precisely, it computes
+
+        $$ \sum_{i=1}^n \left(x[i]x[i]^t+\lambda \operatorname{I}\right)^{-1}v $$
+
+        where $\operatorname{I}$ is the identity matrix and $\lambda$ is positive
+        regularization parameter. The inverse matrices are not calculated explicitly,
+        but instead a vectorized version of the
+        [Sherman–Morrison formula](
+        https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula)
+        is applied.
+
+        Args:
+            x: Input matrix used for the rank one expressions. First dimension is
+                assumed to be the batch dimension.
+            v: Matrix to multiply with. First dimension is
+                assumed to be the batch dimension.
+            regularization: Regularization parameter to make the rank-one expressions
+                invertible, must be positive.
+
+        Returns:
+            Matrix of size $(D, M)$ for x having shape $(N, D)$ and v having shape $(M, D)$.
+        """
+        nominator = torch.einsum("ij,kj->ki", x, v)
+        denominator = x.shape[0] * (regularization + torch.sum(x**2, dim=1))
+        return (v - (nominator / denominator) @ x) / regularization
+
+    @staticmethod
+    def _generate_inverse_rank_one_updates(
+        x: List[torch.Tensor], v: List[torch.Tensor], regularization: float
+    ) -> Generator[torch.Tensor, None, None]:
+
+        x_v_iterator = enumerate(zip(x, v))
+        index, (x_, v_) = next(x_v_iterator)
+
+        denominator = regularization + torch.sum(x_.view(x_.shape[0], -1) ** 2, dim=1)
+        nominator = torch.einsum("i..., k...->ki", x_, v_)
+        num_data_points = x_.shape[0]
+
+        for k, (x_, v_) in x_v_iterator:
+            nominator += torch.einsum("i..., k...->ki", x_, v_)
+            denominator += torch.sum(x_.view(x_.shape[0], -1) ** 2, dim=1)
+
+        denominator = num_data_points * denominator
+
+        for x_, v_ in zip(x, v):
+            yield (
+                v_ - torch.einsum("ji, i... -> j...", nominator / denominator, x_)
+            ) / regularization
 
 
 BatchOperationType = TypeVar("BatchOperationType", bound=_ModelBasedBatchOperation)

@@ -11,7 +11,7 @@ from pydvl.influence.torch.batch_operation import (
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
-from .test_util import model_data, test_parameters
+from .test_util import model_data, test_parameters, torch
 
 
 @pytest.mark.torch
@@ -203,3 +203,111 @@ def test_inverse_harmonic_mean_batch_operation(
         atol=1e-5,
         rtol=1e-2,
     )
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_0, x_dim_1, v_dim_0",
+    [(10, 1, 12), (3, 2, 5), (4, 5, 30), (6, 6, 6), (1, 7, 7)],
+)
+def test_rank_one_mvp(x_dim_0, x_dim_1, v_dim_0):
+    X = torch.randn(x_dim_0, x_dim_1)
+    V = torch.randn(v_dim_0, x_dim_1)
+
+    expected = (
+        (torch.vmap(lambda x: x.unsqueeze(-1) * x.unsqueeze(-1).t())(X) @ V.t())
+        .sum(dim=0)
+        .t()
+    ) / x_dim_0
+
+    result = GaussNewtonBatchOperation._rank_one_mvp(X, V)
+
+    assert result.shape == V.shape
+    assert torch.allclose(result, expected, atol=1e-5, rtol=1e-4)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_1",
+    [
+        [(4, 2, 3), (5, 7), (5,)],
+        [(3, 6, 8, 9), (1, 2)],
+        [(1,)],
+    ],
+)
+@pytest.mark.parametrize(
+    "x_dim_0, v_dim_0",
+    [(10, 12), (3, 5), (4, 10), (6, 6), (1, 7)],
+)
+def test_generate_rank_one_mvp(x_dim_0, x_dim_1, v_dim_0):
+    x_list = [torch.randn(x_dim_0, *d) for d in x_dim_1]
+    v_list = [torch.randn(v_dim_0, *d) for d in x_dim_1]
+
+    x = flatten_dimensions(x_list, shape=(x_dim_0, -1))
+    v = flatten_dimensions(v_list, shape=(v_dim_0, -1))
+    result = GaussNewtonBatchOperation._rank_one_mvp(x, v)
+
+    inverse_result = flatten_dimensions(
+        GaussNewtonBatchOperation._generate_rank_one_mvp(x_list, v_list),
+        shape=(v_dim_0, -1),
+    )
+
+    assert torch.allclose(result, inverse_result, atol=1e-5, rtol=1e-3)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_0, x_dim_1, v_dim_0",
+    [(10, 1, 12), (3, 2, 5), (4, 5, 10), (6, 6, 6), (1, 7, 7)],
+)
+@pytest.mark.parametrize("reg", [0.1, 100, 1.0, 10])
+def test_inverse_rank_one_update(x_dim_0, x_dim_1, v_dim_0, reg):
+    X = torch.randn(x_dim_0, x_dim_1)
+    V = torch.randn(v_dim_0, x_dim_1)
+
+    inverse_result = torch.zeros_like(V)
+
+    for x in X:
+        rank_one_matrix = x.unsqueeze(-1) * x.unsqueeze(-1).t()
+        inverse_result += torch.linalg.solve(
+            rank_one_matrix + reg * torch.eye(rank_one_matrix.shape[0]), V, left=False
+        )
+
+    inverse_result /= X.shape[0]
+    result = InverseHarmonicMeanBatchOperation._inverse_rank_one_update(X, V, reg)
+
+    assert torch.allclose(result, inverse_result, atol=1e-5)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "x_dim_1",
+    [
+        [(4, 2, 3), (5, 7), (5,)],
+        [(3, 6, 8, 9), (1, 2)],
+        [(1,)],
+    ],
+)
+@pytest.mark.parametrize(
+    "x_dim_0, v_dim_0",
+    [(10, 12), (3, 5), (4, 10), (6, 6), (1, 7)],
+)
+@pytest.mark.parametrize("reg", [0.5, 100, 1.0, 10])
+def test_generate_inverse_rank_one_updates(
+    x_dim_0, x_dim_1, v_dim_0, reg, pytorch_seed
+):
+    x_list = [torch.randn(x_dim_0, *d) for d in x_dim_1]
+    v_list = [torch.randn(v_dim_0, *d) for d in x_dim_1]
+
+    x = flatten_dimensions(x_list, shape=(x_dim_0, -1))
+    v = flatten_dimensions(v_list, shape=(v_dim_0, -1))
+    result = InverseHarmonicMeanBatchOperation._inverse_rank_one_update(x, v, reg)
+
+    inverse_result = flatten_dimensions(
+        InverseHarmonicMeanBatchOperation._generate_inverse_rank_one_updates(
+            x_list, v_list, reg
+        ),
+        shape=(v_dim_0, -1),
+    )
+
+    assert torch.allclose(result, inverse_result, atol=1e-5, rtol=1e-3)
