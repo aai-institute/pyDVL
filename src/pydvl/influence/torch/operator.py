@@ -1,27 +1,30 @@
-from typing import Callable, Dict, Generator, Generic, Optional, Type, Union
+from typing import Callable, Dict, Generic, Optional, Tuple, Type, Union
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ..array import LazyChunkSequence, SequenceAggregator
 from .base import (
     GradientProviderFactoryType,
+    TensorDictOperator,
     TorchAutoGrad,
     TorchBatch,
     TorchGradientProvider,
-    TorchOperator,
 )
 from .batch_operation import (
     BatchOperationType,
+    ChunkAveraging,
     GaussNewtonBatchOperation,
     HessianBatchOperation,
     InverseHarmonicMeanBatchOperation,
+    PointAveraging,
+    TensorAveragingType,
 )
-from .util import TorchChunkAverageAggregator, TorchPointAverageAggregator
 
 
-class AggregateBatchOperator(TorchOperator, Generic[BatchOperationType]):
+class _AveragingBatchOperator(
+    TensorDictOperator, Generic[BatchOperationType, TensorAveragingType]
+):
     """
     Class for aggregating batch operations over a dataset using a provided data loader
     and aggregator.
@@ -32,7 +35,7 @@ class AggregateBatchOperator(TorchOperator, Generic[BatchOperationType]):
     Attributes:
         batch_operation: The batch operation to apply.
         dataloader: The data loader providing batches of data.
-        aggregator: The sequence aggregator to aggregate the results of the batch
+        averaging: The sequence aggregator to aggregate the results of the batch
             operations.
     """
 
@@ -40,11 +43,27 @@ class AggregateBatchOperator(TorchOperator, Generic[BatchOperationType]):
         self,
         batch_operation: BatchOperationType,
         dataloader: DataLoader,
-        aggregator: SequenceAggregator[torch.Tensor],
+        averager: TensorAveragingType,
     ):
         self.batch_operation = batch_operation
         self.dataloader = dataloader
-        self.aggregator = aggregator
+        self.averaging = averager
+
+    @property
+    def input_dict_structure(self) -> Dict[str, Tuple[int, ...]]:
+        return self.batch_operation.input_dict_structure
+
+    def _apply_to_mat_dict(
+        self, mat: Dict[str, torch.Tensor]
+    ) -> Dict[str, torch.Tensor]:
+
+        tensor_dicts = (
+            self.batch_operation.apply_to_tensor_dict(TorchBatch(x, y), mat)
+            for x, y in self.dataloader
+        )
+        dict_averaging = self.averaging.as_dict_averaging()
+        result: Dict[str, torch.Tensor] = dict_averaging(tensor_dicts)
+        return result
 
     @property
     def device(self):
@@ -85,21 +104,20 @@ class AggregateBatchOperator(TorchOperator, Generic[BatchOperationType]):
         z: torch.Tensor,
         batch_ops: Callable[[TorchBatch, torch.Tensor], torch.Tensor],
     ):
-        def tensor_gen_factory() -> Generator[torch.Tensor, None, None]:
-            return (
-                batch_ops(
-                    TorchBatch(x.to(self.device), y.to(self.device)), z.to(self.device)
-                )
-                for x, y in self.dataloader
+
+        tensors = (
+            batch_ops(
+                TorchBatch(x.to(self.device), y.to(self.device)), z.to(self.device)
             )
-
-        lazy_tensor_sequence = LazyChunkSequence(
-            tensor_gen_factory, len_generator=len(self.dataloader)
+            for x, y in self.dataloader
         )
-        return self.aggregator(lazy_tensor_sequence)
+
+        return self.averaging(tensors)
 
 
-class GaussNewtonOperator(AggregateBatchOperator[GaussNewtonBatchOperation]):
+class GaussNewtonOperator(
+    _AveragingBatchOperator[GaussNewtonBatchOperation, PointAveraging]
+):
     r"""
     Given a model and loss function computes the Gauss-Newton vector or matrix product
     with respect to the model parameters on a batch, i.e.
@@ -142,11 +160,11 @@ class GaussNewtonOperator(AggregateBatchOperator[GaussNewtonBatchOperation]):
             gradient_provider_factory=gradient_provider_factory,
             restrict_to=restrict_to,
         )
-        aggregator = TorchPointAverageAggregator()
-        super().__init__(batch_op, dataloader, aggregator)
+        averaging = PointAveraging()
+        super().__init__(batch_op, dataloader, averaging)
 
 
-class HessianOperator(AggregateBatchOperator[HessianBatchOperation]):
+class HessianOperator(_AveragingBatchOperator[HessianBatchOperation, ChunkAveraging]):
     r"""
     Given a model and loss function computes the Hessian vector or matrix product
     with respect to the model parameters for a given batch, i.e.
@@ -182,12 +200,12 @@ class HessianOperator(AggregateBatchOperator[HessianBatchOperation]):
         batch_op = HessianBatchOperation(
             model, loss, restrict_to=restrict_to, reverse_only=reverse_only
         )
-        aggregator = TorchChunkAverageAggregator()
-        super().__init__(batch_op, dataloader, aggregator)
+        averaging = ChunkAveraging()
+        super().__init__(batch_op, dataloader, averaging)
 
 
 class InverseHarmonicMeanOperator(
-    AggregateBatchOperator[InverseHarmonicMeanBatchOperation]
+    _AveragingBatchOperator[InverseHarmonicMeanBatchOperation, PointAveraging]
 ):
     r"""
     Given a model and loss function computes an approximation of the inverse
@@ -265,8 +283,8 @@ class InverseHarmonicMeanOperator(
             gradient_provider_factory=gradient_provider_factory,
             restrict_to=restrict_to,
         )
-        aggregator = TorchPointAverageAggregator(weighted=False)
-        super().__init__(batch_op, dataloader, aggregator)
+        averaging = PointAveraging()
+        super().__init__(batch_op, dataloader, averaging)
 
     @property
     def regularization(self):

@@ -11,6 +11,7 @@ from typing import (
     Callable,
     Collection,
     Dict,
+    Generator,
     Iterable,
     Iterator,
     List,
@@ -48,15 +49,11 @@ __all__ = [
     "align_with_model",
     "flatten_dimensions",
     "TorchNumpyConverter",
-    "TorchCatAggregator",
-    "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
     "EkfacRepresentation",
     "empirical_cross_entropy_loss_fn",
     "rank_one_mvp",
     "inverse_rank_one_update",
-    "TorchPointAverageAggregator",
-    "TorchChunkAverageAggregator",
     "LossType",
     "ModelParameterDictBuilder",
     "BlockMode",
@@ -451,33 +448,6 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
         return torch.cat(list(t_gen))
 
 
-class TorchChunkAverageAggregator(SequenceAggregator[torch.Tensor]):
-    def __call__(self, tensor_sequence: LazyChunkSequence):
-        t_gen = tensor_sequence.generator_factory()
-        result = next(t_gen)
-        n_chunks = 1
-        for t in t_gen:
-            result += t
-            n_chunks += 1
-        return result / n_chunks
-
-
-class TorchPointAverageAggregator(SequenceAggregator[torch.Tensor]):
-    def __init__(self, batch_dim: int = 0, weighted: bool = True):
-        self.weighted = weighted
-        self.batch_dim = batch_dim
-
-    def __call__(self, tensor_sequence: LazyChunkSequence):
-        tensor_generator = tensor_sequence.generator_factory()
-        result = next(tensor_generator)
-        n_points = result.shape[self.batch_dim]
-        for tensor in tensor_generator:
-            n_points_in_batch = tensor.shape[self.batch_dim]
-            result += n_points_in_batch * tensor if self.weighted else tensor
-            n_points += n_points_in_batch
-        return result / n_points
-
-
 class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
     """
     An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat]
@@ -648,7 +618,7 @@ def rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     forming xx^T and sums the result. Here, X and V are matrices where each row
     represents an individual vector. Effectively it is computing
 
-    $$ V@(\sum_i^N x[i]x[i]^T) $$
+    $$ V@( \frac{1}{N}\sum_i^N x[i]x[i]^T) $$
 
     Args:
         x: Matrix of vectors of size `(N, M)`.
@@ -661,8 +631,23 @@ def rank_one_mvp(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     """
     if v.ndim == 1:
         result = torch.einsum("ij,kj->ki", x, v.unsqueeze(0)) @ x
-        return result.squeeze()
-    return torch.einsum("ij,kj->ki", x, v) @ x
+        return result.squeeze() / x.shape[0]
+    return (torch.einsum("ij,kj->ki", x, v) @ x) / x.shape[0]
+
+
+def generate_rank_one_mvp(
+    x: List[torch.Tensor], v: List[torch.Tensor]
+) -> Generator[torch.Tensor, None, None]:
+    x_v_iterator = zip(x, v)
+    x_, v_ = next(x_v_iterator)
+
+    nominator = torch.einsum("i..., k...->ki", x_, v_)
+
+    for x_, v_ in x_v_iterator:
+        nominator += torch.einsum("i..., k...->ki", x_, v_)
+
+    for x_, v_ in zip(x, v):
+        yield torch.einsum("ji, i... -> j...", nominator, x_) / x_.shape[0]
 
 
 def inverse_rank_one_update(
@@ -696,30 +681,64 @@ def inverse_rank_one_update(
     return (v - (nominator / denominator) @ x) / regularization
 
 
-def inverse_rank_one_update_dict(
-    x: Dict[str, torch.Tensor], v: Dict[str, torch.Tensor], regularization: float
-) -> Dict[str, torch.Tensor]:
+def generate_inverse_rank_one_updates(
+    x: List[torch.Tensor], v: List[torch.Tensor], regularization: float
+) -> Generator[torch.Tensor, None, None]:
+    def _check_batch_dim(t_x, t_v, idx: int):
+        if t_x.ndim <= 1:
+            raise ValueError(
+                f"Provided tensors in the lists must have at least "
+                f"2 dimensions, "
+                f"but found {t_x.ndim=} at {idx=} in list x"
+            )
 
-    denominator = regularization
-    nominator = None
-    batch_size = None
-    for x_, v_ in zip(x.values(), v.values()):
-        if batch_size is None:
-            batch_size = x_.shape[0]
-        if nominator is None:
-            nominator = torch.einsum("i..., k...->ki", x_, v_)
-        else:
-            nominator += torch.einsum("i..., k...->ki", x_, v_)
+        if v_.ndim <= 1:
+            raise ValueError(
+                f"Provided tensors in the lists must have at least "
+                f"2 dimensions, "
+                f"but found shape {t_v.ndim=} at {idx=} in list v"
+            )
+
+    def _create_dim_error(x_shape, v_shape, idx: int):
+        return ValueError(
+            f"Entries in the tensor lists must have the same "
+            f"(excluding the first batch dimensions), "
+            f"but found shapes {x_shape} and {v_shape}"
+            f"at {idx=}"
+        )
+
+    if not len(x) == len(v):
+        raise ValueError(
+            f"Provided tensor lists must have the same length, but got"
+            f"{len(x)=} and {len(v)=}"
+        )
+
+    x_v_iterator = enumerate(zip(x, v))
+    index, (x_, v_) = next(x_v_iterator)
+
+    _check_batch_dim(x_, v_, index)
+
+    if x_.shape[1:] != v_.shape[1:]:
+        raise _create_dim_error(x_.shape[1:], v_.shape[1:], index)
+
+    denominator = regularization + torch.sum(x_.view(x_.shape[0], -1) ** 2, dim=1)
+    nominator = torch.einsum("i..., k...->ki", x_, v_)
+    num_data_points = x_.shape[0]
+
+    for k, (x_, v_) in x_v_iterator:
+        _check_batch_dim(x_, v_, k)
+        if x_.shape[1:] != v_.shape[1:]:
+            raise _create_dim_error(x_.shape[1:], v_.shape[1:], k)
+
+        nominator += torch.einsum("i..., k...->ki", x_, v_)
         denominator += torch.sum(x_.view(x_.shape[0], -1) ** 2, dim=1)
-    denominator = batch_size * denominator
 
-    result = {}
-    for key in x.keys():
-        result[key] = (
-            v[key] - torch.einsum("ji, i... -> j...", nominator / denominator, x[key])
+    denominator = num_data_points * denominator
+
+    for x_, v_ in zip(x, v):
+        yield (
+            v_ - torch.einsum("ji, i... -> j...", nominator / denominator, x_)
         ) / regularization
-
-    return result
 
 
 LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
