@@ -3,11 +3,10 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from functools import partial, wraps
-from typing import Generic, Optional, Type
+from functools import wraps
+from typing import Generic, Optional, Type, cast
 
 from ..utils.progress import log_duration
-from .array import LazyChunkSequence, SumAggregator
 from .types import BatchType, BlockMapperType, DataLoaderType, InfluenceMode, TensorType
 
 
@@ -434,12 +433,10 @@ class ComposableInfluence(
         )
 
     def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
-        tensor_gen_factory = partial(
-            self.block_mapper.generate_transformed_grads, self._create_batch(x, y)
+        transformed_grads = self.block_mapper.transformed_grads(
+            self._create_batch(x, y)
         )
-        aggregator = SumAggregator()
-        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
-        return result
+        return cast(TensorType, sum(transformed_grads))
 
     def _influences(
         self,
@@ -461,15 +458,8 @@ class ComposableInfluence(
         else:
             right_batch = self._create_batch(x, y)
 
-        tensor_gen_factory = partial(
-            self.block_mapper.generate_interactions,
-            left_batch,
-            right_batch,
-            mode,
-        )
-        aggregator = SumAggregator()
-        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
-        return result
+        tensors = self.block_mapper.generate_interactions(left_batch, right_batch, mode)
+        return cast(TensorType, sum(tensors))
 
     @InfluenceFunctionModel.fit_required
     def influences_from_factors(
@@ -509,17 +499,12 @@ class ComposableInfluence(
             Tensor representing the element-wise scalar products for the provided batch
 
         """
-
-        tensor_gen_factory = partial(
-            self.block_mapper.generate_interactions_from_transformed_grads,
+        tensors = self.block_mapper.generate_interactions_from_transformed_grads(
             z_test_factors,
             self._create_batch(x, y),
             mode,
         )
-
-        aggregator = SumAggregator()
-        result: TensorType = aggregator(LazyChunkSequence(tensor_gen_factory))
-        return result
+        return cast(TensorType, sum(tensors))
 
     @staticmethod
     @abstractmethod
