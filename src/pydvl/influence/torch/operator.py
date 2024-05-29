@@ -165,7 +165,6 @@ class HessianOperator(_AveragingBatchOperator[HessianBatchOperation, ChunkAverag
             i.e. the corresponding sub-matrix of the Hessian. If None, the full Hessian
             is used. Make sure the input matches the corrct dimension, i.e. the
             last dimension must be equal to the property `input_size`.
-        reverse_only: If True only the reverse mode is used in the autograd computation.
     """
 
     def __init__(
@@ -174,11 +173,8 @@ class HessianOperator(_AveragingBatchOperator[HessianBatchOperation, ChunkAverag
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         dataloader: DataLoader,
         restrict_to: Optional[Dict[str, nn.Parameter]] = None,
-        reverse_only: bool = True,
     ):
-        batch_op = HessianBatchOperation(
-            model, loss, restrict_to=restrict_to, reverse_only=reverse_only
-        )
+        batch_op = HessianBatchOperation(model, loss, restrict_to=restrict_to)
         averaging = ChunkAveraging()
         super().__init__(batch_op, dataloader, averaging)
 

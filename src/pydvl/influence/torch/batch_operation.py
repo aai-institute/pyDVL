@@ -198,7 +198,6 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
             i.e. the corresponding sub-matrix of the Hessian. If None, the full Hessian
             is used. Make sure the input matches the corrct dimension, i.e. the
             last dimension must be equal to the property `input_size`.
-        reverse_only: If True only the reverse mode is used in the autograd computation.
     """
 
     def __init__(
@@ -206,14 +205,10 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
         model: torch.nn.Module,
         loss: LossType,
         restrict_to: Optional[Dict[str, torch.nn.Parameter]] = None,
-        reverse_only: bool = True,
     ):
         super().__init__(model, restrict_to=restrict_to)
-        self._batch_hvp = create_batch_hvp_function(
-            model, loss, reverse_only=reverse_only
-        )
+        self._batch_hvp = create_batch_hvp_function(model, loss, reverse_only=True)
         self.loss = loss
-        self.reverse_only = reverse_only
 
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
         return self._batch_hvp(self.params_to_restrict_to, batch.x, batch.y, vec)
@@ -238,7 +233,7 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
                 lambda p: create_batch_loss_function(self.model, self.loss)(p, x, y),
                 self.params_to_restrict_to,
                 dict(zip(self.params_to_restrict_to.keys(), vec)),
-                reverse_only=self.reverse_only,
+                reverse_only=True,
             )
 
         return seq_func

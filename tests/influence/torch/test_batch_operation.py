@@ -23,7 +23,7 @@ from .test_util import model_data, test_parameters, torch
 def test_hessian_batch_operation(model_data, tol: float, pytorch_seed):
     torch_model, x, y, vec, h_analytical = model_data
 
-    params = dict(torch_model.named_parameters())
+    params = {k: p.detach() for k, p in torch_model.named_parameters()}
 
     hessian_op = HessianBatchOperation(
         torch_model, torch.nn.functional.mse_loss, restrict_to=params

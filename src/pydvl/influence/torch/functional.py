@@ -50,6 +50,8 @@ __all__ = [
     "LowRankProductRepresentation",
     "randomized_nystroem_approximation",
     "model_hessian_nystroem_approximation",
+    "create_batch_loss_function",
+    "hvp",
 ]
 
 
