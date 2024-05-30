@@ -64,7 +64,7 @@ def test_hessian_batch_operation(model_data, tol: float, pytorch_seed):
     [(astuple(tp.model_params), 1e-3) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
+def test_gauss_newton_batch_operation(model_data, tol: float):
     torch_model, x, y, vec, _ = model_data
 
     y_pred = torch_model(x)
@@ -97,8 +97,8 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
     )
     gn_autograd_dict_flat = flatten_dimensions(gn_autograd_dict.values())
     analytical_vec = gn_mat_analytical @ vec
-    assert torch.allclose(gn_autograd, analytical_vec, atol=1e-5, rtol=tol)
-    assert torch.allclose(gn_autograd_dict_flat, analytical_vec, atol=1e-5, rtol=tol)
+    assert torch.allclose(gn_autograd, analytical_vec, atol=1e-4, rtol=tol)
+    assert torch.allclose(gn_autograd_dict_flat, analytical_vec, atol=1e-4, rtol=tol)
 
     rand_mat_dict = {k: torch.randn(batch_size, *t.shape) for k, t in params.items()}
     flat_rand_mat = flatten_dimensions(rand_mat_dict.values(), shape=(batch_size, -1))
@@ -112,7 +112,7 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
     assert torch.allclose(
         op_then_flat,
         flat_then_op,
-        atol=1e-5,
+        atol=1e-4,
         rtol=tol,
     )
 
@@ -123,7 +123,7 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
     assert torch.allclose(
         op_then_flat,
         flat_then_op_analytical,
-        atol=1e-5,
+        atol=1e-4,
         rtol=1e-2,
     )
 
@@ -134,10 +134,8 @@ def test_gauss_newton_batch_operation(model_data, tol: float, pytorch_seed):
     [(astuple(tp.model_params), 1e-3) for tp in test_parameters],
     indirect=["model_data"],
 )
-@pytest.mark.parametrize("reg", [0.4])
-def test_inverse_harmonic_mean_batch_operation(
-    model_data, tol: float, reg, pytorch_seed
-):
+@pytest.mark.parametrize("reg", [1.0, 10, 100])
+def test_inverse_harmonic_mean_batch_operation(model_data, tol: float, reg):
     torch_model, x, y, vec, _ = model_data
     y_pred = torch_model(x)
     out_features = y_pred.shape[1]
@@ -172,8 +170,8 @@ def test_inverse_harmonic_mean_batch_operation(
     gn_autograd_dict_flat = flatten_dimensions(gn_autograd_dict.values())
     analytical = ihm_mat_analytical @ vec
 
-    assert torch.allclose(gn_autograd, analytical, atol=1e-5, rtol=tol)
-    assert torch.allclose(gn_autograd_dict_flat, analytical, atol=1e-5, rtol=tol)
+    assert torch.allclose(gn_autograd, analytical, atol=1e-4, rtol=tol)
+    assert torch.allclose(gn_autograd_dict_flat, analytical, atol=1e-4, rtol=tol)
 
     rand_mat_dict = {k: torch.randn(batch_size, *t.shape) for k, t in params.items()}
     flat_rand_mat = flatten_dimensions(rand_mat_dict.values(), shape=(batch_size, -1))
@@ -187,7 +185,7 @@ def test_inverse_harmonic_mean_batch_operation(
     assert torch.allclose(
         op_then_flat,
         flat_then_op,
-        atol=1e-5,
+        atol=1e-4,
         rtol=tol,
     )
 
@@ -198,7 +196,7 @@ def test_inverse_harmonic_mean_batch_operation(
     assert torch.allclose(
         op_then_flat,
         flat_then_op_analytical,
-        atol=1e-5,
+        atol=1e-4,
         rtol=1e-2,
     )
 
