@@ -501,7 +501,7 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
 
     def _apply(self, tensor: torch.Tensor) -> torch.Tensor:
 
-        if tensor.ndim == 2:
+        if tensor.ndim == 2 and tensor.shape[0] > 1:
             return self._apply_to_mat(tensor.to(self.device))
 
         return self._apply_to_vec(tensor.to(self.device))
@@ -694,6 +694,10 @@ class TorchComposableInfluence(
     @property
     def block_names(self) -> List[str]:
         return list(self.parameter_dict.keys())
+
+    @property
+    def n_parameters(self):
+        return sum(block.op.input_size for _, block in self.block_mapper.items())
 
     @abstractmethod
     def with_regularization(
