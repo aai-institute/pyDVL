@@ -426,7 +426,10 @@ class OperatorGradientComposition(
         self.op = op
 
     def interactions(
-        self, left_batch: BatchType, right_batch: BatchType, mode: InfluenceMode
+        self,
+        left_batch: BatchType,
+        right_batch: Optional[BatchType],
+        mode: InfluenceMode,
     ):
         r"""
         Computes the interaction between the gradients on two batches of data based on
@@ -633,7 +636,10 @@ class BlockMapper(Generic[TensorType, BatchType, OperatorGradientCompositionType
             yield comp_block.transformed_grads(batch)
 
     def generate_interactions(
-        self, left_batch: BatchType, right_batch: BatchType, mode: InfluenceMode
+        self,
+        left_batch: BatchType,
+        right_batch: Optional[BatchType],
+        mode: InfluenceMode,
     ) -> Generator[TensorType, None, None]:
         """
         Generator that yields gradient interactions between two batches, processed by

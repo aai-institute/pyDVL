@@ -436,7 +436,7 @@ class ComposableInfluence(
         transformed_grads = self.block_mapper.transformed_grads(
             self._create_batch(x, y)
         )
-        return cast(TensorType, sum(transformed_grads))
+        return cast(TensorType, sum(transformed_grads.values()))
 
     def _influences(
         self,
@@ -449,7 +449,7 @@ class ComposableInfluence(
         left_batch = self._create_batch(x_test, y_test)
 
         if x is None:
-            right_batch = left_batch
+            right_batch = None
         elif y is None:
             raise ValueError(
                 "Providing model input x, without providing labels y "

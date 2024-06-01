@@ -662,10 +662,10 @@ class ModelParameterDictBuilder:
             keys are block identifiers and the inner dictionaries map parameter names
             to parameters.
         """
-        parameter_dict = OrderedDict()
+        parameter_dict = {}
 
         for block_name, parameter_names in block_structure.items():
-            inner_ordered_dict = OrderedDict()
+            inner_ordered_dict = {}
             for parameter_name in parameter_names:
                 parameter = self.model.state_dict()[parameter_name]
                 if parameter.requires_grad:
@@ -684,7 +684,7 @@ class ModelParameterDictBuilder:
 
     def build_from_block_mode(
         self, block_mode: BlockMode
-    ) -> OrderedDict[str, OrderedDict[str, torch.nn.Parameter]]:
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
         """
         Builds an ordered dictionary of model parameters based on the specified block
         mode or custom blocking structure represented by an ordered dictionary, where
@@ -699,10 +699,10 @@ class ModelParameterDictBuilder:
             keys are block identifiers and the inner dictionaries map parameter names
             to parameters.
         """
-        parameter_dict = OrderedDict()
+        parameter_dict = {}
 
         if block_mode is BlockMode.FULL:
-            inner_ordered_dict = OrderedDict()
+            inner_ordered_dict = {}
             for k, v in self.model.named_parameters():
                 if v.requires_grad:
                     inner_ordered_dict[k] = self._optional_detach(v)
@@ -711,11 +711,11 @@ class ModelParameterDictBuilder:
         elif block_mode is BlockMode.PARAMETER_WISE:
             for k, v in self.model.named_parameters():
                 if v.requires_grad:
-                    parameter_dict[k] = OrderedDict({k: self._optional_detach(v)})
+                    parameter_dict[k] = {k: self._optional_detach(v)}
 
         if block_mode is BlockMode.LAYER_WISE:
             for name, submodule in self.model.named_children():
-                inner_ordered_dict = OrderedDict()
+                inner_ordered_dict = {}
                 for param_name, param in submodule.named_parameters():
                     if param.requires_grad:
                         inner_ordered_dict[

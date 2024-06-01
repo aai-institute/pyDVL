@@ -153,6 +153,7 @@ class _ModelBasedBatchOperation(ABC):
                 "The last dimension of the input tensor must be equal to the "
                 "property `input_size`."
             )
+
         if tensor.ndim == 2:
             return self._apply_to_mat(batch.to(self.device), tensor.to(self.device))
         return self._apply_to_vec(batch.to(self.device), tensor.to(self.device))
