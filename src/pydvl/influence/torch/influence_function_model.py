@@ -24,8 +24,8 @@ from ..base_influence_function_model import (
     UnsupportedInfluenceModeException,
 )
 from .base import (
-    TorchAutoGrad,
     TorchComposableInfluence,
+    TorchGradientProvider,
     TorchOperatorGradientComposition,
 )
 from .functional import (
@@ -1904,7 +1904,6 @@ class InverseHarmonicMeanInfluence(
         block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
     ):
         super().__init__(model, block_structure, regularization=regularization)
-        self.gradient_provider_factory = TorchAutoGrad
         self.loss = loss
 
     @property
@@ -1938,12 +1937,9 @@ class InverseHarmonicMeanInfluence(
             self.loss,
             data,
             regularization,
-            self.gradient_provider_factory,
             restrict_to=block_params,
         )
-        gp = self.gradient_provider_factory(
-            self.model, self.loss, restrict_to=block_params
-        )
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
         return TorchOperatorGradientComposition(op, gp)
 
     def with_regularization(

@@ -64,14 +64,11 @@ class TorchBatch(Batch):
         return TorchBatch(self.x.to(device), self.y.to(device))
 
 
-class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
+class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor]):
     r"""
-    Abstract base class for calculating per-sample gradients of a function defined by
-    a [torch.nn.Module][torch.nn.Module] and a loss function.
-
-    This class must be subclassed with implementations for its abstract methods tailored
-    to specific gradient computation needs, e.g. using [torch.autograd][torch.autograd]
-    or stochastic finite differences.
+    Compute per-sample gradients of a function defined by
+    a [torch.nn.Module][torch.nn.Module] and a loss function using
+    [torch.func][torch.func].
 
     Consider a function
 
@@ -94,6 +91,12 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
         loss: LossType,
         restrict_to: Optional[Dict[str, torch.nn.Parameter]],
     ):
+        self._per_sample_gradient_function = create_per_sample_gradient_function(
+            model, loss
+        )
+        self._per_sample_mixed_gradient_func = (
+            create_per_sample_mixed_derivative_function(model, loss)
+        )
         self.loss = loss
         self.model = model
 
@@ -103,6 +106,34 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
             )
 
         self.params_to_restrict_to = restrict_to
+
+    def _compute_loss(
+        self, params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
+        outputs = functional_call(self.model, params, (x.unsqueeze(0).to(self.device),))
+        return self.loss(outputs, y.unsqueeze(0))
+
+    def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
+        return self._per_sample_gradient_function(
+            self.params_to_restrict_to, batch.x, batch.y
+        )
+
+    def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
+        return self._per_sample_mixed_gradient_func(
+            self.params_to_restrict_to, batch.x, batch.y
+        )
+
+    def _jacobian_prod(
+        self,
+        batch: TorchBatch,
+        g: torch.Tensor,
+    ) -> torch.Tensor:
+        matrix_jacobian_product_func = create_matrix_jacobian_product_function(
+            self.model, self.loss, g
+        )
+        return matrix_jacobian_product_func(
+            self.params_to_restrict_to, batch.x, batch.y
+        )
 
     def to(self, device: torch.device):
         self.model = self.model.to(device)
@@ -120,22 +151,6 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
     @property
     def dtype(self):
         return next(self.model.parameters()).dtype
-
-    @abstractmethod
-    def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        pass
-
-    @abstractmethod
-    def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        pass
-
-    @abstractmethod
-    def _jacobian_prod(
-        self,
-        batch: TorchBatch,
-        g: torch.Tensor,
-    ) -> torch.Tensor:
-        pass
 
     @staticmethod
     def _detach_dict(tensor_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -227,76 +242,6 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor], ABC):
     def flat_mixed_grads(self, batch: TorchBatch) -> torch.Tensor:
         shape = (*batch.x.shape, -1)
         return flatten_dimensions(self.mixed_grads(batch).values(), shape=shape)
-
-
-class TorchAutoGrad(TorchGradientProvider):
-    r"""
-    Compute per-sample gradients of a function defined by
-    a [torch.nn.Module][torch.nn.Module] and a loss function using
-    [torch.func][torch.func].
-
-    Consider a function
-
-    $$ \ell: \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \times \mathbb{R}^{n} \times
-        \mathbb{R}^{n}, \quad \ell(\omega_1, \omega_2, x, y) =
-        \operatorname{loss}(f(\omega_1, \omega_2; x), y) $$
-
-    e.g. a two layer neural network $f$ with a loss function, then this object should
-    compute the expressions:
-
-    $$ \nabla_{\omega_{i}}\ell(\omega_1, \omega_2, x, y),
-    \nabla_{\omega_{i}}\nabla_{x}\ell(\omega_1, \omega_2, x, y),
-    \nabla_{\omega}\ell(\omega_1, \omega_2, x, y) \cdot v$$
-
-    """
-
-    def __init__(
-        self,
-        model: torch.nn.Module,
-        loss: LossType,
-        restrict_to: Optional[Dict[str, torch.nn.Parameter]] = None,
-    ):
-        super().__init__(model, loss, restrict_to)
-        self._per_sample_gradient_function = create_per_sample_gradient_function(
-            model, loss
-        )
-        self._per_sample_mixed_gradient_func = (
-            create_per_sample_mixed_derivative_function(model, loss)
-        )
-
-    def _compute_loss(
-        self, params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
-        outputs = functional_call(self.model, params, (x.unsqueeze(0).to(self.device),))
-        return self.loss(outputs, y.unsqueeze(0))
-
-    def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        return self._per_sample_gradient_function(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
-
-    def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        return self._per_sample_mixed_gradient_func(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
-
-    def _jacobian_prod(
-        self,
-        batch: TorchBatch,
-        g: torch.Tensor,
-    ) -> torch.Tensor:
-        matrix_jacobian_product_func = create_matrix_jacobian_product_function(
-            self.model, self.loss, g
-        )
-        return matrix_jacobian_product_func(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
-
-
-GradientProviderFactoryType = Callable[
-    [torch.nn.Module, LossType, Optional[Dict[str, torch.nn.Parameter]]],
-    TorchGradientProvider,
-]
 
 
 class OperatorBilinearForm(

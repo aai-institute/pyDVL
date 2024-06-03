@@ -16,27 +16,11 @@ which is useful in the case that keeping $B$ in memory is not feasible.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import (
-    Callable,
-    Dict,
-    Generator,
-    Generic,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Callable, Dict, Generator, Generic, List, Optional, Tuple, TypeVar
 
 import torch
 
-from .base import (
-    GradientProviderFactoryType,
-    TorchAutoGrad,
-    TorchBatch,
-    TorchGradientProvider,
-)
+from .base import TorchBatch, TorchGradientProvider
 from .functional import create_batch_hvp_function, create_batch_loss_function, hvp
 from .util import LossType
 
@@ -258,11 +242,6 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
     Args:
         model: The model.
         loss: The loss function.
-        gradient_provider_factory: An optional factory to create an object of type
-            [TorchGradientProvider][pydvl.influence.torch.base.TorchGradientProvider],
-            depending on the model, loss and optional parameters to restrict to.
-            If not provided, the implementation
-            [TorchAutograd][pydvl.influence.torch.base.TorchAutograd] is used.
         restrict_to: The parameters to restrict the differentiation to,
             i.e. the corresponding sub-matrix of the Jacobian. If None, the full
             Jacobian is used. Make sure the input matches the corrct dimension, i.e. the
@@ -273,14 +252,10 @@ class GaussNewtonBatchOperation(_ModelBasedBatchOperation):
         self,
         model: torch.nn.Module,
         loss: LossType,
-        gradient_provider_factory: Union[
-            GradientProviderFactoryType,
-            Type[TorchGradientProvider],
-        ] = TorchAutoGrad,
         restrict_to: Optional[Dict[str, torch.nn.Parameter]] = None,
     ):
         super().__init__(model, restrict_to=restrict_to)
-        self.gradient_provider = gradient_provider_factory(
+        self.gradient_provider = TorchGradientProvider(
             model, loss, self.params_to_restrict_to
         )
 
@@ -408,10 +383,6 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
         model: torch.nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         regularization: float,
-        gradient_provider_factory: Union[
-            GradientProviderFactoryType,
-            Type[TorchGradientProvider],
-        ] = TorchAutoGrad,
         restrict_to: Optional[Dict[str, torch.nn.Parameter]] = None,
     ):
         if regularization <= 0:
@@ -419,7 +390,7 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
         self.regularization = regularization
 
         super().__init__(model, restrict_to=restrict_to)
-        self.gradient_provider = gradient_provider_factory(
+        self.gradient_provider = TorchGradientProvider(
             model, loss, self.params_to_restrict_to
         )
 

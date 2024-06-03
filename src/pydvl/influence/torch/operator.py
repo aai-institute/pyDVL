@@ -1,17 +1,10 @@
-from typing import Callable, Dict, Generic, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Generic, Optional, Tuple
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ..types import TensorType
-from .base import (
-    GradientProviderFactoryType,
-    TensorDictOperator,
-    TorchAutoGrad,
-    TorchBatch,
-    TorchGradientProvider,
-)
+from .base import TensorDictOperator, TorchBatch
 from .batch_operation import (
     BatchOperationType,
     ChunkAveraging,
@@ -127,16 +120,11 @@ class GaussNewtonOperator(
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         dataloader: DataLoader,
-        gradient_provider_factory: Union[
-            GradientProviderFactoryType,
-            Type[TorchGradientProvider],
-        ] = TorchAutoGrad,
         restrict_to: Optional[Dict[str, nn.Parameter]] = None,
     ):
         batch_op = GaussNewtonBatchOperation(
             model,
             loss,
-            gradient_provider_factory=gradient_provider_factory,
             restrict_to=restrict_to,
         )
         averaging = PointAveraging()
@@ -240,10 +228,6 @@ class InverseHarmonicMeanOperator(
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         dataloader: DataLoader,
         regularization: float,
-        gradient_provider_factory: Union[
-            GradientProviderFactoryType,
-            Type[TorchGradientProvider],
-        ] = TorchAutoGrad,
         restrict_to: Optional[Dict[str, nn.Parameter]] = None,
     ):
         if regularization <= 0:
@@ -255,7 +239,6 @@ class InverseHarmonicMeanOperator(
             model,
             loss,
             regularization,
-            gradient_provider_factory=gradient_provider_factory,
             restrict_to=restrict_to,
         )
         averaging = PointAveraging()

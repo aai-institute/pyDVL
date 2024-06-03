@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from pydvl.influence.torch.base import TorchAutoGrad, TorchBatch
+from pydvl.influence.torch.base import TorchBatch, TorchGradientProvider
 
 from ..conftest import linear_mixed_second_derivative_analytical, linear_model
 from .conftest import DATA_OUTPUT_NOISE, linear_mvp_model
@@ -22,7 +22,7 @@ class TestTorchPerSampleAutograd:
         y = torch.randn(batch_size, out_features)
         params = {k: p.detach() for k, p in model.named_parameters() if p.requires_grad}
 
-        gp = TorchAutoGrad(model, loss, restrict_to=params)
+        gp = TorchGradientProvider(model, loss, restrict_to=params)
         gradients = gp.grads(TorchBatch(x, y))
         flat_gradients = gp.flat_grads(TorchBatch(x, y))
 
@@ -69,7 +69,7 @@ class TestTorchPerSampleAutograd:
 
         torch_train_x = torch.as_tensor(train_x)
         torch_train_y = torch.as_tensor(train_y)
-        gp = TorchAutoGrad(model, loss, restrict_to=params)
+        gp = TorchGradientProvider(model, loss, restrict_to=params)
         flat_functorch_mixed_derivatives = gp.flat_mixed_grads(
             TorchBatch(torch_train_x, torch_train_y)
         )
@@ -93,7 +93,9 @@ class TestTorchPerSampleAutograd:
         y = torch.randn(batch_size, out_features, requires_grad=True)
         y_pred = model(x)
 
-        gp = TorchAutoGrad(model, torch.nn.functional.mse_loss, restrict_to=params)
+        gp = TorchGradientProvider(
+            model, torch.nn.functional.mse_loss, restrict_to=params
+        )
 
         G = torch.randn((10, out_features * (in_features + 1)))
         mjp = gp.jacobian_prod(TorchBatch(x, y), G)
