@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Dict, List, Optional, Tuple, TypeVar, Union, cast
 
 import torch
 from torch.func import functional_call
@@ -18,16 +18,12 @@ from ..types import (
     Operator,
     OperatorGradientComposition,
 )
-from .functional import (
-    create_matrix_jacobian_product_function,
-    create_per_sample_gradient_function,
-    create_per_sample_mixed_derivative_function,
-)
 from .util import (
     BlockMode,
     LossType,
     ModelInfoMixin,
     ModelParameterDictBuilder,
+    align_structure,
     flatten_dimensions,
 )
 
@@ -91,14 +87,8 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor]):
         loss: LossType,
         restrict_to: Optional[Dict[str, torch.nn.Parameter]],
     ):
-        self._per_sample_gradient_function = create_per_sample_gradient_function(
-            model, loss
-        )
-        self._per_sample_mixed_gradient_func = (
-            create_per_sample_mixed_derivative_function(model, loss)
-        )
-        self.loss = loss
         self.model = model
+        self.loss = loss
 
         if restrict_to is None:
             restrict_to = ModelParameterDictBuilder(model).build_from_block_mode(
@@ -114,26 +104,35 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor]):
         return self.loss(outputs, y.unsqueeze(0))
 
     def _grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        return self._per_sample_gradient_function(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
+        result: Dict[str, torch.Tensor] = torch.vmap(
+            torch.func.grad(self._compute_loss), in_dims=(None, 0, 0)
+        )(self.params_to_restrict_to, batch.x, batch.y)
+        return result
 
     def _mixed_grads(self, batch: TorchBatch) -> Dict[str, torch.Tensor]:
-        return self._per_sample_mixed_gradient_func(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
+        result: Dict[str, torch.Tensor] = torch.vmap(
+            torch.func.jacrev(torch.func.grad(self._compute_loss, argnums=1)),
+            in_dims=(None, 0, 0),
+        )(self.params_to_restrict_to, batch.x, batch.y)
+        return result
 
     def _jacobian_prod(
         self,
         batch: TorchBatch,
         g: torch.Tensor,
     ) -> torch.Tensor:
-        matrix_jacobian_product_func = create_matrix_jacobian_product_function(
-            self.model, self.loss, g
-        )
-        return matrix_jacobian_product_func(
-            self.params_to_restrict_to, batch.x, batch.y
-        )
+        def single_jvp(
+            _g: torch.Tensor,
+        ):
+            return torch.func.jvp(
+                lambda p: torch.vmap(self._compute_loss, in_dims=(None, 0, 0))(
+                    p, *batch
+                ),
+                (self.params_to_restrict_to,),
+                (align_structure(self.params_to_restrict_to, _g),),
+            )[1]
+
+        return torch.func.vmap(single_jvp)(g)
 
     def to(self, device: torch.device):
         self.model = self.model.to(device)
