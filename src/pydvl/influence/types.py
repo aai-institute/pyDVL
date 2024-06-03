@@ -259,7 +259,10 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         return self.inner_prod(left_grad, right_grad)
 
     def mixed_grads_inner_prod(
-        self, left: BatchType, right: BatchType, gradient_provider: GradientProviderType
+        self,
+        left: BatchType,
+        right: Optional[BatchType],
+        gradient_provider: GradientProviderType,
     ) -> TensorType:
         r"""
         Computes the mixed gradient inner product of two batches of data, i.e.
@@ -281,6 +284,8 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
             A tensor representing the inner products of the mixed per-sample gradients
         """
         left_grad = gradient_provider.flat_grads(left)
+        if right is None:
+            right = left
         right_mixed_grad = gradient_provider.flat_mixed_grads(right)
         return self.inner_prod(left_grad, right_mixed_grad)
 

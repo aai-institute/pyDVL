@@ -56,6 +56,7 @@ __all__ = [
     "BlockMode",
     "ModelInfoMixin",
     "safe_torch_linalg_eigh",
+    "SecondOrderMode",
 ]
 
 
@@ -625,6 +626,11 @@ class BlockMode(Enum):
     LAYER_WISE: str = "layer_wise"
     PARAMETER_WISE: str = "parameter_wise"
     FULL: str = "full"
+
+
+class SecondOrderMode(Enum):
+    HESSIAN: str = "hessian"
+    GAUSS_NEWTON: str = "gauss_newton"
 
 
 @dataclass

@@ -364,7 +364,7 @@ class DictBilinearForm(OperatorBilinearForm):
     def mixed_grads_inner_prod(
         self,
         left: TorchBatch,
-        right: TorchBatch,
+        right: Optional[TorchBatch],
         gradient_provider: TorchGradientProvider,
     ) -> torch.Tensor:
         r"""
@@ -387,6 +387,8 @@ class DictBilinearForm(OperatorBilinearForm):
             A tensor representing the inner products of the mixed per-sample gradients
         """
         operator = cast(TensorDictOperator, self.operator)
+        if right is None:
+            right = left
         right_grads = gradient_provider.mixed_grads(right)
         left_grads = gradient_provider.grads(left)
         left_grads = operator.apply_to_dict(left_grads)

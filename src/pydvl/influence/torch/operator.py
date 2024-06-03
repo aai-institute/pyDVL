@@ -4,7 +4,7 @@ import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from .base import TensorDictOperator, TorchBatch
+from .base import TensorDictOperator, TensorOperator, TorchBatch
 from .batch_operation import (
     BatchOperationType,
     ChunkAveraging,
@@ -254,3 +254,55 @@ class InverseHarmonicMeanOperator(
             raise ValueError("regularization must be positive")
         self._regularization = value
         self.batch_operation.regularization = value
+
+
+class DirectSolveOperator(TensorOperator):
+    r"""
+    Given a matrix $A$ and an optional regularization parameter $\lambda$,
+    computes the solution of the system $(A+\lambda I)x = b$, where $b$ is a
+    vector or a matrix. Internally, it uses the routine
+    [torch.linalg.solve][torch.linalg.solve].
+
+    """
+
+    def __init__(self, matrix: torch.Tensor, regularization: Optional[float] = None):
+        self._regularization = regularization
+        self.matrix = matrix
+
+    @property
+    def regularization(self):
+        return self._regularization
+
+    @regularization.setter
+    def regularization(self, value: float):
+        if value <= 0:
+            raise ValueError("regularization must be positive")
+        self._regularization = value
+
+    @property
+    def device(self):
+        return self.matrix.device
+
+    @property
+    def dtype(self):
+        return self.matrix.dtype
+
+    def to(self, device: torch.device):
+        self.matrix = self.matrix.to(device)
+        return self
+
+    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+        mat_to_solve = self.matrix
+        if self.regularization is not None:
+            mat_to_solve = mat_to_solve + self.regularization * torch.eye(
+                self.input_size, device=self.device, dtype=self.dtype
+            )
+        return torch.linalg.solve(mat_to_solve, vec.t()).t()
+
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+        return self._apply_to_vec(mat)
+
+    @property
+    def input_size(self) -> int:
+        result: int = self.matrix.shape[-1]
+        return result

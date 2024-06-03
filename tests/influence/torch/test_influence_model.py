@@ -1,4 +1,4 @@
-from math import prod
+from functools import partial
 from typing import Callable, NamedTuple, Tuple
 
 import numpy as np
@@ -24,7 +24,7 @@ from pydvl.influence.torch.pre_conditioner import (
     NystroemPreConditioner,
     PreConditioner,
 )
-from pydvl.influence.torch.util import BlockMode
+from pydvl.influence.torch.util import BlockMode, SecondOrderMode
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
@@ -759,7 +759,11 @@ def test_influences_cg(
         assert np.allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
 
 
-composable_influence_factories = [InverseHarmonicMeanInfluence]
+composable_influence_factories = [
+    InverseHarmonicMeanInfluence,
+    DirectInfluence,
+    partial(DirectInfluence, second_order_mode=SecondOrderMode.GAUSS_NEWTON),
+]
 
 
 @pytest.mark.parametrize("composable_influence_factory", composable_influence_factories)

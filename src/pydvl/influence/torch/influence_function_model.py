@@ -35,16 +35,18 @@ from .functional import (
     create_matrix_jacobian_product_function,
     create_per_sample_gradient_function,
     create_per_sample_mixed_derivative_function,
+    gauss_newton,
     hessian,
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
 )
-from .operator import InverseHarmonicMeanOperator
+from .operator import DirectSolveOperator, InverseHarmonicMeanOperator
 from .pre_conditioner import PreConditioner
 from .util import (
     BlockMode,
     EkfacRepresentation,
     LossType,
+    SecondOrderMode,
     empirical_cross_entropy_loss_fn,
     flatten_dimensions,
     safe_torch_linalg_eigh,
@@ -351,109 +353,115 @@ class TorchInfluenceFunctionModel(
         return self
 
 
-class DirectInfluence(TorchInfluenceFunctionModel):
+class DirectInfluence(TorchComposableInfluence[DirectSolveOperator]):
     r"""
     Given a model and training data, it finds x such that \(Hx = b\),
-    with \(H\) being the model hessian.
+    with \(H\) being the model hessian or Gauss-Newton matrix.
+
+    Block-mode:
+        This implementation is capable of using a block-matrix approximation. The
+        blocking structure can be specified via the `block_structure` parameter.
+        The `block_structure` parameter can either be a
+        [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
+        layer-wise or parameter-wise blocking) or a custom block structure defined
+        by an ordered dictionary with the keys being the block identifiers (arbitrary
+        strings) and the values being lists of parameter names contained in the block.
+
+        ```python
+        block_structure = OrderedDict(
+            (
+                ("custom_block1", ["0.weight", "1.bias"]),
+                ("custom_block2", ["1.weight", "0.bias"]),
+            )
+        )
+        ```
+
+        If you would like to apply a block-specific regularization, you can provide a
+        dictionary with the block names as keys and the regularization values as values.
+        In this case, the specification must be complete, i.e. every block must have
+        a positive regularization value.
+
+        ```python
+        regularization =  {
+            "custom_block1": 0.1,
+            "custom_block2": 0.2,
+        }
+        ```
+        Accordingly, if you choose a layer-wise or parameter-wise structure
+        (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
+        `block_structure`) the keys must be the layer names or parameter names,
+        respectively.
+
+        You can retrieve the block-wise influence information from the methods
+        with suffix `_by_block`. By default, `block_structure` is set to
+        `BlockMode.FULL` and in this case these methods will return a dictionary
+        with the empty string being the only key.
+
 
     Args:
-        model: A PyTorch model. The Hessian will be calculated with respect to
-            this model's parameters.
-        loss: A callable that takes the model's output and target as input and returns
-              the scalar loss.
-        hessian_regularization: Regularization of the hessian.
+        model: The model.
+        loss: The loss function.
+        regularization: The regularization parameter. In case a dictionary is provided,
+            the keys must match the blocking structure.
+        block_structure: The blocking structure, either a pre-defined enum or a
+            custom block structure, see the information regarding block-mode.
+        second_order_mode: The second order mode, either `SecondOrderMode.HESSIAN` or
+            `SecondOrderMode.GAUSS_NEWTON`.
     """
 
     def __init__(
         self,
         model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float = 0.0,
+        loss: LossType,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
-        self.hessian_regularization = hessian_regularization
+        super().__init__(
+            model,
+            block_structure=block_structure,
+            regularization=regularization,
+        )
+        self.second_order_mode = second_order_mode
+        self.loss = loss
 
-    hessian: torch.Tensor
-
-    @property
-    def is_fitted(self):
-        try:
-            return self.hessian is not None
-        except AttributeError:
-            return False
-
-    @log_duration(log_level=logging.INFO)
-    def fit(self, data: DataLoader) -> DirectInfluence:
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
         """
-        Compute the hessian matrix based on a provided dataloader.
-
+        Update the regularization parameter.
         Args:
-            data: The data to compute the Hessian with.
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
 
         Returns:
-            The fitted instance.
+            The modified instance
+
         """
-        self.hessian = hessian(self.model, self.loss, data)
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self
 
-    @log_duration
-    def influences(
+    def _create_block(
         self,
-        x_test: torch.Tensor,
-        y_test: torch.Tensor,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
-        mode: InfluenceMode = InfluenceMode.Up,
-    ) -> torch.Tensor:
-        r"""
-        Compute approximation of
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
+        if self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            mat = gauss_newton(self.model, self.loss, data, restrict_to=block_params)
+        else:
+            mat = hessian(self.model, self.loss, data, restrict_to=block_params)
 
-        for the case of up-weighting influence, resp.
+        op = DirectSolveOperator(mat, regularization=regularization)
+        return TorchOperatorGradientComposition(op, gp)
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
-
-        for the perturbation type influence case. The action of $H^{-1}$ is achieved
-        via a direct solver using [torch.linalg.solve][torch.linalg.solve].
-
-        Args:
-            x_test: model input to use in the gradient computations of
-                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-            y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations
-                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                if None, use $x=x_{\text{test}}$
-            y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_function_model.InfluenceMode]
-
-        Returns:
-            A tensor representing the element-wise scalar products for the
-                provided batch.
-
-        """
-        return super().influences(x_test, y_test, x, y, mode=mode)
-
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        return torch.linalg.solve(
-            self.hessian.to(self.model_device)
-            + self.hessian_regularization
-            * torch.eye(self.n_parameters, device=self.model_device),
-            rhs.T.to(self.model_device),
-        ).T
-
-    def to(self, device: torch.device):
-        if self.is_fitted:
-            self.hessian = self.hessian.to(device)
-        return super().to(device)
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class CgInfluence(TorchInfluenceFunctionModel):
