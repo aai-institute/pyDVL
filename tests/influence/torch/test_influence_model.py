@@ -487,7 +487,7 @@ def test_influence_linear_model(
         lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
             model,
             loss,
-            hessian_regularization=hessian_reg,
+            regularization=hessian_reg,
             maxiter=150,
             scale=10000,
         ).fit(train_dataLoader),
@@ -830,6 +830,13 @@ composable_influence_factories = [
     InverseHarmonicMeanInfluence,
     DirectInfluence,
     partial(DirectInfluence, second_order_mode=SecondOrderMode.GAUSS_NEWTON),
+    partial(LissaInfluence, maxiter=100, scale=10000),
+    partial(
+        LissaInfluence,
+        maxiter=150,
+        scale=10000,
+        second_order_mode=SecondOrderMode.GAUSS_NEWTON,
+    ),
 ]
 
 
