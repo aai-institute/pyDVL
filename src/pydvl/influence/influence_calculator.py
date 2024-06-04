@@ -16,11 +16,8 @@ from distributed import Client
 from numpy.typing import NDArray
 
 from .array import LazyChunkSequence, NestedLazyChunkSequence, NumpyConverter
-from .base_influence_function_model import (
-    InfluenceFunctionModel,
-    UnsupportedInfluenceModeException,
-)
-from .types import InfluenceMode, TensorType
+from .base_influence_function_model import InfluenceFunctionModel
+from .types import InfluenceMode, TensorType, UnsupportedInfluenceModeException
 
 __all__ = [
     "DaskInfluenceCalculator",

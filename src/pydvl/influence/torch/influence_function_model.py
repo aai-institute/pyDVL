@@ -21,8 +21,8 @@ from .. import InfluenceMode
 from ..base_influence_function_model import (
     InfluenceFunctionModel,
     NotImplementedLayerRepresentationException,
-    UnsupportedInfluenceModeException,
 )
+from ..types import UnsupportedInfluenceModeException
 from .base import (
     TorchComposableInfluence,
     TorchGradientProvider,
