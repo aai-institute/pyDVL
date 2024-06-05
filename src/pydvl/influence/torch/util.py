@@ -11,7 +11,6 @@ from typing import (
     Callable,
     Collection,
     Dict,
-    Generator,
     Iterable,
     Iterator,
     List,
@@ -647,7 +646,16 @@ class ModelParameterDictBuilder:
             return p.detach()
         return p
 
-    def build(self, block_structure: OrderedDict[str, List[str]]):
+    def _extract_parameter_by_name(self, name: str) -> torch.nn.Parameter:
+        for k, p in self.model.named_parameters():
+            if k == name:
+                return p
+        else:
+            raise ValueError(f"Parameter {name} not found in the model.")
+
+    def build(
+        self, block_structure: OrderedDict[str, List[str]]
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
         """
         Builds an ordered dictionary of model parameters based on the specified block
         structure represented by an ordered dictionary, where the keys are block
@@ -667,7 +675,7 @@ class ModelParameterDictBuilder:
         for block_name, parameter_names in block_structure.items():
             inner_ordered_dict = {}
             for parameter_name in parameter_names:
-                parameter = self.model.state_dict()[parameter_name]
+                parameter = self._extract_parameter_by_name(parameter_name)
                 if parameter.requires_grad:
                     inner_ordered_dict[parameter_name] = self._optional_detach(
                         parameter
@@ -699,31 +707,43 @@ class ModelParameterDictBuilder:
             keys are block identifiers and the inner dictionaries map parameter names
             to parameters.
         """
-        parameter_dict = {}
 
-        if block_mode is BlockMode.FULL:
-            inner_ordered_dict = {}
-            for k, v in self.model.named_parameters():
-                if v.requires_grad:
-                    inner_ordered_dict[k] = self._optional_detach(v)
-            parameter_dict[""] = inner_ordered_dict
+        block_mode_mapping = {
+            BlockMode.FULL: self._build_full,
+            BlockMode.PARAMETER_WISE: self._build_parameter_wise,
+            BlockMode.LAYER_WISE: self._build_layer_wise,
+        }
 
-        elif block_mode is BlockMode.PARAMETER_WISE:
-            for k, v in self.model.named_parameters():
-                if v.requires_grad:
-                    parameter_dict[k] = {k: self._optional_detach(v)}
+        parameter_dict_func = block_mode_mapping.get(block_mode, None)
 
-        if block_mode is BlockMode.LAYER_WISE:
-            for name, submodule in self.model.named_children():
-                inner_ordered_dict = {}
-                for param_name, param in submodule.named_parameters():
-                    if param.requires_grad:
-                        inner_ordered_dict[
-                            f"{name}.{param_name}"
-                        ] = self._optional_detach(param)
-                if inner_ordered_dict:
-                    parameter_dict[name] = inner_ordered_dict
+        if parameter_dict_func is None:
+            raise ValueError(f"Unknown block mode {block_mode}.")
 
+        return self.build(parameter_dict_func())
+
+    def _build_full(self):
+        parameter_dict = OrderedDict()
+        parameter_dict[""] = [
+            n for n, p in self.model.named_parameters() if p.requires_grad
+        ]
+        return parameter_dict
+
+    def _build_parameter_wise(self):
+        parameter_dict = OrderedDict()
+        for k, v in self.model.named_parameters():
+            if v.requires_grad:
+                parameter_dict[k] = [k]
+        return parameter_dict
+
+    def _build_layer_wise(self):
+        parameter_dict = OrderedDict()
+        for name, submodule in self.model.named_children():
+            layer_parameter_names = []
+            for param_name, param in submodule.named_parameters():
+                if param.requires_grad:
+                    layer_parameter_names.append(f"{name}.{param_name}")
+            if layer_parameter_names:
+                parameter_dict[name] = layer_parameter_names
         return parameter_dict
 
 
