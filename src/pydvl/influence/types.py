@@ -42,8 +42,8 @@ example for [torch][torch] is provided in the module
 
 from __future__ import annotations
 
+import collections
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
 from typing import (
@@ -53,6 +53,7 @@ from typing import (
     Generic,
     Iterable,
     Optional,
+    OrderedDict,
     TypeVar,
     Union,
     cast,
@@ -547,7 +548,7 @@ class BlockMapper(Generic[TensorType, BatchType, OperatorGradientCompositionType
     def _to_ordered_dict(
         self, tensor_generator: Generator[TensorType, None, None]
     ) -> OrderedDict[str, TensorType]:
-        tensor_dict = OrderedDict()
+        tensor_dict = collections.OrderedDict()
         for k, t in zip(self.composable_block_dict.keys(), tensor_generator):
             tensor_dict[k] = t
         return tensor_dict
