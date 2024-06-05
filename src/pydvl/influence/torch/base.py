@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Dict, Iterable, List, Optional, Tuple, TypeVar, Union, cast
 
 import torch
 from torch.func import functional_call
@@ -17,6 +17,7 @@ from ..types import (
     GradientProvider,
     Operator,
     OperatorGradientComposition,
+    TensorType,
 )
 from .util import (
     BlockMode,
@@ -634,6 +635,12 @@ class TorchComposableInfluence(
         self._regularization_dict = self._build_regularization_dict(regularization)
 
         super().__init__(model)
+
+    def _concat(self, tensors: Iterable[torch.Tensor], dim: int):
+        return torch.cat(list(tensors), dim=dim)
+
+    def _flatten_trailing_dim(self, tensor: torch.Tensor):
+        return tensor.reshape((tensor.shape[0], -1))
 
     @property
     def block_names(self) -> List[str]:

@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from functools import wraps
-from typing import Generic, Optional, Type, cast
+from typing import Generic, Iterable, Optional, Type, cast
 
 from ..utils.progress import log_duration
 from .types import BatchType, BlockMapperType, DataLoaderType, InfluenceMode, TensorType
@@ -433,10 +433,19 @@ class ComposableInfluence(
         )
 
     def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
-        transformed_grads = self.block_mapper.transformed_grads(
-            self._create_batch(x, y)
+        transformed_grads = self.influence_factors_by_block(x, y)
+        transformed_grads = (
+            self._flatten_trailing_dim(t) for t in transformed_grads.values()
         )
-        return cast(TensorType, sum(transformed_grads.values()))
+        return cast(TensorType, self._concat(transformed_grads, dim=-1))
+
+    @abstractmethod
+    def _concat(self, tensors: Iterable[TensorType], dim: int):
+        """Implement this to concat tensors at a specified dimension"""
+
+    @abstractmethod
+    def _flatten_trailing_dim(self, tensor: TensorType):
+        """Implement this to flatten all but the first dimension"""
 
     def _influences(
         self,
