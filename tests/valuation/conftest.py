@@ -196,3 +196,32 @@ def cache_backend():
     cache = InMemoryCacheBackend()
     yield cache
     cache.clear()
+
+
+@pytest.fixture(scope="function")
+def linear_dataset(a: float, b: float, num_points: int):
+    """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
+    x in [-1,1]
+
+    Args:
+        a: Slope
+        b: intercept
+        num_points: number of (x,y) samples to construct
+        train_size: fraction of points to use for training (between 0 and 1)
+
+    Returns:
+        Dataset with train/test split. call str() on it to see the parameters
+
+    TODO: This is a duplicate of the fixture in the global conftest.py but using the
+    Dataset object from pydvl.valuation
+    """
+    step = 2 / num_points
+    stddev = 0.1
+    x = np.arange(-1, 1, step)
+    y = np.random.normal(loc=a * x + b, scale=stddev)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    db.DESCR = f"{{y_i~N({a}*x_i + {b}, {stddev:0.2f}): i=1, ..., {num_points}}}"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.3)

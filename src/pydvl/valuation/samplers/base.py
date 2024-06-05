@@ -260,7 +260,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT]):
                     return sampler.weight(n, subset_len) * coefficient(n, subset_len)
 
                 self.coefficient = coefficient_fun
-            self.coefficient = sampler.weight
+            else:
+                self.coefficient = sampler.weight
 
     @abstractmethod
     def process(

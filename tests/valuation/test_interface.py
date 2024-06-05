@@ -72,8 +72,8 @@ def test_data_shapley_valuation(train_data, utility, n_jobs):
 def test_data_beta_shapley_valuation(train_data, utility, n_jobs):
     valuation = BetaShapleyValuation(
         utility,
-        AntitheticSampler(),
-        MaxUpdates(5) | HistoryDeviation(n_steps=50, rtol=0.1),
+        sampler=AntitheticSampler(),
+        is_done=MaxUpdates(5) | HistoryDeviation(n_steps=50, rtol=0.1),
         alpha=1,
         beta=16,
         progress=False,
@@ -92,7 +92,7 @@ def test_delta_shapley_valuation(train_data, utility, n_jobs):
     n_obs = len(train_data)
     valuation = DeltaShapleyValuation(
         utility,
-        MaxUpdates(5),
+        is_done=MaxUpdates(5),
         # FIXME: maybe it's 2*math.ceil(n/3) for the upper bound?
         lower_bound=n_obs // 3,
         upper_bound=2 * n_obs // 3,
@@ -111,9 +111,9 @@ def test_delta_shapley_valuation(train_data, utility, n_jobs):
 def test_data_banzhaf_valuation(train_data, utility, n_jobs):
     val_bzf = DataBanzhafValuation(
         utility,
-        PermutationSampler(RelativeTruncation(rtol=0.1)),
-        MaxUpdates(5),
-        progress=True,
+        sampler=PermutationSampler(RelativeTruncation(rtol=0.1)),
+        is_done=MaxUpdates(5),
+        progress=False,
     )
     with joblib.parallel_backend("loky", n_jobs=n_jobs):
         val_bzf.fit(train_data)
@@ -128,9 +128,9 @@ def test_data_utility_learning(train_data, utility, n_jobs):
     learned_u = DataUtilityLearning(utility, 10, LinearRegression())
     valuation = DataShapleyValuation(
         learned_u,
-        PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
-        MaxUpdates(5),
-        progress=True,
+        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        is_done=MaxUpdates(5),
+        progress=False,
     )
     with disable_logging():
         with joblib.parallel_backend("loky", n_jobs=n_jobs):

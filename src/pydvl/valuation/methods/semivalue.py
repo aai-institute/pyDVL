@@ -100,7 +100,6 @@ class SemivalueValuation(Valuation):
             indices=data.indices,
             data_names=data.data_names,
         )
-
         ensure_backend_has_generator_return()
 
         self.utility.training_data = data

@@ -459,6 +459,22 @@ class MaxUpdates(StoppingCriterion):
         return f"MaxUpdates(n_updates={self.n_updates})"
 
 
+class NoStopping(StoppingCriterion):
+    """Keep running forever."""
+
+    def __init__(self, modify_result: bool = True):
+        super().__init__(modify_result=modify_result)
+
+    def _check(self, result: ValuationResult) -> Status:
+        return Status.Pending
+
+    def completion(self) -> float:
+        return 0.0
+
+    def __str__(self) -> str:
+        return f"NoStopping()"
+
+
 class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
 

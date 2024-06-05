@@ -87,7 +87,10 @@ class DummyGameUtility(UtilityBase):
     def __init__(self, score):
         self.score = score
 
-    def __call__(self, sample: SampleT) -> float:
+    def __call__(self, sample: SampleT | None) -> float:
+        if sample is None or len(sample.subset) == 0:
+            return 0
+
         idxs = np.array(sample.subset, dtype=np.int32)
         try:
             score = self.score(self.training_data.x[idxs])

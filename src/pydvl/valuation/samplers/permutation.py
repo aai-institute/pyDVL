@@ -171,7 +171,7 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
                 if not truncated:
                     curr = self.utility(Sample(idx, permutation[: i + 1]))
                 marginal = curr - prev
-                marginal *= self.coefficient(self.n_indices, i + 1)
+                marginal *= self.coefficient(self.n_indices, i)
                 r.append(ValueUpdate(idx, marginal))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):
