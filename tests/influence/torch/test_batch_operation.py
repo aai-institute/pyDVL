@@ -118,7 +118,7 @@ class TestGaussNewtonBatchOperation:
         [(astuple(tp.model_params), 1e-3) for tp in test_parameters],
         indirect=["model_data"],
     )
-    def test_analytical_comparison(self, tol):
+    def test_analytical_comparison(self, model_data, tol):
         gn_autograd = self.gn_op.apply(TorchBatch(self.x, self.y), self.vec)
         gn_autograd_dict = self.gn_op.apply_to_dict(
             TorchBatch(self.x, self.y), align_structure(self.params, self.vec)
@@ -136,7 +136,7 @@ class TestGaussNewtonBatchOperation:
         [(astuple(tp.model_params), 1e-3) for tp in test_parameters],
         indirect=["model_data"],
     )
-    def test_flattening_commutation(self, tol):
+    def test_flattening_commutation(self, model_data, tol):
         batch_size = 10
         rand_mat_dict = {
             k: torch.randn(batch_size, *t.shape) for k, t in self.params.items()
