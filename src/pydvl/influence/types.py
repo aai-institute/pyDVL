@@ -121,52 +121,6 @@ class GradientProvider(Generic[BatchType, TensorType], ABC):
     """
 
     @abstractmethod
-    def grads(self, batch: BatchType) -> Dict[str, TensorType]:
-        r"""
-        Computes and returns a dictionary mapping gradient names to their respective
-        per-sample gradients. Given the example in the class docstring, this means
-
-        $$ \text{result}[\omega_i] = \nabla_{\omega_{i}}\ell(\omega_1, \omega_2,
-            \text{batch.x}, \text{batch.y}), $$
-
-        where the first dimension of the resulting tensors is always considered to be
-        the batch dimension, so the shape of the resulting tensors are $(N, d_i)$,
-        where $N$ is the number of samples in the batch.
-
-        Args:
-            batch: The batch of data for which to compute gradients.
-
-        Returns:
-            A dictionary where keys are gradient identifiers and values are the
-                gradients computed per sample.
-        """
-
-    @abstractmethod
-    def mixed_grads(self, batch: BatchType) -> Dict[str, TensorType]:
-        r"""
-        Computes and returns a dictionary mapping gradient names to their respective
-        per-sample mixed gradients. In this context, mixed gradients refer to computing
-        gradients with respect to the instance definition in addition to
-        compute derivatives with respect to the input batch.
-        Given the example in the class docstring, this means
-
-        $$ \text{result}[\omega_i] = \nabla_{\omega_{i}}\nabla_{x}\ell(\omega_1,
-            \omega_2, \text{batch.x}, \text{batch.y}), $$
-
-        where the first dimension of the resulting tensors is always considered to be
-        the batch dimension and the last to be the non-batch input related derivatives.
-        So the shape of the resulting tensors are $(N, n, d_i)$,
-        where $N$ is the number of samples in the batch.
-
-        Args:
-            batch: The batch of data for which to compute mixed gradients.
-
-        Returns:
-            A dictionary where keys are gradient identifiers and values are the
-                mixed gradients computed per sample.
-        """
-
-    @abstractmethod
     def jacobian_prod(
         self,
         batch: BatchType,
