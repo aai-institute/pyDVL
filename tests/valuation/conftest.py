@@ -126,16 +126,16 @@ def dummy_utility(dummy_train_data, dummy_test_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_shapley(dummy_utility):
+def analytic_shapley(dummy_utility, dummy_train_data):
     r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    m = float(max(dummy_utility.data.x))
-    values = np.array([i / m for i in dummy_utility.data.indices])
+    m = float(max(dummy_train_data.x))
+    values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",
         values=values,
         variances=np.zeros_like(values),
-        data_names=dummy_utility.data.indices,
+        data_names=dummy_train_data.indices,
         status=Status.Converged,
     )
     return dummy_utility, result
