@@ -28,7 +28,8 @@
     to `regularization` and change the type annotation to allow
     for block-wise regularization parameters
     [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
-    
+  - Remove parameter `h0` from init of `LissaInfluence`  
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
 
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 

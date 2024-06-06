@@ -74,25 +74,29 @@ original paper [@agarwal_secondorder_2017].
 
 
 ```python
-from pydvl.influence.torch import LissaInfluence
+from pydvl.influence.torch import LissaInfluence, BlockMode, SecondOrderMode
 if_model = LissaInfluence(
    model,
    loss,
-   hessian_regularization=0.0 
+   regularization=0.0 
    maxiter=1000,
    dampen=0.0,
    scale=10.0,
-   h0=None,
    rtol=1e-4,
+   block_structure=BlockMode.FULL,
+   second_order_mode=SecondOrderMode.GAUSS_NEWTON
 )
 if_model.fit(train_loader)
 ```
 
-with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
+with the additional optional parameters `maxiter`, `dampen`, `scale`, and
 `rtol`,
 being the maximum number of iterations, the dampening factor, the scaling
-factor, the initial guess for the solution and the relative tolerance,
-respectively.
+factor and the relative tolerance,
+respectively. This implementation is capable of using a block-matrix 
+approximation, see 
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
 
 ### Arnoldi
 
