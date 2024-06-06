@@ -15,19 +15,18 @@ from pydvl.valuation.samplers import (
     PermutationSampler,
     UniformSampler,
 )
-from pydvl.valuation.scorers import SupervisedScorer
-from pydvl.valuation.scorers.utils import squashed_r2
-from pydvl.valuation.stopping import MaxChecks, MaxUpdates
+from pydvl.valuation.scorers import SupervisedScorer, compose_score, sigmoid
+from pydvl.valuation.stopping import MaxChecks, MaxUpdates, NoStopping
 from pydvl.valuation.utility import ModelUtility
 
 from .. import check_rank_correlation, check_total_value, check_values
 
-# from pydvl.utils.types import Seed
-
-
-# from ..utils import call_with_seeds
-
 log = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def n_jobs():
+    return 1
 
 
 @pytest.mark.parametrize(
@@ -188,110 +187,131 @@ def test_hoeffding_bound_montecarlo(
             check_rank_correlation(values, exact_values, threshold=0.8)
 
 
-# @pytest.mark.slow
-# @pytest.mark.parametrize(
-#     "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
-# )
-# @pytest.mark.parametrize("scorer_class, total_atol", [(squashed_r2, 0.2)])
-# @pytest.mark.parametrize(
-#     "sampler_class, kwargs",
-#     [
-#         (PermutationSampler, {"is_done": MaxUpdates(500)}),
-#         # (ShapleyMode.Owen, dict(n_samples=4, max_q=400)),
-#         # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
-#         # (
-#         #     ShapleyMode.GroupTesting,
-#         #     dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
-#         # ),
-#     ],
-# )
-# def test_linear_montecarlo_with_outlier(
-#     linear_dataset,
-#     n_jobs,
-#     memcache_client_config,
-#     scorer_class,
-#     total_atol: float,
-#     sampler_class,
-#     kwargs: dict,
-#     cache_backend,
-# ):
-#     """Tests whether valuation methods are able to detect an obvious outlier.
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
+)
+@pytest.mark.parametrize(
+    "sampler_class, kwargs",
+    [
+        (PermutationSampler, {"is_done": MaxUpdates(500)}),
+        # (ShapleyMode.Owen, dict(n_samples=4, max_q=400)),
+        # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
+        # (
+        #     ShapleyMode.GroupTesting,
+        #     dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
+        # ),
+    ],
+)
+def test_linear_montecarlo_with_outlier(
+    linear_dataset,
+    n_jobs,
+    sampler_class,
+    kwargs: dict,
+    cache_backend,
+):
+    """Tests whether valuation methods are able to detect an obvious outlier.
 
-#     A point is selected at random from a linear dataset and the dependent
-#     variable is set to 10 standard deviations.
+    A point is selected at random from a linear dataset and the dependent
+    variable is set to 10 standard deviations.
 
-#     Note that this implies that the whole dataset will have very low utility:
-#     e.g. for R^2 it will be very negative. The larger the range of the utility,
-#     the more samples are required for the Monte Carlo approximations to converge,
-#     as indicated by the Hoeffding bound.
-#     """
-#     data_train, data_test = linear_dataset
+    Note that this implies that the whole dataset will have very low utility:
+    e.g. for R^2 it will be very negative. The larger the range of the utility,
+    the more samples are required for the Monte Carlo approximations to converge,
+    as indicated by the Hoeffding bound.
+    """
+    data_train, data_test = linear_dataset
 
-#     breakpoint()
-#     scorer = scorer_class(test_data=data_test)
+    scorer = compose_score(
+        SupervisedScorer("r2", data_test, default=-np.inf),
+        sigmoid,
+        name="squashed r2",
+    )
 
-#     outlier_idx = np.random.randint(len(data_train))
-#     data_train.y[outlier_idx] -= 200
+    outlier_idx = np.random.randint(len(data_train))
+    data_train.y[outlier_idx] -= 100
 
-#     utility = ModelUtility(
-#         LinearRegression(),
-#         scorer=scorer,
-#         cache_backend=cache_backend,
-#     )
+    utility = ModelUtility(
+        LinearRegression(),
+        scorer=scorer,
+        cache_backend=cache_backend,
+    )
 
-#     valuation_permutation = DataShapleyValuation(
-#         utility=utility,
-#         sampler=sampler_class(),
-#         progress=False,
-#         **kwargs,
-#     )
-#     valuation_permutation.fit(data_train)
-#     values = valuation_permutation.values()
-#     values.sort()
+    valuation = DataShapleyValuation(
+        utility=utility,
+        sampler=sampler_class(),
+        progress=False,
+        **kwargs,
+    )
+    with parallel_config(n_jobs=n_jobs):
+        valuation.fit(data_train)
+    values = valuation.values()
+    values.sort()
 
-#     assert values.status == Status.Converged
-#     check_total_value(utility, values, atol=total_atol)
-#     assert values[0].index == outlier_idx
+    assert values.status == Status.Converged
+    assert values[0].index == outlier_idx
+
+    check_total_value(utility, values, atol=0.2)
 
 
-# @pytest.mark.parametrize(
-#     "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
-# )
-# @pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1)])
-# @pytest.mark.parametrize(
-#     "fun, kwargs",
-#     [
-#         (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(700))),
-#     ],
-# )
-# def test_grouped_linear_montecarlo_shapley(
-#     linear_dataset,
-#     n_jobs,
-#     num_groups: int,
-#     fun: ShapleyMode,
-#     scorer: Scorer,
-#     rtol: float,
-#     kwargs: dict,
-#     cache_backend,
-# ):
-#     """
-#     For permutation and truncated montecarlo, the rtol for each scorer is chosen
-#     so that the number of samples selected is just above the (ε,δ) bound for ε =
-#     rtol, δ=0.001 and the range corresponding to each score. This means that
-#     roughly once every 1000/num_methods runs the test will fail.
-#     """
-#     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
-#     grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
-#     grouped_linear_utility = Utility(
-#         LinearRegression(),
-#         data=grouped_linear_dataset,
-#         scorer=scorer,
-#         cache_backend=cache_backend,
-#     )
-#     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
+@pytest.mark.parametrize(
+    "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
+)
+@pytest.mark.parametrize(
+    "sampler_class, kwargs",
+    [
+        (PermutationSampler, dict(is_done=MaxUpdates(700))),
+    ],
+)
+def test_grouped_linear_montecarlo_shapley(
+    linear_dataset,
+    n_jobs,
+    num_groups: int,
+    sampler_class,
+    kwargs: dict,
+    cache_backend,
+):
+    """
+    For permutation and truncated montecarlo, the rtol for each scorer is chosen
+    so that the number of samples selected is just above the (ε,δ) bound for ε =
+    rtol, δ=0.001 and the range corresponding to each score. This means that
+    roughly once every 1000/num_methods runs the test will fail.
+    """
+    data_train, data_test = linear_dataset
 
-#     values = compute_shapley_values(
-#         grouped_linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
-#     )
+    scorer = compose_score(
+        SupervisedScorer("r2", data_test, default=-np.inf),
+        sigmoid,
+        name="squashed r2",
+    )
 
-#     check_values(values, exact_values, rtol=rtol)
+    rtol = 0.1
+
+    data_groups = np.random.randint(0, num_groups, len(data_train))
+    grouped_linear_dataset = GroupedDataset.from_dataset(data_train, data_groups)
+    utility = ModelUtility(
+        LinearRegression(),
+        scorer=scorer,
+        cache_backend=cache_backend,
+    )
+
+    valuation = DataShapleyValuation(
+        utility=utility,
+        sampler=sampler_class(),
+        progress=False,
+        **kwargs,
+    )
+    with parallel_config(n_jobs=n_jobs):
+        valuation.fit(grouped_linear_dataset)
+    values = valuation.values()
+
+    exact_valuation = DataShapleyValuation(
+        utility=utility,
+        sampler=DeterministicUniformSampler(),
+        progress=False,
+        is_done=NoStopping(),
+    )
+    exact_valuation.fit(grouped_linear_dataset)
+    exact_values = exact_valuation.values()
+
+    check_values(values, exact_values, rtol=rtol)

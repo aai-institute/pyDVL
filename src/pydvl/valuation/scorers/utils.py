@@ -6,15 +6,14 @@ from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import SupervisedScorer
 
-__all__ = ["compose_score", "squashed_r2", "squashed_variance"]
+__all__ = ["compose_score", "sigmoid"]
 
 
 def compose_score(
     scorer: SupervisedScorer,
     transformation: Callable[[float], float],
-    range: Tuple[float, float],
     name: str,
-) -> Type[SupervisedScorer]:
+) -> SupervisedScorer:
     """Composes a scoring function with an arbitrary scalar transformation.
 
     Useful to squash unbounded scores into ranges manageable by data valuation
@@ -40,38 +39,20 @@ def compose_score(
     """
 
     class CompositeSupervisedScorer(SupervisedScorer):
-        def __init__(self, test_data: Dataset):
-            super().__init__(
-                scoring=scorer._scorer,
-                test_data=test_data,
-                default=transformation(scorer.default),
-                range=range,
-                name=name,
-            )
-
         def __call__(self, model: SupervisedModel) -> float:
-            score = self._scorer(model=model, X=self.test_data.x, y=self.test_data.y)
-            return transformation(score)
+            raw = super().__call__(model)
+            return transformation(raw)
 
-    return CompositeSupervisedScorer
+    new_scorer = CompositeSupervisedScorer(
+        scoring=scorer._scorer,
+        test_data=scorer.test_data,
+        default=transformation(scorer.default),
+        range=(transformation(scorer.range[0]), transformation(scorer.range[1])),
+        name=name,
+    )
+    return new_scorer
 
 
-def _sigmoid(x: float) -> float:
+def sigmoid(x: float) -> float:
     result: float = expit(x).item()
     return result
-
-
-# FIXME: yuk, this is awkward...
-squashed_r2 = lambda test_data: compose_score(
-    SupervisedScorer("r2", test_data, 0), _sigmoid, (0, 1), "squashed r2"
-)
-""" A scorer that squashes the R² score into the range [0, 1] using a sigmoid."""
-
-squashed_variance = lambda test_data: compose_score(
-    SupervisedScorer("explained_variance", test_data, 0),
-    _sigmoid,
-    (0, 1),
-    "squashed explained variance",
-)
-""" A scorer that squashes the explained variance score into the range [0, 1] using
-    a sigmoid."""
