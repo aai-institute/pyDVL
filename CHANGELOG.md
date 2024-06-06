@@ -14,6 +14,8 @@
 - Extend `DirectInfluence` with block-diagonal and Gauss-Newton
   approximation
   [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+- Extend `LissaInfluence` with block-diagonal and Gauss-Newton approximation
+  [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
   
 ## Changed
 
@@ -22,6 +24,10 @@
     to `regularization` and change the type annotation to allow
     for block-wise regularization parameters
     [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+  - Rename parameter `hessian_regularization` of `LissaInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
     
 
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
