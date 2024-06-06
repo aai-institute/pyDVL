@@ -18,10 +18,9 @@ from numpy.typing import NDArray
 from .array import LazyChunkSequence, NestedLazyChunkSequence, NumpyConverter
 from .base_influence_function_model import (
     InfluenceFunctionModel,
-    InfluenceMode,
-    TensorType,
     UnsupportedInfluenceModeException,
 )
+from .types import InfluenceMode, TensorType
 
 __all__ = [
     "DaskInfluenceCalculator",

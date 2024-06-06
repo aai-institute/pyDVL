@@ -28,7 +28,7 @@ from tqdm import tqdm
 from zarr.storage import StoreLike
 
 from ..utils import log_duration
-from .base_influence_function_model import TensorType
+from .types import TensorType
 
 
 class NumpyConverter(Generic[TensorType], ABC):

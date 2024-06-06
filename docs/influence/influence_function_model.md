@@ -207,7 +207,132 @@ if_model = NystroemSketchInfluence(
 if_model.fit(train_loader)
 ```
 
+### Inverse Harmonic Mean
+
+This implementation replaces the inverse Hessian matrix in the influence computation
+with an approximation of the inverse Gauss-Newton vector product and was
+proposed in [@kwon_datainf_2023].
+
+The approximation method comprises
+the following steps:
+
+1.  Replace the Hessian $H(\theta)$ with the Gauss-Newton matrix 
+    $G(\theta)$:
+    
+    \begin{equation*}
+        G(\theta)=n^{-1} \sum_{i=1}^n \nabla_{\theta}\ell_i\nabla_{\theta}\ell_i^T
+    \end{equation*}
+    
+    which results in
+
+    \begin{equation*}
+        \mathcal{I}(z_{t}, z) \approx \nabla_{\theta} \ell(z_{t}, \theta)^T 
+                         (G(\theta) + \lambda I_d)^{-1} 
+                         \nabla_{\theta} \ell(z, \theta) 
+    \end{equation*}
+
+2.  Simplify the problem by breaking it down into a block diagonal structure, 
+    where each block $G_l(\theta)$ corresponds to the l-th block:   
+    
+    \begin{equation*}
+        G_{l}(\theta) = n^{-1} \sum_{i=1}^n \nabla_{\theta_l} \ell_i 
+                       \nabla_{\theta_l} \ell_i^{T} + \lambda_l I_{d_l},
+    \end{equation*}
+       
+    which leads to
+       
+    \begin{equation*}
+       \mathcal{I}(z_{t}, z) \approx \nabla_{\theta} \ell(z_{t}, \theta)^T 
+                                     \operatorname{diag}(G_1(\theta)^{-1}, 
+                                     \dots, G_L(\theta)^{-1}) 
+                                     \nabla_{\theta} \ell(z, \theta)
+    \end{equation*}
+
+3.  Substitute the arithmetic mean of the rank-$1$ updates in 
+       $G_l(\theta)$, with the inverse harmonic mean $R_l(\theta)$ of the rank-1 
+    updates:
+       
+    \begin{align*}
+        G_l(\theta)^{-1} &= \left(  n^{-1} \sum_{i=1}^n \nabla_{\theta_l} 
+                           \ell(z_i, \theta) \nabla_{\theta_l} 
+                           \ell(z_i, \theta)^{T} + 
+                           \lambda_l I_{d_l}\right)^{-1} \\\
+        R_{l}(\theta)&= n^{-1} \sum_{i=1}^n \left( \nabla_{\theta_l} 
+                       \ell(z_i, \theta) \nabla_{\theta_l} \ell(z_i, \theta)^{T} 
+                       + \lambda_l I_{d_l} \right)^{-1}
+    \end{align*}
+
+4.  Use the 
+   <a href="https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula">
+     Sherman–Morrison formula
+   </a> 
+    to get an explicit representation of the inverses in the definition of 
+    $R_l(\theta):$
+    
+    \begin{align*}
+        R_l(\theta) &= n^{-1} \sum_{i=1}^n \left( \nabla_{\theta_l} \ell_i
+        \nabla_{\theta_l} \ell_i^{T}
+        + \lambda_l I_{d_l}\right)^{-1} \\\
+        &= n^{-1} \sum_{i=1}^n \lambda_l^{-1} \left(I_{d_l}
+        - \frac{\nabla_{\theta_l} \ell_i \nabla_{\theta_l}
+        \ell_i^{T}}{\lambda_l
+        + \\|\nabla_{\theta_l} \ell_i\\|_2^2}\right)
+        ,
+    \end{align*}
+
+    which means application of $R_l(\theta)$ boils down to computing $n$
+    rank-$1$ updates.
+
+```python
+from pydvl.influence.torch import InverseHarmonicMeanInfluence, BlockMode
+
+if_model = InverseHarmonicMeanInfluence(
+    model,
+    loss,
+    regularization=1e-1,
+    block_structure=BlockMode.LAYER_WISE
+)
+if_model.fit(train_loader)
+```
+
+!!! Info
+    This implementation is capable of using a block-matrix approximation. The
+    blocking structure can be specified via the `block_structure` parameter.
+    The `block_structure` parameter can either be a
+    [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
+    layer-wise or parameter-wise blocking) or a custom block structure defined
+    by an ordered dictionary with the keys being the block identifiers (arbitrary
+    strings) and the values being lists of parameter names contained in the block.
+    ```python
+    block_structure = OrderedDict(
+    (
+        ("custom_block1", ["0.weight", "1.bias"]),
+        ("custom_block2", ["1.weight", "0.bias"]),
+    )
+    )
+    ```
+    If you would like to apply a block-specific regularization, you can provide a
+    dictionary with the block names as keys and the regularization values as values.
+    In this case, the specification must be complete, i.e. every block must have
+    a positive regularization value.
+    ```python
+    regularization =  {
+    "custom_block1": 0.1,
+    "custom_block2": 0.2,
+    }
+    ```
+    Accordingly, if you choose a layer-wise or parameter-wise structure
+    (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
+    `block_structure`) the keys must be the layer names or parameter names,
+    respectively.
+    You can retrieve the block-wise influence information from the methods
+    with suffix `_by_block`. By default, `block_structure` is set to
+    `BlockMode.FULL` and in this case these methods will return a dictionary
+    with the empty string being the only key.
+
 These implementations represent the calculation logic on in memory tensors. 
 To scale up to large collection of data, we map these influence function models 
 over these collections. For a detailed discussion see the
 documentation page [Scaling Computation](scaling_computation.md).
+
+

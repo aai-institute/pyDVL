@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import logging
 import math
+import warnings
+from collections import OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import (
+    Callable,
     Collection,
     Dict,
     Iterable,
@@ -42,11 +48,14 @@ __all__ = [
     "align_with_model",
     "flatten_dimensions",
     "TorchNumpyConverter",
-    "TorchCatAggregator",
-    "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
     "EkfacRepresentation",
     "empirical_cross_entropy_loss_fn",
+    "LossType",
+    "ModelParameterDictBuilder",
+    "BlockMode",
+    "ModelInfoMixin",
+    "safe_torch_linalg_eigh",
 ]
 
 
@@ -598,3 +607,162 @@ class TorchLinalgEighException(Exception):
             f" Inspect the original exception message: \n{str(original_exception)}"
         )
         super().__init__(err_msg)
+
+
+LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+
+
+class BlockMode(Enum):
+    """
+    Enumeration for different modes of grouping model parameters.
+
+    Attributes:
+        LAYER_WISE: Groups parameters by layers of the model.
+        PARAMETER_WISE: Groups parameters individually.
+        FULL: Groups all parameters together.
+    """
+
+    LAYER_WISE: str = "layer_wise"
+    PARAMETER_WISE: str = "parameter_wise"
+    FULL: str = "full"
+
+
+@dataclass
+class ModelParameterDictBuilder:
+    """
+    A builder class for creating ordered dictionaries of model parameters based on
+    specified block modes or custom blocking structures.
+
+    Attributes:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+    """
+
+    model: torch.nn.Module
+    detach: bool = True
+
+    def _optional_detach(self, p: torch.nn.Parameter):
+        if self.detach:
+            return p.detach()
+        return p
+
+    def _extract_parameter_by_name(self, name: str) -> torch.nn.Parameter:
+        for k, p in self.model.named_parameters():
+            if k == name:
+                return p
+        else:
+            raise ValueError(f"Parameter {name} not found in the model.")
+
+    def build(
+        self, block_structure: OrderedDict[str, List[str]]
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        structure represented by an ordered dictionary, where the keys are block
+        identifiers and the values are lists of model parameter names contained in
+        this block.
+
+        Args:
+            block_structure: The block structure specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+        parameter_dict = {}
+
+        for block_name, parameter_names in block_structure.items():
+            inner_ordered_dict = {}
+            for parameter_name in parameter_names:
+                parameter = self._extract_parameter_by_name(parameter_name)
+                if parameter.requires_grad:
+                    inner_ordered_dict[parameter_name] = self._optional_detach(
+                        parameter
+                    )
+                else:
+                    warnings.warn(
+                        f"The parameter {parameter_name} from the block "
+                        f"{block_name} is mark as not trainable in the model "
+                        f"and will be excluded from the computation."
+                    )
+            parameter_dict[block_name] = inner_ordered_dict
+
+        return parameter_dict
+
+    def build_from_block_mode(
+        self, block_mode: BlockMode
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        mode or custom blocking structure represented by an ordered dictionary, where
+        the keys are block identifiers and the values are lists of model parameter names
+        contained in this block.
+
+        Args:
+            block_mode: The block mode specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+
+        block_mode_mapping = {
+            BlockMode.FULL: self._build_full,
+            BlockMode.PARAMETER_WISE: self._build_parameter_wise,
+            BlockMode.LAYER_WISE: self._build_layer_wise,
+        }
+
+        parameter_dict_func = block_mode_mapping.get(block_mode, None)
+
+        if parameter_dict_func is None:
+            raise ValueError(f"Unknown block mode {block_mode}.")
+
+        return self.build(parameter_dict_func())
+
+    def _build_full(self):
+        parameter_dict = OrderedDict()
+        parameter_dict[""] = [
+            n for n, p in self.model.named_parameters() if p.requires_grad
+        ]
+        return parameter_dict
+
+    def _build_parameter_wise(self):
+        parameter_dict = OrderedDict()
+        for k, v in self.model.named_parameters():
+            if v.requires_grad:
+                parameter_dict[k] = [k]
+        return parameter_dict
+
+    def _build_layer_wise(self):
+        parameter_dict = OrderedDict()
+        for name, submodule in self.model.named_children():
+            layer_parameter_names = []
+            for param_name, param in submodule.named_parameters():
+                if param.requires_grad:
+                    layer_parameter_names.append(f"{name}.{param_name}")
+            if layer_parameter_names:
+                parameter_dict[name] = layer_parameter_names
+        return parameter_dict
+
+
+class ModelInfoMixin:
+    """
+    A mixin class for classes that contain information about a model.
+    """
+
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.parameters()).device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return next(self.model.parameters()).dtype
+
+    @property
+    def n_parameters(self) -> int:
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)

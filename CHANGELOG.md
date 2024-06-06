@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- New method `InverseHarmonicMeanInfluence`, implementation for the paper 
+  `DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and 
+    Diffusion Models`
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Add new backend implementations for influence computation
+  to account for block-diagonal approximations
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+  
+
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 
 ### Added

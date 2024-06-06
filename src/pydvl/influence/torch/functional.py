@@ -50,6 +50,8 @@ __all__ = [
     "LowRankProductRepresentation",
     "randomized_nystroem_approximation",
     "model_hessian_nystroem_approximation",
+    "create_batch_loss_function",
+    "hvp",
 ]
 
 
@@ -631,6 +633,10 @@ class LowRankProductRepresentation:
             if hasattr(self.eigen_vals, "device")
             else torch.device("cpu")
         )
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.projections.dtype
 
     def to(self, device: torch.device):
         """
