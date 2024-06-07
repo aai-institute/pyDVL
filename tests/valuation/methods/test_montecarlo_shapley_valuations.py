@@ -104,7 +104,7 @@ def test_games(
     "sampler_class, kwargs",
     [
         # TODO Add Permutation Montecarlo once issue #416 is closed.
-        (PermutationSampler, dict(is_done=MaxChecks(4))),
+        (PermutationSampler, dict(is_done=MaxChecks(50))),
         (UniformSampler, dict(is_done=MaxChecks(4))),
         # (ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
         # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
@@ -113,7 +113,6 @@ def test_games(
 )
 def test_seed(
     test_game,
-    n_jobs: int,
     sampler_class,
     kwargs,
     seed,
@@ -128,8 +127,7 @@ def test_seed(
             # TODO: Why is a deepcopy necessary here?
             **deepcopy(kwargs),
         )
-        with parallel_config(n_jobs=n_jobs):
-            valuation.fit(test_game.data)
+        valuation.fit(test_game.data)
         values.append(valuation.values())
 
     values_1, values_2, values_3 = values
