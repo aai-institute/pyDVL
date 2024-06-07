@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
@@ -37,14 +37,15 @@ from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
 from .util import (
-    BlockMode,
-    ModelParameterDictBuilder,
     align_structure,
     align_with_model,
     flatten_dimensions,
     get_model_parameters,
     to_model_device,
 )
+
+if TYPE_CHECKING:
+    from .base import TensorOperator
 
 __all__ = [
     "create_hvp_function",
@@ -1047,4 +1048,48 @@ def model_hessian_nystroem_approximation(
         dtype,
         shift_func=shift_func,
         mat_vec_device=device,
+    )
+
+
+def operator_nystroem_approximation(
+    operator: "TensorOperator",
+    rank: int,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+):
+    r"""
+    Given an operator (representing a symmetric positive definite
+    matrix $A$ ), computes a random Nyström low rank approximation of
+    $A$ in factored form, i.e.
+
+    $$ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\dagger}(A \Omega)^T
+    = U \Sigma U^T $$
+
+    where $\Omega$ is a standard normal random matrix.
+
+    Args:
+        operator: the operator to approximate
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+
+    Returns:
+        object containing, $U$ and $\Sigma$
+    """
+
+    def mat_mat_prod(x: torch.Tensor):
+        return operator.apply(x.t()).t()
+
+    return randomized_nystroem_approximation(
+        mat_mat_prod,
+        operator.input_size,
+        rank,
+        operator.dtype,
+        shift_func=shift_func,
+        mat_vec_device=operator.device,
     )

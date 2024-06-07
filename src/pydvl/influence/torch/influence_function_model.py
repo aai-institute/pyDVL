@@ -44,8 +44,16 @@ from .functional import (
     hessian,
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
+    operator_nystroem_approximation,
 )
-from .operator import DirectSolveOperator, InverseHarmonicMeanOperator, LissaOperator
+from .operator import (
+    DirectSolveOperator,
+    GaussNewtonOperator,
+    HessianOperator,
+    InverseHarmonicMeanOperator,
+    LissaOperator,
+    LowRankOperator,
+)
 from .pre_conditioner import PreConditioner
 from .util import (
     BlockMode,
@@ -1679,7 +1687,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return super().to(device)
 
 
-class NystroemSketchInfluence(TorchInfluenceFunctionModel):
+class NystroemSketchInfluence(TorchComposableInfluence[LowRankOperator]):
     r"""
     Given a model and training data, it uses a low-rank approximation of the Hessian
     (derived via random projection Nyström approximation) in combination with
@@ -1703,58 +1711,69 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
             this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Optional regularization parameter added
+        regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
         rank: rank of the low-rank approximation
 
     """
 
-    low_rank_representation: LowRankProductRepresentation
-
     def __init__(
         self,
         model: torch.nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float,
+        regularization: Union[float, Dict[str, float]],
         rank: int,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
-        self.hessian_regularization = hessian_regularization
+        super().__init__(
+            model,
+            block_structure,
+            regularization=cast(
+                Union[float, Dict[str, Optional[float]]], regularization
+            ),
+        )
+        self.second_order_mode = second_order_mode
         self.rank = rank
+        self.loss = loss
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        regularized_eigenvalues = (
-            self.low_rank_representation.eigen_vals + self.hessian_regularization
-        )
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
+        return self
 
-        proj_rhs = self.low_rank_representation.projections.t() @ rhs.t()
-        inverse_regularized_eigenvalues = 1.0 / regularized_eigenvalues
-        result = self.low_rank_representation.projections @ (
-            proj_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
-        )
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
 
-        if self.hessian_regularization > 0.0:
-            result += (
-                1.0
-                / self.hessian_regularization
-                * (rhs.t() - self.low_rank_representation.projections @ proj_rhs)
+        assert regularization is not None
+        regularization = cast(float, regularization)
+
+        op: Union[HessianOperator, GaussNewtonOperator]
+
+        if self.second_order_mode is SecondOrderMode.HESSIAN:
+            op = HessianOperator(self.model, self.loss, data, restrict_to=block_params)
+        elif self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            op = GaussNewtonOperator(
+                self.model, self.loss, data, restrict_to=block_params
             )
+        else:
+            raise ValueError(f"Unsupported second order mode: {self.second_order_mode}")
 
-        return result.t()
+        low_rank_repr = operator_nystroem_approximation(op, self.rank)
+        low_rank_op = LowRankOperator(low_rank_repr, regularization)
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        return TorchOperatorGradientComposition(low_rank_op, gp)
 
     @property
-    def is_fitted(self):
-        try:
-            return self.low_rank_representation is not None
-        except AttributeError:
-            return False
-
-    @log_duration(log_level=logging.INFO)
-    def fit(self, data: DataLoader):
-        self.low_rank_representation = model_hessian_nystroem_approximation(
-            self.model, self.loss, data, self.rank
-        )
-        return self
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class InverseHarmonicMeanInfluence(
