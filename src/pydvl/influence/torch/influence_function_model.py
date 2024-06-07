@@ -808,44 +808,6 @@ class LissaInfluence(TorchComposableInfluence[LissaOperator[BatchOperationType]]
     see [Linear time Stochastic Second-Order Approximation (LiSSA)]
     [linear-time-stochastic-second-order-approximation-lissa]
 
-    Block-mode:
-        This implementation is capable of using a block-matrix approximation. The
-        blocking structure can be specified via the `block_structure` parameter.
-        The `block_structure` parameter can either be a
-        [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
-        layer-wise or parameter-wise blocking) or a custom block structure defined
-        by an ordered dictionary with the keys being the block identifiers (arbitrary
-        strings) and the values being lists of parameter names contained in the block.
-
-        ```python
-        block_structure = OrderedDict(
-            (
-                ("custom_block1", ["0.weight", "1.bias"]),
-                ("custom_block2", ["1.weight", "0.bias"]),
-            )
-        )
-        ```
-
-        If you would like to apply a block-specific regularization, you can provide a
-        dictionary with the block names as keys and the regularization values as values.
-        In this case, the specification must be complete, i.e. every block must have
-        a positive regularization value.
-
-        ```python
-        regularization =  {
-            "custom_block1": 0.1,
-            "custom_block2": 0.2,
-        }
-        ```
-        Accordingly, if you choose a layer-wise or parameter-wise structure
-        (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
-        `block_structure`) the keys must be the layer names or parameter names,
-        respectively.
-
-        You can retrieve the block-wise influence information from the methods
-        with suffix `_by_block`. By default, `block_structure` is set to
-        `BlockMode.FULL` and in this case these methods will return a dictionary
-        with the empty string being the only key.
 
     Args:
         model: A PyTorch model. The Hessian will be calculated with respect to
@@ -863,7 +825,8 @@ class LissaInfluence(TorchComposableInfluence[LissaOperator[BatchOperationType]]
             achieved within `maxiter` iterations. If False, the log level for this
             information is `logging.DEBUG`
         block_structure: The blocking structure, either a pre-defined enum or a
-            custom block structure, see the information regarding block-mode.
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
         second_order_mode: The second order mode, either `SecondOrderMode.HESSIAN` or
             `SecondOrderMode.GAUSS_NEWTON`.
     """

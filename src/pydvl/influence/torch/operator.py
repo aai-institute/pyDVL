@@ -336,6 +336,35 @@ class DirectSolveOperator(TensorOperator):
 
 
 class LissaOperator(TensorOperator, Generic[BatchOperationType]):
+    r"""
+    Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
+    approximate the solution of the system \((A + \lambda I)x = b\).
+    This is done with the update
+
+    \[(A + \lambda I)^{-1}_{j+1} b = b + (I - d) \ (A + \lambda I) -
+        \frac{(A + \lambda I)^{-1}_j b}{s},\]
+
+    where \(I\) is the identity matrix, \(d\) is a dampening term and \(s\) a scaling
+    factor that are applied to help convergence. For details,
+    see [Linear time Stochastic Second-Order Approximation (LiSSA)]
+    [linear-time-stochastic-second-order-approximation-lissa]
+
+    Args:
+        batch_operation: The `BatchOperation` representing the action of A on a batch
+            of the data loader.
+        data: a pytorch dataloader
+        regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
+        maxiter: Maximum number of iterations.
+        dampen: Dampening factor, defaults to 0 for no dampening.
+        scale: Scaling factor, defaults to 10.
+        rtol: tolerance to use for early stopping
+        progress: If True, display progress bars.
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
+    """
+
     def __init__(
         self,
         batch_operation: BatchOperationType,
