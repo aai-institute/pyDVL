@@ -421,16 +421,16 @@ def hessian(
         hessian_mat = to_model_device(
             torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
-        blf = create_batch_loss_function(model, loss)
+        batch_loss = create_batch_loss_function(model, loss)
 
-        def flat_input_batch_loss_function(
+        def flat_input_batch_loss(
             p: torch.Tensor, t_x: torch.Tensor, t_y: torch.Tensor
         ):
-            return blf(align_structure(params, p), t_x, t_y)
+            return batch_loss(align_structure(params, p), t_x, t_y)
 
         for x, y in iter(data_loader):
             n_samples += x.shape[0]
-            batch_hessian = torch.func.hessian(flat_input_batch_loss_function)(
+            batch_hessian = torch.func.hessian(flat_input_batch_loss)(
                 flat_params, to_model_device(x, model), to_model_device(y, model)
             )
             if not track_gradients and batch_hessian.requires_grad:
