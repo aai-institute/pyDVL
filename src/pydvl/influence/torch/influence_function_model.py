@@ -418,7 +418,9 @@ class DirectInfluence(TorchComposableInfluence[DirectSolveOperator]):
         else:
             mat = hessian(self.model, self.loss, data, restrict_to=block_params)
 
-        op = DirectSolveOperator(mat, regularization=regularization)
+        op = DirectSolveOperator(
+            mat, regularization=regularization, in_place_regularization=True
+        )
         return TorchOperatorGradientComposition(op, gp)
 
     @property

@@ -263,11 +263,33 @@ class DirectSolveOperator(TensorOperator):
     vector or a matrix. Internally, it uses the routine
     [torch.linalg.solve][torch.linalg.solve].
 
+    Args:
+        matrix: the system matrix
+        regularization: the regularization parameter
+        in_place_regularization: If True, the input matrix is modified in-place, by
+            adding the regularization value to the diagonal.
+
     """
 
-    def __init__(self, matrix: torch.Tensor, regularization: Optional[float] = None):
+    def __init__(
+        self,
+        matrix: torch.Tensor,
+        regularization: Optional[float] = None,
+        in_place_regularization: bool = False,
+    ):
+        if regularization is None:
+            self.matrix = matrix
+        else:
+            self.matrix = self._update_diagonal(
+                matrix if in_place_regularization else matrix.clone(), regularization
+            )
         self._regularization = regularization
-        self.matrix = matrix
+
+    @staticmethod
+    def _update_diagonal(matrix: torch.Tensor, value: float) -> torch.Tensor:
+        diag_indices = torch.arange(matrix.shape[-1], device=matrix.device)
+        matrix[diag_indices, diag_indices] += value
+        return matrix
 
     @property
     def regularization(self):
@@ -277,6 +299,12 @@ class DirectSolveOperator(TensorOperator):
     def regularization(self, value: float):
         if value <= 0:
             raise ValueError("regularization must be positive")
+        old_value = self._regularization
+        if old_value is None:
+            self.matrix = self._update_diagonal(self.matrix, value)
+        else:
+            self.matrix = self._update_diagonal(self.matrix, value - old_value)
+
         self._regularization = value
 
     @property
@@ -292,12 +320,7 @@ class DirectSolveOperator(TensorOperator):
         return self
 
     def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-        mat_to_solve = self.matrix
-        if self.regularization is not None:
-            mat_to_solve = mat_to_solve + self.regularization * torch.eye(
-                self.input_size, device=self.device, dtype=self.dtype
-            )
-        return torch.linalg.solve(mat_to_solve, vec.t()).t()
+        return torch.linalg.solve(self.matrix, vec.t()).t()
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
         return self._apply_to_vec(mat)
