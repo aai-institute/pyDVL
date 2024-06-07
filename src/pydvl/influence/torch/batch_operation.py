@@ -22,7 +22,7 @@ import torch
 
 from .base import TorchBatch, TorchGradientProvider
 from .functional import create_batch_hvp_function, create_batch_loss_function, hvp
-from .util import LossType
+from .util import LossType, get_model_parameters
 
 
 class _ModelBasedBatchOperation(ABC):
@@ -41,9 +41,7 @@ class _ModelBasedBatchOperation(ABC):
         restrict_to: Optional[Dict[str, torch.nn.Parameter]] = None,
     ):
         if restrict_to is None:
-            restrict_to = {
-                k: p.detach() for k, p in model.named_parameters() if p.requires_grad
-            }
+            restrict_to = get_model_parameters(model)
         self.params_to_restrict_to = restrict_to
         self.model = model
 

@@ -42,6 +42,7 @@ from .util import (
     align_structure,
     align_with_model,
     flatten_dimensions,
+    get_model_parameters,
     to_model_device,
 )
 
@@ -355,11 +356,7 @@ def create_hvp_function(
         return partial(precomputed_grads_hvp_function, total_grad_xy)
 
     def hvp_function(vec: torch.Tensor) -> torch.Tensor:
-        params = {
-            k: p if track_gradients else p.detach()
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        params = get_model_parameters(model, detach=not track_gradients)
         v = align_structure(params, vec)
         empirical_loss = create_empirical_loss_function(model, loss, data_loader)
         return flatten_dimensions(
@@ -370,11 +367,7 @@ def create_hvp_function(
         n_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = create_batch_hvp_function(model, loss, reverse_only)
-        params = {
-            k: p if track_gradients else p.detach()
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        params = get_model_parameters(model, detach=not track_gradients)
         for t_x, t_y in iter(data_loader):
             t_x, t_y = to_model_device(t_x, model), to_model_device(t_y, model)
             avg_hessian += b_hvp(params, t_x, t_y, to_model_device(vec, model))
@@ -417,11 +410,7 @@ def hessian(
     params = restrict_to
 
     if params is None:
-        params = {
-            k: p if track_gradients else p.detach()
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        params = get_model_parameters(model, detach=not track_gradients)
     n_parameters = sum([p.numel() for p in params.values()])
     model_dtype = next((p.dtype for p in params.values()))
 
@@ -493,7 +482,7 @@ def gauss_newton(
 
     params = restrict_to
     if params is None:
-        params = {k: p.detach() for k, p in model.named_parameters() if p.requires_grad}
+        params = get_model_parameters(model)
 
     def generate_batch_matrices():
         for x, y in data_loader:

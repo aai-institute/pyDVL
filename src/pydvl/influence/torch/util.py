@@ -57,6 +57,7 @@ __all__ = [
     "ModelInfoMixin",
     "safe_torch_linalg_eigh",
     "SecondOrderMode",
+    "get_model_parameters",
 ]
 
 
@@ -215,7 +216,7 @@ def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
         ValueError: If `x` cannot be aligned to match the model's parameters .
 
     """
-    model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
+    model_params = get_model_parameters(model, detach=False)
     return align_structure(model_params, x)
 
 
@@ -772,3 +773,29 @@ class ModelInfoMixin:
     @property
     def n_parameters(self) -> int:
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+
+def get_model_parameters(
+    model: torch.nn.Module, detach: bool = True, require_grad_only: bool = True
+) -> Dict[str, torch.Tensor]:
+    """
+    Returns a dictionary of model parameters, optionally restricted to parameters
+    requiring gradients and optionally detaching them from the computation
+    graph.
+
+    Args:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+        require_grad_only: Whether to include only parameters that require gradients.
+
+    Returns:
+        A dict of named model parameters.
+    """
+
+    parameter_dict = {}
+    for k, p in model.named_parameters():
+        if require_grad_only and not p.requires_grad:
+            continue
+        parameter_dict[k] = p.detach() if detach else p
+
+    return parameter_dict
