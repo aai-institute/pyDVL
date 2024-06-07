@@ -121,6 +121,9 @@ class SemivalueValuation(Valuation):
                         self.sampler.interrupt()
                         break
 
+                if self.is_done(self.result):
+                    break
+
         #####################
 
         # FIXME: remove NaN checking after fit()?

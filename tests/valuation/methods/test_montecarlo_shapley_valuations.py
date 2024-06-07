@@ -24,11 +24,6 @@ from .. import check_rank_correlation, check_total_value, check_values
 log = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def n_jobs():
-    return 1
-
-
 @pytest.mark.parametrize(
     "test_game",
     [
