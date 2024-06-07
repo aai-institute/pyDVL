@@ -282,8 +282,9 @@ infl_model = infl_model.fit(training_data_loader)
 ```
 If you would like to apply a block-specific regularization, you can provide a
 dictionary with the block names as keys and the regularization values as values.
-In this case, the specification must be complete, i.e. every block must have
-a positive regularization value.
+If no value is provided for a specific key, no regularization is applied for
+the corresponding block.
+
 ```python
 regularization =  {
 "custom_block1": 0.1,

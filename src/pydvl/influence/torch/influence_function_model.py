@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn as nn
@@ -358,53 +358,15 @@ class DirectInfluence(TorchComposableInfluence[DirectSolveOperator]):
     Given a model and training data, it finds x such that \(Hx = b\),
     with \(H\) being the model hessian or Gauss-Newton matrix.
 
-    Block-mode:
-        This implementation is capable of using a block-matrix approximation. The
-        blocking structure can be specified via the `block_structure` parameter.
-        The `block_structure` parameter can either be a
-        [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
-        layer-wise or parameter-wise blocking) or a custom block structure defined
-        by an ordered dictionary with the keys being the block identifiers (arbitrary
-        strings) and the values being lists of parameter names contained in the block.
-
-        ```python
-        block_structure = OrderedDict(
-            (
-                ("custom_block1", ["0.weight", "1.bias"]),
-                ("custom_block2", ["1.weight", "0.bias"]),
-            )
-        )
-        ```
-
-        If you would like to apply a block-specific regularization, you can provide a
-        dictionary with the block names as keys and the regularization values as values.
-        In this case, the specification must be complete, i.e. every block must have
-        a positive regularization value.
-
-        ```python
-        regularization =  {
-            "custom_block1": 0.1,
-            "custom_block2": 0.2,
-        }
-        ```
-        Accordingly, if you choose a layer-wise or parameter-wise structure
-        (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
-        `block_structure`) the keys must be the layer names or parameter names,
-        respectively.
-
-        You can retrieve the block-wise influence information from the methods
-        with suffix `_by_block`. By default, `block_structure` is set to
-        `BlockMode.FULL` and in this case these methods will return a dictionary
-        with the empty string being the only key.
-
 
     Args:
         model: The model.
         loss: The loss function.
         regularization: The regularization parameter. In case a dictionary is provided,
-            the keys must match the blocking structure.
+            the keys must be a subset of the block identifiers.
         block_structure: The blocking structure, either a pre-defined enum or a
-            custom block structure, see the information regarding block-mode.
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
         second_order_mode: The second order mode, either `SecondOrderMode.HESSIAN` or
             `SecondOrderMode.GAUSS_NEWTON`.
     """
@@ -1855,63 +1817,33 @@ class InverseHarmonicMeanInfluence(
     For more information,
     see [Inverse Harmonic Mean][inverse-harmonic-mean].
 
-    Block-mode:
-        This implementation is capable of using a block-matrix approximation. The
-        blocking structure can be specified via the `block_structure` parameter.
-        The `block_structure` parameter can either be a
-        [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
-        layer-wise or parameter-wise blocking) or a custom block structure defined
-        by an ordered dictionary with the keys being the block identifiers (arbitrary
-        strings) and the values being lists of parameter names contained in the block.
-
-        ```python
-        block_structure = OrderedDict(
-            (
-                ("custom_block1", ["0.weight", "1.bias"]),
-                ("custom_block2", ["1.weight", "0.bias"]),
-            )
-        )
-        ```
-
-        If you would like to apply a block-specific regularization, you can provide a
-        dictionary with the block names as keys and the regularization values as values.
-        In this case, the specification must be complete, i.e. every block must have
-        a positive regularization value.
-
-        ```python
-        regularization =  {
-            "custom_block1": 0.1,
-            "custom_block2": 0.2,
-        }
-        ```
-        Accordingly, if you choose a layer-wise or parameter-wise structure
-        (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
-        `block_structure`) the keys must be the layer names or parameter names,
-        respectively.
-
-        You can retrieve the block-wise influence information from the methods
-        with suffix `_by_block`. By default, `block_structure` is set to
-        `BlockMode.FULL` and in this case these methods will return a dictionary
-        with the empty string being the only key.
-
-
     Args:
         model: The model.
         loss: The loss function.
         regularization: The regularization parameter. In case a dictionary is provided,
-            the keys must match the blocking structure.
+            the keys must match the blocking structure and the specification must be
+            complete, so every block needs a positive regularization value, which
+            differs from the description in
+            [block-diagonal approximation][block-diagonal-approximation].
         block_structure: The blocking structure, either a pre-defined enum or a
-            custom block structure, see the information regarding block-mode.
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
     """
 
     def __init__(
         self,
         model: torch.nn.Module,
         loss: LossType,
-        regularization: Union[float, Dict[str, Optional[float]]],
+        regularization: Union[float, Dict[str, float]],
         block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
     ):
-        super().__init__(model, block_structure, regularization=regularization)
+        super().__init__(
+            model,
+            block_structure,
+            regularization=cast(
+                Union[float, Dict[str, Optional[float]]], regularization
+            ),
+        )
         self.loss = loss
 
     @property
