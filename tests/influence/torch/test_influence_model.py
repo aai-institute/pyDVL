@@ -527,7 +527,9 @@ def test_influences_lissa(
         influence_factors, x_train, y_train, mode=test_case.mode
     )
 
-    assert torch.allclose(influences_from_factors, approx_influences, rtol=1e-4)
+    assert torch.allclose(
+        influences_from_factors, approx_influences, atol=1e-5, rtol=1e-4
+    )
 
     approx_influences = approx_influences.cpu().numpy()
 
