@@ -58,7 +58,7 @@ class _ModelBasedBatchOperation(ABC):
         return next(self.model.parameters()).dtype
 
     @property
-    def input_size(self):
+    def input_size(self) -> int:
         return sum(p.numel() for p in self.params_to_restrict_to.values())
 
     def to(self, device: torch.device):
@@ -136,7 +136,7 @@ class _ModelBasedBatchOperation(ABC):
                 "property `input_size`."
             )
 
-        if tensor.ndim == 2:
+        if tensor.ndim == 2 and tensor.shape[0] > 1:
             return self._apply_to_mat(batch.to(self.device), tensor.to(self.device))
         return self._apply_to_vec(batch.to(self.device), tensor.to(self.device))
 
@@ -154,11 +154,14 @@ class _ModelBasedBatchOperation(ABC):
                 $(N, \text{input_size})$
 
         """
-        return torch.func.vmap(
+        result = torch.func.vmap(
             lambda _x, _y, m: self._apply_to_vec(TorchBatch(_x, _y), m),
             in_dims=(None, None, 0),
             randomness="same",
         )(batch.x, batch.y, mat)
+        if result.requires_grad:
+            result = result.detach()
+        return result
 
 
 class HessianBatchOperation(_ModelBasedBatchOperation):
@@ -194,7 +197,10 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
         self.loss = loss
 
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
-        return self._batch_hvp(self.params_to_restrict_to, batch.x, batch.y, vec)
+        result = self._batch_hvp(self.params_to_restrict_to, batch.x, batch.y, vec)
+        if result.requires_grad:
+            result = result.detach()
+        return result
 
     def _apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]

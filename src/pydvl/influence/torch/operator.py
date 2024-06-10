@@ -1,8 +1,10 @@
+import logging
 from typing import Callable, Dict, Generic, Optional, Tuple
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from .base import TensorDictOperator, TensorOperator, TorchBatch
 from .batch_operation import (
@@ -14,6 +16,8 @@ from .batch_operation import (
     PointAveraging,
     TensorAveragingType,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class _AveragingBatchOperator(
@@ -329,3 +333,141 @@ class DirectSolveOperator(TensorOperator):
     def input_size(self) -> int:
         result: int = self.matrix.shape[-1]
         return result
+
+
+class LissaOperator(TensorOperator, Generic[BatchOperationType]):
+    r"""
+    Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
+    approximate the solution of the system \((A + \lambda I)x = b\).
+    This is done with the update
+
+    \[(A + \lambda I)^{-1}_{j+1} b = b + (I - d) \ (A + \lambda I) -
+        \frac{(A + \lambda I)^{-1}_j b}{s},\]
+
+    where \(I\) is the identity matrix, \(d\) is a dampening term and \(s\) a scaling
+    factor that are applied to help convergence. For details,
+    see [Linear time Stochastic Second-Order Approximation (LiSSA)]
+    [linear-time-stochastic-second-order-approximation-lissa]
+
+    Args:
+        batch_operation: The `BatchOperation` representing the action of A on a batch
+            of the data loader.
+        data: a pytorch dataloader
+        regularization: Optional regularization parameter added
+            to the Hessian-vector product for numerical stability.
+        maxiter: Maximum number of iterations.
+        dampen: Dampening factor, defaults to 0 for no dampening.
+        scale: Scaling factor, defaults to 10.
+        rtol: tolerance to use for early stopping
+        progress: If True, display progress bars.
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
+    """
+
+    def __init__(
+        self,
+        batch_operation: BatchOperationType,
+        data: DataLoader,
+        regularization: Optional[float] = None,
+        maxiter: int = 1000,
+        dampen: float = 0.0,
+        scale: float = 10.0,
+        rtol: float = 1e-4,
+        progress: bool = False,
+        warn_on_max_iteration: bool = True,
+    ):
+
+        if regularization is not None and regularization < 0:
+            raise ValueError("regularization must be non-negative")
+
+        self.data = data
+        self.warn_on_max_iteration = warn_on_max_iteration
+        self.progress = progress
+        self.rtol = rtol
+        self.scale = scale
+        self.dampen = dampen
+        self.maxiter = maxiter
+        self.batch_operation = batch_operation
+        self._regularization = regularization
+
+    @property
+    def regularization(self):
+        return self._regularization
+
+    @regularization.setter
+    def regularization(self, value: float):
+        if value < 0:
+            raise ValueError("regularization must be non-negative")
+        self._regularization = value
+
+    @property
+    def device(self):
+        return self.batch_operation.device
+
+    @property
+    def dtype(self):
+        return self.batch_operation.dtype
+
+    def to(self, device: torch.device):
+        self.batch_operation = self.batch_operation.to(device)
+        return self
+
+    def _reg_apply(self, batch: TorchBatch, h: torch.Tensor):
+        result = self.batch_operation.apply(batch, h)
+        if self.regularization is not None:
+            result += self.regularization * h
+        return result
+
+    def _lissa_step(self, h: torch.Tensor, rhs: torch.Tensor, batch: TorchBatch):
+        result = rhs + (1 - self.dampen) * h - self._reg_apply(batch, h) / self.scale
+        if result.requires_grad:
+            result = result.detach()
+        return result
+
+    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+        h_estimate = torch.clone(vec)
+        shuffled_training_data = DataLoader(
+            self.data.dataset,
+            self.data.batch_size,
+            shuffle=True,
+        )
+        is_converged = False
+        for k in tqdm(
+            range(self.maxiter), disable=not self.progress, desc="Lissa iteration"
+        ):
+            x, y = next(iter(shuffled_training_data))
+
+            residual = self._lissa_step(h_estimate, vec, TorchBatch(x, y)) - h_estimate
+            h_estimate += residual
+            if torch.isnan(h_estimate).any():
+                raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
+            max_residual = torch.max(torch.abs(residual / h_estimate))
+            if max_residual < self.rtol:
+                mean_residual = torch.mean(torch.abs(residual / h_estimate))
+                logger.debug(
+                    f"Terminated Lissa after {k} iterations with "
+                    f"{max_residual*100:.2f} % max residual and"
+                    f" mean residual {mean_residual*100:.5f} %"
+                )
+                is_converged = True
+                break
+
+        if not is_converged:
+            mean_residual = torch.mean(torch.abs(residual / h_estimate))
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {self.maxiter} without "
+                f"achieving the desired tolerance {self.rtol}.\n "
+                f"Achieved max residual {max_residual*100:.2f} % and"
+                f" {mean_residual*100:.5f} % mean residual",
+            )
+        return h_estimate / self.scale
+
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+        return self._apply_to_vec(mat)
+
+    @property
+    def input_size(self) -> int:
+        return self.batch_operation.input_size
