@@ -142,18 +142,18 @@ def analytic_shapley(dummy_utility, dummy_train_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_banzhaf(dummy_utility):
+def analytic_banzhaf(dummy_utility, dummy_train_data):
     r"""Scores are i/n, so
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
 
-    m = float(max(dummy_utility.data.x))
-    values = np.array([i / m for i in dummy_utility.data.indices])
+    m = float(max(dummy_train_data.x))
+    values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",
         values=values,
         variances=np.zeros_like(values),
-        data_names=dummy_utility.data.indices,
+        data_names=dummy_train_data.indices,
         status=Status.Converged,
     )
     return dummy_utility, result
