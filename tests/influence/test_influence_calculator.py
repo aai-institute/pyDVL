@@ -85,7 +85,7 @@ def influence_model(model_and_data, test_case, influence_factory):
             model,
             loss,
             rank=5,
-            hessian_regularization=hessian_reg,
+            regularization=hessian_reg,
         ).fit(train_dataLoader),
     ],
     ids=["cg", "direct", "arnoldi", "nystroem-sketch"],
