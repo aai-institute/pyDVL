@@ -137,10 +137,6 @@ def test_seed(
         np.testing.assert_equal(values_1.values, values_3.values)
 
 
-# @pytest.mark.skip(
-#     "This test is brittle and the bound isn't sharp. "
-#     "We should at least document the bound in the documentation."
-# )
 @pytest.mark.slow
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
@@ -150,10 +146,10 @@ def test_seed(
         UniformSampler,
     ],
 )
+@pytest.mark.flaky(reruns=1)
 def test_hoeffding_bound_montecarlo(
     analytic_shapley,
     dummy_train_data,
-    tolerate,
     n_jobs,
     sampler_class,
     delta,
@@ -164,20 +160,19 @@ def test_hoeffding_bound_montecarlo(
     n_samples = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
-        with tolerate(max_failures=int(10 * delta)):
-            sampler = sampler_class()
-            valuation = DataShapleyValuation(
-                utility=u,
-                sampler=sampler,
-                progress=False,
-                is_done=MaxChecks(n_samples),
-            )
-            with parallel_config(n_jobs=n_jobs):
-                valuation.fit(dummy_train_data)
-            values = valuation.values()
+        sampler = sampler_class()
+        valuation = DataShapleyValuation(
+            utility=u,
+            sampler=sampler,
+            progress=False,
+            is_done=MaxChecks(n_samples),
+        )
+        with parallel_config(n_jobs=n_jobs):
+            valuation.fit(dummy_train_data)
+        values = valuation.values()
 
-            check_total_value(u, values, atol=len(dummy_train_data) * eps)
-            check_rank_correlation(values, exact_values, threshold=0.8)
+        check_total_value(u, values, atol=len(dummy_train_data) * eps)
+        check_rank_correlation(values, exact_values, threshold=0.8)
 
 
 @pytest.mark.slow
