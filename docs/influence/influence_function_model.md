@@ -294,41 +294,9 @@ if_model = InverseHarmonicMeanInfluence(
 )
 if_model.fit(train_loader)
 ```
+This implementation is capable of using a block-matrix approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation).
 
-!!! Info
-    This implementation is capable of using a block-matrix approximation. The
-    blocking structure can be specified via the `block_structure` parameter.
-    The `block_structure` parameter can either be a
-    [BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
-    layer-wise or parameter-wise blocking) or a custom block structure defined
-    by an ordered dictionary with the keys being the block identifiers (arbitrary
-    strings) and the values being lists of parameter names contained in the block.
-    ```python
-    block_structure = OrderedDict(
-    (
-        ("custom_block1", ["0.weight", "1.bias"]),
-        ("custom_block2", ["1.weight", "0.bias"]),
-    )
-    )
-    ```
-    If you would like to apply a block-specific regularization, you can provide a
-    dictionary with the block names as keys and the regularization values as values.
-    In this case, the specification must be complete, i.e. every block must have
-    a positive regularization value.
-    ```python
-    regularization =  {
-    "custom_block1": 0.1,
-    "custom_block2": 0.2,
-    }
-    ```
-    Accordingly, if you choose a layer-wise or parameter-wise structure
-    (by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
-    `block_structure`) the keys must be the layer names or parameter names,
-    respectively.
-    You can retrieve the block-wise influence information from the methods
-    with suffix `_by_block`. By default, `block_structure` is set to
-    `BlockMode.FULL` and in this case these methods will return a dictionary
-    with the empty string being the only key.
 
 These implementations represent the calculation logic on in memory tensors. 
 To scale up to large collection of data, we map these influence function models 

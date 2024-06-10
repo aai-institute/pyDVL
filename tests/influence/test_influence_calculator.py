@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
 from pydvl.influence.base_influence_function_model import (
     NotImplementedLayerRepresentationException,
-    UnsupportedInfluenceModeException,
 )
 from pydvl.influence.influence_calculator import (
     DisableClientSingleThreadCheck,
@@ -31,6 +30,7 @@ from pydvl.influence.torch.util import (
     TorchCatAggregator,
     TorchNumpyConverter,
 )
+from pydvl.influence.types import UnsupportedInfluenceModeException
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 from tests.influence.torch.test_util import are_active_layers_linear
 

@@ -11,7 +11,18 @@
 - Add new backend implementations for influence computation
   to account for block-diagonal approximations
   [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Extend `DirectInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
   
+## Changed
+
+- **Breaking Changes**
+  - Rename parameter `hessian_regularization` of `DirectInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+    
 
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 

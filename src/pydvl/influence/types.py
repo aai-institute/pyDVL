@@ -259,7 +259,10 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         return self.inner_prod(left_grad, right_grad)
 
     def mixed_grads_inner_prod(
-        self, left: BatchType, right: BatchType, gradient_provider: GradientProviderType
+        self,
+        left: BatchType,
+        right: Optional[BatchType],
+        gradient_provider: GradientProviderType,
     ) -> TensorType:
         r"""
         Computes the mixed gradient inner product of two batches of data, i.e.
@@ -281,6 +284,8 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
             A tensor representing the inner products of the mixed per-sample gradients
         """
         left_grad = gradient_provider.flat_grads(left)
+        if right is None:
+            right = left
         right_mixed_grad = gradient_provider.flat_mixed_grads(right)
         return self.inner_prod(left_grad, right_mixed_grad)
 
@@ -413,9 +418,14 @@ class OperatorGradientComposition(
             The result of the influence computation as dictated by the mode.
         """
         bilinear_form = self.op.as_bilinear_form()
-        if mode is InfluenceMode.Up:
+        if mode == InfluenceMode.Up:
             return bilinear_form.grads_inner_prod(left_batch, right_batch, self.gp)
-        return bilinear_form.mixed_grads_inner_prod(left_batch, right_batch, self.gp)
+        elif mode == InfluenceMode.Perturbation:
+            return bilinear_form.mixed_grads_inner_prod(
+                left_batch, right_batch, self.gp
+            )
+        else:
+            raise UnsupportedInfluenceModeException(mode)
 
     def transformed_grads(self, batch: BatchType):
         r"""
@@ -641,3 +651,11 @@ class BlockMapper(Generic[TensorType, BatchType, OperatorGradientCompositionType
 
 
 BlockMapperType = TypeVar("BlockMapperType", bound=BlockMapper)
+
+
+class UnsupportedInfluenceModeException(ValueError):
+    def __init__(self, mode: str):
+        super().__init__(
+            f"Provided {mode=} is not supported. Choose one of InfluenceMode.Up "
+            f"and InfluenceMode.Perturbation"
+        )
