@@ -3332,6 +3332,24 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#block-diagonal-approximation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Block-diagonal approximation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gauss-newton-approximation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gauss-Newton approximation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perturbation-influences" class="md-nav__link">
     <span class="md-ellipsis">
       Perturbation influences
@@ -3554,7 +3572,7 @@ simplest adds a small <em>hessian perturbation term</em>, i.e. <span class="arit
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">DirectInfluence</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">regularization</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
 </span></code></pre></div>
 <p>This standard
@@ -3563,13 +3581,82 @@ zero and therefore the matrix is invertible. In order for this regularization
 not to corrupt the outcome too much, the parameter <span class="arithmatex">\(\lambda\)</span> should be as small
 as possible while still allowing a reliable inversion of <span class="arithmatex">\(H_{\hat{\theta}} +
 \lambda \mathbb{I}\)</span>.</p>
+<h3 id="block-diagonal-approximation">Block-diagonal approximation<a class="headerlink" href="#block-diagonal-approximation" title="Permanent link">&para;</a></h3>
+<p>This implementation is capable of using a block-diagonal approximation.
+The full matrix is approximated by a block-diagonal version, which
+reduces both the time and memory consumption.
+The blocking structure can be specified via the <code>block_structure</code> parameter.
+The <code>block_structure</code> parameter can either be a
+<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/util/#pydvl.influence.torch.util.BlockMode">BlockMode</a> enum (which provides
+layer-wise or parameter-wise blocking) or a custom block structure defined
+by an ordered dictionary with the keys being the block identifiers (arbitrary
+strings) and the values being lists of parameter names contained in the block.
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">DirectInfluence</span><span class="p">,</span> <span class="n">BlockMode</span><span class="p">,</span> <span class="n">SecondOrderMode</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># layer-wise block-diagonal approximation</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                             <span class="n">regularization</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                             <span class="n">block_structure</span><span class="o">=</span><span class="n">BlockMode</span><span class="o">.</span><span class="n">LAYER_WISE</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">block_structure</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">((</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="p">(</span><span class="s2">&quot;custom_block1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;0.weight&quot;</span><span class="p">,</span> <span class="s2">&quot;1.bias&quot;</span><span class="p">]),</span> 
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="p">(</span><span class="s2">&quot;custom_block2&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;1.weight&quot;</span><span class="p">,</span> <span class="s2">&quot;0.bias&quot;</span><span class="p">]),</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">))</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="c1"># custom block-diagonal structure</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>                             <span class="n">regularization</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>                             <span class="n">block_structure</span><span class="o">=</span><span class="n">block_structure</span><span class="p">)</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
+</span></code></pre></div>
+If you would like to apply a block-specific regularization, you can provide a
+dictionary with the block names as keys and the regularization values as values.
+If no value is provided for a specific key, no regularization is applied for
+the corresponding block.</p>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">regularization</span> <span class="o">=</span>  <span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="s2">&quot;custom_block1&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s2">&quot;custom_block2&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>                             <span class="n">regularization</span><span class="o">=</span><span class="n">regularization</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>                             <span class="n">block_structure</span><span class="o">=</span><span class="n">block_structure</span><span class="p">)</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
+</span></code></pre></div>
+Accordingly, if you choose a layer-wise or parameter-wise structure
+(by providing <code>BlockMode.LAYER_WISE</code> or <code>BlockMode.PARAMETER_WISE</code> for
+<code>block_structure</code>) the keys must be the layer names or parameter names,
+respectively.
+You can retrieve the block-wise influence information from the methods
+with suffix <code>_by_block</code>. By default, <code>block_structure</code> is set to
+<code>BlockMode.FULL</code> and in this case these methods will return a dictionary
+with the empty string being the only key.</p>
+<h3 id="gauss-newton-approximation">Gauss-Newton approximation<a class="headerlink" href="#gauss-newton-approximation" title="Permanent link">&para;</a></h3>
+<p>In the computation of the influence values, the inversion of the Hessian can be
+replaced by the inversion of the Gauss-Newton matrix</p>
+<div class="arithmatex">\[ G_{\hat{\theta}}=n^{-1} \sum_{i=1}^n \nabla_{\theta}L(z_i, \hat{\theta})
+    \nabla_{\theta}L(z_i, \hat{\theta})^T \]</div>
+<p>so the computed values are of the form</p>
+<div class="arithmatex">\[\nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
+G_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta}). \]</div>
+<p>The parameter <code>second_orer_mode</code> is used to configure this approximation.
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">DirectInfluence</span><span class="p">,</span> <span class="n">BlockMode</span><span class="p">,</span> <span class="n">SecondOrderMode</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">training_data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">DirectInfluence</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                             <span class="n">regularization</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;layer_1&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">&quot;layer_2&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">},</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                             <span class="n">block_structure</span><span class="o">=</span><span class="n">BlockMode</span><span class="o">.</span><span class="n">LAYER_WISE</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                             <span class="n">second_order_mode</span><span class="o">=</span><span class="n">SecondOrderMode</span><span class="o">.</span><span class="n">GAUSS_NEWTON</span><span class="p">)</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">infl_model</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">training_data_loader</span><span class="p">)</span>
+</span></code></pre></div></p>
 <h3 id="perturbation-influences">Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permanent link">&para;</a></h3>
 <p>The method of empirical influence computation can be selected with the
 parameter <code>mode</code>:</p>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">InfluenceMode</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                                   <span class="n">mode</span><span class="o">=</span><span class="n">InfluenceMode</span><span class="o">.</span><span class="n">Perturbation</span><span class="p">)</span>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">InfluenceMode</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>                                   <span class="n">mode</span><span class="o">=</span><span class="n">InfluenceMode</span><span class="o">.</span><span class="n">Perturbation</span><span class="p">)</span>
 </span></code></pre></div>
 The result is a tensor with at least three dimensions. The first two dimensions
 are the same as in the case of <code>mode=InfluenceMode.Up</code> case, i.e. one row per test
@@ -3583,8 +3670,8 @@ point.</p>
 are typically the most computationally demanding part of influence calculation.
 They can be obtained via calling the <code>influence_factors</code> method, saved, and later used 
 for influence calculation on different subsets of the training dataset.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">influence_factors</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influence_factors</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences_from_factors</span><span class="p">(</span><span class="n">influence_factors</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">influence_factors</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influence_factors</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">influences</span> <span class="o">=</span> <span class="n">infl_model</span><span class="o">.</span><span class="n">influences_from_factors</span><span class="p">(</span><span class="n">influence_factors</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="footnote">
 <hr />
@@ -3625,7 +3712,7 @@ for influence calculation on different subsets of the training dataset.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-03-30</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-06-07</span>
   </span>
 
     
