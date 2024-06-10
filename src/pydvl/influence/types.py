@@ -215,7 +215,7 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         In this case, the trailing dimension of the `left` and `right` tensors are
         considered for the computation of the inner product. For example,
         if `left` is a tensor of shape $(N, D)$ and, `right` is of shape $(M,..., D)$,
-        then the result is of shape $(N,..., M)$
+        then the result is of shape $(N, M, ...)$.
 
         Args:
             left: The first tensor in the inner product computation.
@@ -293,6 +293,47 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
 BilinearFormType = TypeVar("BilinearFormType", bound=BilinearForm)
 
 
+class InnerTensorProduct(
+    BilinearForm[TensorType, BatchType, GradientProviderType], ABC
+):
+    """
+    A Bilinear-form represented by the inner product of tensors
+    """
+
+    def inner_prod(self, left: TensorType, right: Optional[TensorType]) -> TensorType:
+        r"""
+        Computes the inner product of two vectors, i.e.
+
+        $$ \langle x, y \rangle$$
+
+        The implementations must take care of according vectorization to make
+        it applicable to the case, where `left` and `right` are not one-dimensional.
+        In this case, the trailing dimension of the `left` and `right` tensors are
+        considered for the computation of the inner product. For example,
+        if `left` is a tensor of shape $(N, D)$ and, `right` is of shape $(M,..., D)$,
+        then the result is of shape $(N, M, ...)$.
+
+        Args:
+            left: The first tensor in the inner product computation.
+            right: The second tensor, optional; if not provided, the inner product will
+                use `left` tensor for both arguments.
+
+        Returns:
+            A tensor representing the inner product.
+        """
+        if right is None:
+            right = left
+        return self._einsum(left, right)
+
+    @abstractmethod
+    def _einsum(self, left: TensorType, right: TensorType) -> TensorType:
+        """Implement this method in a way such that the aggregation of the tensors
+        is represented by the Einstein summation convention ia,j...a -> ij..."""
+
+
+InnerTensorProductType = TypeVar("InnerTensorProductType", bound=InnerTensorProduct)
+
+
 class Operator(Generic[TensorType, BilinearFormType], ABC):
     """
     Abstract base class for operators, capable of applying transformations to
@@ -367,7 +408,13 @@ OperatorType = TypeVar("OperatorType", bound=Operator)
 
 
 class OperatorGradientComposition(
-    Generic[TensorType, BatchType, OperatorType, GradientProviderType]
+    Generic[
+        TensorType,
+        BatchType,
+        OperatorType,
+        GradientProviderType,
+        InnerTensorProductType,
+    ]
 ):
     """
     Generic base class representing a composable block that integrates an operator and
@@ -384,6 +431,14 @@ class OperatorGradientComposition(
     def __init__(self, op: OperatorType, gp: GradientProviderType):
         self.gp = gp
         self.op = op
+
+    @property
+    @abstractmethod
+    def _unweighted_bilinear_form(self) -> InnerTensorProductType:
+        """
+        Implement this method to provide an instance bound by
+        [InnerTensorProduct][pydvl.influence.types.InnerTensorProduct]
+        """
 
     def interactions(
         self,
@@ -477,7 +532,7 @@ class OperatorGradientComposition(
             right_grads = self.gp.flat_grads(right_batch)
         else:
             right_grads = self.gp.flat_mixed_grads(right_batch)
-        return self.op.as_bilinear_form().inner_prod(left_factors, right_grads)
+        return self._unweighted_bilinear_form.inner_prod(left_factors, right_grads)
 
 
 OperatorGradientCompositionType = TypeVar(
