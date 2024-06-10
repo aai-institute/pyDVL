@@ -15,10 +15,8 @@ from ..types import (
     BilinearForm,
     BlockMapper,
     GradientProvider,
-    InnerTensorProduct,
     Operator,
     OperatorGradientComposition,
-    TensorType,
 )
 from .util import (
     BlockMode,
@@ -413,17 +411,6 @@ OperatorBilinearFormType = TypeVar(
 )
 
 
-class TorchInnerTensorProduct(
-    InnerTensorProduct[torch.Tensor, TorchBatch, TorchGradientProvider]
-):
-    """
-    A Bilinear-form represented by the inner product of tensors
-    """
-
-    def _einsum(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
-        return torch.einsum("ia,j...a->ij...", left, right)
-
-
 class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
     """
     Abstract base class for operators that can be applied to instances of
@@ -558,7 +545,6 @@ class TorchOperatorGradientComposition(
         TorchBatch,
         TorchOperatorType,
         TorchGradientProvider,
-        TorchInnerTensorProduct,
     ]
 ):
     """
@@ -579,9 +565,10 @@ class TorchOperatorGradientComposition(
         self.op = self.op.to(device)
         return self
 
-    @property
-    def _unweighted_bilinear_form(self) -> TorchInnerTensorProduct:
-        return TorchInnerTensorProduct()
+    def _tensor_inner_product(
+        self, left: torch.Tensor, right: torch.Tensor
+    ) -> torch.Tensor:
+        return torch.einsum("ia,j...a->ij...", left, right)
 
 
 class TorchBlockMapper(
