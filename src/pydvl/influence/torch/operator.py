@@ -432,6 +432,7 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
             self.data.batch_size,
             shuffle=True,
         )
+        is_converged = False
         for k in tqdm(
             range(self.maxiter), disable=not self.progress, desc="Lissa iteration"
         ):
@@ -449,8 +450,10 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
                     f"{max_residual*100:.2f} % max residual and"
                     f" mean residual {mean_residual*100:.5f} %"
                 )
+                is_converged = True
                 break
-        else:
+
+        if not is_converged:
             mean_residual = torch.mean(torch.abs(residual / h_estimate))
             log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
             logger.log(
