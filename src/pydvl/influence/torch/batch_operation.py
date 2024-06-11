@@ -136,7 +136,7 @@ class _ModelBasedBatchOperation(ABC):
                 "property `input_size`."
             )
 
-        if tensor.ndim == 2 and tensor.shape[0] > 1:
+        if tensor.ndim == 2:
             return self._apply_to_mat(batch.to(self.device), tensor.to(self.device))
         return self._apply_to_vec(batch.to(self.device), tensor.to(self.device))
 
