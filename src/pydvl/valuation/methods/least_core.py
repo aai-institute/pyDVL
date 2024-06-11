@@ -10,6 +10,7 @@ from joblib import Parallel, delayed
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
+from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods._solve_least_core_problems import (
@@ -221,10 +222,11 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
         progress: bool = True,
+        seed: Seed | None = None,
     ):
         super().__init__(
             utility=utility,
-            sampler=UniformSampler(index_iteration=NoIndexIteration),
+            sampler=UniformSampler(index_iteration=NoIndexIteration, seed=seed),
             n_samples=n_samples,
             non_negative_subsidy=non_negative_subsidy,
             solver_options=solver_options,

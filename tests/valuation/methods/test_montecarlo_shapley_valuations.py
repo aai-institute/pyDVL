@@ -105,7 +105,7 @@ def test_games(
     [
         # TODO Add Permutation Montecarlo once issue #416 is closed.
         (PermutationSampler, dict(is_done=MaxChecks(50))),
-        (UniformSampler, dict(is_done=MaxChecks(4))),
+        (UniformSampler, dict(is_done=MaxChecks(50))),
         # (ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
         # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
         # (ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),

@@ -61,6 +61,8 @@ __all__ = [
     "PowersetSampler",
     "TruncatedUniformStratifiedSampler",
     "UniformSampler",
+    "OwenSampler",
+    "AntitheticOwenSampler",
     "UniformStratifiedSampler",
     "VarianceReducedStratifiedSampler",
     "IndexIteration",
@@ -367,6 +369,68 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
                     seed=self._rng,
                 )
                 yield Sample(idx, subset)
+
+
+class OwenSampler(StochasticSamplerMixin, PowersetSampler):
+    def __init__(
+        self,
+        n_samples_outer: int,
+        n_samples_inner: int = 2,
+        batch_size: int = 1,
+        seed: Seed | None = None,
+    ):
+        super().__init__(
+            batch_size=batch_size, index_iteration=SequentialIndexIteration, seed=seed
+        )
+        self._n_samples_inner = n_samples_inner
+        self._n_samples_outer = n_samples_outer
+        self._q_stop = 1.0
+
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        probabilities = np.linspace(
+            start=0, stop=self._q_stop, num=self._n_samples_outer
+        )
+        for idx in self.index_iterator(indices):
+            _complement = complement(indices, [idx] if idx is not None else [])
+            for prob in probabilities:
+                for _ in range(self._n_samples_inner):
+                    subset = random_subset(_complement, q=prob, seed=self._rng)
+                    yield Sample(idx, subset)
+
+    def weight(n: int, subset_len: int) -> float:
+        return 1.0
+
+    def sample_limit(self, indices: IndexSetT) -> int:
+        return len(indices) * self._n_samples_outer * self._n_samples_inner
+
+
+class AntitheticOwenSampler(OwenSampler):
+    def __init__(
+        self,
+        n_samples_outer: int,
+        n_samples_inner: int = 2,
+        batch_size: int = 1,
+        seed: Seed | None = None,
+    ):
+        super().__init__(
+            n_samples_outer=n_samples_outer,
+            n_samples_inner=n_samples_inner,
+            batch_size=batch_size,
+            seed=seed,
+        )
+        self._q_stop = 0.5
+
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        for sample in super()._generate(indices):
+            idx, subset = sample
+            _exclude = [idx] if idx is not None else []
+            _exclude += subset.tolist()
+            _antithetic_subset = complement(indices, _exclude)
+            yield sample
+            yield Sample(idx, _antithetic_subset)
+
+    def sample_limit(self, indices: IndexSetT) -> int:
+        return 2 * super().sample_limit(indices)
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):

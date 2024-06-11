@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 __all__ = [
     "BatchGenerator",
@@ -51,6 +52,10 @@ class Sample:
         """
         sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
         return int(sha256_hash, base=16)
+
+    def with_idx_in_subset(self) -> Self:
+        new_subset = np.concatenate([self.subset, [self.idx]])
+        return replace(self, subset=new_subset)
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
