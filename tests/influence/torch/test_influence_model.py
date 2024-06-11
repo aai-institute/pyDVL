@@ -841,6 +841,9 @@ composable_influence_factories = [
         second_order_mode=SecondOrderMode.GAUSS_NEWTON,
     ),
     partial(NystroemSketchInfluence, rank=10),
+    partial(
+        NystroemSketchInfluence, rank=10, second_order_mode=SecondOrderMode.GAUSS_NEWTON
+    ),
 ]
 
 
