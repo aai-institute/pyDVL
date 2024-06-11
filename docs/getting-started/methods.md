@@ -63,3 +63,7 @@ We currently implement the following methods:
 
 - [**Nyström Influence**][pydvl.influence.torch.NystroemSketchInfluence], based
   on the ideas in [@hataya_nystrom_2023] for bi-level optimization.
+
+- [**Inverse-harmonic-mean Influence**][pydvl.influence.torch.InverseHarmonicMeanInfluence]
+  [@kwon_datainf_2023].
+
