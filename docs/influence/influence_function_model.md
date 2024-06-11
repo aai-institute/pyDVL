@@ -206,10 +206,16 @@ if_model = NystroemSketchInfluence(
     model,
     loss,
     rank=10,
-    hessian_regularization=0.0,
+    regularization=0.0,
+    block_structure=BlockMode.FULL,
+    second_order_mode=SecondOrderMode.HESSIAN
 )
 if_model.fit(train_loader)
 ```
+This implementation is capable of using a block-matrix
+approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
 
 ### Inverse Harmonic Mean
 
