@@ -451,7 +451,9 @@ def test_influence_linear_model(
     x_train, y_train = tuple(map(torch.from_numpy, train_data))
     x_test, y_test = tuple(map(torch.from_numpy, test_data))
     influence_values = (
-        influence.influences(x_test, y_test, x_train, y_train, mode=mode).cpu().numpy()
+        (influence.influences(x_test, y_test, x_train, y_train, mode=mode))
+        .cpu()
+        .numpy()
     )
     sym_influence_values = (
         influence.influences(x_train, y_train, x_train, y_train, mode=mode)
@@ -516,13 +518,20 @@ def test_influences_lissa(
     influence_model = influence_factory(
         model.to(device), loss, train_dataloader, test_case.hessian_reg
     )
-    approx_influences = (
-        influence_model.influences(
-            x_test, y_test, x_train, y_train, mode=test_case.mode
-        )
-        .cpu()
-        .numpy()
+    approx_influences = influence_model.influences(
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     )
+
+    influence_factors = influence_model.influence_factors(x_test, y_test)
+    influences_from_factors = influence_model.influences_from_factors(
+        influence_factors, x_train, y_train, mode=test_case.mode
+    )
+
+    assert torch.allclose(
+        influences_from_factors, approx_influences, atol=1e-5, rtol=1e-4
+    )
+
+    approx_influences = approx_influences.cpu().numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
@@ -783,13 +792,18 @@ def test_influences_cg(
     )
     influence_model = influence_model.fit(train_dataloader)
 
-    approx_influences = (
-        influence_model.influences(
-            x_test, y_test, x_train, y_train, mode=test_case.mode
-        )
-        .cpu()
-        .numpy()
+    approx_influences = influence_model.influences(
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     )
+
+    influence_factors = influence_model.influence_factors(x_test, y_test)
+    influences_from_factors = influence_model.influences_from_factors(
+        influence_factors, x_train, y_train, mode=test_case.mode
+    )
+
+    assert torch.allclose(influences_from_factors, approx_influences, rtol=1e-4)
+
+    approx_influences = approx_influences.cpu().numpy()
 
     assert not np.any(np.isnan(approx_influences))
 

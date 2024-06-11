@@ -215,7 +215,7 @@ class BilinearForm(Generic[TensorType, BatchType, GradientProviderType], ABC):
         In this case, the trailing dimension of the `left` and `right` tensors are
         considered for the computation of the inner product. For example,
         if `left` is a tensor of shape $(N, D)$ and, `right` is of shape $(M,..., D)$,
-        then the result is of shape $(N,..., M)$
+        then the result is of shape $(N, M, ...)$.
 
         Args:
             left: The first tensor in the inner product computation.
@@ -367,7 +367,12 @@ OperatorType = TypeVar("OperatorType", bound=Operator)
 
 
 class OperatorGradientComposition(
-    Generic[TensorType, BatchType, OperatorType, GradientProviderType]
+    Generic[
+        TensorType,
+        BatchType,
+        OperatorType,
+        GradientProviderType,
+    ]
 ):
     """
     Generic base class representing a composable block that integrates an operator and
@@ -384,6 +389,11 @@ class OperatorGradientComposition(
     def __init__(self, op: OperatorType, gp: GradientProviderType):
         self.gp = gp
         self.op = op
+
+    @abstractmethod
+    def _tensor_inner_product(self, left: TensorType, right: TensorType) -> TensorType:
+        """Implement this method in a way such that the aggregation of the tensors
+        is represented by the Einstein summation convention ia,j...a -> ij..."""
 
     def interactions(
         self,
@@ -477,7 +487,7 @@ class OperatorGradientComposition(
             right_grads = self.gp.flat_grads(right_batch)
         else:
             right_grads = self.gp.flat_mixed_grads(right_batch)
-        return self.op.as_bilinear_form().inner_prod(left_factors, right_grads)
+        return self._tensor_inner_product(left_factors, right_grads)
 
 
 OperatorGradientCompositionType = TypeVar(

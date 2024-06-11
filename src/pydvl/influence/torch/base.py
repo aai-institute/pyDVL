@@ -17,7 +17,6 @@ from ..types import (
     GradientProvider,
     Operator,
     OperatorGradientComposition,
-    TensorType,
 )
 from .util import (
     BlockMode,
@@ -286,10 +285,6 @@ class OperatorBilinearForm(
 
     def _inner_product(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
         left_result = self.operator.apply(left)
-
-        if left_result.ndim == right.ndim and left.shape[-1] == right.shape[-1]:
-            return left_result @ right.T
-
         return torch.einsum("ia,j...a->ij...", left_result, right)
 
 
@@ -546,7 +541,10 @@ TorchOperatorType = TypeVar("TorchOperatorType", bound=TensorOperator)
 
 class TorchOperatorGradientComposition(
     OperatorGradientComposition[
-        torch.Tensor, TorchBatch, TorchOperatorType, TorchGradientProvider
+        torch.Tensor,
+        TorchBatch,
+        TorchOperatorType,
+        TorchGradientProvider,
     ]
 ):
     """
@@ -566,6 +564,11 @@ class TorchOperatorGradientComposition(
         self.gp = self.gp.to(device)
         self.op = self.op.to(device)
         return self
+
+    def _tensor_inner_product(
+        self, left: torch.Tensor, right: torch.Tensor
+    ) -> torch.Tensor:
+        return torch.einsum("ia,j...a->ij...", left, right)
 
 
 class TorchBlockMapper(

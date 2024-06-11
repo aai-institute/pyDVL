@@ -505,7 +505,10 @@ class ComposableInfluence(
             self._create_batch(x, y),
             mode,
         )
-        return cast(TensorType, sum(tensors))
+        result: TensorType = next(tensors)
+        for tensor in tensors:
+            result = result + tensor
+        return result
 
     @staticmethod
     @abstractmethod
