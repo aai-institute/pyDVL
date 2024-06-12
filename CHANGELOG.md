@@ -12,7 +12,8 @@
 
 ### Fixed
 
-- Fix a bug in pydvl.utils.numeric.random_subset
+- Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
+  as the probability of an element being sampled
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 
 ## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞

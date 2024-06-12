@@ -54,6 +54,16 @@ class Sample:
         return int(sha256_hash, base=16)
 
     def with_idx_in_subset(self) -> Self:
+        """Return a copy of sample with idx added to the subset.
+
+        Returns the original sample if idx was already part of the subset.
+
+        Returns:
+            Sample: A copy of the sample with idx added to the subset.
+
+        Raises:
+            ValueError: If idx is None.
+        """
         if self.idx in self.subset:
             return self
 
