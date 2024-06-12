@@ -16,6 +16,23 @@ from pydvl.valuation.utility.base import UtilityBase
 
 
 class OwenShapleyValuation(SemivalueValuation):
+    """Umbrella class to calculate least-core values with Owen sampling schemes.
+
+    Owen shapley values converge to true Shapley values as the number of samples
+    increases but have been shown to need fewer samples than other sampling schemes.
+
+    The number of samples is governed by the sampler object. There are no convergence
+    criteria for Owen shapley values as they will just run for a fixed number of
+    samples.
+
+    Args:
+        utility: Utility object with model and scoring function.
+        sampler: Owen sampling scheme to use. Can be OwenSampler or
+            AntitheticOwenSampler.
+        progress: Whether to show a progress bar.
+
+    """
+
     def __init__(
         self,
         utility: UtilityBase,
@@ -30,6 +47,22 @@ class OwenShapleyValuation(SemivalueValuation):
         )
 
     def fit(self, dataset: Dataset) -> ValuationResult:
+        """Calculate the Owen shapley values for a given dataset.
+
+        This method has to be called before calling `values()`.
+
+        Calculating the least core valuation is a computationally expensive task that
+        can be parallelized. To do so, call the `fit()` method inside a
+        `joblib.parallel_config` context manager as follows:
+
+        ```python
+        from joblib import parallel_config
+
+        with parallel_config(n_jobs=4):
+            valuation.fit(data)
+        ```
+
+        """
         # since we bypassed the convergence checks we need to set the status to
         # converged manually
         super().fit(dataset)

@@ -372,6 +372,19 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
 
 
 class OwenSampler(StochasticSamplerMixin, PowersetSampler):
+    """A sampler for Owen shapley values.
+
+    Args:
+        n_samples_outer: The number of entries in the probability grid used for
+            the outer loop in Owen sampling.
+        n_samples_inner: The number of samples drawn for each probability. In the
+            original paper this was fixed to 2 for all experiments which is why we
+            give it a default value of 2.
+        batch_size: The batch size of the sampler.
+        seed: The seed for the random number generator.
+
+    """
+
     def __init__(
         self,
         n_samples_outer: int,
@@ -406,6 +419,19 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
 
 
 class AntitheticOwenSampler(OwenSampler):
+    """A sampler for antithetic Owen shapley values.
+
+    Args:
+        n_samples_outer: The number of entries in the probability grid used for
+            the outer loop in Owen sampling.
+        n_samples_inner: The number of samples drawn for each probability. In the
+            original paper this was fixed to 2 for all experiments which is why we
+            give it a default value of 2.
+        batch_size: The batch size of the sampler.
+        seed: The seed for the random number generator.
+
+    """
+
     def __init__(
         self,
         n_samples_outer: int,
