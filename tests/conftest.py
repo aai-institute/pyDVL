@@ -14,9 +14,6 @@ from pydvl.parallel import available_cpus
 from pydvl.utils import Dataset, MemcachedClientConfig
 from tests.cache import CloudPickleCache
 
-if TYPE_CHECKING:
-    from _pytest.terminal import TerminalReporter
-
 
 def pytest_addoption(parser):
     parser.addoption(
