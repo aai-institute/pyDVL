@@ -9,9 +9,11 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
-from pydvl.valuation.methods import DataShapleyValuation
+from pydvl.valuation.methods import DataShapleyValuation, OwenShapleyValuation
 from pydvl.valuation.samplers import (
+    AntitheticOwenSampler,
     DeterministicUniformSampler,
+    OwenSampler,
     PermutationSampler,
     UniformSampler,
 )
@@ -51,8 +53,22 @@ log = logging.getLogger(__name__)
             0.2,
             1e-4,
         ),
-        # (ShapleyMode.Owen, 0.2, 1e-4, dict(n_samples=5, max_q=200)),
-        # (ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=5, max_q=200)),
+        (
+            OwenSampler,
+            {"n_samples_outer": 200, "n_samples_inner": 5},
+            OwenShapleyValuation,
+            {},
+            0.2,
+            1e-4,
+        ),
+        (
+            AntitheticOwenSampler,
+            {"n_samples_outer": 200, "n_samples_inner": 5},
+            OwenShapleyValuation,
+            {},
+            0.1,
+            1e-4,
+        ),
         # Because of the inaccuracy of GroupTesting, a high atol is required for the
         # value 0, for which the rtol has no effect.
         # (
@@ -121,8 +137,18 @@ def test_games(
         # TODO Add Permutation Montecarlo once issue #416 is closed.
         (PermutationSampler, {}, DataShapleyValuation, {"is_done": MaxChecks(50)}),
         (UniformSampler, {}, DataShapleyValuation, {"is_done": MaxChecks(50)}),
-        # (ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
-        # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+        (
+            OwenSampler,
+            {"n_samples_outer": 20, "n_samples_inner": 4},
+            OwenShapleyValuation,
+            {},
+        ),
+        (
+            AntitheticOwenSampler,
+            {"n_samples_outer": 20, "n_samples_inner": 4},
+            OwenShapleyValuation,
+            {},
+        ),
         # (ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
     ],
 )
@@ -200,8 +226,18 @@ def test_hoeffding_bound_montecarlo(
     "sampler_class, sampler_kwargs, valuation_class, valuation_kwargs",
     [
         (PermutationSampler, {}, DataShapleyValuation, {"is_done": MaxUpdates(500)}),
-        # (ShapleyMode.Owen, dict(n_samples=4, max_q=400)),
-        # (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
+        (
+            OwenSampler,
+            {"n_samples_outer": 400, "n_samples_inner": 4},
+            OwenShapleyValuation,
+            {},
+        ),
+        (
+            AntitheticOwenSampler,
+            {"n_samples_outer": 400, "n_samples_inner": 4},
+            OwenShapleyValuation,
+            {},
+        ),
         # (
         #     ShapleyMode.GroupTesting,
         #     dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),

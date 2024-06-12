@@ -397,6 +397,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
                     subset = random_subset(_complement, q=prob, seed=self._rng)
                     yield Sample(idx, subset)
 
+    @staticmethod
     def weight(n: int, subset_len: int) -> float:
         return 1.0
 

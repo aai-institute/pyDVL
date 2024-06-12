@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydvl.utils import Status
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers.powerset import OwenSampler
 from pydvl.valuation.stopping import NoStopping
@@ -27,6 +28,13 @@ class OwenShapleyValuation(SemivalueValuation):
             is_done=NoStopping(),
             progress=progress,
         )
+
+    def fit(self, dataset: Dataset) -> ValuationResult:
+        # since we bypassed the convergence checks we need to set the status to
+        # converged manually
+        super().fit(dataset)
+        self.result._status = Status.Converged
+        return self
 
     def coefficient(self, n: int, k: int) -> float:
         return 1
