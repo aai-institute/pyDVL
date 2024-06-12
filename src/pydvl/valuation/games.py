@@ -27,6 +27,7 @@ from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods._solve_least_core_problems import LeastCoreProblem
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -91,13 +92,16 @@ class DummyGameUtility(UtilityBase):
         if sample is None or len(sample.subset) == 0:
             return 0
 
+        if self.training_data is None:
+            raise ValueError("Utility object has no training data.")
+
         idxs = np.array(sample.subset, dtype=np.int32)
         try:
-            score = self.score(self.training_data.x[idxs])
+            score: float = self.score(self.training_data.x[idxs])
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
-            score = 0
+            score = 0.0
         return score
 
     def with_dataset(self, dataset: Dataset):
@@ -209,7 +213,7 @@ class SymmetricVotingGame(Game):
     @lru_cache
     def shapley_values(self) -> ValuationResult:
         exact_values = np.ones(self.n_players) / self.n_players
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -334,7 +338,7 @@ class AsymmetricVotingGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -405,7 +409,7 @@ class ShoesGame(Game):
             value_left = precomputed_values[self.left, self.right]
             value_right = precomputed_values[self.right, self.left]
         exact_values = np.array([value_left] * self.left + [value_right] * self.right)
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -427,7 +431,7 @@ class ShoesGame(Game):
             subsidy = 0.0
             exact_values = np.array([0.0] * self.left + [1.0] * self.right)
 
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_least_core",
             status=Status.Converged,
             indices=self.data.indices,
@@ -517,7 +521,7 @@ class AirportGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -592,7 +596,7 @@ class MinimumSpanningTreeGame(Game):
     @lru_cache
     def shapley_values(self) -> ValuationResult:
         exact_values = 2 * np.ones_like(self.data.x)
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
@@ -657,7 +661,7 @@ class MinerGame(Game):
             )
             subsidy = (self.n_players - 1) / (2 * self.n_players)
 
-        result: ValuationResult[np.int_, np.int_] = ValuationResult(
+        result = ValuationResult(
             algorithm="exact_least_core",
             status=Status.Converged,
             indices=self.data.indices,

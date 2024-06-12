@@ -31,7 +31,7 @@ NullaryPredicate = Callable[[], bool]
 
 @dataclass(frozen=True)
 class ValueUpdate:
-    idx: int | IndexT
+    idx: int | IndexT | None
     update: float
 
 

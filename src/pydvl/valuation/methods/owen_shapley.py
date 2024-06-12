@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
+from typing_extensions import Self
+
 from pydvl.utils import Status
+from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.powerset import OwenSampler
 from pydvl.valuation.stopping import NoStopping
 from pydvl.valuation.utility.base import UtilityBase
@@ -46,7 +52,7 @@ class OwenShapleyValuation(SemivalueValuation):
             progress=progress,
         )
 
-    def fit(self, dataset: Dataset) -> ValuationResult:
+    def fit(self, dataset: Dataset) -> Self:
         """Calculate the Owen shapley values for a given dataset.
 
         This method has to be called before calling `values()`.
@@ -66,7 +72,9 @@ class OwenShapleyValuation(SemivalueValuation):
         # since we bypassed the convergence checks we need to set the status to
         # converged manually
         super().fit(dataset)
-        self.result._status = Status.Converged
+        # make the type checker happy
+        if self.result is not None:
+            self.result._status = Status.Converged
         return self
 
     def coefficient(self, n: int, k: int) -> float:
