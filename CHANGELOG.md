@@ -7,6 +7,13 @@
 - Refactoring of least-core data valuation methods with more supported sampling methods
   and consistent interface.
   [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
+- Refactoring of owen shapley valuation with new sampler architecture
+  [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
+
+### Fixed
+
+- Fix a bug in pydvl.utils.numeric.random_subset
+  [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 
 ## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
 

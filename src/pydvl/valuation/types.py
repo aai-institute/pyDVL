@@ -54,7 +54,13 @@ class Sample:
         return int(sha256_hash, base=16)
 
     def with_idx_in_subset(self) -> Self:
-        new_subset = np.concatenate([self.subset, [self.idx]])
+        if self.idx in self.subset:
+            return self
+
+        if self.idx is None:
+            raise ValueError("Cannot add idx to subset if idx is None.")
+
+        new_subset = np.array(self.subset.tolist() + [self.idx])
         return replace(self, subset=new_subset)
 
 

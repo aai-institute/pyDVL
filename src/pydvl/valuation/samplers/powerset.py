@@ -212,10 +212,7 @@ class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler]):
     ) -> list[ValueUpdate]:
         r = []
         for sample in batch:
-            assert sample.idx is not None
-            u_i = self.utility(
-                Sample(sample.idx, np.array(list({sample.idx}.union(sample.subset))))
-            )
+            u_i = self.utility(sample.with_idx_in_subset())
             u = self.utility(sample)
             marginal = (u_i - u) * self.coefficient(self.n_indices, len(sample.subset))
             r.append(ValueUpdate(sample.idx, marginal))
