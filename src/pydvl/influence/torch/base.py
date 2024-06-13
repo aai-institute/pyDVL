@@ -724,7 +724,11 @@ class TorchComposableInfluence(
 
     @property
     def n_parameters(self):
-        return sum(block.op.input_size for _, block in self.block_mapper.items())
+        return sum(
+            param.numel()
+            for block in self.parameter_dict.values()
+            for param in block.values()
+        )
 
     @abstractmethod
     def with_regularization(
