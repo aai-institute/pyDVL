@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 __all__ = [
     "BatchGenerator",
@@ -30,7 +31,7 @@ NullaryPredicate = Callable[[], bool]
 
 @dataclass(frozen=True)
 class ValueUpdate:
-    idx: int | IndexT
+    idx: int | IndexT | None
     update: float
 
 
@@ -51,6 +52,26 @@ class Sample:
         """
         sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
         return int(sha256_hash, base=16)
+
+    def with_idx_in_subset(self) -> Self:
+        """Return a copy of sample with idx added to the subset.
+
+        Returns the original sample if idx was already part of the subset.
+
+        Returns:
+            Sample: A copy of the sample with idx added to the subset.
+
+        Raises:
+            ValueError: If idx is None.
+        """
+        if self.idx in self.subset:
+            return self
+
+        if self.idx is None:
+            raise ValueError("Cannot add idx to subset if idx is None.")
+
+        new_subset = np.array(self.subset.tolist() + [self.idx])
+        return replace(self, subset=new_subset)
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
