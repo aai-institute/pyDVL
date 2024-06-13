@@ -424,6 +424,21 @@ class DictBilinearForm(OperatorBilinearForm):
 
 
 class LowRankBilinearForm(OperatorBilinearForm):
+    r"""
+    Specialized bilinear form for operators of the type
+
+    $$ \operatorname{Op}(b) = V D^{-1}V^Tb.$$
+
+    It computes the expressions
+
+    $$ \langle \operatorname{Op}(\nabla_{\theta} \ell(z, \theta)),
+        \nabla_{\theta} \ell(z^{\prime}, \theta) \rangle =
+        \langle V\nabla_{\theta} \ell(z, \theta),
+        D^{-1}V\nabla_{\theta} \ell(z^{\prime}, \theta) \rangle$$
+
+    in an efficient way using [torch.autograd][torch.autograd] functionality.
+    """
+
     def __init__(self, operator: "LowRankOperator"):
         super().__init__(operator)
 
@@ -457,24 +472,24 @@ class LowRankBilinearForm(OperatorBilinearForm):
         if op.exact:
             return super().grads_inner_prod(left, right, gradient_provider)
 
-        projections = op.low_rank_representation.projections
-        eigen_vals = op.low_rank_representation.eigen_vals
+        V = op.low_rank_representation.projections
+        D = op.low_rank_representation.eigen_vals.clone()
         regularization = op.regularization
 
         if regularization is not None:
-            eigen_vals = eigen_vals + regularization
+            D += regularization
 
-        left_grads = gradient_provider.jacobian_prod(left, projections.t())
-        inverse_regularized_eigenvalues = 1.0 / eigen_vals
+        V_left = gradient_provider.jacobian_prod(left, V.t())
+        D_inv = 1.0 / D
 
         if right is None:
-            right_grads = left_grads
+            V_right = V_left
         else:
-            right_grads = gradient_provider.jacobian_prod(right, projections.t())
+            V_right = gradient_provider.jacobian_prod(right, V.t())
 
-        right_grads = right_grads * inverse_regularized_eigenvalues.unsqueeze(-1)
+        V_right = V_right * D_inv.unsqueeze(-1)
 
-        return torch.einsum("ij, ik -> jk", left_grads, right_grads)
+        return torch.einsum("ij, ik -> jk", V_left, V_right)
 
 
 OperatorBilinearFormType = TypeVar(
