@@ -546,23 +546,18 @@ class LowRankOperator(TensorOperator):
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
 
-        regularized_eigen_vals = self._low_rank_representation.eigen_vals.clone()
+        D = self._low_rank_representation.eigen_vals.clone()
+        V = self._low_rank_representation.projections
 
         if self.regularization is not None:
-            regularized_eigen_vals += self.regularization
+            D += self.regularization
 
-        proj_rhs = self._low_rank_representation.projections.t() @ mat.t()
-        inverse_regularized_eigenvalues = 1.0 / regularized_eigen_vals
-        result = self._low_rank_representation.projections @ (
-            proj_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
-        )
+        V_t_mat = V.t() @ mat.t()
+        D_inv = 1.0 / D
+        result = V @ V_t_mat * D_inv.unsqueeze(-1)
 
         if self._exact:
-            result += (
-                1.0
-                / self.regularization
-                * (mat.t() - self._low_rank_representation.projections @ proj_rhs)
-            )
+            result += 1.0 / self.regularization * (mat.t() - V @ V_t_mat)
 
         return result.t()
 
