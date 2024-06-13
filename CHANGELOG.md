@@ -19,6 +19,9 @@
 - Extend `NystroemSketchInfluence` with block-diagonal and Gauss-Newton 
   approximation
   [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
+- Extend `ArnoldiInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
   
 ## Changed
 
@@ -37,6 +40,14 @@
     to `regularization` and change the type annotation to allow
     for block-wise regularization parameters
     [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
+  - Renaming of parameters of `ArnoldiInfluence`,
+    `hessian_regularization` -> `regularization` (modify type annotation),
+    `rank_estimate` -> `rank`
+    [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+  - Remove functions remove obsolete functions 
+    `lanczos_low_rank_hessian_approximation`, `model_hessian_low_rank`
+    from `influence.torch.functional`
+    [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
 
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 
