@@ -554,7 +554,7 @@ class LowRankOperator(TensorOperator):
 
         V_t_mat = V.t() @ mat.t()
         D_inv = 1.0 / D
-        result = V @ V_t_mat * D_inv.unsqueeze(-1)
+        result = V @ (V_t_mat * D_inv.unsqueeze(-1))
 
         if self._exact:
             result += 1.0 / self.regularization * (mat.t() - V @ V_t_mat)
