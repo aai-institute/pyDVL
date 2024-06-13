@@ -118,12 +118,18 @@ from pydvl.influence.torch import ArnoldiInfluence
 if_model = ArnoldiInfluence(
     model,
     loss,
-    hessian_regularization=0.0,
-    rank_estimate=10,
+    regularization=0.0,
+    rank=10,
     tol=1e-6,
+    block_structure=BlockMode.FULL,
+    second_order_mode=SecondOrderMode.HESSIAN
 )
 if_model.fit(train_loader)
 ```
+This implementation is capable of using a block-matrix
+approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
 
 ### Eigenvalue Corrected K-FAC
 
