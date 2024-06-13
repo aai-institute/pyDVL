@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Optional
 
 import torch
 
 from ..base_influence_function_model import NotFittedException
-from .functional import LowRankProductRepresentation, randomized_nystroem_approximation
+from .functional import LowRankProductRepresentation, operator_nystroem_approximation
+
+if TYPE_CHECKING:
+    from .operator import TensorOperator
 
 __all__ = ["JacobiPreConditioner", "NystroemPreConditioner", "PreConditioner"]
 
@@ -31,20 +34,14 @@ class PreConditioner(ABC):
     @abstractmethod
     def fit(
         self,
-        mat_mat_prod: Callable[[torch.Tensor], torch.Tensor],
-        size: int,
-        dtype: torch.dtype,
-        device: torch.device,
+        operator: "TensorOperator",
         regularization: float = 0.0,
     ):
         r"""
         Implement this to fit the pre-conditioner to the matrix represented by the
         mat_mat_prod
         Args:
-            mat_mat_prod: a callable that computes the matrix-matrix product
-            size: size of the matrix represented by `mat_mat_prod`
-            dtype: data type of the matrix represented by `mat_mat_prod`
-            device: device of the matrix represented by `mat_mat_prod`
+            operator: The preconditioner is fitted to this operator
             regularization: regularization parameter $\lambda$ in the equation
                 $ ( A + \lambda \operatorname{I})x = \operatorname{rhs} $
         Returns:
@@ -112,29 +109,27 @@ class JacobiPreConditioner(PreConditioner):
 
     def fit(
         self,
-        mat_mat_prod: Callable[[torch.Tensor], torch.Tensor],
-        size: int,
-        dtype: torch.dtype,
-        device: torch.device,
+        operator: "TensorOperator",
         regularization: float = 0.0,
     ):
         r"""
         Fits by computing an estimate of the diagonal of the matrix represented by
-        `mat_mat_prod` via Hutchinson's estimator
+        a [TensorOperator][pydvl.influence.torch.base.TensorOperator]
+        via Hutchinson's estimator
 
         Args:
-            mat_mat_prod: a callable representing the matrix-matrix product
-            size: size of the square matrix
-            dtype: needed data type of inputs for the mat_mat_prod
-            device: needed device for inputs of mat_mat_prod
+            operator: The preconditioner is fitted to this operator
             regularization: regularization parameter
                 $\lambda$ in $(A+\lambda I)x=b$
         """
         random_samples = torch.randn(
-            size, self.num_samples_estimator, device=device, dtype=dtype
+            operator.input_size,
+            self.num_samples_estimator,
+            device=operator.device,
+            dtype=operator.dtype,
         )
         diagonal_estimate = torch.sum(
-            torch.mul(random_samples, mat_mat_prod(random_samples)), dim=1
+            torch.mul(random_samples, operator.apply(random_samples)), dim=1
         )
         diagonal_estimate /= self.num_samples_estimator
         self._diag = diagonal_estimate
@@ -196,10 +191,7 @@ class NystroemPreConditioner(PreConditioner):
 
     def fit(
         self,
-        mat_mat_prod: Callable[[torch.Tensor], torch.Tensor],
-        size: int,
-        dtype: torch.dtype,
-        device: torch.device,
+        operator: "TensorOperator",
         regularization: float = 0.0,
     ):
         r"""
@@ -207,39 +199,30 @@ class NystroemPreConditioner(PreConditioner):
         `mat_mat_prod` via Nystroem approximation
 
         Args:
-            mat_mat_prod: a callable representing the matrix-matrix product
-            size: size of the square matrix
-            dtype: needed data type of inputs for the mat_mat_prod
-            device: needed device for inputs of mat_mat_prod
+            operator: The preconditioner is fitted to this operator
             regularization: regularization parameter
                 $\lambda$  in $(A+\lambda I)x=b$
         """
 
-        self._low_rank_approx = randomized_nystroem_approximation(
-            mat_mat_prod, size, self._rank, dtype, mat_vec_device=device
-        )
+        self._low_rank_approx = operator_nystroem_approximation(operator, self._rank)
         self._regularization = regularization
 
     def _solve(self, rhs: torch.Tensor):
 
         rhs_is_one_dim = rhs.ndim == 1
+        b = torch.atleast_2d(rhs).t() if rhs_is_one_dim else rhs
 
-        rhs_view = torch.atleast_2d(rhs).t() if rhs_is_one_dim else rhs
+        U = self._low_rank_approx.projections
 
-        regularized_eigenvalues = (
-            self._low_rank_approx.eigen_vals + self._regularization
-        )
+        Sigma = self._low_rank_approx.eigen_vals + self._regularization
         lambda_rank = self._low_rank_approx.eigen_vals[-1] + self._regularization
 
-        proj_rhs = self._low_rank_approx.projections.t() @ rhs_view
+        U_t_b = U.t() @ b
 
-        inverse_regularized_eigenvalues = lambda_rank / regularized_eigenvalues
+        Sigma_inv = lambda_rank / Sigma
 
-        result = self._low_rank_approx.projections @ (
-            proj_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
-        )
-
-        result += rhs_view - self._low_rank_approx.projections @ proj_rhs
+        result = U @ (U_t_b * Sigma_inv.unsqueeze(-1))
+        result += b - U @ U_t_b
 
         if rhs_is_one_dim:
             result = result.squeeze()
