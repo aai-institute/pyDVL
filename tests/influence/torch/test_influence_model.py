@@ -370,7 +370,7 @@ def direct_influences_from_factors(
     [
         [
             lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
-                model, loss, hessian_regularization=hessian_reg
+                model, loss, regularization=hessian_reg
             ).fit(train_dataLoader),
             1e-1,
         ],
@@ -396,8 +396,8 @@ def direct_influences_from_factors(
             lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
                 model,
                 loss,
-                hessian_regularization=hessian_reg,
-                pre_conditioner=NystroemPreConditioner(10),
+                regularization=hessian_reg,
+                preconditioner=NystroemPreConditioner(10),
                 use_block_cg=True,
             ).fit(train_dataLoader),
             1e-4,
@@ -742,7 +742,7 @@ def test_influences_ekfac(
 @pytest.mark.torch
 @pytest.mark.parametrize("use_block_cg", [True, False])
 @pytest.mark.parametrize(
-    "pre_conditioner",
+    "preconditioner",
     [
         JacobiPreConditioner(),
         NystroemPreConditioner(rank=5),
@@ -762,7 +762,7 @@ def test_influences_cg(
     direct_influences,
     direct_factors,
     use_block_cg: bool,
-    pre_conditioner: PreConditioner,
+    preconditioner: PreConditioner,
     device: torch.device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
@@ -775,7 +775,7 @@ def test_influences_cg(
         loss,
         test_case.hessian_reg,
         maxiter=5,
-        pre_conditioner=pre_conditioner,
+        preconditioner=preconditioner,
         use_block_cg=use_block_cg,
     )
     influence_model = influence_model.fit(train_dataloader)
@@ -849,6 +849,18 @@ composable_influence_factories = [
         rank=10,
         second_order_mode=SecondOrderMode.GAUSS_NEWTON,
         use_woodbury=True,
+    ),
+    partial(
+        CgInfluence,
+        maxiter=10,
+        preconditioner=JacobiPreConditioner(),
+        use_block_cg=True,
+    ),
+    partial(
+        CgInfluence,
+        maxiter=10,
+        preconditioner=NystroemPreConditioner(rank=5),
+        use_block_cg=True,
     ),
 ]
 

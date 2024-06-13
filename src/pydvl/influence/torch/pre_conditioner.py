@@ -25,17 +25,41 @@ class PreConditioner(ABC):
     condition number than $A + \lambda \operatorname{I}$.
 
     """
+    _reg: Optional[float]
+
+    @property
+    def regularization(self):
+        return self._reg
+
+    @regularization.setter
+    def regularization(self, value: float):
+        if self.modify_regularization_requires_fit:
+            raise NotImplementedError(
+                f"Adapting regularization for instances of type "
+                f"{type(self)} without re-fitting is not "
+                f"supported. Call the fit method instead."
+            )
+        self._validate_regularization(value)
+        self._reg = value
+
+    def _validate_regularization(self, value: Optional[float]):
+        if value is not None and value < 0:
+            raise ValueError("regularization must be non-negative")
+
+    @property
+    @abstractmethod
+    def modify_regularization_requires_fit(self) -> bool:
+        pass
 
     @property
     @abstractmethod
     def is_fitted(self):
         pass
 
-    @abstractmethod
     def fit(
         self,
         operator: "TensorOperator",
-        regularization: float = 0.0,
+        regularization: Optional[float] = None,
     ):
         r"""
         Implement this to fit the pre-conditioner to the matrix represented by the
@@ -47,6 +71,11 @@ class PreConditioner(ABC):
         Returns:
             self
         """
+        self._validate_regularization(regularization)
+        return self._fit(operator, regularization)
+
+    @abstractmethod
+    def _fit(self, operator: "TensorOperator", regularization: Optional[float] = None):
         pass
 
     def solve(self, rhs: torch.Tensor):
@@ -98,19 +127,24 @@ class JacobiPreConditioner(PreConditioner):
     """
 
     _diag: torch.Tensor
-    _reg: float
 
     def __init__(self, num_samples_estimator: int = 1):
         self.num_samples_estimator = num_samples_estimator
 
     @property
     def is_fitted(self):
-        return self._diag is not None and self._reg is not None
+        has_diag = hasattr(self, "_diag") and self._diag is not None
+        has_regularization = hasattr(self, "_reg")
+        return has_diag and has_regularization
 
-    def fit(
+    @property
+    def modify_regularization_requires_fit(self) -> bool:
+        return False
+
+    def _fit(
         self,
         operator: "TensorOperator",
-        regularization: float = 0.0,
+        regularization: Optional[float] = None,
     ):
         r"""
         Fits by computing an estimate of the diagonal of the matrix represented by
@@ -129,14 +163,19 @@ class JacobiPreConditioner(PreConditioner):
             dtype=operator.dtype,
         )
         diagonal_estimate = torch.sum(
-            torch.mul(random_samples, operator.apply(random_samples)), dim=1
+            torch.mul(random_samples, operator.apply(random_samples.t())), dim=1
         )
         diagonal_estimate /= self.num_samples_estimator
         self._diag = diagonal_estimate
         self._reg = regularization
 
     def _solve(self, rhs: torch.Tensor):
-        inv_diag = 1.0 / (self._diag + self._reg)
+        diag = self._diag
+
+        if self._reg is not None:
+            diag = diag + self._reg
+
+        inv_diag = 1.0 / diag
 
         if rhs.ndim == 1:
             return rhs * inv_diag
@@ -172,7 +211,6 @@ class NystroemPreConditioner(PreConditioner):
     """
 
     _low_rank_approx: LowRankProductRepresentation
-    _regularization: float
 
     def __init__(self, rank: int):
         self._rank = rank
@@ -187,12 +225,20 @@ class NystroemPreConditioner(PreConditioner):
 
     @property
     def is_fitted(self):
-        return self._low_rank_approx is not None and self._regularization is not None
+        has_low_rank_approx = (
+            hasattr(self, "_low_rank_approx") and self._low_rank_approx is not None
+        )
+        has_regularization = hasattr(self, "_reg") and self._reg is not None
+        return has_low_rank_approx and has_regularization
 
-    def fit(
+    @property
+    def modify_regularization_requires_fit(self) -> bool:
+        return False
+
+    def _fit(
         self,
         operator: "TensorOperator",
-        regularization: float = 0.0,
+        regularization: Optional[float] = None,
     ):
         r"""
         Fits by computing a low-rank approximation of the matrix represented by
@@ -205,7 +251,7 @@ class NystroemPreConditioner(PreConditioner):
         """
 
         self._low_rank_approx = operator_nystroem_approximation(operator, self._rank)
-        self._regularization = regularization
+        self._reg = regularization
 
     def _solve(self, rhs: torch.Tensor):
 
@@ -214,8 +260,12 @@ class NystroemPreConditioner(PreConditioner):
 
         U = self._low_rank_approx.projections
 
-        Sigma = self._low_rank_approx.eigen_vals + self._regularization
-        lambda_rank = self._low_rank_approx.eigen_vals[-1] + self._regularization
+        Sigma = self._low_rank_approx.eigen_vals
+        lambda_rank = self._low_rank_approx.eigen_vals[-1]
+
+        if self._reg is not None:
+            Sigma = Sigma + self._reg
+            lambda_rank = lambda_rank + self._reg
 
         U_t_b = U.t() @ b
 
