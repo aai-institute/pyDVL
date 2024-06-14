@@ -3,8 +3,8 @@ import torch
 
 from pydvl.influence.torch.operator import MatrixOperator
 from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
+    JacobiPreconditioner,
+    NystroemPreconditioner,
 )
 
 
@@ -39,7 +39,7 @@ def low_rank_mat():
 @pytest.mark.torch
 @pytest.mark.parametrize("num_samples_estimator", [1, 3, 5])
 def test_jacobi_preconditioner_condition_number(high_cond_mat, num_samples_estimator):
-    preconditioner = JacobiPreConditioner(num_samples_estimator=num_samples_estimator)
+    preconditioner = JacobiPreconditioner(num_samples_estimator=num_samples_estimator)
     size = high_cond_mat.shape[0]
     regularization = 0.1
 
@@ -61,7 +61,7 @@ def test_jacobi_preconditioner_condition_number(high_cond_mat, num_samples_estim
 
 @pytest.mark.torch
 def test_nystroem_preconditioner_condition_number(low_rank_mat):
-    preconditioner = NystroemPreConditioner(60)
+    preconditioner = NystroemPreconditioner(60)
     size = low_rank_mat.shape[0]
     regularization = 1e-2
 

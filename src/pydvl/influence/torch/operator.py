@@ -24,7 +24,7 @@ from .batch_operation import (
     TensorAveragingType,
 )
 from .functional import LowRankProductRepresentation
-from .pre_conditioner import PreConditioner
+from .pre_conditioner import Preconditioner
 from .util import LossType
 
 logger = logging.getLogger(__name__)
@@ -648,7 +648,7 @@ class CgOperator(TensorOperator):
         atol: float = 1e-7,
         maxiter: Optional[int] = None,
         progress: bool = False,
-        preconditioner: Optional[PreConditioner] = None,
+        preconditioner: Optional[Preconditioner] = None,
         use_block_cg: bool = False,
         warn_on_max_iteration: bool = True,
     ):

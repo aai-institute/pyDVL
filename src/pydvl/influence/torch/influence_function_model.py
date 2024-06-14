@@ -52,7 +52,7 @@ from .operator import (
     LissaOperator,
     LowRankOperator,
 )
-from .pre_conditioner import PreConditioner
+from .pre_conditioner import Preconditioner
 from .util import (
     BlockMode,
     EkfacRepresentation,
@@ -484,7 +484,7 @@ class CgInfluence(TorchComposableInfluence[CgOperator]):
         maxiter: Optional[int] = None,
         progress: bool = False,
         precompute_grad: bool = False,
-        preconditioner: Optional[PreConditioner] = None,
+        preconditioner: Optional[Preconditioner] = None,
         use_block_cg: bool = False,
         warn_on_max_iteration: bool = True,
         block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,

@@ -20,9 +20,9 @@ from pydvl.influence.torch.influence_function_model import (
     NystroemSketchInfluence,
 )
 from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
-    PreConditioner,
+    JacobiPreconditioner,
+    NystroemPreconditioner,
+    Preconditioner,
 )
 from pydvl.influence.torch.util import BlockMode, SecondOrderMode
 from pydvl.influence.types import UnsupportedInfluenceModeException
@@ -397,7 +397,7 @@ def direct_influences_from_factors(
                 model,
                 loss,
                 regularization=hessian_reg,
-                preconditioner=NystroemPreConditioner(10),
+                preconditioner=NystroemPreconditioner(10),
                 use_block_cg=True,
             ).fit(train_dataLoader),
             1e-4,
@@ -744,8 +744,8 @@ def test_influences_ekfac(
 @pytest.mark.parametrize(
     "preconditioner",
     [
-        JacobiPreConditioner(),
-        NystroemPreConditioner(rank=5),
+        JacobiPreconditioner(),
+        NystroemPreconditioner(rank=5),
         None,
     ],
 )
@@ -762,7 +762,7 @@ def test_influences_cg(
     direct_influences,
     direct_factors,
     use_block_cg: bool,
-    preconditioner: PreConditioner,
+    preconditioner: Preconditioner,
     device: torch.device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
@@ -853,13 +853,13 @@ composable_influence_factories = [
     partial(
         CgInfluence,
         maxiter=10,
-        preconditioner=JacobiPreConditioner(),
+        preconditioner=JacobiPreconditioner(),
         use_block_cg=True,
     ),
     partial(
         CgInfluence,
         maxiter=10,
-        preconditioner=NystroemPreConditioner(rank=5),
+        preconditioner=NystroemPreconditioner(rank=5),
         use_block_cg=True,
     ),
 ]

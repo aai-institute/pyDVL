@@ -30,11 +30,11 @@ https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner
 based on Hutchinson's diagonal estimator [@bekas_estimator_2007],
 or a [Nyström approximation based pre-conditioner
 ][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner], 
-described in [@frangella_randomized_2023]. 
+described in [@frangella_randomized_2023].
 
 ```python
 from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.pre_conditioner import NystroemPreConditioner
+from pydvl.influence.torch.pre_conditioner import NystroemPreconditioner
 
 if_model = CgInfluence(
     model,
@@ -44,7 +44,7 @@ if_model = CgInfluence(
     atol=1e-7,
     maxiter=None,
     use_block_cg=True,
-    pre_conditioner=NystroemPreConditioner(rank=10)
+    pre_conditioner=NystroemPreconditioner(rank=10)
 )
 if_model.fit(train_loader)
 ```

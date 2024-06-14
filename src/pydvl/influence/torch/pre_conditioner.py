@@ -11,10 +11,10 @@ from .functional import LowRankProductRepresentation, operator_nystroem_approxim
 if TYPE_CHECKING:
     from .operator import TensorOperator
 
-__all__ = ["JacobiPreConditioner", "NystroemPreConditioner", "PreConditioner"]
+__all__ = ["JacobiPreconditioner", "NystroemPreconditioner", "Preconditioner"]
 
 
-class PreConditioner(ABC):
+class Preconditioner(ABC):
     r"""
     Abstract base class for implementing pre-conditioners for improving the convergence
     of CG for systems of the form
@@ -99,12 +99,12 @@ class PreConditioner(ABC):
         pass
 
     @abstractmethod
-    def to(self, device: torch.device) -> PreConditioner:
+    def to(self, device: torch.device) -> Preconditioner:
         """Implement this to move the (potentially fitted) preconditioner to a
         specific device"""
 
 
-class JacobiPreConditioner(PreConditioner):
+class JacobiPreconditioner(Preconditioner):
     r"""
     Pre-conditioner for improving the convergence of CG for systems of the form
 
@@ -184,13 +184,13 @@ class JacobiPreConditioner(PreConditioner):
 
         return rhs * inv_diag.unsqueeze(-1)
 
-    def to(self, device: torch.device) -> JacobiPreConditioner:
+    def to(self, device: torch.device) -> JacobiPreconditioner:
         if self._diag is not None:
             self._diag = self._diag.to(device)
         return self
 
 
-class NystroemPreConditioner(PreConditioner):
+class NystroemPreconditioner(Preconditioner):
     r"""
     Pre-conditioner for improving the convergence of CG for systems of the form
 
@@ -281,7 +281,7 @@ class NystroemPreConditioner(PreConditioner):
 
         return result
 
-    def to(self, device: torch.device) -> NystroemPreConditioner:
+    def to(self, device: torch.device) -> NystroemPreconditioner:
         if self._low_rank_approx is not None:
             self._low_rank_approx = self._low_rank_approx.to(device)
         return self

@@ -7,5 +7,5 @@ from .influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
-from .pre_conditioner import JacobiPreConditioner, NystroemPreConditioner
+from .pre_conditioner import JacobiPreconditioner, NystroemPreconditioner
 from .util import BlockMode, SecondOrderMode
