@@ -98,23 +98,11 @@ class GroupTestingValuation(Valuation):
         """
         self._utility = self._utility.with_dataset(data)
 
-        u_values, masks = get_utility_values_and_sample_masks(
+        problem = _create_group_testing_problem(
             utility=self._utility,
             sampler=self._sampler,
             n_samples=self._n_samples,
             progress=self._progress,
-            extra_samples=[Sample(idx=None, subset=data.indices)],
-        )
-
-        total_utility = u_values[-1]
-        u_values = u_values[:-1]
-        masks = masks[:-1]
-
-        problem = _create_group_testing_problem(
-            utility_values=u_values,
-            masks=masks,
-            total_utility=total_utility,
-            n_obs=len(data),
             epsilon=self._epsilon,
         )
 
@@ -202,7 +190,7 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
         raise NotImplementedError("This is not a semi-value sampler.")
 
 
-def get_utility_values_and_sample_masks(
+def compute_utility_values_and_sample_masks(
     utility: UtilityBase,
     sampler: GTSampler,
     n_samples: int,
@@ -276,7 +264,33 @@ def get_utility_values_and_sample_masks(
     return u_values, masks
 
 
-def _create_group_testing_problem(utility_values, masks, total_utility, n_obs, epsilon):
+def _create_group_testing_problem(utility, sampler, n_samples, progress, epsilon):
+    u_values, masks = compute_utility_values_and_sample_masks(
+        utility=utility,
+        sampler=sampler,
+        n_samples=n_samples,
+        progress=progress,
+        extra_samples=[Sample(idx=None, subset=utility.training_data.indices)],
+    )
+
+    total_utility = u_values[-1]
+    u_values = u_values[:-1]
+    masks = masks[:-1]
+
+    u_differences = _calculate_utility_differences(
+        utility_values=u_values, masks=masks, n_obs=len(utility.training_data)
+    )
+
+    problem = GroupTestingProblem(
+        utility_differences=u_differences,
+        total_utility=total_utility,
+        epsilon=epsilon,
+    )
+
+    return problem
+
+
+def _calculate_utility_differences(utility_values, masks, n_obs):
     betas = masks.astype(np.int_)
     n_samples = len(utility_values)
 
@@ -288,10 +302,7 @@ def _create_group_testing_problem(utility_values, masks, total_utility, n_obs, e
             u_differences[i, j] = np.dot(utility_values, betas[:, i] - betas[:, j])
     u_differences *= z / n_samples
 
-    problem = GroupTestingProblem(
-        utility_differences=u_differences, total_utility=total_utility, epsilon=epsilon
-    )
-    return problem
+    return u_differences
 
 
 def _solve_group_testing_problem(

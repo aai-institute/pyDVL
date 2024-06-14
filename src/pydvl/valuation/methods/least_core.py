@@ -17,6 +17,7 @@ from pydvl.valuation.methods._solve_least_core_problems import (
     LeastCoreProblem,
     lc_solve_problem,
 )
+from pydvl.valuation.methods.gt_shapley import compute_utility_values_and_sample_masks
 from pydvl.valuation.samplers.powerset import (
     DeterministicUniformSampler,
     NoIndexIteration,
@@ -250,60 +251,11 @@ def create_least_core_problem(
         LeastCoreProblem: The least core problem to solve.
 
     """
-    if u.training_data is not None:
-        n_indices = len(u.training_data.indices)
-    else:
-        raise ValueError("Utility object must have a training dataset.")
-
-    batch_size = sampler.batch_size
-    n_batches = math.ceil(n_samples / batch_size)
-
-    def _create_mask_and_utility_values(
-        batch: Iterable[SampleT],
-    ) -> tuple[List[NDArray[BoolDType]], List[float]]:
-        """Convert sampled indices to boolean masks and calculate utility on each
-        sample in batch."""
-        masks: List[NDArray[BoolDType]] = []
-        u_values: List[float] = []
-        for sample in batch:
-            m = np.full(n_indices, False)
-            m[sample.subset.astype(int)] = True
-            masks.append(m)
-            u_values.append(u(sample))
-
-        return masks, u_values
-
-    generator = takewhile(
-        lambda _: sampler.n_samples < n_samples,
-        sampler.generate_batches(u.training_data.indices),
+    utility_values, masks = compute_utility_values_and_sample_masks(
+        utility=u, sampler=sampler, n_samples=n_samples, progress=progress
     )
 
-    generator_with_progress = typing.cast(
-        BatchGenerator,
-        tqdm(
-            generator,
-            disable=not progress,
-            total=n_batches - 1,
-            position=0,
-        ),
-    )
-
-    parallel = Parallel(return_as="generator")
-    results = parallel(
-        delayed(_create_mask_and_utility_values)(batch)
-        for batch in generator_with_progress
-    )
-
-    masks: List[NDArray[BoolDType]] = []
-    u_values: List[float] = []
-    for m, v in results:
-        masks.extend(m)
-        u_values.extend(v)
-
-    utility_values = np.array(u_values)
-    A_lb = np.row_stack(masks).astype(float)
-
-    return LeastCoreProblem(utility_values=utility_values, A_lb=A_lb)
+    return LeastCoreProblem(utility_values=utility_values, A_lb=masks.astype(float))
 
 
 def _get_default_n_samples(sampler: PowersetSampler, indices: IndexSetT) -> int:
