@@ -458,14 +458,10 @@ class CgInfluence(TorchComposableInfluence[CgOperator]):
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
         progress: If True, display progress bars for computing in the non-block mode
             (use_block_cg=False).
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep the full computation graph
-            in memory.
-        pre_conditioner: Optional pre-conditioner to improve convergence of conjugate
+        preconditioner: Optional preconditioner to improve convergence of conjugate
             gradient method
-        use_block_cg: If True, use block variant of conjugate gradient method, which
-            solves several right hand sides simultaneously
+        solve_simultaneously: If True, use a variant of conjugate gradient method to
+            simultaneously solve for several right hand sides.
         warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
             achieved within `maxiter` iterations. If False, the log level for this
             information is `logging.DEBUG`
@@ -485,7 +481,7 @@ class CgInfluence(TorchComposableInfluence[CgOperator]):
         progress: bool = False,
         precompute_grad: bool = False,
         preconditioner: Optional[Preconditioner] = None,
-        use_block_cg: bool = False,
+        solve_simultaneously: bool = False,
         warn_on_max_iteration: bool = True,
         block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
         second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
@@ -493,7 +489,7 @@ class CgInfluence(TorchComposableInfluence[CgOperator]):
         super().__init__(model, block_structure, regularization)
         self.loss = loss
         self.warn_on_max_iteration = warn_on_max_iteration
-        self.use_block_cg = use_block_cg
+        self.solve_simultaneously = solve_simultaneously
         self.preconditioner = preconditioner
         self.precompute_grad = precompute_grad
         self.progress = progress
@@ -547,7 +543,7 @@ class CgInfluence(TorchComposableInfluence[CgOperator]):
             maxiter=self.maxiter,
             progress=self.progress,
             preconditioner=preconditioner,
-            use_block_cg=self.use_block_cg,
+            use_block_cg=self.solve_simultaneously,
             warn_on_max_iteration=self.warn_on_max_iteration,
         )
         gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)

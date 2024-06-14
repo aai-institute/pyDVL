@@ -58,7 +58,8 @@
     [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
   - Renaming of parameters of `CgInfluence`,
     `hessian_regularization` -> `regularization` (modify type annotation),
-    `pre_conditioner` -> `preconditioner`
+    `pre_conditioner` -> `preconditioner`,
+    `use_block_cg` -> `solve_simultaneously`
     [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
   - Remove parameter `x0` from `CgInfluence`
     [PR #601](https://github.com/aai-institute/pyDVL/pull/601)

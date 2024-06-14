@@ -398,7 +398,7 @@ def direct_influences_from_factors(
                 loss,
                 regularization=hessian_reg,
                 preconditioner=NystroemPreconditioner(10),
-                use_block_cg=True,
+                solve_simultaneously=True,
             ).fit(train_dataLoader),
             1e-4,
         ],
@@ -776,7 +776,7 @@ def test_influences_cg(
         test_case.hessian_reg,
         maxiter=5,
         preconditioner=preconditioner,
-        use_block_cg=use_block_cg,
+        solve_simultaneously=use_block_cg,
     )
     influence_model = influence_model.fit(train_dataloader)
 
