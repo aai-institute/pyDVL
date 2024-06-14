@@ -157,14 +157,16 @@ class JacobiPreConditioner(PreConditioner):
                 $\lambda$ in $(A+\lambda I)x=b$
         """
         random_samples = torch.randn(
-            operator.input_size,
             self.num_samples_estimator,
+            operator.input_size,
             device=operator.device,
             dtype=operator.dtype,
         )
+
         diagonal_estimate = torch.sum(
-            torch.mul(random_samples, operator.apply(random_samples.t())), dim=1
+            torch.mul(random_samples, operator.apply(random_samples)), dim=0
         )
+
         diagonal_estimate /= self.num_samples_estimator
         self._diag = diagonal_estimate
         self._reg = regularization
