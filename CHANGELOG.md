@@ -22,6 +22,9 @@
 - Extend `ArnoldiInfluence` with block-diagonal and Gauss-Newton
   approximation
   [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+- Extend `CgInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
 
 ## Fixed
 - Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
@@ -53,7 +56,21 @@
     `lanczos_low_rank_hessian_approximation`, `model_hessian_low_rank`
     from `influence.torch.functional`
     [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
-
+  - Renaming of parameters of `CgInfluence`,
+    `hessian_regularization` -> `regularization` (modify type annotation),
+    `pre_conditioner` -> `preconditioner`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Remove parameter `x0` from `CgInfluence`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Rename module 
+    `influence.torch.pre_conditioner` -> `influence.torch.preconditioner`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Refactor preconditioner:
+    - renaming `PreConditioner` -> `Preconditioner`
+    - fit to `TensorOperator`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  
+  
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 
 ### Added
