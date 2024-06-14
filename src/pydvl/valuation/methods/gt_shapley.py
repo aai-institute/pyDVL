@@ -30,12 +30,13 @@ from __future__ import annotations
 
 import logging
 import math
-from itertools import takewhile
-from typing import Iterable, NamedTuple, Sequence, cast
+from itertools import chain, takewhile
+from typing import Iterable, NamedTuple, Sequence, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
 from joblib import Parallel, delayed
+from more_itertools import batched
 from numpy.typing import NDArray
 from tqdm.auto import tqdm
 from typing_extensions import Self
@@ -97,15 +98,27 @@ class GroupTestingValuation(Valuation):
         """
         self._utility = self._utility.with_dataset(data)
 
-        problem = create_group_testing_problem(
+        u_values, masks = get_utility_values_and_sample_masks(
             utility=self._utility,
             sampler=self._sampler,
             n_samples=self._n_samples,
             progress=self._progress,
+            extra_samples=[Sample(idx=None, subset=data.indices)],
+        )
+
+        total_utility = u_values[-1]
+        u_values = u_values[:-1]
+        masks = masks[:-1]
+
+        problem = _create_group_testing_problem(
+            utility_values=u_values,
+            masks=masks,
+            total_utility=total_utility,
+            n_obs=len(data),
             epsilon=self._epsilon,
         )
 
-        solution = solve_group_testing_problem(
+        solution = _solve_group_testing_problem(
             problem=problem,
             solver_options=self._solver_options,
             algorithm_name=self.algorithm_name,
@@ -189,24 +202,17 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
         raise NotImplementedError("This is not a semi-value sampler.")
 
 
-def create_group_testing_problem(
+def get_utility_values_and_sample_masks(
     utility: UtilityBase,
     sampler: GTSampler,
     n_samples: int,
     progress: bool,
-    epsilon: float,
-) -> GroupTestingProblem:
-    """Create the feasibility problem for the group testing algorithm.
+    extra_samples: Iterable[SampleT] | None = None,
+) -> Tuple[NDArray[np.float_], NDArray[np.int_]]:
+    """Calculate utility values and sample masks on samples in parallel.
 
-    Args:
-        utility: Utility object with model, data and scoring function.
-        n_samples: The number of samples to use for the valuation.
-        progress: Whether to display progress bars during the construction of the
-            group testing problem.
-        seed: The seed for the random number generator.
-
-    Returns:
-        The group testing problem.
+    Creating the utility evaluations and sample masks is the computational bottleneck
+    of several data valuation algorithms, for examples least-core and group-testing.
 
     """
     if utility.training_data is None:
@@ -238,6 +244,9 @@ def create_group_testing_problem(
         sampler.generate_batches(indices),
     )
 
+    if extra_samples is not None:
+        generator = chain(generator, batched(extra_samples, batch_size))
+
     generator_with_progress = cast(
         BatchGenerator,
         tqdm(
@@ -262,17 +271,22 @@ def create_group_testing_problem(
         u_values.extend(v)
 
     u_values = np.array(u_values)
-    betas = np.row_stack(masks).astype(np.int_)
+    masks = np.row_stack(masks)
+
+    return u_values, masks
+
+
+def _create_group_testing_problem(utility_values, masks, total_utility, n_obs, epsilon):
+    betas = masks.astype(np.int_)
+    n_samples = len(utility_values)
 
     z = _calculate_z(n_obs)
 
     u_differences = np.zeros(shape=(n_obs, n_obs))
     for i in range(n_obs):
         for j in range(i + 1, n_obs):
-            u_differences[i, j] = np.dot(u_values, betas[:, i] - betas[:, j])
+            u_differences[i, j] = np.dot(utility_values, betas[:, i] - betas[:, j])
     u_differences *= z / n_samples
-
-    total_utility = utility(Sample(idx=None, subset=indices))
 
     problem = GroupTestingProblem(
         utility_differences=u_differences, total_utility=total_utility, epsilon=epsilon
@@ -280,7 +294,7 @@ def create_group_testing_problem(
     return problem
 
 
-def solve_group_testing_problem(
+def _solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
     algorithm_name: str = "",

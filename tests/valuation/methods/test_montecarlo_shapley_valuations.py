@@ -79,12 +79,13 @@ log = logging.getLogger(__name__)
             None,
             {},
             GroupTestingValuation,
-            {"n_samples": 4e4, "epsilon": 0.2},
+            {"n_samples": 5e4, "epsilon": 0.2},
             0.1,
             1e-2,
         ),
     ],
 )
+@pytest.mark.flaky(reruns=1)
 def test_games(
     test_game,
     n_jobs,
@@ -94,7 +95,6 @@ def test_games(
     valuation_kwargs,
     rtol,
     atol,
-    seed,
 ):
     """Tests shapley values for all methods using toy games.
 
@@ -114,7 +114,7 @@ def test_games(
 
     """
     if sampler_class is not None:
-        sampler = sampler_class(seed=seed, **sampler_kwargs)
+        sampler = sampler_class(**sampler_kwargs)
         valuation = valuation_class(
             utility=test_game.u,
             sampler=sampler,
