@@ -606,7 +606,7 @@ class MatrixOperator(TensorOperator):
         return self._apply_to_mat(vec.unsqueeze(dim=0))
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-        return self.matrix @ mat.t()
+        return (self.matrix @ mat.t()).t()
 
     @property
     def input_size(self) -> int:
@@ -681,7 +681,7 @@ class CgOperator(TensorOperator):
                     "Modifying the regularization value requires "
                     "re-fitting the preconditioner"
                 )
-                self.preconditioner = self.preconditioner.fit(self.operator, value)
+                self.preconditioner.fit(self.operator, value)
             else:
                 self.preconditioner.regularization = value
 
