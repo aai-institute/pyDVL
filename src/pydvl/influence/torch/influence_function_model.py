@@ -52,7 +52,7 @@ from .operator import (
     LissaOperator,
     LowRankOperator,
 )
-from .pre_conditioner import Preconditioner
+from .preconditioner import Preconditioner
 from .util import (
     BlockMode,
     EkfacRepresentation,

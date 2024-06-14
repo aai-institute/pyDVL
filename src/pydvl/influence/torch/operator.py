@@ -24,7 +24,7 @@ from .batch_operation import (
     TensorAveragingType,
 )
 from .functional import LowRankProductRepresentation
-from .pre_conditioner import Preconditioner
+from .preconditioner import Preconditioner
 from .util import LossType
 
 logger = logging.getLogger(__name__)

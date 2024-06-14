@@ -2,7 +2,7 @@ import pytest
 import torch
 
 from pydvl.influence.torch.operator import MatrixOperator
-from pydvl.influence.torch.pre_conditioner import (
+from pydvl.influence.torch.preconditioner import (
     JacobiPreconditioner,
     NystroemPreconditioner,
 )

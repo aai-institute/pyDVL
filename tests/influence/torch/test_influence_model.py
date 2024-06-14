@@ -19,7 +19,7 @@ from pydvl.influence.torch.influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
-from pydvl.influence.torch.pre_conditioner import (
+from pydvl.influence.torch.preconditioner import (
     JacobiPreconditioner,
     NystroemPreconditioner,
     Preconditioner,

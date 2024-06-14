@@ -34,7 +34,7 @@ described in [@frangella_randomized_2023].
 
 ```python
 from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.pre_conditioner import NystroemPreconditioner
+from pydvl.influence.torch.preconditioner import NystroemPreconditioner
 
 if_model = CgInfluence(
     model,
