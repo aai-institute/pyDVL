@@ -29,16 +29,11 @@ You can read more [in the documentation][data-valuation].
 from __future__ import annotations
 
 import logging
-import math
-from itertools import chain, takewhile
-from typing import Iterable, NamedTuple, Sequence, Tuple, cast
+from typing import NamedTuple, Sequence
 
 import cvxpy as cp
 import numpy as np
-from joblib import Parallel, delayed
-from more_itertools import batched
 from numpy.typing import NDArray
-from tqdm.auto import tqdm
 from typing_extensions import Self
 
 from pydvl.utils.numeric import random_subset_of_size
@@ -46,10 +41,13 @@ from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.methods._utility_values_and_sample_masks import (
+    compute_utility_values_and_sample_masks,
+)
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import BatchGenerator, IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -188,80 +186,6 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
         coefficient: Callable[[int, int], float] | None = None,
     ) -> EvaluationStrategy:
         raise NotImplementedError("This is not a semi-value sampler.")
-
-
-def compute_utility_values_and_sample_masks(
-    utility: UtilityBase,
-    sampler: GTSampler,
-    n_samples: int,
-    progress: bool,
-    extra_samples: Iterable[SampleT] | None = None,
-) -> Tuple[NDArray[np.float_], NDArray[np.int_]]:
-    """Calculate utility values and sample masks on samples in parallel.
-
-    Creating the utility evaluations and sample masks is the computational bottleneck
-    of several data valuation algorithms, for examples least-core and group-testing.
-
-    """
-    if utility.training_data is None:
-        raise ValueError("Utility object must have training data.")
-
-    indices = utility.training_data.indices
-    n_obs = len(indices)
-
-    batch_size = sampler.batch_size
-    n_batches = math.ceil(n_samples / batch_size)
-
-    def _create_mask_and_utility_values(
-        batch: Iterable[SampleT],
-    ) -> tuple[List[NDArray[BoolDType]], List[float]]:
-        """Convert sampled indices to boolean masks and calculate utility on each
-        sample in batch."""
-        masks: List[NDArray[BoolDType]] = []
-        u_values: List[float] = []
-        for sample in batch:
-            m = np.full(n_obs, False)
-            m[sample.subset.astype(int)] = True
-            masks.append(m)
-            u_values.append(utility(sample))
-
-        return masks, u_values
-
-    generator = takewhile(
-        lambda _: sampler.n_samples < n_samples,
-        sampler.generate_batches(indices),
-    )
-
-    if extra_samples is not None:
-        generator = chain(generator, batched(extra_samples, batch_size))
-
-    generator_with_progress = cast(
-        BatchGenerator,
-        tqdm(
-            generator,
-            disable=not progress,
-            total=n_batches - 1,
-            position=0,
-        ),
-    )
-
-    parallel = Parallel(return_as="generator")
-
-    results = parallel(
-        delayed(_create_mask_and_utility_values)(batch)
-        for batch in generator_with_progress
-    )
-
-    masks: List[NDArray[BoolDType]] = []
-    u_values: List[float] = []
-    for m, v in results:
-        masks.extend(m)
-        u_values.extend(v)
-
-    u_values = np.array(u_values)
-    masks = np.row_stack(masks)
-
-    return u_values, masks
 
 
 def _create_group_testing_problem(utility, sampler, n_samples, progress, epsilon):

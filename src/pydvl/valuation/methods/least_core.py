@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-import math
-import typing
-from itertools import takewhile
-from typing import Iterable, List
-
 import numpy as np
-from joblib import Parallel, delayed
-from numpy.typing import NDArray
-from tqdm.auto import tqdm
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
@@ -17,14 +9,16 @@ from pydvl.valuation.methods._solve_least_core_problems import (
     LeastCoreProblem,
     lc_solve_problem,
 )
-from pydvl.valuation.methods.gt_shapley import compute_utility_values_and_sample_masks
+from pydvl.valuation.methods._utility_values_and_sample_masks import (
+    compute_utility_values_and_sample_masks,
+)
 from pydvl.valuation.samplers.powerset import (
     DeterministicUniformSampler,
     NoIndexIteration,
     PowersetSampler,
     UniformSampler,
 )
-from pydvl.valuation.types import BatchGenerator, IndexSetT, SampleT
+from pydvl.valuation.types import IndexSetT
 from pydvl.valuation.utility.base import UtilityBase
 
 BoolDType = np.bool_
@@ -167,10 +161,13 @@ class ExactLeastCoreValuation(LeastCoreValuation):
         non_negative_subsidy: bool = False,
         solver_options: dict | None = None,
         progress: bool = True,
+        batch_size: int = 1,
     ):
         super().__init__(
             utility=utility,
-            sampler=DeterministicUniformSampler(index_iteration=NoIndexIteration),
+            sampler=DeterministicUniformSampler(
+                index_iteration=NoIndexIteration, batch_size=batch_size
+            ),
             n_samples=None,
             non_negative_subsidy=non_negative_subsidy,
             solver_options=solver_options,
@@ -224,10 +221,13 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
         solver_options: dict | None = None,
         progress: bool = True,
         seed: Seed | None = None,
+        batch_size: int = 1,
     ):
         super().__init__(
             utility=utility,
-            sampler=UniformSampler(index_iteration=NoIndexIteration, seed=seed),
+            sampler=UniformSampler(
+                index_iteration=NoIndexIteration, seed=seed, batch_size=batch_size
+            ),
             n_samples=n_samples,
             non_negative_subsidy=non_negative_subsidy,
             solver_options=solver_options,
