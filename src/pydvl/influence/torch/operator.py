@@ -16,6 +16,7 @@ from .batch_operation import (
     PointAveraging,
     TensorAveragingType,
 )
+from .functional import LowRankProductRepresentation
 
 logger = logging.getLogger(__name__)
 
@@ -471,3 +472,96 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
     @property
     def input_size(self) -> int:
         return self.batch_operation.input_size
+
+
+class LowRankOperator(TensorOperator):
+    r"""
+    Given a low rank representation of a matrix
+
+    $$ A = V D V^T$$
+
+    with a diagonal matrix $D$ and an optional regularization parameter $\lambda$,
+    computes
+
+    $$ (V D V^T+\lambda I)^{-1}b$$.
+
+    Depending on the value of the `exact` flag, the inverse action is computed exactly
+    using the [Sherman–Morrison–Woodbury formula]
+    (https://en.wikipedia.org/wiki/Woodbury_matrix_identity). If `exact` is set to
+    `False`, the inverse action is approximated by
+
+    $$ V^T(D+\lambda I)^{-1}Vb$$
+
+    Args:
+    """
+
+    def __init__(
+        self,
+        low_rank_representation: LowRankProductRepresentation,
+        regularization: float,
+        exact: bool = True,
+    ):
+
+        if exact and (regularization is None or regularization <= 0):
+            raise ValueError("regularization must be positive when exact=True")
+        elif regularization is not None and regularization < 0:
+            raise ValueError("regularization must be non-negative")
+
+        self._regularization = regularization
+        self._exact = exact
+        self._low_rank_representation = low_rank_representation
+
+    @property
+    def exact(self):
+        return self._exact
+
+    @property
+    def regularization(self):
+        return self._regularization
+
+    @regularization.setter
+    def regularization(self, value: float):
+        if value < 0:
+            raise ValueError("regularization must be non-negative")
+        self._regularization = value
+
+    @property
+    def device(self):
+        return self._low_rank_representation.device
+
+    @property
+    def dtype(self):
+        return self._low_rank_representation.dtype
+
+    def to(self, device: torch.device):
+        self._low_rank_representation = self._low_rank_representation.to(device)
+        return self
+
+    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+
+        if vec.ndim == 1:
+            return self._apply_to_mat(vec.unsqueeze(0)).squeeze()
+
+        return self._apply_to_mat(vec)
+
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+
+        D = self._low_rank_representation.eigen_vals.clone()
+        V = self._low_rank_representation.projections
+
+        if self.regularization is not None:
+            D += self.regularization
+
+        V_t_mat = V.t() @ mat.t()
+        D_inv = 1.0 / D
+        result = V @ (V_t_mat * D_inv.unsqueeze(-1))
+
+        if self._exact:
+            result += 1.0 / self.regularization * (mat.t() - V @ V_t_mat)
+
+        return result.t()
+
+    @property
+    def input_size(self) -> int:
+        result: int = self._low_rank_representation.projections.shape[0]
+        return result

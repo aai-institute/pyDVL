@@ -567,7 +567,7 @@ def test_influences_lissa(
             precompute_grad=True,
         ),
         lambda model, loss, hessian_reg, rank: NystroemSketchInfluence(
-            model, loss, hessian_regularization=hessian_reg, rank=rank
+            model, loss, regularization=hessian_reg, rank=rank
         ),
     ],
     ids=["arnoldi", "nystroem"],
@@ -588,8 +588,8 @@ def test_influences_low_rank(
     influence_factory,
     device: torch.device,
 ):
-    atol = 1e-7
-    rtol = 1e-4
+    atol = 1e-8
+    rtol = 1e-5
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
     num_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -615,46 +615,35 @@ def test_influences_low_rank(
 
     influence_func_model = influence_func_model.fit(train_dataloader)
 
-    low_rank_influence = (
-        influence_func_model.influences(
-            x_test, y_test, x_train, y_train, mode=test_case.mode
-        )
-        .cpu()
-        .numpy()
+    low_rank_influence = influence_func_model.influences(
+        x_test, y_test, x_train, y_train, mode=test_case.mode
     )
 
-    sym_low_rank_influence = (
-        influence_func_model.influences(x_train, y_train, mode=test_case.mode)
-        .cpu()
-        .numpy()
+    sym_low_rank_influence = influence_func_model.influences(
+        x_train, y_train, mode=test_case.mode
     )
 
-    low_rank_factors = influence_func_model.influence_factors(x_test, y_test)
     assert np.allclose(
         direct_factors,
-        influence_func_model.influence_factors(x_train, y_train).cpu().numpy(),
+        influence_func_model.influence_factors(x_train, y_train),
         atol=atol,
         rtol=rtol,
     )
 
     if test_case.mode is InfluenceMode.Up:
-        low_rank_influence_transpose = (
-            influence_func_model.influences(
-                x_train, y_train, x_test, y_test, mode=test_case.mode
-            )
-            .cpu()
-            .numpy()
+        low_rank_influence_transpose = influence_func_model.influences(
+            x_train, y_train, x_test, y_test, mode=test_case.mode
         )
         assert np.allclose(
-            low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
+            low_rank_influence_transpose,
+            low_rank_influence.swapaxes(0, 1),
+            atol=atol,
+            rtol=rtol,
         )
 
-    low_rank_values_from_factors = (
-        influence_func_model.influences_from_factors(
-            low_rank_factors, x_train, y_train, mode=test_case.mode
-        )
-        .cpu()
-        .numpy()
+    low_rank_factors = influence_func_model.influence_factors(x_test, y_test)
+    low_rank_values_from_factors = influence_func_model.influences_from_factors(
+        low_rank_factors, x_train, y_train, mode=test_case.mode
     )
     assert np.allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
     assert np.allclose(
@@ -850,6 +839,10 @@ composable_influence_factories = [
         maxiter=150,
         scale=10000,
         second_order_mode=SecondOrderMode.GAUSS_NEWTON,
+    ),
+    partial(NystroemSketchInfluence, rank=10),
+    partial(
+        NystroemSketchInfluence, rank=10, second_order_mode=SecondOrderMode.GAUSS_NEWTON
     ),
 ]
 

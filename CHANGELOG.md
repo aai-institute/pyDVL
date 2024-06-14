@@ -16,6 +16,9 @@
   [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
 - Extend `LissaInfluence` with block-diagonal and Gauss-Newton approximation
   [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+- Extend `NystroemSketchInfluence` with block-diagonal and Gauss-Newton 
+  approximation
+  [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
   
 ## Changed
 
@@ -30,6 +33,10 @@
     [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
   - Remove parameter `h0` from init of `LissaInfluence`  
     [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+  - Rename parameter `hessian_regularization` of `NystroemSketchInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
 
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 

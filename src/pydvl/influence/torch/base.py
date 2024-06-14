@@ -443,7 +443,7 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
 
     def _apply(self, tensor: torch.Tensor) -> torch.Tensor:
 
-        if tensor.ndim == 2 and tensor.shape[0] > 1:
+        if tensor.ndim == 2:
             return self._apply_to_mat(tensor.to(self.device))
 
         return self._apply_to_vec(tensor.to(self.device))
