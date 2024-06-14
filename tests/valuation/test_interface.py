@@ -125,7 +125,7 @@ def test_data_banzhaf_valuation(train_data, utility, n_jobs):
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_group_testing_valuation(train_data, utility, n_jobs):
-    valuation = GroupTestingValuation(
+    valuation = GroupTestingShapleyValuation(
         utility,
         n_samples=10,
         progress=False,

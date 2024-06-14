@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import chain, takewhile
-from typing import Iterable, Tuple, cast
+from typing import Generator, Iterable, List, Tuple, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -23,11 +23,26 @@ def compute_utility_values_and_sample_masks(
     n_samples: int,
     progress: bool,
     extra_samples: Iterable[SampleT] | None = None,
-) -> Tuple[NDArray[np.float_], NDArray[np.int_]]:
+) -> Tuple[NDArray[np.float_], NDArray[np.bool_]]:
     """Calculate utility values and sample masks on samples in parallel.
 
     Creating the utility evaluations and sample masks is the computational bottleneck
     of several data valuation algorithms, for examples least-core and group-testing.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        sampler: The sampler to use for the valuation.
+        n_samples: The number of samples to use from the sampler.
+        progress: Whether to show a progress bar.
+        extra_samples: Additional samples to evaluate. For example, this can be used
+            to calculate the total utility of the dataset in parallel with evaluating
+            the utility on the samples. Defaults to None.
+
+    Returns:
+        A tuple containing the utility values and the sample masks.
+
+    Raises:
+        ValueError: If the utility object does not have training data.
 
     """
     if utility.training_data is None:
@@ -54,13 +69,18 @@ def compute_utility_values_and_sample_masks(
 
         return masks, u_values
 
-    generator = takewhile(
-        lambda _: sampler.n_samples < n_samples,
-        sampler.generate_batches(indices),
+    generator = cast(
+        BatchGenerator,
+        takewhile(
+            lambda _: sampler.n_samples < n_samples,
+            sampler.generate_batches(indices),
+        ),
     )
 
     if extra_samples is not None:
-        generator = chain(generator, batched(extra_samples, batch_size))
+        generator = cast(
+            BatchGenerator, chain(generator, batched(extra_samples, batch_size))
+        )
 
     generator_with_progress = cast(
         BatchGenerator,
@@ -85,7 +105,4 @@ def compute_utility_values_and_sample_masks(
         masks.extend(m)
         u_values.extend(v)
 
-    u_values = np.array(u_values)
-    masks = np.row_stack(masks)
-
-    return u_values, masks
+    return np.array(u_values), np.row_stack(masks)

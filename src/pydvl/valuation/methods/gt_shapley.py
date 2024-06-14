@@ -12,8 +12,6 @@ computed with guarantees.
 
 You can read more [in the documentation][data-valuation].
 
-!!! tip "New in version 0.4.0"
-
 ## References
 
 [^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
@@ -29,7 +27,7 @@ You can read more [in the documentation][data-valuation].
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple, Sequence
+from typing import Callable, NamedTuple, Sequence, cast
 
 import cvxpy as cp
 import numpy as np
@@ -45,17 +43,45 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
     compute_utility_values_and_sample_masks,
 )
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import IndexSampler
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
 
-__all__ = ["GroupTestingValuation", "compute_n_samples"]
+__all__ = ["GroupTestingShapleyValuation", "compute_n_samples"]
 
 
-class GroupTestingValuation(Valuation):
+class GroupTestingShapleyValuation(Valuation):
+    """Class to calculate the group-testing approximation to shapley values.
+
+    See [Data valuation][data-valuation] for an overview.
+
+    !!! Warning
+    This method is very inefficient. Potential improvements to the
+    implementation notwithstanding, convergence seems to be very slow (in terms
+    of evaluations of the utility required). We recommend other Monte Carlo
+    methods instead.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        n_samples: The number of samples to use. A sample size with theoretical
+            guarantees can be computed using
+            `pydvl.valuation.methods.gt_shapleyt.compute_n_samples`.
+        epsilon: The error tolerance.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+        progress: Whether to show a progress bar during the construction of the
+            group-testing problem.
+        seed: Seed for the random number generator.
+        batch_size: The number of samples to draw in each batch. Can be used to reduce
+            parallelization overhead for fast utilities. Defaults to 1.
+
+    """
+
     algorithm_name = "Group-Testing-Shapley"
 
     def __init__(
@@ -96,7 +122,7 @@ class GroupTestingValuation(Valuation):
         """
         self._utility = self._utility.with_dataset(data)
 
-        problem = _create_group_testing_problem(
+        problem = create_group_testing_problem(
             utility=self._utility,
             sampler=self._sampler,
             n_samples=self._n_samples,
@@ -104,7 +130,7 @@ class GroupTestingValuation(Valuation):
             epsilon=self._epsilon,
         )
 
-        solution = _solve_group_testing_problem(
+        solution = solve_group_testing_problem(
             problem=problem,
             solver_options=self._solver_options,
             algorithm_name=self.algorithm_name,
@@ -146,7 +172,7 @@ def compute_n_samples(epsilon: float, delta: float, n_obs: int) -> int:
     )
 
     def _h(u: float) -> float:
-        return (1 + u) * np.log(1 + u) - u
+        return cast(float, (1 + u) * np.log(1 + u) - u)
 
     n_samples = np.log(n_obs * (n_obs - 1) / delta)
     n_samples /= 1 - q_tot
@@ -164,6 +190,17 @@ class GroupTestingProblem(NamedTuple):
 
 
 class GTSampler(StochasticSamplerMixin, IndexSampler):
+    """Sampler for the group-testing algorithm.
+
+    Methods that are specific to semi-values like weight and make_strategy are not
+    implemented.
+
+    Args:
+        batch_size: The number of samples to draw in each batch.
+        seed: Seed for the random number generator.
+
+    """
+
     def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
 
@@ -173,10 +210,11 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
         probabilities = _create_sampling_probabilities(sample_sizes)
 
         while True:
-            size = self._rng.choice(sample_sizes, p=probabilities, size=1)
+            size = self._rng.choice(sample_sizes, p=probabilities)
             subset = random_subset_of_size(indices, size=size, seed=self._rng)
             yield Sample(idx=None, subset=subset)
 
+    @staticmethod
     def weight(n: int, subset_len: int) -> float:
         raise NotImplementedError("This is not a semi-value sampler.")
 
@@ -188,7 +226,29 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
         raise NotImplementedError("This is not a semi-value sampler.")
 
 
-def _create_group_testing_problem(utility, sampler, n_samples, progress, epsilon):
+def create_group_testing_problem(
+    utility: UtilityBase,
+    sampler: IndexSampler,
+    n_samples: int,
+    progress: bool,
+    epsilon: float,
+) -> GroupTestingProblem:
+    """Create the feasibility problem that characterizes group testing shapley values.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        sampler: The sampler to use for the valuation.
+        n_samples: The number of samples to use.
+        progress: Whether to show a progress bar.
+        epsilon: The error tolerance.
+
+    Returns:
+        A GroupTestingProblem object.
+
+    """
+    if utility.training_data is None:
+        raise ValueError("Utility object must have training data.")
+
     u_values, masks = compute_utility_values_and_sample_masks(
         utility=utility,
         sampler=sampler,
@@ -214,7 +274,22 @@ def _create_group_testing_problem(utility, sampler, n_samples, progress, epsilon
     return problem
 
 
-def _calculate_utility_differences(utility_values, masks, n_obs):
+def _calculate_utility_differences(
+    utility_values: NDArray[np.float_],
+    masks: NDArray[np.bool_],
+    n_obs: int,
+) -> NDArray[np.float_]:
+    """Calculate utility differences from utility values and sample masks.
+
+    Args:
+        utility_values: 1D array with utility values.
+        masks: 2d array with sample masks.
+        n_obs: The number of observations.
+
+    Returns:
+        The utility differences.
+
+    """
     betas = masks.astype(np.int_)
     n_samples = len(utility_values)
 
@@ -229,13 +304,27 @@ def _calculate_utility_differences(utility_values, masks, n_obs):
     return u_differences
 
 
-def _solve_group_testing_problem(
+def solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
-    algorithm_name: str = "",
-    data_names: Sequence[str] | None = None,
+    algorithm_name: str,
+    data_names: NDArray[np.object_],
 ) -> ValuationResult:
-    """Solve the group testing problem and create a ValuationResult."""
+    """Solve the group testing problem and create a ValuationResult.
+
+    Args:
+        problem: The group testing problem.
+        solver_options: Optional dictionary containing a CVXPY solver and options to
+            configure it. For valid values to the "solver" key see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+        algorithm_name: The name of the algorithm.
+        data_names: The names of the data columns.
+
+    Returns:
+        A ValuationResult object.
+
+    """
 
     solver_options = {} if solver_options is None else solver_options.copy()
 
@@ -258,9 +347,7 @@ def _solve_group_testing_problem(
     if cp_problem.status != "optimal":
         log.warning(f"cvxpy returned status {cp_problem.status}")
         values = (
-            np.nan * np.ones_like(u.data.indices)
-            if not hasattr(v.value, "__len__")
-            else v.value
+            np.nan * np.ones_like(n_obs) if not hasattr(v.value, "__len__") else v.value
         )
         status = Status.Failed
     else:
@@ -288,10 +375,12 @@ def _create_sampling_probabilities(
 ) -> NDArray[np.float_]:
     """Create probabilities for each possible sample size."""
     weights = 1 / sample_sizes + 1 / sample_sizes[::-1]
-    probs = weights / weights.sum()
+    probs: NDArray[np.float_] = weights / weights.sum()
     return probs
 
 
-def _calculate_z(n_obs):
+def _calculate_z(n_obs: int) -> float:
+    """Calculate the normalization constant Z."""
     kk = _create_sample_sizes(n_obs)
-    return 2 * np.sum(1 / kk)
+    z: float = 2 * np.sum(1 / kk)
+    return z

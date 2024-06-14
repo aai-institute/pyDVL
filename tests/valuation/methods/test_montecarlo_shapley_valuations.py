@@ -11,7 +11,7 @@ from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
 from pydvl.valuation.methods import (
     DataShapleyValuation,
-    GroupTestingValuation,
+    GroupTestingShapleyValuation,
     OwenShapleyValuation,
 )
 from pydvl.valuation.samplers import (
@@ -78,7 +78,7 @@ log = logging.getLogger(__name__)
         (
             None,
             {},
-            GroupTestingValuation,
+            GroupTestingShapleyValuation,
             {"n_samples": 5e4, "epsilon": 0.2},
             0.1,
             1e-2,
@@ -165,7 +165,7 @@ def test_games(
         (
             None,
             {},
-            GroupTestingValuation,
+            GroupTestingShapleyValuation,
             {"n_samples": 21, "epsilon": 0.2},
         ),
     ],
@@ -267,7 +267,7 @@ def test_hoeffding_bound_montecarlo(
         (
             None,
             {},
-            GroupTestingValuation,
+            GroupTestingShapleyValuation,
             {"n_samples": 5e4, "epsilon": 0.25},
         ),
     ],
