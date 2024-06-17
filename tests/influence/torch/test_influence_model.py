@@ -854,13 +854,13 @@ composable_influence_factories = [
         CgInfluence,
         maxiter=10,
         preconditioner=JacobiPreconditioner(),
-        use_block_cg=True,
+        solve_simultaneously=True,
     ),
     partial(
         CgInfluence,
         maxiter=10,
         preconditioner=NystroemPreconditioner(rank=5),
-        use_block_cg=True,
+        solve_simultaneously=True,
     ),
 ]
 
