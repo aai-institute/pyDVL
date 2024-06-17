@@ -92,12 +92,11 @@ def compute_utility_values_and_sample_masks(
         ),
     )
 
-    parallel = Parallel(return_as="generator")
-
-    results = parallel(
-        delayed(_create_mask_and_utility_values)(batch)
-        for batch in generator_with_progress
-    )
+    with Parallel(return_as="generator") as parallel:
+        results = parallel(
+            delayed(_create_mask_and_utility_values)(batch)
+            for batch in generator_with_progress
+        )
 
     masks: List[NDArray[BoolDType]] = []
     u_values: List[float] = []
