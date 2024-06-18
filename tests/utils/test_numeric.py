@@ -50,7 +50,7 @@ def test_random_powerset(n, max_subsets):
     counts are lower.
     """
     s = np.arange(n)
-    item_counts = np.zeros_like(s, dtype=np.float_)
+    item_counts = np.zeros_like(s, dtype=np.float64)
     size_counts = np.zeros(n + 1)
     for subset in random_powerset(s, n_samples=max_subsets):
         size_counts[len(subset)] += 1

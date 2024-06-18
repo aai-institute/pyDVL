@@ -21,16 +21,16 @@ logger = logging.getLogger(__name__)
 
 
 def plot_gaussian_blobs(
-    train_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
-    test_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
-    x_min: Optional[NDArray[np.float_]] = None,
-    x_max: Optional[NDArray[np.float_]] = None,
+    train_ds: Tuple[NDArray[np.float64], NDArray[np.int_]],
+    test_ds: Tuple[NDArray[np.float64], NDArray[np.int_]],
+    x_min: Optional[NDArray[np.float64]] = None,
+    x_max: Optional[NDArray[np.float64]] = None,
     *,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     vline: Optional[float] = None,
-    line: Optional[NDArray[np.float_]] = None,
+    line: Optional[NDArray[np.float64]] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
     figsize: Tuple[int, int] = (20, 10),
@@ -104,15 +104,15 @@ def plot_gaussian_blobs(
 
 
 def plot_influences(
-    x: NDArray[np.float_],
-    influences: NDArray[np.float_],
+    x: NDArray[np.float64],
+    influences: NDArray[np.float64],
     corrupted_indices: Optional[List[int]] = None,
     *,
     ax: Optional[plt.Axes] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
-    line: Optional[NDArray[np.float_]] = None,
+    line: Optional[NDArray[np.float64]] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
 ) -> plt.Axes:
@@ -403,7 +403,7 @@ def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
 
 
 def plot_lowest_highest_influence_images(
-    subset_influences: NDArray[np.float_],
+    subset_influences: NDArray[np.float64],
     subset_images: List[JpegImageFile],
     num_to_plot: int,
 ):
@@ -454,7 +454,7 @@ def plot_losses(losses: Losses):
 def corrupt_imagenet(
     dataset: pd.DataFrame,
     fraction_to_corrupt: float,
-    avg_influences: NDArray[np.float_],
+    avg_influences: NDArray[np.float64],
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
     """Given the preprocessed tiny imagenet dataset (or a subset of it), 
     it takes a fraction of the images with the highest influence and (randomly)
@@ -494,7 +494,7 @@ def corrupt_imagenet(
 def compute_mean_corrupted_influences(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: NDArray[np.float_],
+    avg_corrupted_influences: NDArray[np.float64],
 ) -> pd.DataFrame:
     """Given a corrupted dataset, it returns a dataframe with average influence for each class,
     separating corrupted and original points.
@@ -534,7 +534,7 @@ def compute_mean_corrupted_influences(
 def plot_corrupted_influences_distribution(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: NDArray[np.float_],
+    avg_corrupted_influences: NDArray[np.float64],
     figsize: Tuple[int, int] = (16, 8),
 ):
     """Given a corrupted dataset, plots the histogram with the distribution of

@@ -73,7 +73,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     # closest to farthest
     _, indices = nns.kneighbors(u.data.x_test)
 
-    values: NDArray[np.float_] = np.zeros_like(u.data.indices, dtype=np.float_)
+    values: NDArray[np.float64] = np.zeros_like(u.data.indices, dtype=np.float64)
     n = len(u.data)
     yt = u.data.y_train
     iterator = enumerate(zip(u.data.y_test, indices), start=1)

@@ -385,7 +385,7 @@ def test_adding_different_indices(
     [
         ([0, 1, 2], np.int32, ["a", "b", "c"], "<U1"),
         ([4, 1, 7], np.int64, [4, 1, 7], np.int64),
-        ([4, 1, 7], np.int32, [4, 1, 7], np.float_),
+        ([4, 1, 7], np.int32, [4, 1, 7], np.float64),
     ],
 )
 def test_types(indices, index_t, data_names, name_t):
@@ -394,7 +394,7 @@ def test_types(indices, index_t, data_names, name_t):
 
     v = ValuationResult(
         indices=np.array(indices, dtype=index_t),
-        values=np.ones(len(indices), dtype=np.float_),
+        values=np.ones(len(indices), dtype=np.float64),
         data_names=np.array(data_names, dtype=name_t),
     )
     assert v.indices.dtype == index_t

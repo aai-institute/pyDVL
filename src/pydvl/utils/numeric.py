@@ -279,20 +279,20 @@ def running_moments(
 
 @overload
 def running_moments(
-    previous_avg: NDArray[np.float_],
-    previous_variance: NDArray[np.float_],
+    previous_avg: NDArray[np.float64],
+    previous_variance: NDArray[np.float64],
     count: int,
-    new_value: NDArray[np.float_],
-) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
+    new_value: NDArray[np.float64],
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
     ...
 
 
 def running_moments(
-    previous_avg: float | NDArray[np.float_],
-    previous_variance: float | NDArray[np.float_],
+    previous_avg: float | NDArray[np.float64],
+    previous_variance: float | NDArray[np.float64],
     count: int,
-    new_value: float | NDArray[np.float_],
-) -> Tuple[float | NDArray[np.float_], float | NDArray[np.float_]]:
+    new_value: float | NDArray[np.float64],
+) -> Tuple[float | NDArray[np.float64], float | NDArray[np.float64]]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
@@ -323,7 +323,7 @@ def running_moments(
 
 
 def top_k_value_accuracy(
-    y_true: NDArray[np.float_], y_pred: NDArray[np.float_], k: int = 3
+    y_true: NDArray[np.float64], y_pred: NDArray[np.float64], k: int = 3
 ) -> float:
     """Computes the top-k accuracy for the estimated values by comparing indices
     of the highest k values.

@@ -166,7 +166,7 @@ class ClasswiseScorer(Scorer):
     def __call__(
         self: "ClasswiseScorer",
         model: SupervisedModel,
-        x_test: NDArray[np.float_],
+        x_test: NDArray[np.float64],
         y_test: NDArray[np.int_],
     ) -> float:
         (
@@ -180,7 +180,7 @@ class ClasswiseScorer(Scorer):
     def estimate_in_class_and_out_of_class_score(
         self,
         model: SupervisedModel,
-        x_test: NDArray[np.float_],
+        x_test: NDArray[np.float64],
         y_test: NDArray[np.int_],
         rescale_scores: bool = True,
     ) -> Tuple[float, float]:

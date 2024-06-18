@@ -202,9 +202,9 @@ class ValuationResult(
     """
 
     _indices: NDArray[IndexT]
-    _values: NDArray[np.float_]
+    _values: NDArray[np.float64]
     _counts: NDArray[np.int_]
-    _variances: NDArray[np.float_]
+    _variances: NDArray[np.float64]
     _data: Dataset
     _names: NDArray[NameT]
     _algorithm: str
@@ -216,8 +216,8 @@ class ValuationResult(
     def __init__(
         self,
         *,
-        values: NDArray[np.float_],
-        variances: Optional[NDArray[np.float_]] = None,
+        values: NDArray[np.float64],
+        variances: Optional[NDArray[np.float64]] = None,
         counts: Optional[NDArray[np.int_]] = None,
         indices: Optional[NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
@@ -299,20 +299,20 @@ class ValuationResult(
         self._sort_order = reverse
 
     @property
-    def values(self) -> NDArray[np.float_]:
+    def values(self) -> NDArray[np.float64]:
         """The values, possibly sorted."""
         return self._values[self._sort_positions]
 
     @property
-    def variances(self) -> NDArray[np.float_]:
+    def variances(self) -> NDArray[np.float64]:
         """The variances, possibly sorted."""
         return self._variances[self._sort_positions]
 
     @property
-    def stderr(self) -> NDArray[np.float_]:
+    def stderr(self) -> NDArray[np.float64]:
         """The raw standard errors, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+            NDArray[np.float64], np.sqrt(self.variances / np.maximum(1, self.counts))
         )
 
     @property
