@@ -184,7 +184,7 @@ def compute_n_samples(epsilon: float, delta: float, n_obs: int) -> int:
 class GroupTestingProblem(NamedTuple):
     """Solver agnostic representation of the group-testing problem."""
 
-    utility_differences: NDArray[np.float_]
+    utility_differences: NDArray[np.float64]
     total_utility: float
     epsilon: float
 
@@ -196,7 +196,7 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
     implemented.
 
     Args:
-        batch_size: The number of samples to draw in each batch.
+        batch_size: The number of samples to draw from each batch.
         seed: Seed for the random number generator.
 
     """
@@ -275,10 +275,10 @@ def create_group_testing_problem(
 
 
 def _calculate_utility_differences(
-    utility_values: NDArray[np.float_],
+    utility_values: NDArray[np.float64],
     masks: NDArray[np.bool_],
     n_obs: int,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Calculate utility differences from utility values and sample masks.
 
     Args:
@@ -372,10 +372,10 @@ def _create_sample_sizes(n_obs: int) -> NDArray[np.int_]:
 
 def _create_sampling_probabilities(
     sample_sizes: NDArray[np.int_],
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """Create probabilities for each possible sample size."""
     weights = 1 / sample_sizes + 1 / sample_sizes[::-1]
-    probs: NDArray[np.float_] = weights / weights.sum()
+    probs: NDArray[np.float64] = weights / weights.sum()
     return probs
 
 
