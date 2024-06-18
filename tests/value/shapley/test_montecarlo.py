@@ -144,10 +144,10 @@ def test_seed(
         ShapleyMode.CombinatorialMontecarlo,
     ],
 )
+@pytest.mark.flaky(reruns=1)
 def test_hoeffding_bound_montecarlo(
     num_samples,
     analytic_shapley,
-    tolerate,
     n_jobs,
     fun: ShapleyMode,
     delta: float,
@@ -158,13 +158,12 @@ def test_hoeffding_bound_montecarlo(
     n_samples = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
-        with tolerate(max_failures=int(10 * delta)):
-            values = compute_shapley_values(
-                u=u, mode=fun, done=MaxChecks(n_samples), n_jobs=n_jobs
-            )
-            # Trivial bound on total error using triangle inequality
-            check_total_value(u, values, atol=len(u.data) * eps)
-            check_rank_correlation(values, exact_values, threshold=0.8)
+        values = compute_shapley_values(
+            u=u, mode=fun, done=MaxChecks(n_samples), n_jobs=n_jobs
+        )
+        # Trivial bound on total error using triangle inequality
+        check_total_value(u, values, atol=len(u.data) * eps)
+        check_rank_correlation(values, exact_values, threshold=0.8)
 
 
 @pytest.mark.slow

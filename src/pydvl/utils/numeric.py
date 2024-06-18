@@ -96,7 +96,7 @@ def random_subset(
         The subset
     """
     rng = np.random.default_rng(seed)
-    selection = rng.uniform(size=len(s)) > q
+    selection = rng.uniform(size=len(s)) < q
     return s[selection]
 
 

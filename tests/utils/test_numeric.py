@@ -6,6 +6,7 @@ from pydvl.utils.numeric import (
     random_matrix_with_condition_number,
     random_powerset,
     random_powerset_label_min,
+    random_subset,
     random_subset_of_size,
     running_moments,
 )
@@ -273,3 +274,13 @@ def test_random_powerset_label_min(
 
         if idx == check_num_samples:
             break
+
+
+@pytest.mark.flaky(reruns=1)
+def test_size_of_random_subset():
+    """This test discovered an actual bug where (1 - q) was used instead of q."""
+    subset = random_subset(np.arange(10), q=0)
+    assert len(subset) == 0
+
+    subset = random_subset(np.arange(10), q=1)
+    assert len(subset) == 10

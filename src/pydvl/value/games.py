@@ -92,13 +92,13 @@ class DummyModel(SupervisedModel):
     def __init__(self) -> None:
         pass
 
-    def fit(self, x: NDArray, y: NDArray) -> None:
+    def fit(self, x: NDArray, y: NDArray | None) -> None:
         pass
 
     def predict(self, x: NDArray) -> NDArray:  # type: ignore
         pass
 
-    def score(self, x: NDArray, y: NDArray) -> float:
+    def score(self, x: NDArray, y: NDArray | None) -> float:
         # Dummy, will be overriden
         return 0
 
