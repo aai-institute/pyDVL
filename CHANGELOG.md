@@ -4,6 +4,8 @@
 
 ### Added
 
+- Refactoring group-testing shapley values with new sampler architecture
+  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
 - Refactoring of least-core data valuation methods with more supported sampling methods
   and consistent interface.
   [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
@@ -31,8 +33,12 @@
   as the probability of an element being sampled
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 
-## Changed
 
+### Changed
+
+- Use tighter bounds for the calculation of the minimal sample size that guarantees
+  an epsilon-delta approximation in group testing (Jia et al. 2023)
+  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
 - **Breaking Changes**
   - Rename parameter `hessian_regularization` of `DirectInfluence`
     to `regularization` and change the type annotation to allow

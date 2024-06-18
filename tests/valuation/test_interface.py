@@ -124,6 +124,23 @@ def test_data_banzhaf_valuation(train_data, utility, n_jobs):
 
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
+def test_group_testing_valuation(train_data, utility, n_jobs):
+    valuation = GroupTestingShapleyValuation(
+        utility,
+        n_samples=10,
+        progress=False,
+        epsilon=0.1,
+    )
+    with disable_logging():
+        with joblib.parallel_config(backend="loky", n_jobs=n_jobs):
+            valuation.fit(train_data)
+
+    got = valuation.values()
+    assert isinstance(got, ValuationResult)
+    assert len(got) == len(train_data)
+
+
+@pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_utility_learning(train_data, utility, n_jobs):
     learned_u = DataUtilityLearning(utility, 10, LinearRegression())
     valuation = DataShapleyValuation(

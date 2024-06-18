@@ -9,7 +9,11 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
-from pydvl.valuation.methods import DataShapleyValuation, OwenShapleyValuation
+from pydvl.valuation.methods import (
+    DataShapleyValuation,
+    GroupTestingShapleyValuation,
+    OwenShapleyValuation,
+)
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     DeterministicUniformSampler,
@@ -71,14 +75,17 @@ log = logging.getLogger(__name__)
         ),
         # Because of the inaccuracy of GroupTesting, a high atol is required for the
         # value 0, for which the rtol has no effect.
-        # (
-        #     ShapleyMode.GroupTesting,
-        #     0.1,
-        #     1e-2,
-        #     dict(n_samples=int(4e4), epsilon=0.2, delta=0.01),
-        # ),
+        (
+            None,
+            {},
+            GroupTestingShapleyValuation,
+            {"n_samples": 5e4, "epsilon": 0.2},
+            0.1,
+            1e-2,
+        ),
     ],
 )
+@pytest.mark.flaky(reruns=1)
 def test_games(
     test_game,
     n_jobs,
@@ -88,7 +95,6 @@ def test_games(
     valuation_kwargs,
     rtol,
     atol,
-    seed,
 ):
     """Tests shapley values for all methods using toy games.
 
@@ -107,18 +113,25 @@ def test_games(
        samples
 
     """
-    sampler = sampler_class(seed=seed, **sampler_kwargs)
-    valuation = valuation_class(
-        utility=test_game.u,
-        sampler=sampler,
-        progress=False,
-        **valuation_kwargs,
-    )
+    if sampler_class is not None:
+        sampler = sampler_class(**sampler_kwargs)
+        valuation = valuation_class(
+            utility=test_game.u,
+            sampler=sampler,
+            progress=False,
+            **valuation_kwargs,
+        )
+    else:
+        valuation = valuation_class(
+            utility=test_game.u,
+            progress=False,
+            **valuation_kwargs,
+        )
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(test_game.data)
     got = valuation.values()
     expected = test_game.shapley_values()
-    check_total_value(test_game.u, got, atol=atol)
+    check_total_value(test_game.u.with_dataset(test_game.data), got, atol=atol)
 
     check_values(got, expected, rtol=rtol, atol=atol)
 
@@ -149,7 +162,12 @@ def test_games(
             OwenShapleyValuation,
             {},
         ),
-        # (ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
+        (
+            None,
+            {},
+            GroupTestingShapleyValuation,
+            {"n_samples": 21, "epsilon": 0.2},
+        ),
     ],
 )
 def test_seed(
@@ -163,13 +181,21 @@ def test_seed(
 ):
     values = []
     for s in [seed, seed, seed_alt]:
-        valuation = valuation_class(
-            utility=test_game.u,
-            sampler=sampler_class(seed=s, **sampler_kwargs),
-            progress=False,
-            # TODO: Why is a deepcopy necessary here?
-            **deepcopy(valuation_kwargs),
-        )
+        if sampler_class is not None:
+            valuation = valuation_class(
+                utility=test_game.u,
+                sampler=sampler_class(seed=s, **sampler_kwargs),
+                progress=False,
+                # TODO: Why is a deepcopy necessary here?
+                **deepcopy(valuation_kwargs),
+            )
+        else:
+            valuation = valuation_class(
+                utility=test_game.u,
+                progress=False,
+                **valuation_kwargs,
+                seed=s,
+            )
         valuation.fit(test_game.data)
         values.append(valuation.values())
 
@@ -238,10 +264,12 @@ def test_hoeffding_bound_montecarlo(
             OwenShapleyValuation,
             {},
         ),
-        # (
-        #     ShapleyMode.GroupTesting,
-        #     dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
-        # ),
+        (
+            None,
+            {},
+            GroupTestingShapleyValuation,
+            {"n_samples": 5e4, "epsilon": 0.25},
+        ),
     ],
 )
 def test_linear_montecarlo_with_outlier(
@@ -280,12 +308,20 @@ def test_linear_montecarlo_with_outlier(
         cache_backend=cache_backend,
     )
 
-    valuation = valuation_class(
-        utility=utility,
-        sampler=sampler_class(**sampler_kwargs),
-        progress=False,
-        **valuation_kwargs,
-    )
+    if sampler_class is not None:
+        valuation = valuation_class(
+            utility=utility,
+            sampler=sampler_class(**sampler_kwargs),
+            progress=False,
+            **valuation_kwargs,
+        )
+    else:
+        valuation = valuation_class(
+            utility=utility,
+            progress=False,
+            **valuation_kwargs,
+        )
+
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(data_train)
     values = valuation.values()
@@ -294,7 +330,7 @@ def test_linear_montecarlo_with_outlier(
     assert values.status == Status.Converged
     assert values[0].index == outlier_idx
 
-    check_total_value(utility, values, atol=0.2)
+    check_total_value(utility.with_dataset(data_train), values, atol=0.2)
 
 
 @pytest.mark.parametrize(
