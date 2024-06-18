@@ -27,7 +27,7 @@ You can read more [in the documentation][data-valuation].
 from __future__ import annotations
 
 import logging
-from typing import Callable, NamedTuple, Sequence, cast
+from typing import Callable, NamedTuple, cast
 
 import cvxpy as cp
 import numpy as np

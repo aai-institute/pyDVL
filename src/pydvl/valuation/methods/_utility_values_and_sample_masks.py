@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import chain, takewhile
-from typing import Generator, Iterable, List, Tuple, cast
+from typing import Iterable, List, Tuple, cast
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -98,10 +98,10 @@ def compute_utility_values_and_sample_masks(
             for batch in generator_with_progress
         )
 
-    masks: List[NDArray[BoolDType]] = []
-    u_values: List[float] = []
-    for m, v in results:
-        masks.extend(m)
-        u_values.extend(v)
+        masks: List[NDArray[BoolDType]] = []
+        u_values: List[float] = []
+        for m, v in results:
+            masks.extend(m)
+            u_values.extend(v)
 
     return np.array(u_values), np.row_stack(masks)
