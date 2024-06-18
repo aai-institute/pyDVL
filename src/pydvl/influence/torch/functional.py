@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence
@@ -36,7 +36,16 @@ from torch._C import _LinAlgError
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
-from .util import align_structure, align_with_model, flatten_dimensions, to_model_device
+from .util import (
+    align_structure,
+    align_with_model,
+    flatten_dimensions,
+    get_model_parameters,
+    to_model_device,
+)
+
+if TYPE_CHECKING:
+    from .base import TensorOperator
 
 __all__ = [
     "create_hvp_function",
@@ -50,6 +59,8 @@ __all__ = [
     "LowRankProductRepresentation",
     "randomized_nystroem_approximation",
     "model_hessian_nystroem_approximation",
+    "create_batch_loss_function",
+    "hvp",
 ]
 
 
@@ -346,11 +357,7 @@ def create_hvp_function(
         return partial(precomputed_grads_hvp_function, total_grad_xy)
 
     def hvp_function(vec: torch.Tensor) -> torch.Tensor:
-        params = {
-            k: p if track_gradients else p.detach()
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        params = get_model_parameters(model, detach=not track_gradients)
         v = align_structure(params, vec)
         empirical_loss = create_empirical_loss_function(model, loss, data_loader)
         return flatten_dimensions(
@@ -361,11 +368,7 @@ def create_hvp_function(
         n_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = create_batch_hvp_function(model, loss, reverse_only)
-        params = {
-            k: p if track_gradients else p.detach()
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        params = get_model_parameters(model, detach=not track_gradients)
         for t_x, t_y in iter(data_loader):
             t_x, t_y = to_model_device(t_x, model), to_model_device(t_y, model)
             avg_hessian += b_hvp(params, t_x, t_y, to_model_device(vec, model))
@@ -381,6 +384,7 @@ def hessian(
     data_loader: DataLoader,
     use_hessian_avg: bool = True,
     track_gradients: bool = False,
+    restrict_to: Optional[Dict[str, torch.Tensor]] = None,
 ) -> torch.Tensor:
     """
     Computes the Hessian matrix for a given model and loss function.
@@ -395,18 +399,19 @@ def hessian(
             If False, the empirical loss across the entire dataset is used.
         track_gradients: Whether to track gradients for the resulting tensor of
             the hessian vector products.
+        restrict_to: The parameters to restrict the second order differentiation to,
+            i.e. the corresponding sub-matrix of the Hessian. If None, the full Hessian
+            is computed.
 
     Returns:
         A tensor representing the Hessian matrix. The shape of the tensor will be
             (n_parameters, n_parameters), where n_parameters is the number of trainable
             parameters in the model.
     """
+    params = restrict_to
 
-    params = {
-        k: p if track_gradients else p.detach()
-        for k, p in model.named_parameters()
-        if p.requires_grad
-    }
+    if params is None:
+        params = get_model_parameters(model, detach=not track_gradients)
     n_parameters = sum([p.numel() for p in params.values()])
     model_dtype = next((p.dtype for p in params.values()))
 
@@ -417,18 +422,21 @@ def hessian(
         hessian_mat = to_model_device(
             torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
-        blf = create_batch_loss_function(model, loss)
+        batch_loss = create_batch_loss_function(model, loss)
 
-        def flat_input_batch_loss_function(
+        def flat_input_batch_loss(
             p: torch.Tensor, t_x: torch.Tensor, t_y: torch.Tensor
         ):
-            return blf(align_with_model(p, model), t_x, t_y)
+            return batch_loss(align_structure(params, p), t_x, t_y)
 
         for x, y in iter(data_loader):
             n_samples += x.shape[0]
-            hessian_mat += x.shape[0] * torch.func.hessian(
-                flat_input_batch_loss_function
-            )(flat_params, to_model_device(x, model), to_model_device(y, model))
+            batch_hessian = torch.func.hessian(flat_input_batch_loss)(
+                flat_params, to_model_device(x, model), to_model_device(y, model)
+            )
+            if not track_gradients and batch_hessian.requires_grad:
+                batch_hessian = batch_hessian.detach()
+            hessian_mat += x.shape[0] * batch_hessian
 
         hessian_mat /= n_samples
     else:
@@ -443,6 +451,57 @@ def hessian(
         )
 
     return hessian_mat
+
+
+def gauss_newton(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+    restrict_to: Optional[Dict[str, torch.Tensor]] = None,
+):
+    r"""
+    Compute the Gauss-Newton matrix, i.e.
+
+    $$ \sum_{i=1}^N \nabla_{\theta}\ell(m(x_i; \theta), y)
+        \nabla_{\theta}\ell(m(x_i; \theta), y)^t,$$
+    for a  loss function $\ell$ and a model $m$ with model parameters $\theta$.
+
+    Args:
+        model: The PyTorch model.
+        loss: A callable that computes the loss.
+        data_loader: A PyTorch DataLoader providing batches of input data and
+            corresponding output data.
+        restrict_to: The parameters to restrict the differentiation to,
+            i.e. the corresponding sub-matrix of the Jacobian. If None, the full
+            Jacobian is used.
+
+    Returns:
+        The Gauss-Newton matrix.
+    """
+
+    per_sample_grads = create_per_sample_gradient_function(model, loss)
+
+    params = restrict_to
+    if params is None:
+        params = get_model_parameters(model)
+
+    def generate_batch_matrices():
+        for x, y in data_loader:
+            grads = flatten_dimensions(
+                per_sample_grads(params, x, y).values(), shape=(x.shape[0], -1)
+            )
+            batch_mat = grads.t() @ grads
+            yield batch_mat.detach()
+
+    n_points = 0
+    tensors = generate_batch_matrices()
+    result = next(tensors)
+
+    for t in tensors:
+        result += t
+        n_points += t.shape[0]
+
+    return result / n_points
 
 
 def create_per_sample_loss_function(
@@ -631,6 +690,10 @@ class LowRankProductRepresentation:
             if hasattr(self.eigen_vals, "device")
             else torch.device("cpu")
         )
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self.projections.dtype
 
     def to(self, device: torch.device):
         """
@@ -985,4 +1048,48 @@ def model_hessian_nystroem_approximation(
         dtype,
         shift_func=shift_func,
         mat_vec_device=device,
+    )
+
+
+def operator_nystroem_approximation(
+    operator: "TensorOperator",
+    rank: int,
+    shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
+):
+    r"""
+    Given an operator (representing a symmetric positive definite
+    matrix $A$ ), computes a random Nyström low rank approximation of
+    $A$ in factored form, i.e.
+
+    $$ A_{\text{nys}} = (A \Omega)(\Omega^T A \Omega)^{\dagger}(A \Omega)^T
+    = U \Sigma U^T $$
+
+    where $\Omega$ is a standard normal random matrix.
+
+    Args:
+        operator: the operator to approximate
+        rank: rank of the approximation
+        shift_func: optional function for computing the stabilizing shift in the
+            construction of the randomized nystroem approximation, defaults to
+
+            $$ \sqrt{\operatorname{\text{input_dim}}} \cdot
+                \varepsilon(\operatorname{\text{input_type}}) \cdot \|A\Omega\|_2,$$
+
+            where $\varepsilon(\operatorname{\text{input_type}})$ is the value of the
+            machine precision corresponding to the data type.
+
+    Returns:
+        object containing, $U$ and $\Sigma$
+    """
+
+    def mat_mat_prod(x: torch.Tensor):
+        return operator.apply(x.t()).t()
+
+    return randomized_nystroem_approximation(
+        mat_mat_prod,
+        operator.input_size,
+        rank,
+        operator.dtype,
+        shift_func=shift_func,
+        mat_vec_device=operator.device,
     )

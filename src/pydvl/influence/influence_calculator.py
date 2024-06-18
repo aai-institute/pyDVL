@@ -7,7 +7,7 @@ which is mapped over collection of chunks.
 
 import logging
 from functools import partial
-from typing import Generator, Iterable, Optional, Tuple, Type, Union
+from typing import Generator, Iterable, Optional, Sized, Tuple, Type, Union, cast
 
 import distributed
 from dask import array as da
@@ -16,12 +16,8 @@ from distributed import Client
 from numpy.typing import NDArray
 
 from .array import LazyChunkSequence, NestedLazyChunkSequence, NumpyConverter
-from .base_influence_function_model import (
-    InfluenceFunctionModel,
-    InfluenceMode,
-    TensorType,
-    UnsupportedInfluenceModeException,
-)
+from .base_influence_function_model import InfluenceFunctionModel
+from .types import InfluenceMode, TensorType, UnsupportedInfluenceModeException
 
 __all__ = [
     "DaskInfluenceCalculator",
@@ -619,8 +615,14 @@ class SequentialInfluenceCalculator:
         Returns:
             A lazy data structure representing the chunks of the resulting tensor
         """
+        try:
+            len_iterable = len(cast(Sized, data_iterable))
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of data iterable: {e}")
+            len_iterable = None
+
         tensors_gen_factory = partial(self._influence_factors_gen, data_iterable)
-        return LazyChunkSequence(tensors_gen_factory)
+        return LazyChunkSequence(tensors_gen_factory, len_generator=len_iterable)
 
     def _influences_gen(
         self,
@@ -677,7 +679,15 @@ class SequentialInfluenceCalculator:
             mode,
         )
 
-        return NestedLazyChunkSequence(nested_tensor_gen_factory)
+        try:
+            len_iterable = len(cast(Sized, test_data_iterable))
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of test data iterable: {e}")
+            len_iterable = None
+
+        return NestedLazyChunkSequence(
+            nested_tensor_gen_factory, len_outer_generator=len_iterable
+        )
 
     def _influences_from_factors_gen(
         self,
@@ -735,4 +745,13 @@ class SequentialInfluenceCalculator:
             train_data_iterable,
             mode,
         )
-        return NestedLazyChunkSequence(nested_tensor_gen)
+
+        try:
+            len_iterable = len(cast(Sized, z_test_factors))
+        except Exception as e:
+            logger.debug(f"Failed to retrieve len of factors iterable: {e}")
+            len_iterable = None
+
+        return NestedLazyChunkSequence(
+            nested_tensor_gen, len_outer_generator=len_iterable
+        )

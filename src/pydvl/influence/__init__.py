@@ -10,9 +10,9 @@ concepts and methods implemented here.
     probably change.
 
 """
-from .base_influence_function_model import InfluenceMode
 from .influence_calculator import (
     DaskInfluenceCalculator,
     DisableClientSingleThreadCheck,
     SequentialInfluenceCalculator,
 )
+from .types import InfluenceMode

@@ -41,22 +41,34 @@ def repeat_indices(
             pbar.refresh()
 
 
-def log_duration(func):
+def log_duration(_func=None, *, log_level=logging.DEBUG):
     """
-    Decorator to log execution time of a function
+    Decorator to log execution time of a function with a configurable logging level.
+    It can be used with or without specifying a log level.
     """
 
-    @wraps(func)
-    def wrapper_log_duration(*args, **kwargs):
-        func_name = func.__qualname__
-        logger.info(f"Function '{func_name}' is starting.")
-        start_time = time()
-        result = func(*args, **kwargs)
-        duration = time() - start_time
-        logger.info(f"Function '{func_name}' completed. Duration: {duration:.2f} sec")
-        return result
+    def decorator_log_duration(func):
+        @wraps(func)
+        def wrapper_log_duration(*args, **kwargs):
+            func_name = func.__qualname__
+            logger.log(log_level, f"Function '{func_name}' is starting.")
+            start_time = time()
+            result = func(*args, **kwargs)
+            duration = time() - start_time
+            logger.log(
+                log_level,
+                f"Function '{func_name}' completed. " f"Duration: {duration:.2f} sec",
+            )
+            return result
 
-    return wrapper_log_duration
+        return wrapper_log_duration
+
+    if _func is None:
+        # If log_duration was called without arguments, return decorator
+        return decorator_log_duration
+    else:
+        # If log_duration was called with a function, apply decorator directly
+        return decorator_log_duration(_func)
 
 
 T = TypeVar("T")

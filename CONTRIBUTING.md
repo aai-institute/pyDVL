@@ -131,6 +131,13 @@ There are a few important arguments:
 - `--slow-tests` enables running slow tests. See below for a description
   of slow tests.
 
+- `--with-cuda` sets the device fixture in [tests/influence/torch/conftest.py](
+  tests/influence/torch/conftest.py) to `cuda` if it is available.
+  Using this fixture within tests, you can run parts of your tests on a `cuda` 
+  device. Be aware, that you still have to take care of the usage of the device
+  manually in a specific test. Setting this flag does not result in
+  running all tests on a GPU.
+
 ### Markers
 
 We use a few different markers to differentiate between tests and runs

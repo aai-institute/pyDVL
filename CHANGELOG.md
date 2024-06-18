@@ -1,16 +1,31 @@
 # Changelog
 
-## 0.10.0
+## Unreleased
 
 ### Added
 
+- Refactoring group-testing shapley values with new sampler architecture
+  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
 - Refactoring of least-core data valuation methods with more supported sampling methods
   and consistent interface.
   [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
 - Refactoring of owen shapley valuation with new sampler architecture
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
-- Refactoring group-testing shapley values with new sampler architecture
-  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
+- New method `InverseHarmonicMeanInfluence`, implementation for the paper
+  `DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
+    Diffusion Models`
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Add new backend implementations for influence computation
+  to account for block-diagonal approximations
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Extend `DirectInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+- Extend `LissaInfluence` with block-diagonal and Gauss-Newton approximation
+  [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+- Extend `NystroemSketchInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
 
 ### Fixed
 
@@ -24,6 +39,66 @@
 - Use tighter bounds for the calculation of the minimal sample size that guarantees
   an epsilon-delta approximation in group testing (Jia et al. 2023)
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
+- **Breaking Changes**
+  - Rename parameter `hessian_regularization` of `DirectInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+  - Rename parameter `hessian_regularization` of `LissaInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+  - Remove parameter `h0` from init of `LissaInfluence`
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+  - Rename parameter `hessian_regularization` of `NystroemSketchInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
+
+## 0.9.2 - 🏗  Bug fixes, logging improvement
+
+### Added
+
+- Add progress bars to the computation of `LazyChunkSequence` and
+  `NestedLazyChunkSequence`
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+- Add a device fixture for `pytest`, which depending on the availability and
+  user input (`pytest --with-cuda`) resolves to cuda device
+  [PR #574](https://github.com/aai-institute/pyDVL/pull/574)
+
+### Fixed
+
+- Fixed logging issue in decorator `log_duration`
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+- Fixed missing move of tensors to model device in `EkfacInfluence`
+  implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
+- Missing move to device of `preconditioner` in `CgInfluence` implementation
+  [PR #572](https://github.com/aai-institute/pyDVL/pull/572)
+- Raise a more specific error message, when a `RunTimeError` occurs in
+  `torch.linalg.eigh`, so the user can check if it is related to a known
+  issue
+  [PR #578](https://github.com/aai-institute/pyDVL/pull/578)
+- Fix an edge case (empty train data) in the test
+  `test_classwise_scorer_accuracies_manual_derivation`, which resulted
+  in undefined behavior (`np.nan` to `int` conversion with different results
+  depending on OS)
+  [PR #579](https://github.com/aai-institute/pyDVL/pull/579)
+
+### Changed
+
+- Changed logging behavior of iterative methods `LissaInfluence` and
+  `CgInfluence` to warn on not achieving desired tolerance within `maxiter`,
+  add parameter `warn_on_max_iteration` to set the level for this information
+  to `logging.DEBUG`
+  [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
+
+## 0.9.1 - Bug fixes, logging improvement
+
+### Fixed
+
+- `FutureWarning` for `ParallelConfig` constantly raised without actually
+  instantiating the object
+  [PR #562](https://github.com/aai-institute/pyDVL/pull/562)
 
 ## 0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
 

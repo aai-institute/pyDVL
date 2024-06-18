@@ -238,7 +238,7 @@ from torch.utils.data import DataLoader
 from pydvl.influence.torch import DirectInfluence
 
 training_data_loader = DataLoader(...)
-infl_model = DirectInfluence(model, loss, hessian_regularization=0.01)
+infl_model = DirectInfluence(model, loss, regularization=0.01)
 infl_model = infl_model.fit(training_data_loader)
 ```
 
@@ -248,6 +248,88 @@ zero and therefore the matrix is invertible. In order for this regularization
 not to corrupt the outcome too much, the parameter $\lambda$ should be as small
 as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 \lambda \mathbb{I}$.
+
+### Block-diagonal approximation
+
+This implementation is capable of using a block-diagonal approximation.
+The full matrix is approximated by a block-diagonal version, which
+reduces both the time and memory consumption.
+The blocking structure can be specified via the `block_structure` parameter.
+The `block_structure` parameter can either be a
+[BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
+layer-wise or parameter-wise blocking) or a custom block structure defined
+by an ordered dictionary with the keys being the block identifiers (arbitrary
+strings) and the values being lists of parameter names contained in the block.
+```python
+from torch.utils.data import DataLoader
+from pydvl.influence.torch import DirectInfluence, BlockMode, SecondOrderMode
+
+training_data_loader = DataLoader(...)
+# layer-wise block-diagonal approximation
+infl_model = DirectInfluence(model, loss,
+                             regularization=0.1,
+                             block_structure=BlockMode.LAYER_WISE)
+
+block_structure = OrderedDict((
+    ("custom_block1", ["0.weight", "1.bias"]), 
+    ("custom_block2", ["1.weight", "0.bias"]),
+))
+# custom block-diagonal structure
+infl_model = DirectInfluence(model, loss,
+                             regularization=0.1,
+                             block_structure=block_structure)
+infl_model = infl_model.fit(training_data_loader)
+```
+If you would like to apply a block-specific regularization, you can provide a
+dictionary with the block names as keys and the regularization values as values.
+If no value is provided for a specific key, no regularization is applied for
+the corresponding block.
+
+```python
+regularization =  {
+"custom_block1": 0.1,
+"custom_block2": 0.2,
+}
+infl_model = DirectInfluence(model, loss,
+                             regularization=regularization,
+                             block_structure=block_structure)
+infl_model = infl_model.fit(training_data_loader)
+```
+Accordingly, if you choose a layer-wise or parameter-wise structure
+(by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
+`block_structure`) the keys must be the layer names or parameter names,
+respectively.
+You can retrieve the block-wise influence information from the methods
+with suffix `_by_block`. By default, `block_structure` is set to
+`BlockMode.FULL` and in this case these methods will return a dictionary
+with the empty string being the only key.
+
+### Gauss-Newton approximation
+
+In the computation of the influence values, the inversion of the Hessian can be
+replaced by the inversion of the Gauss-Newton matrix
+
+$$ G_{\hat{\theta}}=n^{-1} \sum_{i=1}^n \nabla_{\theta}L(z_i, \hat{\theta})
+    \nabla_{\theta}L(z_i, \hat{\theta})^T $$
+
+so the computed values are of the form
+
+$$\nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
+G_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta}). $$
+
+The parameter `second_orer_mode` is used to configure this approximation.
+```python
+from torch.utils.data import DataLoader
+from pydvl.influence.torch import DirectInfluence, BlockMode, SecondOrderMode
+
+training_data_loader = DataLoader(...)
+infl_model = DirectInfluence(model, loss,
+                             regularization={"layer_1": 0.1, "layer_2": 0.2},
+                             block_structure=BlockMode.LAYER_WISE,
+                             second_order_mode=SecondOrderMode.GAUSS_NEWTON)
+infl_model = infl_model.fit(training_data_loader)
+```
+
 
 ### Perturbation influences
 
