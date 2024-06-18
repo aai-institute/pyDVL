@@ -31,19 +31,17 @@ def dummy_values(values, names):
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
     dummy_values.sort(key="value")
-    assert all([it.value for it in dummy_values] == sorted(values))
-    assert all(dummy_values.indices == ranks_asc)
-    assert all(
-        [it.value for it in reversed(dummy_values)] == sorted(values, reverse=True)
-    )
+    assert [it.value for it in dummy_values] == sorted(values)
+    assert dummy_values.indices.tolist() == ranks_asc
+    assert [it.value for it in reversed(dummy_values)] == sorted(values, reverse=True)
 
     dummy_values.sort(reverse=True)
-    assert all([it.value for it in dummy_values] == sorted(values, reverse=True))
-    assert all(dummy_values.indices == list(reversed(ranks_asc)))
+    assert [it.value for it in dummy_values] == sorted(values, reverse=True)
+    assert dummy_values.indices.tolist() == list(reversed(ranks_asc))
 
     dummy_values.sort(key="index")
-    assert all(dummy_values.indices == list(range(len(values))))
-    assert all([it.value for it in dummy_values] == values)
+    assert dummy_values.indices.tolist() == list(range(len(values)))
+    assert [it.value for it in dummy_values] == values
 
 
 @pytest.mark.parametrize(
