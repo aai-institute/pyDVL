@@ -74,25 +74,29 @@ original paper [@agarwal_secondorder_2017].
 
 
 ```python
-from pydvl.influence.torch import LissaInfluence
+from pydvl.influence.torch import LissaInfluence, BlockMode, SecondOrderMode
 if_model = LissaInfluence(
    model,
    loss,
-   hessian_regularization=0.0 
+   regularization=0.0 
    maxiter=1000,
    dampen=0.0,
    scale=10.0,
-   h0=None,
    rtol=1e-4,
+   block_structure=BlockMode.FULL,
+   second_order_mode=SecondOrderMode.GAUSS_NEWTON
 )
 if_model.fit(train_loader)
 ```
 
-with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
+with the additional optional parameters `maxiter`, `dampen`, `scale`, and
 `rtol`,
 being the maximum number of iterations, the dampening factor, the scaling
-factor, the initial guess for the solution and the relative tolerance,
-respectively.
+factor and the relative tolerance,
+respectively. This implementation is capable of using a block-matrix 
+approximation, see 
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
 
 ### Arnoldi
 
@@ -202,12 +206,111 @@ if_model = NystroemSketchInfluence(
     model,
     loss,
     rank=10,
-    hessian_regularization=0.0,
+    regularization=0.0,
+    block_structure=BlockMode.FULL,
+    second_order_mode=SecondOrderMode.HESSIAN
 )
 if_model.fit(train_loader)
 ```
+This implementation is capable of using a block-matrix
+approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
+
+### Inverse Harmonic Mean
+
+This implementation replaces the inverse Hessian matrix in the influence computation
+with an approximation of the inverse Gauss-Newton vector product and was
+proposed in [@kwon_datainf_2023].
+
+The approximation method comprises
+the following steps:
+
+1.  Replace the Hessian $H(\theta)$ with the Gauss-Newton matrix 
+    $G(\theta)$:
+    
+    \begin{equation*}
+        G(\theta)=n^{-1} \sum_{i=1}^n \nabla_{\theta}\ell_i\nabla_{\theta}\ell_i^T
+    \end{equation*}
+    
+    which results in
+
+    \begin{equation*}
+        \mathcal{I}(z_{t}, z) \approx \nabla_{\theta} \ell(z_{t}, \theta)^T 
+                         (G(\theta) + \lambda I_d)^{-1} 
+                         \nabla_{\theta} \ell(z, \theta) 
+    \end{equation*}
+
+2.  Simplify the problem by breaking it down into a block diagonal structure, 
+    where each block $G_l(\theta)$ corresponds to the l-th block:   
+    
+    \begin{equation*}
+        G_{l}(\theta) = n^{-1} \sum_{i=1}^n \nabla_{\theta_l} \ell_i 
+                       \nabla_{\theta_l} \ell_i^{T} + \lambda_l I_{d_l},
+    \end{equation*}
+       
+    which leads to
+       
+    \begin{equation*}
+       \mathcal{I}(z_{t}, z) \approx \nabla_{\theta} \ell(z_{t}, \theta)^T 
+                                     \operatorname{diag}(G_1(\theta)^{-1}, 
+                                     \dots, G_L(\theta)^{-1}) 
+                                     \nabla_{\theta} \ell(z, \theta)
+    \end{equation*}
+
+3.  Substitute the arithmetic mean of the rank-$1$ updates in 
+       $G_l(\theta)$, with the inverse harmonic mean $R_l(\theta)$ of the rank-1 
+    updates:
+       
+    \begin{align*}
+        G_l(\theta)^{-1} &= \left(  n^{-1} \sum_{i=1}^n \nabla_{\theta_l} 
+                           \ell(z_i, \theta) \nabla_{\theta_l} 
+                           \ell(z_i, \theta)^{T} + 
+                           \lambda_l I_{d_l}\right)^{-1} \\\
+        R_{l}(\theta)&= n^{-1} \sum_{i=1}^n \left( \nabla_{\theta_l} 
+                       \ell(z_i, \theta) \nabla_{\theta_l} \ell(z_i, \theta)^{T} 
+                       + \lambda_l I_{d_l} \right)^{-1}
+    \end{align*}
+
+4.  Use the 
+   <a href="https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula">
+     Sherman–Morrison formula
+   </a> 
+    to get an explicit representation of the inverses in the definition of 
+    $R_l(\theta):$
+    
+    \begin{align*}
+        R_l(\theta) &= n^{-1} \sum_{i=1}^n \left( \nabla_{\theta_l} \ell_i
+        \nabla_{\theta_l} \ell_i^{T}
+        + \lambda_l I_{d_l}\right)^{-1} \\\
+        &= n^{-1} \sum_{i=1}^n \lambda_l^{-1} \left(I_{d_l}
+        - \frac{\nabla_{\theta_l} \ell_i \nabla_{\theta_l}
+        \ell_i^{T}}{\lambda_l
+        + \\|\nabla_{\theta_l} \ell_i\\|_2^2}\right)
+        ,
+    \end{align*}
+
+    which means application of $R_l(\theta)$ boils down to computing $n$
+    rank-$1$ updates.
+
+```python
+from pydvl.influence.torch import InverseHarmonicMeanInfluence, BlockMode
+
+if_model = InverseHarmonicMeanInfluence(
+    model,
+    loss,
+    regularization=1e-1,
+    block_structure=BlockMode.LAYER_WISE
+)
+if_model.fit(train_loader)
+```
+This implementation is capable of using a block-matrix approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation).
+
 
 These implementations represent the calculation logic on in memory tensors. 
 To scale up to large collection of data, we map these influence function models 
 over these collections. For a detailed discussion see the
 documentation page [Scaling Computation](scaling_computation.md).
+
+

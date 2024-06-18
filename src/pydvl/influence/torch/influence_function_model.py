@@ -8,20 +8,30 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Tuple
+from collections import OrderedDict
+from typing import Callable, Dict, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from pydvl.utils.progress import log_duration
-
+from ...utils.progress import log_duration
+from .. import InfluenceMode
 from ..base_influence_function_model import (
     InfluenceFunctionModel,
-    InfluenceMode,
     NotImplementedLayerRepresentationException,
-    UnsupportedInfluenceModeException,
+)
+from ..types import UnsupportedInfluenceModeException
+from .base import (
+    TorchComposableInfluence,
+    TorchGradientProvider,
+    TorchOperatorGradientComposition,
+)
+from .batch_operation import (
+    BatchOperationType,
+    GaussNewtonBatchOperation,
+    HessianBatchOperation,
 )
 from .functional import (
     LowRankProductRepresentation,
@@ -30,16 +40,40 @@ from .functional import (
     create_matrix_jacobian_product_function,
     create_per_sample_gradient_function,
     create_per_sample_mixed_derivative_function,
+    gauss_newton,
     hessian,
     model_hessian_low_rank,
     model_hessian_nystroem_approximation,
+    operator_nystroem_approximation,
+)
+from .operator import (
+    DirectSolveOperator,
+    GaussNewtonOperator,
+    HessianOperator,
+    InverseHarmonicMeanOperator,
+    LissaOperator,
+    LowRankOperator,
 )
 from .pre_conditioner import PreConditioner
 from .util import (
+    BlockMode,
     EkfacRepresentation,
+    LossType,
+    SecondOrderMode,
     empirical_cross_entropy_loss_fn,
     flatten_dimensions,
+    safe_torch_linalg_eigh,
 )
+
+__all__ = [
+    "DirectInfluence",
+    "CgInfluence",
+    "LissaInfluence",
+    "ArnoldiInfluence",
+    "EkfacInfluence",
+    "NystroemSketchInfluence",
+    "InverseHarmonicMeanInfluence",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -303,13 +337,13 @@ class TorchInfluenceFunctionModel(
         """
         if mode == InfluenceMode.Up:
             return (
-                z_test_factors
+                z_test_factors.to(self.model_device)
                 @ self._loss_grad(x.to(self.model_device), y.to(self.model_device)).T
             )
         elif mode == InfluenceMode.Perturbation:
             return torch.einsum(
                 "ia,j...a->ij...",
-                z_test_factors,
+                z_test_factors.to(self.model_device),
                 self._flat_loss_mixed_grad(
                     x.to(self.model_device), y.to(self.model_device)
                 ),
@@ -332,108 +366,79 @@ class TorchInfluenceFunctionModel(
         return self
 
 
-class DirectInfluence(TorchInfluenceFunctionModel):
+class DirectInfluence(TorchComposableInfluence[DirectSolveOperator]):
     r"""
     Given a model and training data, it finds x such that \(Hx = b\),
-    with \(H\) being the model hessian.
+    with \(H\) being the model hessian or Gauss-Newton matrix.
+
 
     Args:
-        model: A PyTorch model. The Hessian will be calculated with respect to
-            this model's parameters.
-        loss: A callable that takes the model's output and target as input and returns
-              the scalar loss.
-        hessian_regularization: Regularization of the hessian.
+        model: The model.
+        loss: The loss function.
+        regularization: The regularization parameter. In case a dictionary is provided,
+            the keys must be a subset of the block identifiers.
+        block_structure: The blocking structure, either a pre-defined enum or a
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
+        second_order_mode: The second order mode, either `SecondOrderMode.HESSIAN` or
+            `SecondOrderMode.GAUSS_NEWTON`.
     """
 
     def __init__(
         self,
         model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float = 0.0,
+        loss: LossType,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
-        self.hessian_regularization = hessian_regularization
+        super().__init__(
+            model,
+            block_structure=block_structure,
+            regularization=regularization,
+        )
+        self.second_order_mode = second_order_mode
+        self.loss = loss
 
-    hessian: torch.Tensor
-
-    @property
-    def is_fitted(self):
-        try:
-            return self.hessian is not None
-        except AttributeError:
-            return False
-
-    def fit(self, data: DataLoader) -> DirectInfluence:
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
         """
-        Compute the hessian matrix based on a provided dataloader.
-
+        Update the regularization parameter.
         Args:
-            data: The data to compute the Hessian with.
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
 
         Returns:
-            The fitted instance.
+            The modified instance
+
         """
-        self.hessian = hessian(self.model, self.loss, data)
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self
 
-    @log_duration
-    def influences(
+    def _create_block(
         self,
-        x_test: torch.Tensor,
-        y_test: torch.Tensor,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
-        mode: InfluenceMode = InfluenceMode.Up,
-    ) -> torch.Tensor:
-        r"""
-        Compute approximation of
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
+        if self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            mat = gauss_newton(self.model, self.loss, data, restrict_to=block_params)
+        else:
+            mat = hessian(self.model, self.loss, data, restrict_to=block_params)
 
-        for the case of up-weighting influence, resp.
+        op = DirectSolveOperator(
+            mat, regularization=regularization, in_place_regularization=True
+        )
+        return TorchOperatorGradientComposition(op, gp)
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
-
-        for the perturbation type influence case. The action of $H^{-1}$ is achieved
-        via a direct solver using [torch.linalg.solve][torch.linalg.solve].
-
-        Args:
-            x_test: model input to use in the gradient computations of
-                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-            y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations
-                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                if None, use $x=x_{\text{test}}$
-            y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_function_model.InfluenceMode]
-
-        Returns:
-            A tensor representing the element-wise scalar products for the
-                provided batch.
-
-        """
-        return super().influences(x_test, y_test, x, y, mode=mode)
-
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        return torch.linalg.solve(
-            self.hessian.to(self.model_device)
-            + self.hessian_regularization
-            * torch.eye(self.n_parameters, device=self.model_device),
-            rhs.T.to(self.model_device),
-        ).T
-
-    def to(self, device: torch.device):
-        if self.is_fitted:
-            self.hessian = self.hessian.to(device)
-        return super().to(device)
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class CgInfluence(TorchInfluenceFunctionModel):
@@ -454,7 +459,8 @@ class CgInfluence(TorchInfluenceFunctionModel):
         rtol: Maximum relative tolerance of result.
         atol: Absolute tolerance of result.
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
-        progress: If True, display progress bars.
+        progress: If True, display progress bars for computing in the non-block mode
+            (use_block_cg=False).
         precompute_grad: If True, the full data gradient is precomputed and kept
             in memory, which can speed up the hessian vector product computation.
             Set this to False, if you can't afford to keep the full computation graph
@@ -463,6 +469,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
             gradient method
         use_block_cg: If True, use block variant of conjugate gradient method, which
             solves several right hand sides simultaneously
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
 
     """
 
@@ -479,8 +488,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
         precompute_grad: bool = False,
         pre_conditioner: Optional[PreConditioner] = None,
         use_block_cg: bool = False,
+        warn_on_max_iteration: bool = True,
     ):
         super().__init__(model, loss)
+        self.warn_on_max_iteration = warn_on_max_iteration
         self.use_block_cg = use_block_cg
         self.pre_conditioner = pre_conditioner
         self.precompute_grad = precompute_grad
@@ -500,6 +511,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> CgInfluence:
         self.train_dataloader = data
         if self.pre_conditioner is not None:
@@ -650,6 +662,7 @@ class CgInfluence(TorchInfluenceFunctionModel):
 
         for k in range(maxiter):
             if torch.norm(r0) < tol:
+                logger.debug(f"Terminated cg after {k} iterations with residuum={r0}")
                 break
             Ap = hvp(p)
             alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
@@ -666,6 +679,16 @@ class CgInfluence(TorchInfluenceFunctionModel):
             r0 = r
             p = z + beta * p
             z0 = z
+        else:
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {maxiter=} without "
+                f"achieving the desired tolerance {tol}. \n"
+                f"Achieved residuum is {torch.norm(r0)}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or the "
+                f"parameter 'hessian_regularization'.",
+            )
 
         return x
 
@@ -704,7 +727,9 @@ class CgInfluence(TorchInfluenceFunctionModel):
         R = (rhs - mat_mat(X)).T
         Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
         P, _, _ = torch.linalg.svd(Z, full_matrices=False)
-        active_indices = torch.as_tensor(list(range(X.shape[-1])), dtype=torch.long)
+        active_indices = torch.as_tensor(
+            list(range(X.shape[-1])), dtype=torch.long, device=self.model_device
+        )
 
         maxiter = self.maxiter if self.maxiter is not None else len(rhs) * 10
         y_norm = torch.linalg.norm(rhs, dim=1)
@@ -732,6 +757,10 @@ class CgInfluence(TorchInfluenceFunctionModel):
                 non_finished_indices = non_finished_indices.unsqueeze(-1)
 
             if num_remaining_indices == 0:
+                logger.debug(
+                    f"Terminated block cg after {k} iterations with max "
+                    f"residuum={B.max()}"
+                )
                 break
 
             # Reduce problem size by removing finished columns from the iteration
@@ -753,11 +782,27 @@ class CgInfluence(TorchInfluenceFunctionModel):
             # Orthogonalization search directions to stabilize the action of
             # (P^tAP)^{-1}
             P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
+        else:
+            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
+            logger.log(
+                log_level,
+                f"Reached max number of iterations {maxiter=} of block cg "
+                f"without achieving the desired tolerance {tol.min()}. \n"
+                f"Achieved max residuum is "
+                f"{torch.linalg.norm(R, dim=0).max()}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or "
+                f"the parameter 'hessian_regularization'.",
+            )
 
         return X.T
 
+    def to(self, device: torch.device):
+        if self.pre_conditioner is not None:
+            self.pre_conditioner = self.pre_conditioner.to(device)
+        return super().to(device)
 
-class LissaInfluence(TorchInfluenceFunctionModel):
+
+class LissaInfluence(TorchComposableInfluence[LissaOperator[BatchOperationType]]):
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. \(Hx = b\),
@@ -771,109 +816,103 @@ class LissaInfluence(TorchInfluenceFunctionModel):
     see [Linear time Stochastic Second-Order Approximation (LiSSA)]
     [linear-time-stochastic-second-order-approximation-lissa]
 
+
     Args:
         model: A PyTorch model. The Hessian will be calculated with respect to
             this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Optional regularization parameter added
+        regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
         maxiter: Maximum number of iterations.
         dampen: Dampening factor, defaults to 0 for no dampening.
         scale: Scaling factor, defaults to 10.
-        h0: Initial guess for hvp.
         rtol: tolerance to use for early stopping
         progress: If True, display progress bars.
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
+        block_structure: The blocking structure, either a pre-defined enum or a
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
+        second_order_mode: The second order mode, either `SecondOrderMode.HESSIAN` or
+            `SecondOrderMode.GAUSS_NEWTON`.
     """
 
     def __init__(
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float = 0.0,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
         maxiter: int = 1000,
         dampen: float = 0.0,
         scale: float = 10.0,
-        h0: Optional[torch.Tensor] = None,
         rtol: float = 1e-4,
         progress: bool = False,
+        warn_on_max_iteration: bool = True,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
+        super().__init__(model, block_structure, regularization)
         self.maxiter = maxiter
-        self.hessian_regularization = hessian_regularization
         self.progress = progress
         self.rtol = rtol
-        self.h0 = h0
         self.scale = scale
         self.dampen = dampen
+        self.loss = loss
+        self.second_order_mode = second_order_mode
+        self.warn_on_max_iteration = warn_on_max_iteration
 
-    train_dataloader: DataLoader
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        """
+        Update the regularization parameter.
+        Args:
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
 
-    @property
-    def is_fitted(self):
-        try:
-            return self.train_dataloader is not None
-        except AttributeError:
-            return False
+        Returns:
+            The modified instance
 
-    def fit(self, data: DataLoader) -> LissaInfluence:
-        self.train_dataloader = data
+        """
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self
 
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        h_estimate = self.h0 if self.h0 is not None else torch.clone(rhs)
-
-        shuffled_training_data = DataLoader(
-            self.train_dataloader.dataset,
-            self.train_dataloader.batch_size,
-            shuffle=True,
-        )
-
-        def lissa_step(
-            h: torch.Tensor, reg_hvp: Callable[[torch.Tensor], torch.Tensor]
-        ) -> torch.Tensor:
-            """Given an estimate of the hessian inverse and the regularised hessian
-            vector product, it computes the next estimate.
-
-            Args:
-                h: An estimate of the hessian inverse.
-                reg_hvp: Regularised hessian vector product.
-
-            Returns:
-                The next estimate of the hessian inverse.
-            """
-            return rhs + (1 - self.dampen) * h - reg_hvp(h) / self.scale
-
-        model_params = {
-            k: p.detach() for k, p in self.model.named_parameters() if p.requires_grad
-        }
-        b_hvp = torch.vmap(
-            create_batch_hvp_function(self.model, self.loss),
-            in_dims=(None, None, None, 0),
-        )
-        for _ in tqdm(range(self.maxiter), disable=not self.progress, desc="Lissa"):
-            x, y = next(iter(shuffled_training_data))
-            x = x.to(self.model_device)
-            y = y.to(self.model_device)
-            reg_hvp = (
-                lambda v: b_hvp(model_params, x, y, v) + self.hessian_regularization * v
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        batch_op: Union[GaussNewtonBatchOperation, HessianBatchOperation]
+        if self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            batch_op = GaussNewtonBatchOperation(
+                self.model, self.loss, restrict_to=block_params
             )
-            residual = lissa_step(h_estimate, reg_hvp) - h_estimate
-            h_estimate += residual
-            if torch.isnan(h_estimate).any():
-                raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
-            max_residual = torch.max(torch.abs(residual / h_estimate))
-            if max_residual < self.rtol:
-                break
-
-        mean_residual = torch.mean(torch.abs(residual / h_estimate))
-
-        logger.info(
-            f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-            f" Mean residual: {mean_residual*100:.5f} %"
+        else:
+            batch_op = HessianBatchOperation(
+                self.model, self.loss, restrict_to=block_params
+            )
+        lissa_op = LissaOperator(
+            batch_op,
+            data,
+            regularization,
+            maxiter=self.maxiter,
+            dampen=self.dampen,
+            scale=self.scale,
+            rtol=self.rtol,
+            progress=self.progress,
+            warn_on_max_iteration=self.warn_on_max_iteration,
         )
-        return h_estimate / self.scale
+        return TorchOperatorGradientComposition(lissa_op, gp)
+
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class ArnoldiInfluence(TorchInfluenceFunctionModel):
@@ -918,6 +957,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             Set this to False, if you can't afford to keep the full computation graph
             in memory.
     """
+
     low_rank_representation: LowRankProductRepresentation
 
     def __init__(
@@ -948,6 +988,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> ArnoldiInfluence:
         r"""
         Fitting corresponds to the computation of the low rank decomposition
@@ -1191,7 +1232,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             data, disable=not self.progress, desc="K-FAC blocks - batch progress"
         ):
             data_len += x.shape[0]
-            pred_y = self.model(x)
+            pred_y = self.model(x.to(self.model_device))
             loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
@@ -1204,6 +1245,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
 
         return forward_x, grad_y
 
+    @log_duration(log_level=logging.INFO)
     def fit(self, data: DataLoader) -> EkfacInfluence:
         """
         Compute the KFAC blocks for each layer of the model, using the provided data.
@@ -1215,8 +1257,8 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         layers_evect_g = {}
         layers_diags = {}
         for key in self.active_layers.keys():
-            evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
-            evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
+            evals_a, evecs_a = safe_torch_linalg_eigh(forward_x[key])
+            evals_g, evecs_g = safe_torch_linalg_eigh(grad_y[key])
             layers_evecs_a[key] = evecs_a
             layers_evect_g[key] = evecs_g
             layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
@@ -1314,7 +1356,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             data, disable=not self.progress, desc="Update Diagonal - batch progress"
         ):
             data_len += x.shape[0]
-            pred_y = self.model(x)
+            pred_y = self.model(x.to(self.model_device))
             loss = empirical_cross_entropy_loss_fn(pred_y)
             loss.backward()
 
@@ -1521,7 +1563,10 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             influences = {}
             for layer_id, layer_z_test in z_test_factors.items():
                 end_idx = start_idx + layer_z_test.shape[1]
-                influences[layer_id] = layer_z_test @ total_grad[:, start_idx:end_idx].T
+                influences[layer_id] = (
+                    layer_z_test.to(self.model_device)
+                    @ total_grad[:, start_idx:end_idx].T
+                )
                 start_idx = end_idx
             return influences
         elif mode == InfluenceMode.Perturbation:
@@ -1534,7 +1579,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
                 end_idx = start_idx + layer_z_test.shape[1]
                 influences[layer_id] = torch.einsum(
                     "ia,j...a->ij...",
-                    layer_z_test,
+                    layer_z_test.to(self.model_device),
                     total_mixed_grad[:, start_idx:end_idx],
                 )
                 start_idx = end_idx
@@ -1621,7 +1666,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
             being dictionaries containing the influences for each layer of the model,
             with the layer name as key.
         """
-        grad = self._loss_grad(x, y)
+        grad = self._loss_grad(x.to(self.model_device), y.to(self.model_device))
         influences_by_reg_value = {}
         for reg_value in regularization_values:
             reg_factors = self._solve_hvp_by_layer(
@@ -1642,7 +1687,7 @@ class EkfacInfluence(TorchInfluenceFunctionModel):
         return super().to(device)
 
 
-class NystroemSketchInfluence(TorchInfluenceFunctionModel):
+class NystroemSketchInfluence(TorchComposableInfluence[LowRankOperator]):
     r"""
     Given a model and training data, it uses a low-rank approximation of the Hessian
     (derived via random projection Nyström approximation) in combination with
@@ -1666,54 +1711,194 @@ class NystroemSketchInfluence(TorchInfluenceFunctionModel):
             this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Optional regularization parameter added
+        regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
         rank: rank of the low-rank approximation
 
     """
 
-    low_rank_representation: LowRankProductRepresentation
-
     def __init__(
         self,
         model: torch.nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float,
+        regularization: Union[float, Dict[str, float]],
         rank: int,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
-        self.hessian_regularization = hessian_regularization
+        super().__init__(
+            model,
+            block_structure,
+            regularization=cast(
+                Union[float, Dict[str, Optional[float]]], regularization
+            ),
+        )
+        self.second_order_mode = second_order_mode
         self.rank = rank
+        self.loss = loss
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        regularized_eigenvalues = (
-            self.low_rank_representation.eigen_vals + self.hessian_regularization
-        )
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
+        return self
 
-        proj_rhs = self.low_rank_representation.projections.t() @ rhs.t()
-        inverse_regularized_eigenvalues = 1.0 / regularized_eigenvalues
-        result = self.low_rank_representation.projections @ (
-            proj_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
-        )
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
 
-        if self.hessian_regularization > 0.0:
-            result += (
-                1.0
-                / self.hessian_regularization
-                * (rhs.t() - self.low_rank_representation.projections @ proj_rhs)
+        assert regularization is not None
+        regularization = cast(float, regularization)
+
+        op: Union[HessianOperator, GaussNewtonOperator]
+
+        if self.second_order_mode is SecondOrderMode.HESSIAN:
+            op = HessianOperator(self.model, self.loss, data, restrict_to=block_params)
+        elif self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            op = GaussNewtonOperator(
+                self.model, self.loss, data, restrict_to=block_params
             )
+        else:
+            raise ValueError(f"Unsupported second order mode: {self.second_order_mode}")
 
-        return result.t()
+        low_rank_repr = operator_nystroem_approximation(op, self.rank)
+        low_rank_op = LowRankOperator(low_rank_repr, regularization)
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        return TorchOperatorGradientComposition(low_rank_op, gp)
 
     @property
-    def is_fitted(self):
-        try:
-            return self.low_rank_representation is not None
-        except AttributeError:
-            return False
+    def is_thread_safe(self) -> bool:
+        return False
 
-    def fit(self, data: DataLoader):
-        self.low_rank_representation = model_hessian_nystroem_approximation(
-            self.model, self.loss, data, self.rank
+
+class InverseHarmonicMeanInfluence(
+    TorchComposableInfluence[InverseHarmonicMeanOperator]
+):
+    r"""
+    This implementation replaces the inverse Hessian matrix in the influence computation
+    with an approximation of the inverse Gauss-Newton vector product.
+
+    Viewing the damped Gauss-newton matrix
+
+    \begin{align*}
+        G_{\lambda}(\theta) &=
+        \frac{1}{N}\sum_{i}^N\nabla_{\theta}\ell (x_i,y_i; \theta)
+            \nabla_{\theta}\ell (x_i, y_i; \theta)^t + \lambda \operatorname{I}, \\\
+        \ell(x,y; \theta) &= \text{loss}(\text{model}(x; \theta), y)
+    \end{align*}
+
+    as an arithmetic mean of the rank-$1$ updates, this implementation replaces it with
+    the harmonic mean of the rank-$1$ updates, i.e.
+
+    $$ \tilde{G}_{\lambda}(\theta) =
+        \left(N \cdot \sum_{i=1}^N  \left( \nabla_{\theta}\ell (x_i,y_i; \theta)
+            \nabla_{\theta}\ell (x_i,y_i; \theta)^t +
+            \lambda \operatorname{I}\right)^{-1}
+            \right)^{-1}$$
+
+    and uses the matrix
+
+    $$ \tilde{G}_{\lambda}^{-1}(\theta)$$
+
+    instead of the inverse Hessian.
+
+    In other words, it switches the order of summation and inversion, which resolves
+    to the `inverse harmonic mean` of the rank-$1$ updates. The results are averaged
+    over the batches provided by the data loader.
+
+    The inverses of the rank-$1$ updates are not calculated explicitly,
+    but instead a vectorized version of the
+    [Sherman–Morrison formula](
+    https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula)
+    is applied.
+
+    For more information,
+    see [Inverse Harmonic Mean][inverse-harmonic-mean].
+
+    Args:
+        model: The model.
+        loss: The loss function.
+        regularization: The regularization parameter. In case a dictionary is provided,
+            the keys must match the blocking structure and the specification must be
+            complete, so every block needs a positive regularization value, which
+            differs from the description in
+            [block-diagonal approximation][block-diagonal-approximation].
+        block_structure: The blocking structure, either a pre-defined enum or a
+            custom block structure, see the information regarding
+            [block-diagonal approximation][block-diagonal-approximation].
+    """
+
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        loss: LossType,
+        regularization: Union[float, Dict[str, float]],
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+    ):
+        super().__init__(
+            model,
+            block_structure,
+            regularization=cast(
+                Union[float, Dict[str, Optional[float]]], regularization
+            ),
         )
+        self.loss = loss
+
+    @property
+    def n_parameters(self):
+        return sum(block.op.input_size for _, block in self.block_mapper.items())
+
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
+
+    @staticmethod
+    def _validate_regularization(
+        block_name: str, value: Optional[float]
+    ) -> Optional[float]:
+        if value is None or value <= 0.0:
+            raise ValueError(
+                f"The regularization for block '{block_name}' must be a positive float,"
+                f"but found {value=}"
+            )
+        return value
+
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        assert regularization is not None
+        op = InverseHarmonicMeanOperator(
+            self.model,
+            self.loss,
+            data,
+            regularization,
+            restrict_to=block_params,
+        )
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        return TorchOperatorGradientComposition(op, gp)
+
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        """
+        Update the regularization parameter.
+        Args:
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
+
+        Returns:
+            The modified instance
+
+        """
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self

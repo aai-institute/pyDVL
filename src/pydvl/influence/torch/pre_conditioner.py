@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
@@ -70,6 +72,11 @@ class PreConditioner(ABC):
     def _solve(self, rhs: torch.Tensor):
         pass
 
+    @abstractmethod
+    def to(self, device: torch.device) -> PreConditioner:
+        """Implement this to move the (potentially fitted) preconditioner to a
+        specific device"""
+
 
 class JacobiPreConditioner(PreConditioner):
     r"""
@@ -140,6 +147,11 @@ class JacobiPreConditioner(PreConditioner):
             return rhs * inv_diag
 
         return rhs * inv_diag.unsqueeze(-1)
+
+    def to(self, device: torch.device) -> JacobiPreConditioner:
+        if self._diag is not None:
+            self._diag = self._diag.to(device)
+        return self
 
 
 class NystroemPreConditioner(PreConditioner):
@@ -233,3 +245,8 @@ class NystroemPreConditioner(PreConditioner):
             result = result.squeeze()
 
         return result
+
+    def to(self, device: torch.device) -> NystroemPreConditioner:
+        if self._low_rank_approx is not None:
+            self._low_rank_approx = self._low_rank_approx.to(device)
+        return self

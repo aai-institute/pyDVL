@@ -17,11 +17,16 @@ from pydvl.influence.torch.functional import (
     lanzcos_low_rank_hessian_approx,
 )
 from pydvl.influence.torch.util import (
+    BlockMode,
+    ModelParameterDictBuilder,
+    TorchLinalgEighException,
     TorchTensorContainerType,
     align_structure,
     flatten_dimensions,
+    safe_torch_linalg_eigh,
     torch_dataset_to_dask_array,
 )
+from tests.conftest import is_osx_arm64
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
@@ -297,3 +302,59 @@ def are_active_layers_linear(model):
                 if any(param_requires_grad):
                     return False
     return True
+
+
+@pytest.mark.torch
+def test_safe_torch_linalg_eigh():
+    t = torch.randn([10, 10])
+    t = t @ t.t()
+    safe_eigs, safe_eigvec = safe_torch_linalg_eigh(t)
+    eigs, eigvec = torch.linalg.eigh(t)
+    assert torch.allclose(safe_eigs, eigs)
+    assert torch.allclose(safe_eigvec, eigvec)
+
+
+@pytest.mark.torch
+@pytest.mark.slow
+@pytest.mark.skipif(not is_osx_arm64(), reason="Requires macOS ARM64.")
+def test_safe_torch_linalg_eigh_exception():
+    with pytest.raises(TorchLinalgEighException):
+        safe_torch_linalg_eigh(torch.randn([53000, 53000]))
+
+
+class TestModelParameterDictBuilder:
+    class SimpleModel(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.fc1 = torch.nn.Linear(5, 10)
+            self.fc2 = torch.nn.Linear(10, 5)
+            self.fc1.weight.requires_grad = False
+
+    @pytest.fixture
+    def model(self):
+        return TestModelParameterDictBuilder.SimpleModel()
+
+    @pytest.mark.parametrize("block_mode", [mode for mode in BlockMode])
+    def test_build(self, block_mode, model):
+        builder = ModelParameterDictBuilder(
+            model=model,
+            detach=True,
+        )
+        param_dict = builder.build_from_block_mode(block_mode)
+
+        if block_mode is BlockMode.FULL:
+            assert "" in param_dict
+            assert "fc1.weight" not in param_dict[""]
+        elif block_mode is BlockMode.PARAMETER_WISE:
+            assert "fc2.bias" in param_dict
+            assert len(param_dict["fc2.bias"]) > 0
+            assert "fc1.weight" not in param_dict
+        elif block_mode is BlockMode.LAYER_WISE:
+            assert "fc2" in param_dict
+            assert "fc2.bias" in param_dict["fc2"]
+            assert "fc1.weight" not in param_dict["fc1"]
+            assert "fc1.bias" in param_dict["fc1"]
+
+        assert all(
+            (not p.requires_grad for q in param_dict.values() for p in q.values())
+        )

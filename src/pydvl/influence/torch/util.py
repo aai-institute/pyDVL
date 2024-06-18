@@ -1,18 +1,25 @@
+from __future__ import annotations
+
 import logging
 import math
+import warnings
+from collections import OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import (
+    Callable,
     Collection,
     Dict,
-    Generator,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import dask
@@ -21,8 +28,16 @@ import torch
 from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
-from ..array import NestedSequenceAggregator, NumpyConverter, SequenceAggregator
+from ...utils.exceptions import catch_and_raise_exception
+from ..array import (
+    LazyChunkSequence,
+    NestedLazyChunkSequence,
+    NestedSequenceAggregator,
+    NumpyConverter,
+    SequenceAggregator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +48,16 @@ __all__ = [
     "align_with_model",
     "flatten_dimensions",
     "TorchNumpyConverter",
-    "TorchCatAggregator",
-    "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
+    "EkfacRepresentation",
+    "empirical_cross_entropy_loss_fn",
+    "LossType",
+    "ModelParameterDictBuilder",
+    "BlockMode",
+    "ModelInfoMixin",
+    "safe_torch_linalg_eigh",
+    "SecondOrderMode",
+    "get_model_parameters",
 ]
 
 
@@ -194,7 +216,7 @@ def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
         ValueError: If `x` cannot be aligned to match the model's parameters .
 
     """
-    model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
+    model_params = get_model_parameters(model, detach=False)
     return align_structure(model_params, x)
 
 
@@ -296,11 +318,11 @@ def torch_dataset_to_dask_array(
                 return total_size
             else:
                 logger.warning(
-                    err_msg + f" Infer the number of samples from the dataset, "
-                    f"via iterating the dataset once. "
-                    f"This might induce severe overhead, so consider"
-                    f"providing total_size, if you know the number of samples "
-                    f"beforehand."
+                    err_msg + " Infer the number of samples from the dataset, "
+                    "via iterating the dataset once. "
+                    "This might induce severe overhead, so consider"
+                    "providing total_size, if you know the number of samples "
+                    "beforehand."
                 )
                 idx = 0
                 while True:
@@ -398,20 +420,31 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     function. Concatenation is done along the first dimension of the chunks.
     """
 
-    def __call__(self, tensor_generator: Generator[torch.Tensor, None, None]):
+    def __call__(
+        self,
+        tensor_sequence: LazyChunkSequence[torch.Tensor],
+    ):
         """
         Aggregates tensors from a single-level generator into a single tensor by
         concatenating them. This method is a straightforward way to combine a sequence
         of tensors into one larger tensor.
 
         Args:
-            tensor_generator: A generator that yields `torch.Tensor` objects.
+            tensor_sequence: Object wrapping a generator that yields `torch.Tensor`
+                objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the generator.
                 The concatenation is performed along the default dimension (0).
         """
-        return torch.cat(list(tensor_generator))
+        t_gen = cast(Iterator[torch.Tensor], tensor_sequence.generator_factory())
+        len_generator = tensor_sequence.len_generator
+        if len_generator is not None:
+            t_gen = cast(
+                Iterator[torch.Tensor], tqdm(t_gen, total=len_generator, desc="Blocks")
+            )
+
+        return torch.cat(list(t_gen))
 
 
 class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
@@ -421,10 +454,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
     """
 
     def __call__(
-        self,
-        nested_generators_of_tensors: Generator[
-            Generator[torch.Tensor, None, None], None, None
-        ],
+        self, nested_sequence_of_tensors: NestedLazyChunkSequence[torch.Tensor]
     ):
         """
         Aggregates tensors from a nested generator structure into a single tensor by
@@ -433,19 +463,31 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
         form the final tensor.
 
         Args:
-            nested_generators_of_tensors: A generator of generators, where each inner
-                generator yields `torch.Tensor` objects.
+            nested_sequence_of_tensors: Object wrapping a generator of generators,
+                where each inner generator yields `torch.Tensor` objects.
 
         Returns:
             A single tensor formed by concatenating all tensors from the nested
             generators.
 
         """
+
+        outer_gen = cast(
+            Iterator[Iterator[torch.Tensor]],
+            nested_sequence_of_tensors.generator_factory(),
+        )
+        len_outer_generator = nested_sequence_of_tensors.len_outer_generator
+        if len_outer_generator is not None:
+            outer_gen = cast(
+                Iterator[Iterator[torch.Tensor]],
+                tqdm(outer_gen, total=len_outer_generator, desc="Row blocks"),
+            )
+
         return torch.cat(
             list(
                 map(
                     lambda tensor_gen: torch.cat(list(tensor_gen), dim=1),
-                    nested_generators_of_tensors,
+                    outer_gen,
                 )
             )
         )
@@ -521,3 +563,239 @@ def empirical_cross_entropy_loss_fn(
         torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
     )
     return torch.sum(log_probs_ * probs_.detach() ** 0.5)
+
+
+@catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
+def safe_torch_linalg_eigh(*args, **kwargs):
+    """
+    A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
+    by raising a custom `TorchLinalgEighException` with more context,
+    especially related to the issues reported in
+    [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141).
+
+    Args:
+        *args: Positional arguments passed to `torch.linalg.eigh`.
+        **kwargs: Keyword arguments passed to `torch.linalg.eigh`.
+
+    Returns:
+        The result of calling `torch.linalg.eigh` with the provided arguments.
+
+    Raises:
+        TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
+            `torch.linalg.eigh`.
+    """
+    return torch.linalg.eigh(*args, **kwargs)
+
+
+class TorchLinalgEighException(Exception):
+    """
+    Exception to wrap a RunTimeError raised by torch.linalg.eigh, when used
+    with large matrices,
+    see [https://github.com/pytorch/pytorch/issues/92141](
+    https://github.com/pytorch/pytorch/issues/92141)
+    """
+
+    def __init__(self, original_exception: RuntimeError):
+        func = torch.linalg.eigh
+        err_msg = (
+            f"A RunTimeError occurred in '{func.__module__}.{func.__qualname__}'. "
+            "This might be related to known issues with "
+            "[torch.linalg.eigh][torch.linalg.eigh] on certain matrix sizes.\n "
+            "For more details, refer to "
+            "https://github.com/pytorch/pytorch/issues/92141. \n"
+            "In this case, consider to use a different implementation, which does not "
+            "depend on the usage of [torch.linalg.eigh][torch.linalg.eigh].\n"
+            f" Inspect the original exception message: \n{str(original_exception)}"
+        )
+        super().__init__(err_msg)
+
+
+LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+
+
+class BlockMode(Enum):
+    """
+    Enumeration for different modes of grouping model parameters.
+
+    Attributes:
+        LAYER_WISE: Groups parameters by layers of the model.
+        PARAMETER_WISE: Groups parameters individually.
+        FULL: Groups all parameters together.
+    """
+
+    LAYER_WISE: str = "layer_wise"
+    PARAMETER_WISE: str = "parameter_wise"
+    FULL: str = "full"
+
+
+class SecondOrderMode(Enum):
+    HESSIAN: str = "hessian"
+    GAUSS_NEWTON: str = "gauss_newton"
+
+
+@dataclass
+class ModelParameterDictBuilder:
+    """
+    A builder class for creating ordered dictionaries of model parameters based on
+    specified block modes or custom blocking structures.
+
+    Attributes:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+    """
+
+    model: torch.nn.Module
+    detach: bool = True
+
+    def _optional_detach(self, p: torch.nn.Parameter):
+        if self.detach:
+            return p.detach()
+        return p
+
+    def _extract_parameter_by_name(self, name: str) -> torch.nn.Parameter:
+        for k, p in self.model.named_parameters():
+            if k == name:
+                return p
+        else:
+            raise ValueError(f"Parameter {name} not found in the model.")
+
+    def build(
+        self, block_structure: OrderedDict[str, List[str]]
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        structure represented by an ordered dictionary, where the keys are block
+        identifiers and the values are lists of model parameter names contained in
+        this block.
+
+        Args:
+            block_structure: The block structure specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+        parameter_dict = {}
+
+        for block_name, parameter_names in block_structure.items():
+            inner_ordered_dict = {}
+            for parameter_name in parameter_names:
+                parameter = self._extract_parameter_by_name(parameter_name)
+                if parameter.requires_grad:
+                    inner_ordered_dict[parameter_name] = self._optional_detach(
+                        parameter
+                    )
+                else:
+                    warnings.warn(
+                        f"The parameter {parameter_name} from the block "
+                        f"{block_name} is mark as not trainable in the model "
+                        f"and will be excluded from the computation."
+                    )
+            parameter_dict[block_name] = inner_ordered_dict
+
+        return parameter_dict
+
+    def build_from_block_mode(
+        self, block_mode: BlockMode
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        mode or custom blocking structure represented by an ordered dictionary, where
+        the keys are block identifiers and the values are lists of model parameter names
+        contained in this block.
+
+        Args:
+            block_mode: The block mode specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+
+        block_mode_mapping = {
+            BlockMode.FULL: self._build_full,
+            BlockMode.PARAMETER_WISE: self._build_parameter_wise,
+            BlockMode.LAYER_WISE: self._build_layer_wise,
+        }
+
+        parameter_dict_func = block_mode_mapping.get(block_mode, None)
+
+        if parameter_dict_func is None:
+            raise ValueError(f"Unknown block mode {block_mode}.")
+
+        return self.build(parameter_dict_func())
+
+    def _build_full(self):
+        parameter_dict = OrderedDict()
+        parameter_dict[""] = [
+            n for n, p in self.model.named_parameters() if p.requires_grad
+        ]
+        return parameter_dict
+
+    def _build_parameter_wise(self):
+        parameter_dict = OrderedDict()
+        for k, v in self.model.named_parameters():
+            if v.requires_grad:
+                parameter_dict[k] = [k]
+        return parameter_dict
+
+    def _build_layer_wise(self):
+        parameter_dict = OrderedDict()
+        for name, submodule in self.model.named_children():
+            layer_parameter_names = []
+            for param_name, param in submodule.named_parameters():
+                if param.requires_grad:
+                    layer_parameter_names.append(f"{name}.{param_name}")
+            if layer_parameter_names:
+                parameter_dict[name] = layer_parameter_names
+        return parameter_dict
+
+
+class ModelInfoMixin:
+    """
+    A mixin class for classes that contain information about a model.
+    """
+
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.parameters()).device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return next(self.model.parameters()).dtype
+
+    @property
+    def n_parameters(self) -> int:
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+
+def get_model_parameters(
+    model: torch.nn.Module, detach: bool = True, require_grad_only: bool = True
+) -> Dict[str, torch.Tensor]:
+    """
+    Returns a dictionary of model parameters, optionally restricted to parameters
+    requiring gradients and optionally detaching them from the computation
+    graph.
+
+    Args:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+        require_grad_only: Whether to include only parameters that require gradients.
+
+    Returns:
+        A dict of named model parameters.
+    """
+
+    parameter_dict = {}
+    for k, p in model.named_parameters():
+        if require_grad_only and not p.requires_grad:
+            continue
+        parameter_dict[k] = p.detach() if detach else p
+
+    return parameter_dict

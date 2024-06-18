@@ -1,5 +1,3 @@
-import uuid
-
 import dask.array as da
 import numpy as np
 import pytest
@@ -12,7 +10,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
 from pydvl.influence.base_influence_function_model import (
     NotImplementedLayerRepresentationException,
-    UnsupportedInfluenceModeException,
 )
 from pydvl.influence.influence_calculator import (
     DisableClientSingleThreadCheck,
@@ -28,15 +25,12 @@ from pydvl.influence.torch import (
     EkfacInfluence,
 )
 from pydvl.influence.torch.influence_function_model import NystroemSketchInfluence
-from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
-)
 from pydvl.influence.torch.util import (
     NestedTorchCatAggregator,
     TorchCatAggregator,
     TorchNumpyConverter,
 )
+from pydvl.influence.types import UnsupportedInfluenceModeException
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 from tests.influence.torch.test_util import are_active_layers_linear
 
@@ -91,7 +85,7 @@ def influence_model(model_and_data, test_case, influence_factory):
             model,
             loss,
             rank=5,
-            hessian_regularization=hessian_reg,
+            regularization=hessian_reg,
         ).fit(train_dataLoader),
     ],
     ids=["cg", "direct", "arnoldi", "nystroem-sketch"],
