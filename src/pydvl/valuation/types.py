@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
+from enum import Enum
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
@@ -29,10 +30,17 @@ NameT = Union[np.object_, np.int_]
 NullaryPredicate = Callable[[], bool]
 
 
+class ValueUpdateKind(str, Enum):
+    POSITVE = "positve"
+    NEGATIVE = "negative"
+    DEFAULT = "default"
+
+
 @dataclass(frozen=True)
 class ValueUpdate:
     idx: int | IndexT | None
     update: float
+    kind: ValueUpdateKind = ValueUpdateKind.DEFAULT
 
 
 @dataclass(frozen=True)
