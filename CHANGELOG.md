@@ -22,6 +22,11 @@
 - Extend `ArnoldiInfluence` with block-diagonal and Gauss-Newton
   approximation
   [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+
+## Fixed
+- Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
+  as the old aliases are removed in NumPy 2.0
+  [PR #604](https://github.com/aai-institute/pyDVL/pull/604)
   
 ## Changed
 
