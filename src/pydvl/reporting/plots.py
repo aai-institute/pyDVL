@@ -272,7 +272,7 @@ def plot_shapley(
 
 
 def plot_influence_distribution(
-    influences: NDArray[np.float_], index: int, title_extra: str = ""
+    influences: NDArray[np.float64], index: int, title_extra: str = ""
 ) -> plt.Axes:
     """Plots the histogram of the influence that all samples in the training set
     have over a single sample index.
@@ -292,7 +292,7 @@ def plot_influence_distribution(
 
 
 def plot_influence_distribution_by_label(
-    influences: NDArray[np.float_], labels: NDArray[np.float_], title_extra: str = ""
+    influences: NDArray[np.float64], labels: NDArray[np.float64], title_extra: str = ""
 ):
     """Plots the histogram of the influence that all samples in the training set
     have over a single sample index, separated by labels.

@@ -5,5 +5,5 @@ from numpy.typing import NDArray
 
 
 class Losses(NamedTuple):
-    training: NDArray[np.float_]
-    validation: NDArray[np.float_]
+    training: NDArray[np.float64]
+    validation: NDArray[np.float64]

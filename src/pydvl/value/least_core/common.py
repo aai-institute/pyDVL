@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class LeastCoreProblem(NamedTuple):
-    utility_values: NDArray[np.float_]
-    A_lb: NDArray[np.float_]
+    utility_values: NDArray[np.float64]
+    A_lb: NDArray[np.float64]
 
 
 def lc_solve_problem(
@@ -113,7 +113,7 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: Optional[NDArray[np.float_]]
+    values: Optional[NDArray[np.float64]]
 
     if subsidy is None:
         logger.debug("No values were found")
@@ -219,13 +219,13 @@ def lc_solve_problems(
 
 
 def _solve_least_core_linear_program(
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+) -> Tuple[Optional[NDArray[np.float64]], Optional[float]]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -297,12 +297,12 @@ def _solve_least_core_linear_program(
 
 def _solve_egalitarian_least_core_quadratic_program(
     subsidy: float,
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
-) -> Optional[NDArray[np.float_]]:
+) -> Optional[NDArray[np.float64]]:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$

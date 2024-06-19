@@ -64,7 +64,7 @@ class Scorer:
     """
 
     _name: str
-    range: NDArray[np.float_]
+    range: NDArray[np.float64]
 
     def __init__(
         self,

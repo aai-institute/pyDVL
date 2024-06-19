@@ -49,7 +49,7 @@ __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
 
 log = logging.getLogger(__name__)
 
-T = TypeVar("T", NDArray[np.float_], float)
+T = TypeVar("T", NDArray[np.float64], float)
 GTConstants = namedtuple("GTConstants", ["kk", "Z", "q", "q_tot", "T"])
 
 
@@ -266,7 +266,7 @@ def group_testing_shapley(
         results_it: Iterable[Tuple[NDArray, NDArray]]
     ) -> Tuple[NDArray, NDArray]:
         return np.concatenate(list(x[0] for x in results_it)).astype(
-            np.float_
+            np.float64
         ), np.concatenate(list(x[1] for x in results_it)).astype(np.int_)
 
     seed_sequence = ensure_seed_sequence(seed)

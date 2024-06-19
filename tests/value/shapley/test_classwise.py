@@ -418,7 +418,7 @@ def dataset_manual_derivation() -> Dataset:
 @pytest.fixture(scope="function")
 def dataset_left_right_margins(
     n_element: int, left_margin: float, right_margin: float
-) -> Tuple[NDArray[np.float_], NDArray[np.int_], Dict[str, float]]:
+) -> Tuple[NDArray[np.float64], NDArray[np.int_], Dict[str, float]]:
     """
     The label set is represented as 0000011100011111, with adjustable left and right
     margins. The left margin denotes the percentage of zeros at the beginning, while the
