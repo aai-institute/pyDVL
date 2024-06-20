@@ -562,9 +562,8 @@ def test_influences_lissa(
         lambda model, loss, hessian_reg, rank: ArnoldiInfluence(
             model,
             loss,
-            hessian_regularization=hessian_reg,
-            rank_estimate=rank,
-            precompute_grad=True,
+            regularization=hessian_reg,
+            rank=rank,
         ),
         lambda model, loss, hessian_reg, rank: NystroemSketchInfluence(
             model, loss, regularization=hessian_reg, rank=rank
@@ -844,6 +843,13 @@ composable_influence_factories = [
     partial(
         NystroemSketchInfluence, rank=10, second_order_mode=SecondOrderMode.GAUSS_NEWTON
     ),
+    partial(ArnoldiInfluence, rank=10, use_woodbury=True),
+    partial(
+        ArnoldiInfluence,
+        rank=10,
+        second_order_mode=SecondOrderMode.GAUSS_NEWTON,
+        use_woodbury=True,
+    ),
 ]
 
 
@@ -897,7 +903,7 @@ def test_composable_influence(
         x_test, y_test, x_train, y_train, mode=test_case.mode
     )
 
-    threshold = 1 - 1e-3
+    threshold = 1 - 1e-4
     check_correlation(
         direct_influences.reshape(-1), infl_values.reshape(-1), corr_val=threshold
     )

@@ -6,7 +6,13 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .base import TensorDictOperator, TensorOperator, TorchBatch
+from .base import (
+    LowRankBilinearForm,
+    OperatorBilinearForm,
+    TensorDictOperator,
+    TensorOperator,
+    TorchBatch,
+)
 from .batch_operation import (
     BatchOperationType,
     ChunkAveraging,
@@ -498,7 +504,7 @@ class LowRankOperator(TensorOperator):
     def __init__(
         self,
         low_rank_representation: LowRankProductRepresentation,
-        regularization: float,
+        regularization: Optional[float] = None,
         exact: bool = True,
     ):
 
@@ -524,6 +530,10 @@ class LowRankOperator(TensorOperator):
         if value < 0:
             raise ValueError("regularization must be non-negative")
         self._regularization = value
+
+    @property
+    def low_rank_representation(self) -> LowRankProductRepresentation:
+        return self._low_rank_representation
 
     @property
     def device(self):
@@ -564,4 +574,38 @@ class LowRankOperator(TensorOperator):
     @property
     def input_size(self) -> int:
         result: int = self._low_rank_representation.projections.shape[0]
+        return result
+
+    def as_bilinear_form(self) -> LowRankBilinearForm:
+        return LowRankBilinearForm(self)
+
+
+class MatrixOperator(TensorOperator):
+    """
+    A simple wrapper for a [torch.Tensor][torch.Tensor] acting as a matrix mapping.
+    """
+
+    def __init__(self, matrix: torch.Tensor):
+        self.matrix = matrix
+
+    @property
+    def device(self):
+        return self.matrix.device
+
+    @property
+    def dtype(self):
+        return self.matrix.dtype
+
+    def to(self, device: torch.device):
+        self.matrix = self.matrix.to(device)
+
+    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+        return self._apply_to_mat(vec.unsqueeze(dim=0))
+
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+        return self.matrix @ mat.t()
+
+    @property
+    def input_size(self) -> int:
+        result: int = self.matrix.shape[-1]
         return result

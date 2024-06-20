@@ -34,17 +34,13 @@ from .batch_operation import (
     HessianBatchOperation,
 )
 from .functional import (
-    LowRankProductRepresentation,
-    create_batch_hvp_function,
     create_hvp_function,
-    create_matrix_jacobian_product_function,
     create_per_sample_gradient_function,
     create_per_sample_mixed_derivative_function,
     gauss_newton,
     hessian,
-    model_hessian_low_rank,
-    model_hessian_nystroem_approximation,
     operator_nystroem_approximation,
+    operator_spectral_approximation,
 )
 from .operator import (
     DirectSolveOperator,
@@ -915,7 +911,7 @@ class LissaInfluence(TorchComposableInfluence[LissaOperator[BatchOperationType]]
         return False
 
 
-class ArnoldiInfluence(TorchInfluenceFunctionModel):
+class ArnoldiInfluence(TorchComposableInfluence[LowRankOperator]):
     r"""
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function
     and b is the given right-hand side vector.
@@ -935,155 +931,89 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Optional regularization parameter added
-            to the Hessian-vector product for numerical stability.
-        rank_estimate: The number of eigenvalues and corresponding eigenvectors
+        regularization: The regularization parameter. In case a dictionary is provided,
+            the keys must be a subset of the block identifiers.
+        rank: The number of eigenvalues and corresponding eigenvectors
             to compute. Represents the desired rank of the Hessian approximation.
         krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
             Defaults to min(model's number of parameters,
-            max(2 times rank_estimate + 1, 20)).
+            max(2 times rank + 1, 20)).
         tol: The stopping criteria for the Lanczos algorithm.
-            Ignored if `low_rank_representation` is provided.
         max_iter: The maximum number of iterations for the Lanczos method.
-            Ignored if `low_rank_representation` is provided.
         eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation
             on the model's device
             via a cupy implementation. Ensure the model size or rank_estimate
             is appropriate for device memory.
             If False, the eigen pair approximation is executed on the CPU by the scipy
             wrapper to ARPACK.
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep the full computation graph
-            in memory.
+        use_woodbury: If True, uses the [Sherman–Morrison–Woodbury
+            formula](https://en.wikipedia.org/wiki/Woodbury_matrix_identity) for the
+            computation of the inverse action, which is more precise but needs
+            additional computation.
     """
-
-    low_rank_representation: LowRankProductRepresentation
 
     def __init__(
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float = 0.0,
-        rank_estimate: int = 10,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
+        rank: int = 10,
         krylov_dimension: Optional[int] = None,
         tol: float = 1e-6,
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
-        precompute_grad: bool = False,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
+        use_woodbury: bool = False,
     ):
-        super().__init__(model, loss)
-        self.hessian_regularization = hessian_regularization
-        self.rank_estimate = rank_estimate
+        super().__init__(model, block_structure, regularization)
+        self.use_woodbury = use_woodbury
+        self.second_order_mode = second_order_mode
+        self.loss = loss
+        self.rank = rank
         self.tol = tol
         self.max_iter = max_iter
         self.krylov_dimension = krylov_dimension
         self.eigen_computation_on_gpu = eigen_computation_on_gpu
-        self.precompute_grad = precompute_grad
 
-    @property
-    def is_fitted(self):
-        try:
-            return self.low_rank_representation is not None
-        except AttributeError:
-            return False
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
+        return self
 
-    @log_duration(log_level=logging.INFO)
-    def fit(self, data: DataLoader) -> ArnoldiInfluence:
-        r"""
-        Fitting corresponds to the computation of the low rank decomposition
-
-        \[ V D^{-1} V^T \]
-
-        of the Hessian defined by the provided data loader.
-
-        Args:
-            data: The data to compute the Hessian with.
-
-        Returns:
-            The fitted instance.
-
-        """
-        low_rank_representation = model_hessian_low_rank(
-            self.model,
-            self.loss,
-            data,
-            hessian_perturbation=0.0,  # regularization is applied, when computing values
-            rank_estimate=self.rank_estimate,
+    def _create_block(
+        self,
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        op: Union[HessianOperator, GaussNewtonOperator]
+        if self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            op = GaussNewtonOperator(
+                self.model, self.loss, data, restrict_to=block_params
+            )
+        else:
+            op = HessianOperator(self.model, self.loss, data, restrict_to=block_params)
+        low_rank_representation = operator_spectral_approximation(
+            op,
+            self.rank,
             krylov_dimension=self.krylov_dimension,
             tol=self.tol,
             max_iter=self.max_iter,
             eigen_computation_on_gpu=self.eigen_computation_on_gpu,
-            precompute_grad=self.precompute_grad,
         )
-        self.low_rank_representation = low_rank_representation.to(self.model_device)
-        return self
-
-    def _non_symmetric_values(
-        self,
-        x_test: torch.Tensor,
-        y_test: torch.Tensor,
-        x: torch.Tensor,
-        y: torch.Tensor,
-        mode: InfluenceMode = InfluenceMode.Up,
-    ) -> torch.Tensor:
-        if mode == InfluenceMode.Up:
-            mjp = create_matrix_jacobian_product_function(
-                self.model, self.loss, self.low_rank_representation.projections.T
-            )
-            left = mjp(self.model_params, x_test, y_test)
-
-            inverse_regularized_eigenvalues = 1.0 / (
-                self.low_rank_representation.eigen_vals + self.hessian_regularization
-            )
-
-            right = mjp(
-                self.model_params, x, y
-            ) * inverse_regularized_eigenvalues.unsqueeze(-1)
-            values = torch.einsum("ij, ik -> jk", left, right)
-        elif mode == InfluenceMode.Perturbation:
-            factors = self.influence_factors(x_test, y_test)
-            values = self.influences_from_factors(factors, x, y, mode=mode)
-        else:
-            raise UnsupportedInfluenceModeException(mode)
-        return values
-
-    def _symmetric_values(
-        self, x: torch.Tensor, y: torch.Tensor, mode: InfluenceMode
-    ) -> torch.Tensor:
-        if mode == InfluenceMode.Up:
-            left = create_matrix_jacobian_product_function(
-                self.model, self.loss, self.low_rank_representation.projections.T
-            )(self.model_params, x, y)
-            inverse_regularized_eigenvalues = 1.0 / (
-                self.low_rank_representation.eigen_vals + self.hessian_regularization
-            )
-            right = left * inverse_regularized_eigenvalues.unsqueeze(-1)
-            values = torch.einsum("ij, ik -> jk", left, right)
-        elif mode == InfluenceMode.Perturbation:
-            factors = self.influence_factors(x, y)
-            values = self.influences_from_factors(factors, x, y, mode=mode)
-        else:
-            raise UnsupportedInfluenceModeException(mode)
-        return values
-
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        inverse_regularized_eigenvalues = 1.0 / (
-            self.low_rank_representation.eigen_vals + self.hessian_regularization
+        low_rank_op = LowRankOperator(
+            low_rank_representation, regularization, exact=self.use_woodbury
         )
+        return TorchOperatorGradientComposition(low_rank_op, gp)
 
-        projected_rhs = self.low_rank_representation.projections.t() @ rhs.t()
-        result = self.low_rank_representation.projections @ (
-            projected_rhs * inverse_regularized_eigenvalues.unsqueeze(-1)
-        )
-
-        return result.t()
-
-    def to(self, device: torch.device):
-        if self.is_fitted:
-            self.low_rank_representation = self.low_rank_representation.to(device)
-        return super().to(device)
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class EkfacInfluence(TorchInfluenceFunctionModel):
