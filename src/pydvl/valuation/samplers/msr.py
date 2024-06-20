@@ -23,7 +23,7 @@ __all__ = ["MSRSampler"]
 
 
 class MSRSampler(StochasticSamplerMixin, IndexSampler):
-    def __init__(self, batch_size: int = 1, seed: Seed = None):
+    def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:

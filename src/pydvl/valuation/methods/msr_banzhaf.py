@@ -98,6 +98,12 @@ class MSRBanzhafValuation(SemivalueValuation):
             algorithm=self.algorithm_name,
         )
 
+        self.result = ValuationResult.zeros(
+            indices=data.indices,
+            data_names=data.data_names,
+            algorithm=self.algorithm_name,
+        )
+
         ensure_backend_has_generator_return()
 
         self.utility.training_data = data
