@@ -25,18 +25,18 @@ from pydvl.valuation.samplers import (
     UniformSampler,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates, MinUpdates
 
 from .. import check_values
 from ..utils import timed
 
 
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize("num_samples", [5])
 def test_msr_banzhaf(
     num_samples: int,
     analytic_banzhaf,
     dummy_train_data,
-    parallel_backend,
     n_jobs,
     seed: Seed,
 ):
@@ -45,7 +45,7 @@ def test_msr_banzhaf(
     valuation = MSRBanzhafValuation(
         utility=u,
         sampler=MSRSampler(seed=seed),
-        is_done=MaxChecks(200 * num_samples),
+        is_done=MinUpdates(500 * num_samples),
         progress=False,
     )
     with parallel_config(n_jobs=n_jobs):
@@ -53,8 +53,7 @@ def test_msr_banzhaf(
 
     values = valuation.values()
 
-    # Need to use atol because msr banzhaf is quite noisy.
-    check_values(values, exact_values, atol=0.1)
+    check_values(values, exact_values, atol=0.025)
 
     # Check order
     assert np.array_equal(np.argsort(exact_values), np.argsort(values))

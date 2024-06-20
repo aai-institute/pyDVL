@@ -32,6 +32,22 @@ __all__ = ["MSRBanzhafValuation"]
 
 
 class MSRBanzhafValuation(SemivalueValuation):
+    """Class to compute Maximum Sample Re-use (MSR) Banzhaf values.
+
+    See [Data Valuation][data-valuation] for an overview.
+
+    The MSR Banzhaf valuation approximates the Banzhaf valuation and is much more
+    efficient than traditional Montecarlo approaches.
+
+    Args:
+        utility: Utility object with model, data and scoring function.
+        sampler: Sampling scheme to use. Currently, only one MSRSampler is implemented.
+            In the future, weighted MSRSamplers will be supported.
+        is_done: Stopping criterion to use.
+        progress: Whether to show a progress bar.
+
+    """
+
     algorithm_name = "MSR-Banzhaf"
 
     def __init__(
@@ -54,15 +70,28 @@ class MSRBanzhafValuation(SemivalueValuation):
         return 1.0
 
     def fit(self, data: Dataset) -> Self:
+        """Calculate the MSR Banzhaf valuation on a dataset.
 
-        # initialize an intermediate result object for positive updates
+        This method has to be called before calling `values()`.
+
+        Calculating the Banzhaf valuation is a computationally expensive task that
+        can be parallelized. To do so, call the `fit()` method inside a
+        `joblib.parallel_config` context manager as follows:
+
+        ```python
+        from joblib import parallel_config
+
+        with parallel_config(n_jobs=4):
+            valuation.fit(data)
+        ```
+
+        """
         self._pos_result = ValuationResult.zeros(
             indices=data.indices,
             data_names=data.data_names,
             algorithm=self.algorithm_name,
         )
 
-        # initialize an intermediate result object for negative updates
         self._neg_result = ValuationResult.zeros(
             indices=data.indices,
             data_names=data.data_names,
@@ -73,52 +102,37 @@ class MSRBanzhafValuation(SemivalueValuation):
 
         self.utility.training_data = data
 
-        parallel = Parallel(return_as="generator_unordered")
         strategy = self.sampler.make_strategy(self.utility, self.coefficient)
         processor = delayed(strategy.process)
 
-        with make_parallel_flag() as flag:
-            delayed_evals = parallel(
-                processor(batch=list(batch), is_interrupted=flag)
-                for batch in self.sampler.generate_batches(data.indices)
-            )
-            for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
-                for evaluation in batch:
-                    # update the intermediate result objects
-                    if evaluation.kind == ValueUpdateKind.POSITVE:
-                        self._pos_result.update(evaluation.idx, evaluation.update)
-                    elif evaluation.kind == ValueUpdateKind.NEGATIVE:
-                        self._neg_result.update(evaluation.idx, evaluation.update)
-                    else:
-                        raise ValueError("Invalid ValueUpdateKind: {evaluation.kind}")
+        with Parallel(return_as="generator_unordered") as parallel:
+            with make_parallel_flag() as flag:
+                delayed_evals = parallel(
+                    processor(batch=list(batch), is_interrupted=flag)
+                    for batch in self.sampler.generate_batches(data.indices)
+                )
+                for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
+                    for evaluation in batch:
+                        if evaluation.kind == ValueUpdateKind.POSITVE:
+                            self._pos_result.update(evaluation.idx, evaluation.update)
+                        elif evaluation.kind == ValueUpdateKind.NEGATIVE:
+                            self._neg_result.update(evaluation.idx, evaluation.update)
+                        else:
+                            raise ValueError(
+                                "Invalid ValueUpdateKind: {evaluation.kind}"
+                            )
 
-                    # combine the intermediate results into the final result
-                    self.result = _combine_results(
-                        self._pos_result, self._neg_result, data=data
-                    )
+                        self.result = _combine_results(
+                            self._pos_result, self._neg_result, data=data
+                        )
+
+                        if self.is_done(self.result):
+                            flag.set()
+                            self.sampler.interrupt()
+                            break
 
                     if self.is_done(self.result):
-                        flag.set()
-                        self.sampler.interrupt()
                         break
-
-                if self.is_done(self.result):
-                    break
-
-        #####################
-
-        # FIXME: remove NaN checking after fit()?
-        import logging
-
-        import numpy as np
-
-        logger = logging.getLogger(__name__)
-        nans = np.isnan(self.result.values).sum()
-        if nans > 0:
-            logger.warning(
-                f"{nans} NaN values in current result. "
-                "Consider setting a default value for the Scorer"
-            )
 
         return self
 
@@ -132,18 +146,26 @@ def _combine_results(
     this would lead to wrong variance estimates, misleading update counts and even
     wrong values if no further precaution is taken.
 
+    TODO: Verify that the two running means are statistically independent (which is
+    assumed in the aggregation of variances).
+
+    Args:
+        pos_result: The result of the positive updates.
+        neg_result: The result of the negative updates.
+        data: The dataset used for the valuation. Used for indices and names.
+
+    Returns:
+        The combined valuation result.
+
     """
     # set counts to the minimum of the two; This enables us to ensure via stopping
     # criteria that both running means have a minimal number of updates
     counts = np.minimum(pos_result.counts, neg_result.counts)
 
     values = pos_result.values - neg_result.values
-    # follow the convention to set the value to zero if one of the two counts was zero
-    # TODO: Should this be nan instead?
-    values[counts == 0] = 0.0
+    values[counts == 0] = np.nan
 
     variances = pos_result.variances + neg_result.variances
-    # set the variance to infinity if one of the two counts was zero
     variances[counts == 0] = np.inf
 
     result = ValuationResult(
