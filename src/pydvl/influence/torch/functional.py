@@ -26,6 +26,7 @@ In particular, the module contains functionality for
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union
@@ -957,7 +958,9 @@ def operator_spectral_approximation(
             from torch.utils.dlpack import from_dlpack, to_dlpack
         except ImportError as e:
             raise ImportError(
-                f"Try to install missing dependencies or set eigen_computation_on_gpu "
+                "Missing cupy, check the installation instructions "
+                "at https://docs.cupy.dev/en/stable/install.html "
+                "or set eigen_computation_on_gpu "
                 f"to False: {e}"
             )
 
@@ -991,7 +994,7 @@ def operator_spectral_approximation(
         )
 
     except ArpackNoConvergence as e:
-        logger.warning(
+        warnings.warn(
             f"ARPACK did not converge for parameters {max_iter=}, {tol=}, "
             f"{krylov_dimension=}, {rank=}. \n "
             f"Returning the best approximation found so far. "
