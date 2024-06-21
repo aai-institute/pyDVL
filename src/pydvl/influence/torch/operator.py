@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Callable, Dict, Generic, Optional, Tuple
 
 import torch
@@ -23,6 +24,8 @@ from .batch_operation import (
     TensorAveragingType,
 )
 from .functional import LowRankProductRepresentation
+from .preconditioner import Preconditioner
+from .util import LossType
 
 logger = logging.getLogger(__name__)
 
@@ -603,9 +606,283 @@ class MatrixOperator(TensorOperator):
         return self._apply_to_mat(vec.unsqueeze(dim=0))
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-        return self.matrix @ mat.t()
+        return (self.matrix @ mat.t()).t()
 
     @property
     def input_size(self) -> int:
         result: int = self.matrix.shape[-1]
         return result
+
+
+class CgOperator(TensorOperator):
+    r"""
+    Given an operator , it uses conjugate gradient to calculate the
+    action of its inverse. More precisely, it finds x such that \(Ax =
+    A\), with \(A\) being the matrix represented by the operator. For more info, see
+    [Conjugate Gradient][conjugate-gradient].
+
+    Args:
+        operator:
+        regularization: Optional regularization parameter added
+            to the matrix vector product for numerical stability.
+        rtol: Maximum relative tolerance of result.
+        atol: Absolute tolerance of result.
+        maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
+        progress: If True, display progress bars for computing in the non-block mode
+            (use_block_cg=False).
+        preconditioner: Optional pre-conditioner to improve convergence of conjugate
+            gradient method
+        use_block_cg: If True, use block variant of conjugate gradient method, which
+            solves several right hand sides simultaneously
+        warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
+            achieved within `maxiter` iterations. If False, the log level for this
+            information is `logging.DEBUG`
+
+    """
+
+    def __init__(
+        self,
+        operator: TensorOperator,
+        regularization: Optional[float] = None,
+        rtol: float = 1e-7,
+        atol: float = 1e-7,
+        maxiter: Optional[int] = None,
+        progress: bool = False,
+        preconditioner: Optional[Preconditioner] = None,
+        use_block_cg: bool = False,
+        warn_on_max_iteration: bool = True,
+    ):
+
+        if regularization is not None and regularization < 0:
+            raise ValueError("regularization must be non-negative")
+
+        self.progress = progress
+        self.warn_on_max_iteration = warn_on_max_iteration
+        self.use_block_cg = use_block_cg
+        self.preconditioner = preconditioner
+        self.maxiter = maxiter
+        self.atol = atol
+        self.rtol = rtol
+        self._regularization = regularization
+        self.operator = operator
+
+    @property
+    def regularization(self):
+        return self._regularization
+
+    @regularization.setter
+    def regularization(self, value: float):
+        if value < 0:
+            raise ValueError("regularization must be non-negative")
+        self._regularization = value
+        if self.preconditioner is not None:
+            if self.preconditioner.modify_regularization_requires_fit:
+                warnings.warn(
+                    "Modifying the regularization value requires "
+                    "re-fitting the preconditioner"
+                )
+                self.preconditioner.fit(self.operator, value)
+            else:
+                self.preconditioner.regularization = value
+
+    @property
+    def device(self):
+        return self.operator.device
+
+    @property
+    def dtype(self):
+        return self.operator.dtype
+
+    def to(self, device: torch.device):
+        self.operator = self.operator.to(device)
+        if self.preconditioner is not None:
+            self.preconditioner = self.preconditioner.to(device)
+        return self
+
+    def _reg_operator_apply(self, x: torch.Tensor):
+        result = self.operator.apply(x)
+        if self._regularization is not None:
+            result += self._regularization * x
+        return result
+
+    @property
+    def input_size(self) -> int:
+        return self.operator.input_size
+
+    def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
+        return self._apply_to_mat(vec.unsqueeze(0))
+
+    def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
+
+        if self.use_block_cg:
+            return self._solve_pbcg(mat)
+
+        y_norm = torch.linalg.norm(mat, dim=0)
+
+        stopping_val = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
+
+        batch_cg = torch.zeros_like(mat)
+
+        for idx, (bi, _tol) in enumerate(
+            tqdm(
+                zip(mat, stopping_val),
+                disable=not self.progress,
+                desc="Conjugate gradient",
+            )
+        ):
+            batch_result = self._solve_pcg(bi, _tol)
+            batch_cg[idx] = batch_result
+
+        return batch_cg
+
+    def _solve_pcg(
+        self,
+        b: torch.Tensor,
+        tol: float,
+    ) -> torch.Tensor:
+
+        x0 = torch.clone(b)
+        maxiter = self.maxiter
+        if maxiter is None:
+            maxiter = len(b) * 10
+
+        x = x0
+
+        r0 = b - self._reg_operator_apply(x)
+
+        if self.preconditioner is not None:
+            p = z0 = self.preconditioner.solve(r0)
+        else:
+            p = z0 = r0
+
+        residuum = torch.norm(r0)
+
+        for k in range(maxiter):
+            if residuum < tol:
+                logger.debug(
+                    f"Terminated cg after {k} iterations with residuum={residuum}"
+                )
+                break
+            Ap = self._reg_operator_apply(p)
+            alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
+            x += alpha * p
+            r = r0 - alpha * Ap
+
+            if self.preconditioner is not None:
+                z = self.preconditioner.solve(r)
+            else:
+                z = r
+
+            beta = torch.dot(r, z) / torch.dot(r0, z0)
+
+            r0 = r
+            residuum = torch.norm(r0)
+            p = z + beta * p
+            z0 = z
+        else:
+            log_msg = (
+                f"Reached max number of iterations {maxiter=} without "
+                f"achieving the desired tolerance {tol}. \n"
+                f"Achieved residuum is {residuum}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or the "
+                f"parameter 'hessian_regularization'."
+            )
+            if self.warn_on_max_iteration:
+                warnings.warn(log_msg)
+            else:
+                logger.debug(log_msg)
+        return x
+
+    def _solve_pbcg(
+        self,
+        rhs: torch.Tensor,
+    ):
+
+        # The block variant of conjugate gradient is known to suffer from breakdown,
+        # due to the possibility of rank deficiency of the iterates of the parameter
+        # matrix P^tAP, which destabilizes the direct solver.
+        # The paper `Randomized Nyström Preconditioning,
+        # Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine,
+        # SIAM J. Matrix Anal. Appl., 2023`
+        # proposes a simple orthogonalization pre-processing. However, we observed, that
+        # this stabilization only worked for double precision. We thus implement
+        # a different stabilization strategy described in
+        # `A breakdown-free block conjugate gradient method, Ji, Hao and Li, Yaohang,
+        # BIT Numerical Mathematics, 2017`
+
+        X = torch.clone(rhs.T)
+
+        R = (rhs - self._reg_operator_apply(X.t())).T
+        B = torch.linalg.norm(R, dim=0)
+        Z = R if self.preconditioner is None else self.preconditioner.solve(R)
+        P, _, _ = torch.linalg.svd(Z, full_matrices=False)
+        active_indices = torch.as_tensor(
+            list(range(X.shape[-1])), dtype=torch.long, device=self.device
+        )
+
+        maxiter = self.maxiter if self.maxiter is not None else len(rhs) * 10
+        y_norm = torch.linalg.norm(rhs, dim=1)
+        tol = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
+
+        # In the case the parameter dimension is smaller than the number of right
+        # hand sides, we do not shrink the indices due to resulting wrong
+        # dimensionality of the svd decomposition. We consider this an edge case, which
+        # does not need optimization
+        shrink_finished_indices = rhs.shape[0] <= rhs.shape[1]
+
+        for k in range(maxiter):
+            Q = self._reg_operator_apply(P.t()).T
+            p_t_ap = P.T @ Q
+            alpha = torch.linalg.solve(p_t_ap, P.T @ R)
+            X[:, active_indices] += P @ alpha
+            R -= Q @ alpha
+
+            B = torch.linalg.norm(R, dim=0)
+            non_finished_indices = torch.nonzero(B > tol)
+            num_remaining_indices = non_finished_indices.numel()
+            non_finished_indices = non_finished_indices.squeeze()
+
+            if num_remaining_indices == 1:
+                non_finished_indices = non_finished_indices.unsqueeze(-1)
+
+            if num_remaining_indices == 0:
+                logger.debug(
+                    f"Terminated block cg after {k} iterations with max "
+                    f"residuum={B.max()}"
+                )
+                break
+
+            # Reduce problem size by removing finished columns from the iteration
+            if shrink_finished_indices:
+                active_indices = active_indices[non_finished_indices]
+                R = R[:, non_finished_indices]
+                P = P[:, non_finished_indices]
+                Q = Q[:, non_finished_indices]
+                p_t_ap = p_t_ap[:, non_finished_indices][non_finished_indices, :]
+                tol = tol[non_finished_indices]
+
+            Z = R if self.preconditioner is None else self.preconditioner.solve(R)
+            beta = -torch.linalg.solve(p_t_ap, Q.T @ Z)
+            Z_tmp = Z + P @ beta
+
+            if Z_tmp.ndim == 1:
+                Z_tmp = Z_tmp.unsqueeze(-1)
+
+            # Orthogonalization search directions to stabilize the action of
+            # (P^tAP)^{-1}
+            P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
+        else:
+            log_msg = (
+                f"Reached max number of iterations {maxiter=} of block cg "
+                f"without achieving the desired tolerance {tol.min()}. \n"
+                f"Achieved max residuum is "
+                f"{B.max()}.\n"
+                f"Consider increasing 'maxiter', the desired tolerance or "
+                f"the parameter 'hessian_regularization'."
+            )
+            if self.warn_on_max_iteration:
+                warnings.warn(log_msg)
+            else:
+                logger.debug(log_msg)
+
+        return X.T

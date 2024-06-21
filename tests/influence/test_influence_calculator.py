@@ -71,7 +71,7 @@ def influence_model(model_and_data, test_case, influence_factory):
             model,
             loss,
             hessian_reg,
-            use_block_cg=True,
+            solve_simultaneously=True,
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
             model, loss, hessian_reg

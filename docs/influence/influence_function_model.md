@@ -23,37 +23,45 @@ gradient method, defined in [@ji_breakdownfree_2017], which solves several
 right hand sides simultaneously.
 
 Optionally, the user can provide a pre-conditioner to improve convergence, such 
-as a [Jacobi pre-conditioner
-][pydvl.influence.torch.pre_conditioner.JacobiPreConditioner], which
+as a [Jacobi preconditioner
+][pydvl.influence.torch.preconditioner.JacobiPreconditioner], which
 is a simple [diagonal pre-conditioner](
 https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner) 
 based on Hutchinson's diagonal estimator [@bekas_estimator_2007],
-or a [Nyström approximation based pre-conditioner
-][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner], 
-described in [@frangella_randomized_2023]. 
+or a [Nyström approximation based preconditioner
+][pydvl.influence.torch.preconditioner.NystroemPreconditioner], 
+described in [@frangella_randomized_2023].
 
 ```python
-from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.pre_conditioner import NystroemPreConditioner
+from pydvl.influence.torch import CgInfluence, BlockMode, SecondOrderMode
+from pydvl.influence.torch.preconditioner import NystroemPreconditioner
 
 if_model = CgInfluence(
     model,
     loss,
-    hessian_regularization=0.0,
+    regularization=0.0,
     rtol=1e-7,
     atol=1e-7,
     maxiter=None,
-    use_block_cg=True,
-    pre_conditioner=NystroemPreConditioner(rank=10)
+    solve_simultaneously=True,
+    preconditioner=NystroemPreconditioner(rank=10),
+    block_structure=BlockMode.FULL,
+    second_order_mode=SecondOrderMode.HESSIAN
 )
 if_model.fit(train_loader)
 ```
 
-The additional optional parameters `rtol`, `atol`, `maxiter`, `use_block_cg` and 
-`pre_conditioner` are respectively, the relative
+The additional optional parameters `rtol`, `atol`, `maxiter`, 
+`solve_simultaneously` and `preconditioner` are respectively, the relative
 tolerance, the absolute tolerance, the maximum number of iterations, 
-a flag indicating whether to use block variant of cg and an optional
-pre-conditioner.
+a flag indicating whether to use a variant of cg to
+simultaneously solving the system for several right hand sides and an optional
+preconditioner.
+
+This implementation is capable of using a block-diagonal
+approximation, see
+[Block-diagonal approximation](#block-diagonal-approximation), and can handle
+[Gauss-Newton approximation](#gauss-newton-approximation).
 
 
 ### Linear time Stochastic Second-Order Approximation (LiSSA)
@@ -78,7 +86,7 @@ from pydvl.influence.torch import LissaInfluence, BlockMode, SecondOrderMode
 if_model = LissaInfluence(
    model,
    loss,
-   regularization=0.0 
+   regularization=0.0, 
    maxiter=1000,
    dampen=0.0,
    scale=10.0,
@@ -114,7 +122,7 @@ the Hessian and \(V\) contains the corresponding eigenvectors. See also
 [@schioppa_scaling_2022].
 
 ```python
-from pydvl.influence.torch import ArnoldiInfluence
+from pydvl.influence.torch import ArnoldiInfluence, BlockMode, SecondOrderMode
 if_model = ArnoldiInfluence(
     model,
     loss,
@@ -207,7 +215,7 @@ see also [@hataya_nystrom_2023] and [@frangella_randomized_2023]. The essential
 parameter is the rank of the approximation.
 
 ```python
-from pydvl.influence.torch import NystroemSketchInfluence
+from pydvl.influence.torch import NystroemSketchInfluence, BlockMode, SecondOrderMode
 if_model = NystroemSketchInfluence(
     model,
     loss,

@@ -6,6 +6,7 @@ utilizing PyTorch.
 
 from __future__ import annotations
 
+import copy
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -43,6 +44,7 @@ from .functional import (
     operator_spectral_approximation,
 )
 from .operator import (
+    CgOperator,
     DirectSolveOperator,
     GaussNewtonOperator,
     HessianOperator,
@@ -50,7 +52,7 @@ from .operator import (
     LissaOperator,
     LowRankOperator,
 )
-from .pre_conditioner import PreConditioner
+from .preconditioner import Preconditioner
 from .util import (
     BlockMode,
     EkfacRepresentation,
@@ -437,7 +439,7 @@ class DirectInfluence(TorchComposableInfluence[DirectSolveOperator]):
         return False
 
 
-class CgInfluence(TorchInfluenceFunctionModel):
+class CgInfluence(TorchComposableInfluence[CgOperator]):
     r"""
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x such that \(Hx =
@@ -449,25 +451,22 @@ class CgInfluence(TorchInfluenceFunctionModel):
             this model's parameters.
         loss: A callable that takes the model's output and target as input and returns
               the scalar loss.
-        hessian_regularization: Optional regularization parameter added
+        regularization: Optional regularization parameter added
             to the Hessian-vector product for numerical stability.
-        x0: Initial guess for hvp. If None, defaults to b.
         rtol: Maximum relative tolerance of result.
         atol: Absolute tolerance of result.
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
         progress: If True, display progress bars for computing in the non-block mode
             (use_block_cg=False).
-        precompute_grad: If True, the full data gradient is precomputed and kept
-            in memory, which can speed up the hessian vector product computation.
-            Set this to False, if you can't afford to keep the full computation graph
-            in memory.
-        pre_conditioner: Optional pre-conditioner to improve convergence of conjugate
+        preconditioner: Optional preconditioner to improve convergence of conjugate
             gradient method
-        use_block_cg: If True, use block variant of conjugate gradient method, which
-            solves several right hand sides simultaneously
+        solve_simultaneously: If True, use a variant of conjugate gradient method to
+            simultaneously solve for several right hand sides.
         warn_on_max_iteration: If True, logs a warning, if the desired tolerance is not
             achieved within `maxiter` iterations. If False, the log level for this
             information is `logging.DEBUG`
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
 
     """
 
@@ -475,327 +474,84 @@ class CgInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float = 0.0,
-        x0: Optional[torch.Tensor] = None,
-        rtol: float = 1e-7,
-        atol: float = 1e-7,
+        regularization: Optional[Union[float, Dict[str, Optional[float]]]] = None,
+        rtol: float = 1e-4,
+        atol: float = 1e-6,
         maxiter: Optional[int] = None,
         progress: bool = False,
         precompute_grad: bool = False,
-        pre_conditioner: Optional[PreConditioner] = None,
-        use_block_cg: bool = False,
+        preconditioner: Optional[Preconditioner] = None,
+        solve_simultaneously: bool = False,
         warn_on_max_iteration: bool = True,
+        block_structure: Union[BlockMode, OrderedDict[str, List[str]]] = BlockMode.FULL,
+        second_order_mode: SecondOrderMode = SecondOrderMode.HESSIAN,
     ):
-        super().__init__(model, loss)
+        super().__init__(model, block_structure, regularization)
+        self.loss = loss
         self.warn_on_max_iteration = warn_on_max_iteration
-        self.use_block_cg = use_block_cg
-        self.pre_conditioner = pre_conditioner
+        self.solve_simultaneously = solve_simultaneously
+        self.preconditioner = preconditioner
         self.precompute_grad = precompute_grad
         self.progress = progress
         self.maxiter = maxiter
         self.atol = atol
         self.rtol = rtol
-        self.x0 = x0
-        self.hessian_regularization = hessian_regularization
+        self.second_order_mode = second_order_mode
 
-    train_dataloader: DataLoader
+    def with_regularization(
+        self, regularization: Union[float, Dict[str, Optional[float]]]
+    ) -> TorchComposableInfluence:
+        """
+        Update the regularization parameter.
+        Args:
+            regularization: Either a positive float or a dictionary with the
+                block names as keys and the regularization values as values.
 
-    @property
-    def is_fitted(self):
-        try:
-            return self.train_dataloader is not None
-        except AttributeError:
-            return False
+        Returns:
+            The modified instance
 
-    @log_duration(log_level=logging.INFO)
-    def fit(self, data: DataLoader) -> CgInfluence:
-        self.train_dataloader = data
-        if self.pre_conditioner is not None:
-            hvp = create_hvp_function(
-                self.model,
-                self.loss,
-                self.train_dataloader,
-                precompute_grad=self.precompute_grad,
-            )
-
-            def model_hessian_mat_mat_prod(x: torch.Tensor):
-                return torch.func.vmap(hvp, in_dims=1, randomness="same")(x).t()
-
-            self.pre_conditioner.fit(
-                model_hessian_mat_mat_prod,
-                self.n_parameters,
-                self.model_dtype,
-                self.model_device,
-                self.hessian_regularization,
-            )
+        """
+        self._regularization_dict = self._build_regularization_dict(regularization)
+        for k, reg in self._regularization_dict.items():
+            self.block_mapper.composable_block_dict[k].op.regularization = reg
         return self
 
-    @log_duration
-    def influences(
+    def _create_block(
         self,
-        x_test: torch.Tensor,
-        y_test: torch.Tensor,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
-        mode: InfluenceMode = InfluenceMode.Up,
-    ) -> torch.Tensor:
-        r"""
-        Compute an approximation of
+        block_params: Dict[str, torch.nn.Parameter],
+        data: DataLoader,
+        regularization: Optional[float],
+    ) -> TorchOperatorGradientComposition:
+        op: Union[HessianOperator, GaussNewtonOperator]
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
-
-        for the case of up-weighting influence, resp.
-
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-            f_{\theta}(x_{\text{test}})),
-            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
-
-        for the case of perturbation-type influence. The approximate action of
-        $H^{-1}$ is achieved via the [conjugate gradient
-        method](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
-
-        Args:
-            x_test: model input to use in the gradient computations of
-                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
-                    f_{\theta}(x_{\text{test}}))$
-            y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations
-                $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$,
-                if None, use $x=x_{\text{test}}$
-            y: optional label tensor to compute gradients
-            mode: enum value of [InfluenceMode]
-                [pydvl.influence.base_influence_function_model.InfluenceMode]
-
-        Returns:
-            A tensor representing the element-wise scalar products for the
-                provided batch.
-
-        """
-        return super().influences(x_test, y_test, x, y, mode=mode)
-
-    @log_duration
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        if len(self.train_dataloader) == 0:
-            raise ValueError("Training dataloader must not be empty.")
-
-        if self.use_block_cg:
-            return self._solve_pbcg(rhs)
-
-        hvp = create_hvp_function(
-            self.model,
-            self.loss,
-            self.train_dataloader,
-            precompute_grad=self.precompute_grad,
-        )
-
-        def reg_hvp(v: torch.Tensor):
-            return hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
-
-        y_norm = torch.linalg.norm(rhs, dim=0)
-
-        stopping_val = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
-
-        batch_cg = torch.zeros_like(rhs)
-
-        for idx, (bi, _tol) in enumerate(
-            tqdm(
-                zip(rhs, stopping_val),
-                disable=not self.progress,
-                desc="Conjugate gradient",
+        if self.second_order_mode is SecondOrderMode.GAUSS_NEWTON:
+            op = GaussNewtonOperator(
+                self.model, self.loss, data, restrict_to=block_params
             )
-        ):
-            batch_result = self._solve_pcg(
-                reg_hvp,
-                bi,
-                tol=_tol,
-                x0=self.x0,
-                maxiter=self.maxiter,
-            )
-            batch_cg[idx] = batch_result
-
-        return batch_cg
-
-    def _solve_pcg(
-        self,
-        hvp: Callable[[torch.Tensor], torch.Tensor],
-        b: torch.Tensor,
-        *,
-        tol: float,
-        x0: Optional[torch.Tensor] = None,
-        maxiter: Optional[int] = None,
-    ) -> torch.Tensor:
-        r"""
-        Conjugate gradient solver for the Hessian vector product.
-
-        Args:
-            hvp: A callable Hvp, operating with tensors of size N.
-            b: A vector or matrix, the right hand side of the equation \(Hx = b\).
-            x0: Initial guess for hvp.
-            rtol: Maximum relative tolerance of result.
-            atol: Absolute tolerance of result.
-            maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
-
-        Returns:
-            A tensor with the solution of \(Ax=b\).
-        """
-
-        if x0 is None:
-            x0 = torch.clone(b)
-        if maxiter is None:
-            maxiter = len(b) * 10
-
-        x = x0
-
-        r0 = b - hvp(x)
-
-        if self.pre_conditioner is not None:
-            p = z0 = self.pre_conditioner.solve(r0)
         else:
-            p = z0 = r0
+            op = HessianOperator(self.model, self.loss, data, restrict_to=block_params)
 
-        for k in range(maxiter):
-            if torch.norm(r0) < tol:
-                logger.debug(f"Terminated cg after {k} iterations with residuum={r0}")
-                break
-            Ap = hvp(p)
-            alpha = torch.dot(r0, z0) / torch.dot(p, Ap)
-            x += alpha * p
-            r = r0 - alpha * Ap
+        preconditioner = None
+        if self.preconditioner is not None:
+            preconditioner = copy.copy(self.preconditioner).fit(op, regularization)
 
-            if self.pre_conditioner is not None:
-                z = self.pre_conditioner.solve(r)
-            else:
-                z = r
-
-            beta = torch.dot(r, z) / torch.dot(r0, z0)
-
-            r0 = r
-            p = z + beta * p
-            z0 = z
-        else:
-            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
-            logger.log(
-                log_level,
-                f"Reached max number of iterations {maxiter=} without "
-                f"achieving the desired tolerance {tol}. \n"
-                f"Achieved residuum is {torch.norm(r0)}.\n"
-                f"Consider increasing 'maxiter', the desired tolerance or the "
-                f"parameter 'hessian_regularization'.",
-            )
-
-        return x
-
-    def _solve_pbcg(
-        self,
-        rhs: torch.Tensor,
-    ):
-        hvp = create_hvp_function(
-            self.model,
-            self.loss,
-            self.train_dataloader,
-            precompute_grad=self.precompute_grad,
+        cg_op = CgOperator(
+            op,
+            regularization,
+            rtol=self.rtol,
+            atol=self.atol,
+            maxiter=self.maxiter,
+            progress=self.progress,
+            preconditioner=preconditioner,
+            use_block_cg=self.solve_simultaneously,
+            warn_on_max_iteration=self.warn_on_max_iteration,
         )
+        gp = TorchGradientProvider(self.model, self.loss, restrict_to=block_params)
+        return TorchOperatorGradientComposition(cg_op, gp)
 
-        # The block variant of conjugate gradient is known to suffer from breakdown,
-        # due to the possibility of rank deficiency of the iterates of the parameter
-        # matrix P^tAP, which destabilizes the direct solver.
-        # The paper `Randomized Nyström Preconditioning,
-        # Frangella, Zachary and Tropp, Joel A. and Udell, Madeleine,
-        # SIAM J. Matrix Anal. Appl., 2023`
-        # proposes a simple orthogonalization pre-processing. However, we observed, that
-        # this stabilization only worked for double precision. We thus implement
-        # a different stabilization strategy described in
-        # `A breakdown-free block conjugate gradient method, Ji, Hao and Li, Yaohang,
-        # BIT Numerical Mathematics, 2017`
-
-        def mat_mat(x: torch.Tensor):
-            return torch.vmap(
-                lambda u: hvp(u) + self.hessian_regularization * u,
-                in_dims=1,
-                randomness="same",
-            )(x)
-
-        X = torch.clone(rhs.T)
-
-        R = (rhs - mat_mat(X)).T
-        Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
-        P, _, _ = torch.linalg.svd(Z, full_matrices=False)
-        active_indices = torch.as_tensor(
-            list(range(X.shape[-1])), dtype=torch.long, device=self.model_device
-        )
-
-        maxiter = self.maxiter if self.maxiter is not None else len(rhs) * 10
-        y_norm = torch.linalg.norm(rhs, dim=1)
-        tol = torch.clamp(self.rtol**2 * y_norm, min=self.atol**2)
-
-        # In the case the parameter dimension is smaller than the number of right
-        # hand sides, we do not shrink the indices due to resulting wrong
-        # dimensionality of the svd decomposition. We consider this an edge case, which
-        # does not need optimization
-        shrink_finished_indices = rhs.shape[0] <= rhs.shape[1]
-
-        for k in range(maxiter):
-            Q = mat_mat(P).T
-            p_t_ap = P.T @ Q
-            alpha = torch.linalg.solve(p_t_ap, P.T @ R)
-            X[:, active_indices] += P @ alpha
-            R -= Q @ alpha
-
-            B = torch.linalg.norm(R, dim=0)
-            non_finished_indices = torch.nonzero(B > tol)
-            num_remaining_indices = non_finished_indices.numel()
-            non_finished_indices = non_finished_indices.squeeze()
-
-            if num_remaining_indices == 1:
-                non_finished_indices = non_finished_indices.unsqueeze(-1)
-
-            if num_remaining_indices == 0:
-                logger.debug(
-                    f"Terminated block cg after {k} iterations with max "
-                    f"residuum={B.max()}"
-                )
-                break
-
-            # Reduce problem size by removing finished columns from the iteration
-            if shrink_finished_indices:
-                active_indices = active_indices[non_finished_indices]
-                R = R[:, non_finished_indices]
-                P = P[:, non_finished_indices]
-                Q = Q[:, non_finished_indices]
-                p_t_ap = p_t_ap[:, non_finished_indices][non_finished_indices, :]
-                tol = tol[non_finished_indices]
-
-            Z = R if self.pre_conditioner is None else self.pre_conditioner.solve(R)
-            beta = -torch.linalg.solve(p_t_ap, Q.T @ Z)
-            Z_tmp = Z + P @ beta
-
-            if Z_tmp.ndim == 1:
-                Z_tmp = Z_tmp.unsqueeze(-1)
-
-            # Orthogonalization search directions to stabilize the action of
-            # (P^tAP)^{-1}
-            P, _, _ = torch.linalg.svd(Z_tmp, full_matrices=False)
-        else:
-            log_level = logging.WARNING if self.warn_on_max_iteration else logging.DEBUG
-            logger.log(
-                log_level,
-                f"Reached max number of iterations {maxiter=} of block cg "
-                f"without achieving the desired tolerance {tol.min()}. \n"
-                f"Achieved max residuum is "
-                f"{torch.linalg.norm(R, dim=0).max()}.\n"
-                f"Consider increasing 'maxiter', the desired tolerance or "
-                f"the parameter 'hessian_regularization'.",
-            )
-
-        return X.T
-
-    def to(self, device: torch.device):
-        if self.pre_conditioner is not None:
-            self.pre_conditioner = self.pre_conditioner.to(device)
-        return super().to(device)
+    @property
+    def is_thread_safe(self) -> bool:
+        return False
 
 
 class LissaInfluence(TorchComposableInfluence[LissaOperator[BatchOperationType]]):
