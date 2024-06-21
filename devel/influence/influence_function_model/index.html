@@ -1730,11 +1730,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/pydvl/influence/torch/pre_conditioner/" class="md-nav__link">
+      <a href="../../api/pydvl/influence/torch/preconditioner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Pre conditioner
+    Preconditioner
   </span>
   
 
@@ -3453,33 +3453,40 @@ text books such as (Trefethen and Bau, 1997, Lecture 38)<sup id="fnref:1"><a cla
 gradient method, defined in (Ji and Li, 2017)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>, which solves several
 right hand sides simultaneously.</p>
 <p>Optionally, the user can provide a pre-conditioner to improve convergence, such 
-as a <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/pre_conditioner/#pydvl.influence.torch.pre_conditioner.JacobiPreConditioner">Jacobi pre-conditioner
+as a <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/preconditioner/#pydvl.influence.torch.preconditioner.JacobiPreconditioner">Jacobi preconditioner
 </a>, which
 is a simple <a href="https://en.wikipedia.org/wiki/Preconditioner#Jacobi_(or_diagonal)_preconditioner">diagonal pre-conditioner</a> 
 based on Hutchinson's diagonal estimator (Bekas et al., 2007)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>,
-or a <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/pre_conditioner/#pydvl.influence.torch.pre_conditioner.NystroemPreConditioner">Nyström approximation based pre-conditioner
+or a <a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/preconditioner/#pydvl.influence.torch.preconditioner.NystroemPreconditioner">Nyström approximation based preconditioner
 </a>, 
-described in (Frangella et al., 2023)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>. </p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">CgInfluence</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch.pre_conditioner</span> <span class="kn">import</span> <span class="n">NystroemPreConditioner</span>
+described in (Frangella et al., 2023)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">CgInfluence</span><span class="p">,</span> <span class="n">BlockMode</span><span class="p">,</span> <span class="n">SecondOrderMode</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch.preconditioner</span> <span class="kn">import</span> <span class="n">NystroemPreconditioner</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">CgInfluence</span><span class="p">(</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">loss</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">maxiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">use_block_cg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">pre_conditioner</span><span class="o">=</span><span class="n">NystroemPreConditioner</span><span class="p">(</span><span class="n">rank</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">solve_simultaneously</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">preconditioner</span><span class="o">=</span><span class="n">NystroemPreconditioner</span><span class="p">(</span><span class="n">rank</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">block_structure</span><span class="o">=</span><span class="n">BlockMode</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">second_order_mode</span><span class="o">=</span><span class="n">SecondOrderMode</span><span class="o">.</span><span class="n">HESSIAN</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
 </span></code></pre></div>
-<p>The additional optional parameters <code>rtol</code>, <code>atol</code>, <code>maxiter</code>, <code>use_block_cg</code> and 
-<code>pre_conditioner</code> are respectively, the relative
+<p>The additional optional parameters <code>rtol</code>, <code>atol</code>, <code>maxiter</code>, 
+<code>solve_simultaneously</code> and <code>preconditioner</code> are respectively, the relative
 tolerance, the absolute tolerance, the maximum number of iterations, 
-a flag indicating whether to use block variant of cg and an optional
-pre-conditioner.</p>
+a flag indicating whether to use a variant of cg to
+simultaneously solving the system for several right hand sides and an optional
+preconditioner.</p>
+<p>This implementation is capable of using a block-diagonal
+approximation, see
+<a href="#block-diagonal-approximation">Block-diagonal approximation</a>, and can handle
+<a href="#gauss-newton-approximation">Gauss-Newton approximation</a>.</p>
 <h3 id="linear-time-stochastic-second-order-approximation-lissa">Linear time Stochastic Second-Order Approximation (<abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr>)<a class="headerlink" href="#linear-time-stochastic-second-order-approximation-lissa" title="Permanent link">&para;</a></h3>
 <p>The <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> method is a stochastic approximation of the inverse Hessian vector
 product. Compared to <a href="#conjugate-gradient">conjugate gradient</a>
@@ -3495,7 +3502,7 @@ original paper (Agarwal et al., 2017)<sup id="fnref:5"><a class="footnote-ref" h
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">LissaInfluence</span><span class="p">(</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>   <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   <span class="n">loss</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>   <span class="n">regularization</span><span class="o">=</span><span class="mf">0.0</span> 
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>   <span class="n">regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> 
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>   <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>   <span class="n">dampen</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>   <span class="n">scale</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
@@ -3524,16 +3531,22 @@ approximated by</p>
 <p>where <span class="arithmatex">\(D\)</span> is a diagonal matrix with the top (in absolute value) eigenvalues of
 the Hessian and <span class="arithmatex">\(V\)</span> contains the corresponding eigenvectors. See also
  (Schioppa et al., 2022)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">ArnoldiInfluence</span>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">ArnoldiInfluence</span><span class="p">,</span> <span class="n">BlockMode</span><span class="p">,</span> <span class="n">SecondOrderMode</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">ArnoldiInfluence</span><span class="p">(</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">loss</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">rank_estimate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">regularization</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">rank</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">block_structure</span><span class="o">=</span><span class="n">BlockMode</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">second_order_mode</span><span class="o">=</span><span class="n">SecondOrderMode</span><span class="o">.</span><span class="n">HESSIAN</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">if_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
 </span></code></pre></div>
+This implementation is capable of using a block-matrix
+approximation, see
+<a href="#block-diagonal-approximation">Block-diagonal approximation</a>, and can handle
+<a href="#gauss-newton-approximation">Gauss-Newton approximation</a>.</p>
 <h3 id="eigenvalue-corrected-k-fac">Eigenvalue Corrected <abbr title="Kronecker-Factored Approximate Curvature">K-FAC</abbr><a class="headerlink" href="#eigenvalue-corrected-k-fac" title="Permanent link">&para;</a></h3>
 <p><abbr title="Kronecker-Factored Approximate Curvature">K-FAC</abbr>, short for Kronecker-Factored Approximate Curvature, is a method that 
 approximates the Fisher information matrix <a href="https://en.wikipedia.org/wiki/Fisher_information">FIM</a> of a model. 
@@ -3593,7 +3606,7 @@ action of its inverse:</p>
 \end{equation*}\]</div>
 <p>see also (Hataya and Yamada, 2023)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup> and (Frangella et al., 2023)<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup>. The essential 
 parameter is the rank of the approximation.</p>
-<p><div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">NystroemSketchInfluence</span>
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.torch</span> <span class="kn">import</span> <span class="n">NystroemSketchInfluence</span><span class="p">,</span> <span class="n">BlockMode</span><span class="p">,</span> <span class="n">SecondOrderMode</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">if_model</span> <span class="o">=</span> <span class="n">NystroemSketchInfluence</span><span class="p">(</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">model</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">loss</span><span class="p">,</span>
@@ -3751,7 +3764,7 @@ documentation page <a href="../scaling_computation/">Scaling Computation</a>.</p
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-06-11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2024-06-14</span>
   </span>
 
     
