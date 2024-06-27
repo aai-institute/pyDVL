@@ -18,7 +18,7 @@ If you're a first time user of pyDVL, we recommend you to go through
     [[getting-started|__Getting started__]]
 
     ---
-    Steps to install pyDVL and its requirements
+    New users of pyDVL should read this first
 
 -   :fontawesome-regular-images:{ .lg .middle }
     [[examples|__Example gallery__]]
