@@ -143,8 +143,8 @@ plugins:
             show_root_full_path: true
             show_root_heading: true
   - bibtex:
-      bib_file: "docs/assets/pydvl.bib"
-      csl_file: "docs/assets/elsevier-harvard.csl"
+      bib_file: "docs/assets/bibliography/pydvl.bib"
+      csl_file: "docs/assets/bibliography/elsevier-harvard.csl"
       cite_inline: true
   - git-revision-date-localized:
       enable_creation_date: true
@@ -155,9 +155,9 @@ plugins:
 
 theme:
   name: material
-  custom_dir: docs/overrides
-  logo: assets/signet.svg
-  favicon: assets/signet.svg
+  custom_dir: docs/assets/overrides
+  logo: assets/images/signet.svg
+  favicon: assets/images/signet.svg
   icon:
     repo: fontawesome/brands/github
   features:
@@ -199,11 +199,11 @@ theme:
         name: Switch to system preference
 
 extra_css:
-  - css/extra.css
-  - css/grid-cards.css
+  - assets/css/extra.css
+  - assets/css/grid-cards.css
 
 extra_javascript:
-  - javascripts/mathjax.js
+  - assets/js/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
