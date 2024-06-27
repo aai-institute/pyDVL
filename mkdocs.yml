@@ -8,16 +8,17 @@ remote_branch: gh-pages
 
 nav:
   - Home: index.md
-  - Previous Structure:
-    - Home: previous_index.md
-    - Getting Started:
-      - getting-started/index.md
-      - First steps: getting-started/first-steps.md
-      - Applications: getting-started/applications.md
-      - Benchmarking: getting-started/benchmarking.md
-      - Methods: getting-started/methods.md
-      - Advanced usage: getting-started/advanced-usage.md
-      - Glossary: getting-started/glossary.md
+  - Getting Started:
+    - getting-started/index.md
+    - First steps: getting-started/first-steps.md
+    - Applications: getting-started/applications.md
+    - Benchmarking: getting-started/benchmarking.md
+    - Advanced usage: getting-started/advanced-usage.md
+    - Glossary: getting-started/glossary.md
+  - How-to Guides:
+    - how-to-guides/index.md
+  - Methods:
+    - methods/index.md
     - Data Valuation:
       - value/index.md
       - Shapley values: value/shapley.md
@@ -28,24 +29,30 @@ nav:
       - influence/index.md
       - Influence Function Model: influence/influence_function_model.md
       - Scaling Computation: influence/scaling_computation.md
-    - Examples:
-      - examples/index.md
-      - Data Valuation:
-          - Shapley values: examples/shapley_basic_spotify.ipynb
-          - KNN Shapley: examples/shapley_knn_flowers.ipynb
-          - Data utility learning: examples/shapley_utility_learning.ipynb
-          - Least Core: examples/least_core_basic.ipynb
-          - Data OOB: examples/data_oob.ipynb
-          - Banzhaf Semivalues: examples/msr_banzhaf_digits.ipynb
-      - Influence Function:
+  - Tutorials:
+    - tutorials/index.md
+  - Examples:
+    - examples/index.md
+    - Data Valuation:
+        - Shapley values: examples/shapley_basic_spotify.ipynb
+        - KNN Shapley: examples/shapley_knn_flowers.ipynb
+        - Data utility learning: examples/shapley_utility_learning.ipynb
+        - Least Core: examples/least_core_basic.ipynb
+        - Data OOB: examples/data_oob.ipynb
+        - Banzhaf Semivalues: examples/msr_banzhaf_digits.ipynb
+    - Influence Function:
         - For CNNs: examples/influence_imagenet.ipynb
         - For mislabeled data: examples/influence_synthetic.ipynb
         - For outlier detection: examples/influence_wine.ipynb
         - For language models: examples/influence_sentiment_analysis.ipynb
-    - Code:
-      - API Reference: api/pydvl/
-      - Changelog: CHANGELOG.md
-      - Development Guidelines: CONTRIBUTING.md
+  - API:
+    - api/index.md
+    - User API: api/user-api/index.md
+    - Development:
+      - api/development/index.md
+      - API Reference: api/development/reference/
+      - Changelog: changelog.md
+      - Development Guidelines: contributing.md
 
 watch:
   - src/pydvl
