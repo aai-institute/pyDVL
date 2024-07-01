@@ -104,39 +104,24 @@ class SemivalueValuation(Valuation):
 
         self.utility.training_data = data
 
-        parallel = Parallel(return_as="generator_unordered")
         strategy = self.sampler.make_strategy(self.utility, self.coefficient)
         processor = delayed(strategy.process)
 
-        with make_parallel_flag() as flag:
-            delayed_evals = parallel(
-                processor(batch=list(batch), is_interrupted=flag)
-                for batch in self.sampler.generate_batches(data.indices)
-            )
-            for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
-                for evaluation in batch:
-                    self.result.update(evaluation.idx, evaluation.update)
+        with Parallel(return_as="generator_unordered") as parallel:
+            with make_parallel_flag() as flag:
+                delayed_evals = parallel(
+                    processor(batch=list(batch), is_interrupted=flag)
+                    for batch in self.sampler.generate_batches(data.indices)
+                )
+                for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
+                    for evaluation in batch:
+                        self.result.update(evaluation.idx, evaluation.update)
+                        if self.is_done(self.result):
+                            flag.set()
+                            self.sampler.interrupt()
+                            break
+
                     if self.is_done(self.result):
-                        flag.set()
-                        self.sampler.interrupt()
                         break
-
-                if self.is_done(self.result):
-                    break
-
-        #####################
-
-        # FIXME: remove NaN checking after fit()?
-        import logging
-
-        import numpy as np
-
-        logger = logging.getLogger(__name__)
-        nans = np.isnan(self.result.values).sum()
-        if nans > 0:
-            logger.warning(
-                f"{nans} NaN values in current result. "
-                "Consider setting a default value for the Scorer"
-            )
 
         return self

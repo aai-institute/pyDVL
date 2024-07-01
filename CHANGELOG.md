@@ -4,6 +4,8 @@
 
 ### Added
 
+- Refactoring MSR Banzhaf semivalues with the new sampler architecture.
+  [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
 - Refactoring group-testing shapley values with new sampler architecture
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
 - Refactoring of least-core data valuation methods with more supported sampling methods
@@ -32,6 +34,9 @@
 - Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
   as the probability of an element being sampled
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
+- Fix a bug in the calculation of variance estimates for MSR Banzhaf
+  [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
+
 
 
 ### Changed

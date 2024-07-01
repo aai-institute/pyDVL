@@ -215,12 +215,5 @@ def pytest_runtest_setup(item: pytest.Item):
             pytest.skip("slow test")
 
 
-def pytest_terminal_summary(
-    terminalreporter: "TerminalReporter", exitstatus: int, config: "Config"
-):
-    tolerate_session = terminalreporter.config._tolerate_session
-    tolerate_session.display(terminalreporter)
-
-
 def is_osx_arm64():
     return platform.system() == "Darwin" and platform.machine() == "arm64"

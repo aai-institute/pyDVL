@@ -81,6 +81,7 @@ the marginal evaluations for `PowersetSampler` or the successive evaluations for
 """
 from typing import Union
 
+from .msr import *
 from .permutation import *
 from .powerset import *
 

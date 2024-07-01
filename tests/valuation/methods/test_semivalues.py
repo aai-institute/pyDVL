@@ -5,46 +5,58 @@ import numpy as np
 import pytest
 from joblib import parallel_config
 
+from pydvl.utils.types import Seed
 from pydvl.valuation import (
     BetaShapleyValuation,
     DataBanzhafValuation,
     DataShapleyValuation,
     DeltaShapleyValuation,
+    MSRBanzhafValuation,
     SemivalueValuation,
-    WeightedBanzhafValuation,
 )
 from pydvl.valuation.samplers import (
     AntitheticPermutationSampler,
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
+    MSRSampler,
     PermutationSampler,
     PowersetSampler,
     UniformSampler,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates, MinUpdates
 
 from .. import check_values
 from ..utils import timed
 
-# @pytest.mark.parametrize("num_samples", [5])
-# def test_msr_banzhaf(
-#     num_samples: int, analytic_banzhaf, parallel_backend, n_jobs, seed: Seed
-# ):
-#     u, exact_values = analytic_banzhaf
-#     values = compute_msr_banzhaf_semivalues(
-#         u=u,
-#         done=MaxChecks(200 * num_samples),
-#         parallel_backend=parallel_backend,
-#         n_jobs=n_jobs,
-#         seed=seed,
-#     )
-#     # Need to use atol because msr banzhaf is quite noisy.
-#     check_values(values, exact_values, atol=0.1)
 
-#     # Check order
-#     assert np.array_equal(np.argsort(exact_values), np.argsort(values))
+@pytest.mark.flaky(reruns=1)
+@pytest.mark.parametrize("num_samples", [5])
+def test_msr_banzhaf(
+    num_samples: int,
+    analytic_banzhaf,
+    dummy_train_data,
+    n_jobs,
+    seed: Seed,
+):
+    u, exact_values = analytic_banzhaf
+
+    valuation = MSRBanzhafValuation(
+        utility=u,
+        sampler=MSRSampler(seed=seed),
+        is_done=MinUpdates(500 * num_samples),
+        progress=False,
+    )
+    with parallel_config(n_jobs=n_jobs):
+        valuation.fit(dummy_train_data)
+
+    values = valuation.values()
+
+    check_values(values, exact_values, atol=0.025)
+
+    # Check order
+    assert np.array_equal(np.argsort(exact_values), np.argsort(values))
 
 
 @pytest.mark.parametrize("n", [10, 100])
