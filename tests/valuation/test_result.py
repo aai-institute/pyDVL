@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.status import Status
-from pydvl.value import ValuationResult
+from pydvl.valuation import ValuationResult
 
 
 @pytest.fixture
@@ -383,9 +383,9 @@ def test_adding_different_indices(
 @pytest.mark.parametrize(
     "indices, index_t, data_names, name_t",
     [
-        ([0, 1, 2], np.int32, ["a", "b", "c"], "<U1"),
+        ([0, 1, 2], np.int64, ["a", "b", "c"], "<U1"),
         ([4, 1, 7], np.int64, [4, 1, 7], np.int64),
-        ([4, 1, 7], np.int32, [4, 1, 7], np.float_),
+        ([4, 1, 7], np.int64, [4, 1, 7], np.float_),
     ],
 )
 def test_types(indices, index_t, data_names, name_t):
