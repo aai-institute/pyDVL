@@ -22,8 +22,9 @@ Results can also be sorted by value, variance or number of updates, see
 [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
 [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
 [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices],
-[ValuationResult.names][pydvl.valuation.result.ValuationResult.names] are sorted in
-the same way.
+[ValuationResult.stderr][pydvl.valuation.result.ValuationResult.stderr],
+[ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
+are sorted in the same way.
 
 Indexing and slicing of results is supported and
 [ValueItem][pydvl.valuation.result.ValueItem] objects are returned. These objects
@@ -283,6 +284,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         properties
         [ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
         [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
+        [ValuationResult.stderr][pydvl.valuation.result.ValuationResult.stderr],
         [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
         [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices]
         and [ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
@@ -298,6 +300,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             "value": "_values",
             "variance": "_variances",
             "name": "_names",
+            "stderr": "stderr",
         }
         self._sort_positions = np.argsort(getattr(self, keymap[key]))
         if reverse:
@@ -323,7 +326,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def stderr(self) -> NDArray[np.float_]:
         """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+            NDArray[np.float_], np.sqrt(self._variances / np.maximum(1, self.counts))
         )
 
     @property

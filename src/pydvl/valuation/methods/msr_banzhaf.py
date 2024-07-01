@@ -11,6 +11,8 @@ This module implements the MSR-Banzhaf valuation method, as described in
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from joblib import Parallel, delayed
 from typing_extensions import Self
@@ -148,9 +150,21 @@ def _combine_results(
 ) -> ValuationResult:
     """Combine the positive and negative running means into a final result.
 
-    We cannot simply subtract the negative result from the positive result because
-    this would lead to wrong variance estimates, misleading update counts and even
-    wrong values if no further precaution is taken.
+    Since MSR-Banzhaf values are not a mean over marginals, both the variances of the
+    marginals and the update counts are ill-defined. We use the following conventions:
+
+    1. The counts are defined as the minimum of the two counts. This definition enables
+    us to ensure a minimal number of updates for both running means via stopping
+    criteria and correctly detects that no actual update has taken place if one of the
+    counts is zero.
+    2. We reverse engineer the variances such that they yield correct standard errors
+    given our convention for the counts and the normal calculation of standard errors
+    in the valuation result.
+
+    Note that we cannot use the normal addition or subtraction defined by the
+    ValuationResult because it is weighted with counts. If we were to simply subtract
+    the negative result from the positive we would get wrong variance estimates,
+    misleading update counts and even wrong values if no further precaution is taken.
 
     TODO: Verify that the two running means are statistically independent (which is
     assumed in the aggregation of variances).
@@ -164,15 +178,16 @@ def _combine_results(
         The combined valuation result.
 
     """
-    # set counts to the minimum of the two; This enables us to ensure via stopping
-    # criteria that both running means have a minimal number of updates
+    # define counts as minimum of the two counts (see docstring for details)
     counts = np.minimum(pos_result.counts, neg_result.counts)
 
     values = pos_result.values - neg_result.values
     values[counts == 0] = np.nan
 
-    variances = pos_result.variances + neg_result.variances
-    variances[counts == 0] = np.inf
+    # define variances that yield correct standard errors (see docstring for details)
+    pos_var = pos_result.variances / np.clip(pos_result.counts, 1, np.inf)
+    neg_var = neg_result.variances / np.clip(neg_result.counts, 1, np.inf)
+    variances = np.where(counts != 0, (pos_var + neg_var) * counts, np.inf)
 
     result = ValuationResult(
         values=values,
