@@ -13,10 +13,11 @@ nav:
     - First steps: getting-started/first-steps.md
     - Applications: getting-started/applications.md
     - Benchmarking: getting-started/benchmarking.md
-    - Advanced usage: getting-started/advanced-usage.md
     - Glossary: getting-started/glossary.md
   - How-to Guides:
     - how-to-guides/index.md
+    - How-to Speed up Computations with Parallelization: how-to-guides/how-to-speedup-parallel.md
+    - How-to Speed up Computations with Caching: how-to-guides/how-to-speedup-caching.md
   - Methods:
     - methods/index.md
     - Data Valuation:
@@ -28,7 +29,6 @@ nav:
     - The Influence Function:
       - influence/index.md
       - Influence Function Model: influence/influence_function_model.md
-      - Scaling Computation: influence/scaling_computation.md
   - Tutorials:
     - tutorials/index.md
   - Examples:
