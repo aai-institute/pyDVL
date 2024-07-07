@@ -8,15 +8,19 @@ alias:
 <div class="grid cards" markdown>
 
 -   :fontawesome-solid-network-wired:{ .lg .middle } 
-    [[speed-up-parallelization|__Speed up computations with parallelization__]]
-
+    [[speed-up-value-with-parallel|__Speed up data valuation with parallelization__]]
     ---
-    Guide showing how-to speed up computations using parallelization.
+    Guide showing how-to speed up data valuation with parallelization.
+
+-   :fontawesome-solid-network-wired:{ .lg .middle } 
+    [[scale-up-if-with-parallel|__Scaling up influence function with parallelization__]]
+    ---
+    Guide showing how-to scale up influence function algorithms with parallelization.
 
 -   :fontawesome-solid-database:{ .lg .middle } 
-    [[speed-up-caching|__Speed up computations with caching__]]
-
+    [[speed-up-value-with-caching|__Speed up data valuation with caching__]]
     ---
-    Guide showing how-to speed up computations using caching.
+    Guide showing how-to speed up data valuation with caching.
+
 
 </div>
