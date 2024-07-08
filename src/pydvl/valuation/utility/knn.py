@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig
@@ -8,6 +7,8 @@ from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers import KNNScorer
 from pydvl.valuation.types import Sample
 from pydvl.valuation.utility import ModelUtility
+
+__all__ = ["KNNUtility"]
 
 
 class KNNUtility(ModelUtility[Sample, KNeighborsClassifier]):
