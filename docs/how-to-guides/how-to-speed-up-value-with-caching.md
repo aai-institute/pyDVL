@@ -6,7 +6,7 @@ alias:
 
 Speeding up data valuation is crucial for handling complex and large datasets
 efficiently. This guide explains how to leverage caching in pyDVL
-to improve performance.
+to improve performance of data valuation algorithms.
 
 While caching is disabled by default in pyDVL, it can be enabled
 to speed up repeated computations.
