@@ -32,6 +32,51 @@ and to provide a running cluster.
     using a model that can be fitted incrementally with a dataset
     that can be loaded partially.
 
+## Set up the dataset, model and method
+
+For the rest of the guide we will use the following dataset and model:
+
+```python
+from sklearn.datasets import fetch_covtype
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MinMaxScaler, Normalizer
+from sklearn.svm import LinearSVC
+
+data = fetch_covtype()
+model = make_pipeline(MinMaxScaler(), Normalizer(), LinearSVC())
+```
+
+And the following utility and data valuation method:
+
+```python
+from pydvl.valuation import (
+    Dataset,
+    DataShapleyValuation,
+    ModelUtility,
+    PermutationSampler,
+    MaxUpdates,
+)
+
+dataset = Dataset.from_sklearn(data, random_state=16)
+utility = ModelUtility(model)
+valuation = DataShapleyValuation(
+    utility,
+    sampler=PermutationSampler(batch_size=10, seed=16),
+    is_done=MaxUpdates(100)
+)
+```
+
+## Parallelization
+
+The general pattern to parallelize the data valuation methods is the following:
+
+```python
+from joblib import parallel_config
+
+with parallel_config():
+    valuation.fit(dataset)
+```
+
 pyDVL uses joblib's [Parallel][joblib.Parallel] class internally as 
 a context manager to submit the computations and we can configure
 it at runtime using the [parallel_config][joblib.parallel_config]
@@ -40,33 +85,6 @@ context manager.
 Please read its documentation to know all possible configuration options
 that you can pass to the [parallel_config][joblib.parallel_config]
 context manager.
-
-### Set up the dataset, model and method
-
-For the rest of the guide we will use the following dataset, utility and
-data valuation method:
-
-```python
-from pydvl.valuation import DataShapleyValuation
-from pydvl.valuation.utility import ModelUtility
-from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.samplers import PermutationSampler
-from pydvl.value.stopping import MaxUpdates
-from sklearn.datasets import fetch_covtype
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import MinMaxScaler, Normalizer
-from sklearn.svm import LinearSVC
-
-data = Dataset.from_sklearn(fetch_covtype(), random_state=16)
-model = make_pipeline(MinMaxScaler(), Normalizer(), LinearSVC())
-utility = ModelUtility(model)
-utility.with_dataset(data)
-valuation = DataShapleyValuation(
-    utility,
-    sampler=PermutationSampler(batch_size=10, seed=16),
-    is_done=MaxUpdates(100)
-)
-```
 
 ### Local Parallelization
 
@@ -79,17 +97,17 @@ which is a multiprocessing backend with reusable processes.
 
     Threads are not recommended unless the model's fitting releases the GIL.
 
+
 ```python
 from joblib import parallel_config
 
 # We limit the number of concurrent jobs to 4
 with parallel_config(backend="loky", n_jobs=4):
-    valuation.fit(utility.data)
+    valuation.fit(dataset)
 ```
-
 ### Remote Parallelization
 
-Remotely, you can use the Dask and Ray backends to speed up
+Remotely, you can use either Dask or Ray backends to speed up
 computations across several machines.
 
 #### Ray
@@ -102,20 +120,13 @@ you don't have to set anything up.
 Before starting a computation, you should initialize ray by calling 
 [`ray.init`][ray.init] with the appropriate parameters.
 
-To set up and start a local ray cluster with 4 CPUs you would use:
-
 ```python
 import ray
 
+# either start a local ray cluster with 4 CPUs you would use
 ray.init(num_cpus=4)
-```
 
-Whereas for a remote ray cluster, you would to first start it separately,
-get its address and then connect to it:
-
-```python
-import ray
-
+# Or connect to a remote ray cluster
 address = "<Hypothetical Ray Cluster IP Address>"
 ray.init(address)
 ```
@@ -140,21 +151,12 @@ register_parallel_backend("ray", RayBackend)
 To use ray to compute shapley values you would then use:
 
 ```python
-import ray
-from joblib import register_parallel_backend, parallel_config
-from ray.util.joblib.ray_backend import RayBackend
-
-# Register ray backend
-RayBackend.supports_return_generator = True
-register_parallel_backend("ray", RayBackend)
-
-# Initialize ray client
-ray.init()
+from joblib import parallel_config
 
 # We use the 'ray' backend, limit the number of concurrent jobs to 4,
 # and specify a resource requirement of 1 gpu per task
 with parallel_config(backend="ray", n_jobs=4, ray_remote_args=dict(num_gpus=1)):
-    valuation.fit(utility.data)
+    valuation.fit(dataset)
 ```
 
 #### Dask
@@ -181,7 +183,7 @@ from joblib import parallel_config
 
 # We use the 'dask' backend, limit the number of concurrent jobs to 4
 with parallel_config(backend="dask", n_jobs=4):
-    valuation.fit(utility.data)
+    valuation.fit(dataset)
 ```
 
 ## Conclusion
@@ -190,4 +192,4 @@ By following this guide, you've learned how to speed up
 data valuation algorithms using various parallelization methods.
 For more advanced configurations, refer to the official
 [joblib](https://joblib.readthedocs.io/en/stable/), [Ray](https://ray.io),
-and [Dask](https://docs.dask.org/en/stable/)documentation.
+and [Dask](https://docs.dask.org/en/stable/) documentation.
