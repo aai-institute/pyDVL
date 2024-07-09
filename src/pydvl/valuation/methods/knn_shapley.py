@@ -16,8 +16,10 @@ This module contains Shapley computations for K-Nearest Neighbours.
 from __future__ import annotations
 
 import numpy as np
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
 from sklearn.neighbors import NearestNeighbors
+from tqdm.auto import tqdm
 from typing_extensions import Self
 
 from pydvl.utils.status import Status
@@ -78,12 +80,26 @@ class KNNShapleyValuation(Valuation):
         n_obs = len(data.x)
         n_test = len(self.utility.test_data)
 
-        values = np.zeros(n_obs)
-        for x, y in zip(self.utility.test_data.x, self.utility.test_data.y):
-            values += _compute_values_for_one_test_point(
-                self.helper_model, x, y, data.y
+        generator = zip(self.utility.test_data.x, self.utility.test_data.y)
+
+        generator_with_progress = tqdm(
+            generator,
+            total=n_test,
+            disable=not self.progress,
+            position=0,
+        )
+
+        with Parallel(return_as="generator") as parallel:
+            results = parallel(
+                delayed(_compute_values_for_one_test_point)(
+                    self.helper_model, x, y, data.y
+                )
+                for x, y in generator_with_progress
             )
-        values /= n_test
+            values = np.zeros(n_obs)
+            for res in results:
+                values += res
+            values /= n_test
 
         res = ValuationResult(
             algorithm="knn_shapley",
