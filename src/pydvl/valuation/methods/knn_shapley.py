@@ -26,13 +26,14 @@ from pydvl.utils.status import Status
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.utility import KNNUtility
+from pydvl.valuation.utility import KNNClassifierUtility
 
 
 class KNNShapleyValuation(Valuation):
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
+    This implements the method described in
+    (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
     It exploits the local structure of K-Nearest Neighbours to reduce the number
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.
@@ -45,7 +46,7 @@ class KNNShapleyValuation(Valuation):
 
     """
 
-    def __init__(self, utility: KNNUtility, progress: bool = True):
+    def __init__(self, utility: KNNClassifierUtility, progress: bool = True):
         self.utility = utility
         self.progress = progress
 

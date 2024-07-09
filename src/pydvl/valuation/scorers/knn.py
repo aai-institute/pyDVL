@@ -8,8 +8,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from pydvl.valuation.scorers import SupervisedScorer
 
 
-class KNNScorer(SupervisedScorer):
-    """Scorer for KNN models  based on the KNN likelihood.
+class KNNClassifierScorer(SupervisedScorer):
+    """Scorer for KNN classifier models  based on the KNN likelihood.
 
     Typically, users will not create instances of this class directly but indirectly
     by using `pydvl.valuation.utility.KNNUtility`.

@@ -10,7 +10,7 @@ from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods import DataShapleyValuation, KNNShapleyValuation
 from pydvl.valuation.samplers import PermutationSampler
 from pydvl.valuation.stopping import MinUpdates
-from pydvl.valuation.utility import KNNUtility
+from pydvl.valuation.utility import KNNClassifierUtility
 from pydvl.value.shapley.knn import knn_shapley as old_knn_shapley
 
 
@@ -28,7 +28,7 @@ def data():
 def montecarlo_results(data):
     model = KNeighborsClassifier(n_neighbors=5)
     data_train, data_test = data
-    utility = KNNUtility(model=model, test_data=data_test)
+    utility = KNNClassifierUtility(model=model, test_data=data_test)
     sampler = PermutationSampler(seed=42)
     montecarlo_valuation = DataShapleyValuation(
         utility,
@@ -43,7 +43,7 @@ def montecarlo_results(data):
 def test_against_montecarlo(n_jobs, data, montecarlo_results):
     model = KNeighborsClassifier(n_neighbors=5)
     data_train, data_test = data
-    utility = KNNUtility(model=model, test_data=data_test)
+    utility = KNNClassifierUtility(model=model, test_data=data_test)
     valuation = KNNShapleyValuation(utility, progress=False)
 
     with parallel_config(n_jobs=n_jobs):
@@ -67,7 +67,7 @@ def test_old_vs_new(seed, data):
     old_values = old_knn_shapley(old_u, progress=False).values
 
     data_train, data_test = data
-    utility = KNNUtility(model=model, test_data=data_test)
+    utility = KNNClassifierUtility(model=model, test_data=data_test)
     new_valuation = KNNShapleyValuation(utility, progress=False)
     new_values = new_valuation.fit(data_train).values().values
 

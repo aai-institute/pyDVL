@@ -4,14 +4,14 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.scorers import KNNScorer
+from pydvl.valuation.scorers import KNNClassifierScorer
 from pydvl.valuation.types import Sample
 from pydvl.valuation.utility import ModelUtility
 
-__all__ = ["KNNUtility"]
+__all__ = ["KNNClassifierUtility"]
 
 
-class KNNUtility(ModelUtility[Sample, KNeighborsClassifier]):
+class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
     def __init__(
         self,
         model: KNeighborsClassifier,
@@ -23,7 +23,7 @@ class KNNUtility(ModelUtility[Sample, KNeighborsClassifier]):
         cached_func_options: CachedFuncConfig | None = None,
         clone_before_fit: bool = True,
     ):
-        scorer = KNNScorer(test_data)
+        scorer = KNNClassifierScorer(test_data)
 
         self.test_data = test_data
 
