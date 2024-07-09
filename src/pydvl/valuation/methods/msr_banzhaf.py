@@ -162,7 +162,7 @@ class MSRBanzhafValuation(SemivalueValuation):
         precaution is taken.
 
         TODO: Verify that the two running means are statistically independent (which is
-        assumed in the aggregation of variances).
+ assumed in the aggregation of variances).
 
         Args:
             pos_result: The result of the positive updates.
