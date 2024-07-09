@@ -170,7 +170,7 @@ class MSRBanzhafValuation(SemivalueValuation):
             The combined valuation result.
 
         TODO: Verify that the two running means are statistically independent (which is
- assumed in the aggregation of variances).
+            assumed in the aggregation of variances).
 
         """
         # define counts as minimum of the two counts (see docstring)
