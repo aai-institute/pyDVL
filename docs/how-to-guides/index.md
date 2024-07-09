@@ -5,28 +5,14 @@ alias:
   title: How-to Guides
 ---
 
-<div class="grid cards" markdown>
+This pages indexes how-to guides showing exactly how to achieve certain
+specific tasks.
 
--   :fontawesome-solid-network-wired:{ .lg .middle } 
-    [[speed-up-value-with-parallel|__Speed up data valuation with parallelization__]]
+## Speeding up
 
-    ---
-    In this guide we will show you how to speed up data valuation algorithms
-    by leveraging parallelization.
+- [[speed-up-value-with-parallel|__Speed up data valuation with parallelization__]]
+- [[speed-up-value-with-caching|__Speed up data valuation with caching__]]
 
--   :fontawesome-solid-database:{ .lg .middle } 
-    [[speed-up-value-with-caching|__Speed up data valuation with caching__]]
+## Scaling up
 
-    ---
-    This guide explains how to leverage caching in pyDVL 
-    to improve performance of data valuation algorithms.
-
-
--   :fontawesome-solid-network-wired:{ .lg .middle } 
-    [[scale-up-if-with-parallel|__Scaling up influence function with parallelization__]]
-
-    ---
-    This guide shows you how to parallelize influence function
-    computations using pyDVL to handle large batches of data efficiently.
-
-</div>
+- [[scale-up-if-with-parallel|__Scaling up influence function with parallelization__]]

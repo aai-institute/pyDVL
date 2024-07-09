@@ -16,9 +16,6 @@ nav:
     - Glossary: getting-started/glossary.md
   - How-to Guides:
     - how-to-guides/index.md
-    - How-to Speed up Data Valuation with Parallelization: how-to-guides/how-to-speed-up-value-with-parallel.md
-    - How-to Scale up Influence Function with Parallelization: how-to-guides/how-to-scale-up-if-with-parallel.md
-    - How-to Speed up Data Valuation with Caching: how-to-guides/how-to-speed-up-value-with-caching.md
   - Methods:
     - methods/index.md
     - Data Valuation:
@@ -53,7 +50,7 @@ nav:
       - api/development/index.md
       - API Reference: api/development/reference/
       - Changelog: changelog.md
-      - Development Guidelines: contributing.md
+      - Development Guidelines: development_guidelines.md
 
 watch:
   - src/pydvl
