@@ -30,11 +30,12 @@ The simplest way to compute influence functions is sequentially using the
 This uses a double for-loop to iterate over the batches sequentially
 and collects them.
 
+We start by instantiating the dataloaders and the model and then fitting
+the latter:
+
 ```python
 from pydvl.influence.torch import CgInfluence
 from torch.utils.data import DataLoader
-from pydvl.influence import SequentialInfluenceCalculator
-from pydvl.influence.torch.util import NestedTorchCatAggregator
 
 batch_size = 10
 train_dataloader = DataLoader(..., batch_size=batch_size)
@@ -42,6 +43,13 @@ test_dataloader = DataLoader(..., batch_size=batch_size)
 
 infl_model = CgInfluence(model, loss, hessian_regularization=0.01)
 infl_model.fit(train_dataloader)
+```
+
+We then compute influences sequentially:
+
+```python
+from pydvl.influence import SequentialInfluenceCalculator
+from pydvl.influence.torch.util import NestedTorchCatAggregator
 
 infl_calc = SequentialInfluenceCalculator(infl_model)
 
@@ -104,16 +112,13 @@ and the following [blog entry](https://blog.dask.org/2021/11/02/choosing-dask-ch
     For details on dask schedulers see the
     [official documentation](https://docs.dask.org/en/stable/scheduling.html).
 
+We start by instantiating the dataloaders and the model and then fitting
+the latter:
+
+
 ```python
-import torch
 from torch.utils.data import Dataset, DataLoader
-from pydvl.influence import DaskInfluenceCalculator
 from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.util import (
-    torch_dataset_to_dask_array,
-    TorchNumpyConverter,
-)
-from distributed import Client
 
 train_data_set: Dataset = LargeDataSet(
     ...)  # Possible some out of memory large Dataset
@@ -123,6 +128,17 @@ test_data_set: Dataset = LargeDataSet(
 train_dataloader = DataLoader(train_data_set)
 infl_model = CgInfluence(model, loss, hessian_regularization=0.01)
 infl_model = infl_model.fit(train_dataloader)
+```
+
+After that, we instantiate a Dask client and wrap the data into dask arrays:
+
+```python
+from pydvl.influence.torch.util import torch_dataset_to_dask_array
+from distributed import Client
+
+# use only one thread for scheduling, 
+# due to non-thread safety of some torch operations
+client = Client(n_workers=4, threads_per_worker=1)
 
 # wrap your input data into dask arrays
 chunk_size = 10
@@ -131,10 +147,14 @@ da_x_test, da_y_test = torch_dataset_to_dask_array(
     test_data_set,
     chunk_size=chunk_size
 )
+```
 
-# use only one thread for scheduling, 
-# due to non-thread safety of some torch operations
-client = Client(n_workers=4, threads_per_worker=1)
+Finally, we compute the influences and write them to disk:
+
+```python
+import torch
+from pydvl.influence import DaskInfluenceCalculator
+from pydvl.influence.torch.util import TorchNumpyConverter
 
 infl_calc = DaskInfluenceCalculator(
     infl_model,
