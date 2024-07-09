@@ -47,6 +47,7 @@ class KNNShapleyValuation(Valuation):
     """
 
     def __init__(self, utility: KNNClassifierUtility, progress: bool = True):
+        super().__init__()
         self.utility = utility
         self.progress = progress
 
@@ -65,7 +66,7 @@ class KNNShapleyValuation(Valuation):
         In contrast to other data valuation models, the runtime increases linearly
         with the size of the test dataset.
 
-        Calculating the least core valuation is a computationally expensive task that
+        Calculating the KNN valuation is a computationally expensive task that
         can be parallelized. To do so, call the `fit()` method inside a
         `joblib.parallel_config` context manager as follows:
 
@@ -92,7 +93,7 @@ class KNNShapleyValuation(Valuation):
 
         with Parallel(return_as="generator") as parallel:
             results = parallel(
-                delayed(_compute_values_for_one_test_point)(
+                delayed(self._compute_values_for_one_test_point)(
                     self.helper_model, x, y, data.y
                 )
                 for x, y in generator_with_progress
@@ -112,44 +113,44 @@ class KNNShapleyValuation(Valuation):
         self.result = res
         return self
 
+    @staticmethod
+    def _compute_values_for_one_test_point(
+        helper_model: NearestNeighbors, x: NDArray, y: int, y_train: NDArray
+    ) -> np.ndarray:
+        """Compute the Shapley value for a single test data point.
 
-def _compute_values_for_one_test_point(
-    helper_model: NearestNeighbors, x: NDArray, y: int, y_train: NDArray
-) -> np.ndarray:
-    """Compute the Shapley value for a single test data point.
+        The shapley values of the whole test set are the average of the shapley values
+        of the single test data points.
 
-    The shapley values of the whole test set are the average of the shapley values
-    of the single test data points.
+        Args:
+            helper_model: A fitted NearestNeighbors model.
+            x: A single test data point.
+            y: The correct label of the test data point.
+            y_train: The training labels.
 
-    Args:
-        helper_model: A fitted NearestNeighbors model.
-        x: A single test data point.
-        y: The correct label of the test data point.
-        y_train: The training labels.
+        Returns:
+            The Shapley values for the test data point.
 
-    Returns:
-        The Shapley values for the test data point.
+        """
+        n_obs = len(y_train)
+        n_neighbors = helper_model.get_params()["n_neighbors"]
 
-    """
-    n_obs = len(y_train)
-    k = helper_model.get_params()["n_neighbors"]
+        # sorts data indices from close to far
+        sorted_indices = helper_model.kneighbors(
+            x.reshape(1, -1), n_neighbors=n_obs, return_distance=False
+        )[0]
 
-    # sorts data indices from close to far
-    sorted_indices = helper_model.kneighbors(
-        x.reshape(1, -1), n_neighbors=n_obs, return_distance=False
-    )[0]
+        values = np.zeros(n_obs)
 
-    values = np.zeros(n_obs)
+        idx = sorted_indices[-1]
+        values[idx] = float(y_train[idx] == y) / n_obs
+        # reverse range because we want to go from far to close
+        for i in range(n_obs - 1, 0, -1):
+            prev_idx = sorted_indices[i]
+            idx = sorted_indices[i - 1]
+            values[idx] = values[prev_idx]
+            values[idx] += (int(y_train[idx] == y) - int(y_train[prev_idx] == y)) / max(
+                n_neighbors, i
+            )
 
-    idx = sorted_indices[-1]
-    values[idx] = float(y_train[idx] == y) / n_obs
-    # reverse range because we want to go from far to close
-    for i in range(n_obs - 1, 0, -1):
-        prev_idx = sorted_indices[i]
-        idx = sorted_indices[i - 1]
-        values[idx] = values[prev_idx]
-        values[idx] += (int(y_train[idx] == y) - int(y_train[prev_idx] == y)) / max(
-            k, i
-        )
-
-    return values
+        return values
