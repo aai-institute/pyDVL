@@ -30,7 +30,7 @@ class KNNClassifierScorer(SupervisedScorer):
                     likelihoods.append(0.0)
                 else:
                     likelihoods.append(probs[i, label_to_pos[y[i]]])
-            return np.mean(likelihoods)
+            return cast(float, np.mean(likelihoods))
 
         super().__init__(
             scoring=cast(SupervisedScorerCallable, scoring),
