@@ -1,6 +1,6 @@
-"""
+r"""
 This module implements the MSR-Banzhaf valuation method, as described in
-(Wang et. al.)<sup><a href="wang_data_2023">3</a></sup>.
+(Wang et. al.)<sup><a href="#wang_data_2023">1</a></sup>.
 
 ## References
 
@@ -127,7 +127,7 @@ class MSRBanzhafValuation(SemivalueValuation):
                             self._neg_result.update(evaluation.idx, evaluation.update)
                         else:
                             raise ValueError(
-                                "Invalid ValueUpdateKind: {evaluation.kind}"
+f"Invalid ValueUpdateKind: {evaluation.kind}"
                             )
 
                         self.result = _combine_results(
@@ -167,7 +167,7 @@ def _combine_results(
     misleading update counts and even wrong values if no further precaution is taken.
 
     TODO: Verify that the two running means are statistically independent (which is
-    assumed in the aggregation of variances).
+ assumed in the aggregation of variances).
 
     Args:
         pos_result: The result of the positive updates.
