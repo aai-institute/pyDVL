@@ -46,7 +46,7 @@ data = fetch_covtype()
 model = make_pipeline(MinMaxScaler(), Normalizer(), LinearSVC())
 ```
 
-And the following utility and data valuation method:
+And the following scorer, utility and data valuation method:
 
 ```python
 from pydvl.valuation import (
@@ -55,10 +55,12 @@ from pydvl.valuation import (
     ModelUtility,
     PermutationSampler,
     MaxUpdates,
+    Scorer,
 )
 
-dataset = Dataset.from_sklearn(data, random_state=16)
-utility = ModelUtility(model)
+scorer = Scorer("accuracy")
+utility = ModelUtility(model, scorer)
+training_set, test_set = Dataset.from_sklearn(data, random_state=16)
 valuation = DataShapleyValuation(
     utility,
     sampler=PermutationSampler(batch_size=10, seed=16),
@@ -74,7 +76,7 @@ The general pattern to parallelize the data valuation methods is the following:
 from joblib import parallel_config
 
 with parallel_config():
-    valuation.fit(dataset)
+    valuation.fit(training_set)
 ```
 
 pyDVL uses joblib's [Parallel][joblib.Parallel] class internally as 
@@ -103,7 +105,7 @@ from joblib import parallel_config
 
 # We limit the number of concurrent jobs to 4
 with parallel_config(backend="loky", n_jobs=4):
-    valuation.fit(dataset)
+    valuation.fit(training_set)
 ```
 ### Remote Parallelization
 
@@ -183,7 +185,7 @@ from joblib import parallel_config
 
 # We use the 'dask' backend, limit the number of concurrent jobs to 4
 with parallel_config(backend="dask", n_jobs=4):
-    valuation.fit(dataset)
+    valuation.fit(training_set)
 ```
 
 ## Conclusion
