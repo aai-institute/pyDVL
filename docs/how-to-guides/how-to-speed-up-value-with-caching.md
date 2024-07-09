@@ -208,3 +208,10 @@ print(cache_backend.client.stats())
 ```
 
 This will return the result of the memcached "stats" command.
+
+## Conclusion
+
+By following this guide, you've learned how to speed up
+data valuation algorithms using various caching methods.
+For more advanced configurations, refer to the documentation
+of the [caching][pydvl.utils.caching] package.
