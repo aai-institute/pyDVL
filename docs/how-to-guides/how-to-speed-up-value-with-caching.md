@@ -64,19 +64,74 @@ useful for:
     see the documentation for the [caching package][pydvl.utils.caching] for more
     information.
 
-## Example: Disk-Based Caching
+## Set up the dataset and model
 
-To enable disk-based caching using:
+For the rest of the guide we will use the following dataset, model and scorer:
+
+```python
+from pydvl.valuation import Dataset, Scorer
+from sklearn.datasets import fetch_covtype
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MinMaxScaler, Normalizer
+from sklearn.svm import LinearSVC
+
+data = fetch_covtype()
+training_set, test_set = Dataset.from_sklearn(data, random_state=16)
+model = make_pipeline(MinMaxScaler(), Normalizer(), LinearSVC())
+scorer = Scorer("accuracy")
+```
+
+## Disk-Based Caching
+
+To enable disk-based caching we first instantiate it:
 
 ```python
 from pydvl.utils.caching.disk import DiskCacheBackend
-from pydvl.valuation.utility import ModelUtility
 
 cache_backend = DiskCacheBackend()
-utility = ModelUtility(..., cache_backend=cache_backend)
 ```
 
-## Example: Memcached-Based Caching
+We can verify that the cache is empty at first (i.e. no hits, no misses):
+
+```python
+print(cache_backend.stats)
+```
+
+In order to use the cache with the utility we have to pass it at initialization: 
+
+```python
+from pydvl.valuation.utility import ModelUtility
+
+utility = ModelUtility(model, scorer, cache_backend=cache_backend)
+utility.with_dataset(training_set)
+```
+
+We can now compute the utility of a sample: 
+
+```python
+import numpy as np
+from pydvl.valuation import Sample
+
+# We use the entire training set as a sample
+sample = Sample(-1, np.arange(len(training_set)))
+_ = utility(sample)
+```
+
+After using the utility, we can verify that the cache is no longer empty,
+i.e., that there was a miss and a set:
+
+```python
+print(cache_backend.stats)
+```
+
+We can also inspect the directory used by the cache to find a file
+that represents the cached utility value:
+
+```python
+print(list(cache_backend.cache_dir.glob("*")))
+```
+
+## Memcached-Based Caching
 
 To enable memcached-based caching, you have to first install and run it:
 
@@ -97,15 +152,59 @@ To enable memcached-based caching, you have to first install and run it:
 
 - Or run it remotely and get its address and port number.
 
-If we assume that we chose the 2nd option and have memcached running
-in a docker container locally, then we can enable memcached-based caching using:
+We will assume that we chose the 2nd option and have memcached running
+in a docker container locally, then we can enable memcached-based caching
+by first instantiate the respective class:
 
 ```python
-from pydvl.utils.caching.memcached import MemcachedCacheBackend, MemcachedClientConfig
-from pydvl.valuation.utility import ModelUtility
+from pydvl.utils.caching.memcached import (
+  MemcachedCacheBackend,
+  MemcachedClientConfig,
+)
 
+# We don't pass anything because the defaults work for our specific scenario
 cache_config = MemcachedClientConfig()
 cache_backend = MemcachedCacheBackend(cache_config)
-utility = ModelUtility(..., cache_backend=cache_backend)
-
 ```
+
+We can verify that the cache is empty at first (i.e. no hits, no misses):
+
+```python
+print(cache_backend.stats)
+```
+
+In order to use the cache with the utility we have to pass it at initialization: 
+
+```python
+from pydvl.valuation.utility import ModelUtility
+
+utility = ModelUtility(model, scorer, cache_backend=cache_backend)
+utility.with_dataset(training_set)
+```
+
+We can now compute the utility of a sample: 
+
+```python
+import numpy as np
+from pydvl.valuation import Sample
+
+# We use the entire training set as a sample
+sample = Sample(-1, np.arange(len(training_set)))
+_ = utility(sample)
+```
+
+After using the utility, we can verify that the cache is no longer empty,
+i.e., that there was a miss and a set:
+
+```python
+print(cache_backend.stats)
+```
+
+We can also inspect the directory used by the cache to find a file
+that represents the cached utility value:
+
+```python
+print(cache_backend.client.stats())
+```
+
+This will return the result of the memcached "stats" command.
