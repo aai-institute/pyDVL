@@ -14,6 +14,9 @@ class KNNClassifierScorer(SupervisedScorer):
     Typically, users will not create instances of this class directly but indirectly
     by using `pydvl.valuation.utility.KNNUtility`.
 
+    Args:
+        test_data: The test data to evaluate the model on.
+
     """
 
     def __init__(self, test_data):
