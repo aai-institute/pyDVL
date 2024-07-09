@@ -22,8 +22,9 @@ Results can also be sorted by value, variance or number of updates, see
 [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
 [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
 [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices],
-[ValuationResult.names][pydvl.valuation.result.ValuationResult.names] are sorted in
-the same way.
+[ValuationResult.stderr][pydvl.valuation.result.ValuationResult.stderr],
+[ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
+are sorted in the same way.
 
 Indexing and slicing of results is supported and
 [ValueItem][pydvl.valuation.result.ValueItem] objects are returned. These objects
@@ -93,8 +94,7 @@ class ValueItem:
             [Dataset][pydvl.utils.dataset.Dataset]
         name: Name of the sample if it was provided. Otherwise, `str(index)`
         value: The value
-        variance: Variance of the value if it was computed with an approximate
-            method
+        variance: Variance of the marginals from which the value was computed.
         count: Number of updates for this value
     """
 
@@ -187,7 +187,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             common to pass the indices of a [Dataset][pydvl.utils.dataset.Dataset]
             here. Attention must be paid in a parallel context to copy them to
             the local process. Just do `indices=np.copy(data.indices)`.
-        variances: An optional array of variances in the computation of each value.
+        variances: An optional array of variances of the marginals from which the values
+            are computed.
         counts: An optional array with the number of updates for each value.
             Defaults to an array of ones.
         data_names: Names for the data points. Defaults to index numbers if not set.
@@ -283,6 +284,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         properties
         [ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
         [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
+        [ValuationResult.stderr][pydvl.valuation.result.ValuationResult.stderr],
         [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
         [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices]
         and [ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
@@ -298,6 +300,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             "value": "_values",
             "variance": "_variances",
             "name": "_names",
+            "stderr": "stderr",
         }
         self._sort_positions = np.argsort(getattr(self, keymap[key]))
         if reverse:
@@ -311,14 +314,19 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     @property
     def variances(self) -> NDArray[np.float_]:
-        """The variances, possibly sorted."""
+        """Variances of the marginals from which values were computed, possibly sorted.
+
+        Note that this is not the variance of the value estimate, but the sample
+        variance of the marginals used to compute it.
+
+        """
         return self._variances[self._sort_positions]
 
     @property
     def stderr(self) -> NDArray[np.float_]:
-        """The raw standard errors, possibly sorted."""
+        """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+            NDArray[np.float_], np.sqrt(self._variances / np.maximum(1, self.counts))
         )
 
     @property

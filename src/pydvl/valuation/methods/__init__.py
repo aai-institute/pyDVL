@@ -8,6 +8,6 @@ from .gt_shapley import *
 from .knn_shapley import *
 from .least_core import *
 from .loo import *
+from .msr_banzhaf import *
 from .owen_shapley import *
 from .semivalue import *
-from .weighted_banzhaf import *

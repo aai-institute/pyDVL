@@ -210,15 +210,15 @@ class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler]):
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
-        r = []
+        updates = []
         for sample in batch:
             u_i = self.utility(sample.with_idx_in_subset())
             u = self.utility(sample)
             marginal = (u_i - u) * self.coefficient(self.n_indices, len(sample.subset))
-            r.append(ValueUpdate(sample.idx, marginal))
+            updates.append(ValueUpdate(sample.idx, marginal))
             if is_interrupted():
                 break
-        return r
+        return updates
 
 
 class LOOSampler(IndexSampler):
@@ -263,16 +263,16 @@ class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
-        r = []
+        updates = []
         for sample in batch:
             assert sample.idx is not None
             u = self.utility(sample)
             marginal = self.total_utility - u
             marginal *= self.coefficient(self.n_indices, len(sample.subset))
-            r.append(ValueUpdate(sample.idx, marginal))
+            updates.append(ValueUpdate(sample.idx, marginal))
             if is_interrupted():
                 break
-        return r
+        return updates
 
 
 class DeterministicUniformSampler(PowersetSampler):

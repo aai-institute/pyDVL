@@ -7,17 +7,13 @@ from numpy.testing import assert_array_equal
 
 from pydvl.utils import Seed
 from pydvl.utils.numeric import powerset
-from pydvl.valuation.samplers.permutation import (
-    AntitheticPermutationSampler,
-    DeterministicPermutationSampler,
-    PermutationSampler,
-)
-from pydvl.valuation.samplers.powerset import (
+from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     AntitheticSampler,
     DeterministicUniformSampler,
     IndexIteration,
     LOOSampler,
+    MSRSampler,
     NoIndexIteration,
     OwenSampler,
     PowersetSampler,
@@ -28,6 +24,11 @@ from pydvl.valuation.samplers.powerset import (
     UniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
 )
+from pydvl.valuation.samplers.permutation import (
+    AntitheticPermutationSampler,
+    DeterministicPermutationSampler,
+    PermutationSampler,
+)
 
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
 # See https://github.com/python/typing/issues/213
@@ -37,6 +38,7 @@ StochasticSampler = Union[
     AntitheticSampler,
     UniformStratifiedSampler,
     AntitheticPermutationSampler,
+    MSRSampler,
 ]
 
 
@@ -159,6 +161,7 @@ def _check_subsets(batches, expected):
         VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
         OwenSampler(n_samples_outer=4),
         AntitheticOwenSampler(n_samples_outer=2),
+        MSRSampler(),
     ],
 )
 @pytest.mark.parametrize("indices", [np.array([]), np.array([0, 1, 2])])
@@ -171,7 +174,10 @@ def test_proper(sampler, indices):
     for batch in samples:
         sample = list(batch)[0]
         idx, subset = sample
-        subsets = [set(s) for s in powerset(np.setxor1d(indices, [idx]))]
+        if idx is not None:
+            subsets = [set(s) for s in powerset(np.setxor1d(indices, [idx]))]
+        else:
+            subsets = [set(s) for s in powerset(indices)]
         assert set(subset) in subsets
 
 
@@ -193,6 +199,7 @@ def test_proper(sampler, indices):
         VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
         OwenSampler(n_samples_outer=4),
         AntitheticOwenSampler(n_samples_outer=2),
+        MSRSampler(),
     ],
 )
 def test_sample_counter(sampler):
@@ -240,6 +247,7 @@ def test_length_for_finite_samplers(sampler, expected_length):
         AntitheticPermutationSampler(),
         TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
         VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
+        MSRSampler(),
     ],
 )
 def test_length_of_infinite_samplers(sampler):
