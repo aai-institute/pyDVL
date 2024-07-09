@@ -252,6 +252,27 @@ def test_running_moments():
         assert np.allclose(variances, true_variances)
 
 
+def test_running_moment_initialization():
+    """We often use running moments for updates in ValuationResult where the means
+    and variances are initialized to zero. This test makes sure that case is handled
+    correctly.
+
+    """
+    got_mean, got_var = running_moments(
+        previous_avg=0.0, previous_variance=0.0, count=0, new_value=1.0
+    )
+
+    assert got_mean == 1.0
+    assert got_var == 0.0  # TODO: shouldn't this be undefined?
+
+    got_mean, got_var = running_moments(
+        previous_avg=got_mean, previous_variance=got_var, count=1, new_value=2.0
+    )
+
+    assert np.isclose(got_mean, 1.5)
+    assert np.isclose(got_var, np.var([1.0, 2.0]))
+
+
 @pytest.mark.parametrize(
     "min_elements_per_label,num_elements_per_label,num_labels,check_num_samples",
     [(0, 10, 3, 1000), (1, 10, 3, 1000), (2, 10, 3, 1000)],

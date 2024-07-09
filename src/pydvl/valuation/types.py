@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
+from enum import Enum
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
