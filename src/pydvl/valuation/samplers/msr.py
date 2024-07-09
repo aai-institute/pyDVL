@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -15,14 +16,28 @@ from pydvl.valuation.types import (
     SampleBatch,
     SampleGenerator,
     ValueUpdate,
-    ValueUpdateKind,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["MSRSampler"]
 
 
+@dataclass(frozen=True)
+class MSRValueUpdate(ValueUpdate):
+    is_positive: bool
+
+
 class MSRSampler(StochasticSamplerMixin, IndexSampler):
+    """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
+
+    This is similar to a UniformSampler without an outer index.
+
+    Args:
+        batch_size: Number of samples to generate in each batch.
+        seed: Seed for the random number generator.
+
+    """
+
     def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
 
@@ -46,7 +61,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler):
 class MSREvaluationStrategy(EvaluationStrategy):
     """Evaluation strategy for Maximum Sample Re-use (MSR) valuation.
 
-    The MSR evaluation strategy makes one utility evaluation per update but generates
+    The MSR evaluation strategy makes one utility evaluation per sample but generates
     `n_indices` many updates from it. The updates will be used to update two running
     means that will later be combined into on final value. We send the
     `ValueUpdate.kind` field to `ValueUpdateKind.POSITVE` or `ValueUpdateKind.NEGATIVE`
@@ -70,7 +85,6 @@ class MSREvaluationStrategy(EvaluationStrategy):
         mask[sample.subset] = True
 
         updates = []
-        for i in range(self.n_indices):
-            kind = ValueUpdateKind.POSITVE if mask[i] else ValueUpdateKind.NEGATIVE
-            updates.append(ValueUpdate(idx=i, update=u_value, kind=kind))
+        for i, m in enumerate(mask):
+            updates.append(MSRValueUpdate(idx=i, update=u_value, is_positive=m))
         return updates

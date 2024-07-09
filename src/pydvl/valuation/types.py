@@ -30,17 +30,10 @@ NameT = Union[np.object_, np.int_]
 NullaryPredicate = Callable[[], bool]
 
 
-class ValueUpdateKind(str, Enum):
-    POSITVE = "positve"
-    NEGATIVE = "negative"
-    DEFAULT = "default"
-
-
 @dataclass(frozen=True)
 class ValueUpdate:
     idx: int | IndexT | None
     update: float
-    kind: ValueUpdateKind = ValueUpdateKind.DEFAULT
 
 
 @dataclass(frozen=True)
