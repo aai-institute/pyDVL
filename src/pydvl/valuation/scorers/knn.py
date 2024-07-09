@@ -1,6 +1,6 @@
 """Specialized scorer for k-nearest neighbors models."""
 
-
+from typing import cast
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier
@@ -32,7 +32,7 @@ class KNNClassifierScorer(SupervisedScorer):
             return np.mean(likelihoods)
 
         super().__init__(
-            scoring=scoring,
+scoring=cast(SupervisedScorerCallable, scoring)
             test_data=test_data,
             default=0.0,
             range=(0, 1),
