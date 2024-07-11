@@ -20,7 +20,7 @@ computations using pyDVL to handle large batches of data efficiently.
 
 ### Sequential Computation
 
-The simplest way to compute influence functions is sequentially using the
+The simplest way to scale the computation of influence functions is using the convenience class 
 [SequentialInfluenceCalculator][pydvl.influence.influence_calculator].
 
 This uses a double for-loop to iterate over the batches sequentially
@@ -37,7 +37,7 @@ batch_size = 10
 train_dataloader = DataLoader(..., batch_size=batch_size)
 test_dataloader = DataLoader(..., batch_size=batch_size)
 
-infl_model = CgInfluence(model, loss, hessian_regularization=0.01)
+infl_model = CgInfluence(model, loss, regularization=0.01)
 infl_model.fit(train_dataloader)
 ```
 
@@ -122,7 +122,7 @@ test_data_set: Dataset = LargeDataSet(
     ...)  # Possible some out of memory large Dataset
 
 train_dataloader = DataLoader(train_data_set)
-infl_model = CgInfluence(model, loss, hessian_regularization=0.01)
+infl_model = CgInfluence(model, loss, regularization=0.01)
 infl_model = infl_model.fit(train_dataloader)
 ```
 
