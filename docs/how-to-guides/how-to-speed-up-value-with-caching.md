@@ -20,6 +20,11 @@ occur again. pyDVL supports three different caching backends:
   cached values. This is used to share cached values between threads
   in a single process.
 
+    !!! warning
+
+        The in-memory cache backend will be deprecated in favor of using
+        shared memory.
+
 - [DiskCacheBackend][pydvl.utils.caching.disk.DiskCacheBackend]:
   a disk-based cache backend that uses pickled values written to and read from disk.  
   This is used to share cached values between processes in a single machine.
