@@ -17,10 +17,6 @@ computations using pyDVL to handle large batches of data efficiently.
     For speeding-up data valuation algorithms with parallelization
     see [[speed-up-value-with-parallel]].
 
-!!! warning "Speeding up Influence Function"
-
-    Scaling up Influence Function computations will not speed up
-    the computations and may even slow them down.
 
 ### Sequential Computation
 
