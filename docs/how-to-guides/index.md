@@ -12,7 +12,8 @@ specific tasks.
 
 - [[speed-up-value-with-parallel|__Speed up data valuation with parallelization__]]
 - [[speed-up-value-with-caching|__Speed up data valuation with caching__]]
+- [[speed-up-if-with-parallel|__Speeding up influence function with parallelization__]]
 
 ## Scaling up
 
-- [[scale-up-if-with-parallel|__Scaling up influence function with parallelization__]]
+- [[scale-up-if-locally-with-lazy|__Scaling up influence function locally with lazy computations__]]
