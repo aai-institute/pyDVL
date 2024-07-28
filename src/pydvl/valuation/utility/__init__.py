@@ -18,5 +18,6 @@ for learning the scoring function to avoid repeated re-training of the model to
 compute the score.
 """
 
+from .modelutility import *  # isort: skip
+from .knn import *
 from .learning import *
-from .modelutility import *

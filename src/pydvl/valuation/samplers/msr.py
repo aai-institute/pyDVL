@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, List
 
 import numpy as np
 
@@ -71,7 +71,7 @@ class MSREvaluationStrategy(EvaluationStrategy):
 
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
-    ) -> list[ValueUpdate]:
+    ) -> List[MSRValueUpdate]:
         updates = []
         for sample in batch:
             updates.extend(self._process_sample(sample))
@@ -79,7 +79,7 @@ class MSREvaluationStrategy(EvaluationStrategy):
                 break
         return updates
 
-    def _process_sample(self, sample: Sample) -> list[ValueUpdate]:
+    def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
         u_value = self.utility(sample)
         mask = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True

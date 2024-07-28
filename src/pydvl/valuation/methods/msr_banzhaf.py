@@ -161,9 +161,6 @@ class MSRBanzhafValuation(SemivalueValuation):
         estimates, misleading update counts and even wrong values if no further
         precaution is taken.
 
-        TODO: Verify that the two running means are statistically independent (which is
- assumed in the aggregation of variances).
-
         Args:
             pos_result: The result of the positive updates.
             neg_result: The result of the negative updates.
@@ -171,6 +168,9 @@ class MSRBanzhafValuation(SemivalueValuation):
 
         Returns:
             The combined valuation result.
+
+        TODO: Verify that the two running means are statistically independent (which is
+            assumed in the aggregation of variances).
 
         """
         # define counts as minimum of the two counts (see docstring)

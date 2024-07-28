@@ -173,7 +173,6 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                 model or the scorer returns [numpy.NaN][]. Otherwise, the score
                 of the model.
         """
-
         if self.training_data is None:
             raise ValueError("No training data provided")
 
