@@ -4,6 +4,7 @@
 
 ### Added
 
+- Refactoring KNN Shapley values with the new sampler architecture [PR #610](https://github.com/aai-institute/pyDVL/pull/610).
 - Refactoring MSR Banzhaf semivalues with the new sampler architecture.
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
 - Refactoring group-testing shapley values with new sampler architecture
@@ -36,7 +37,7 @@
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 - Fix a bug in the calculation of variance estimates for MSR Banzhaf
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
-
+- Fix a bug in KNN Shapley values. See [Issue 613](https://github.com/aai-institute/pyDVL/issues/613) for details.
 
 
 ### Changed
