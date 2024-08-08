@@ -1,48 +1,56 @@
 from __future__ import annotations
 
-import hashlib
-from dataclasses import dataclass, field
-from typing import cast
+import numpy as np
 
-from numpy.typing import NDArray
-
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
-from pydvl.valuation.types import IndexT, Sample
+from pydvl.valuation.types import CSSample
 from pydvl.valuation.utility import ModelUtility
 
-__all__ = ["CSSample", "ClasswiseUtility"]
+__all__ = ["ClasswiseModelUtility"]
 
 
-@dataclass(frozen=True)
-class CSSample(Sample):
-    label: int | None
-    in_class_subset: NDArray[IndexT]
+class ClasswiseModelUtility(ModelUtility[CSSample, SupervisedModel]):
+    def __init__(
+        self,
+        model: SupervisedModel,
+        scorer: ClasswiseSupervisedScorer,
+        *,
+        catch_errors: bool = True,
+        show_warnings: bool = False,
+        cache_backend: CacheBackend | None = None,
+        cached_func_options: CachedFuncConfig | None = None,
+        clone_before_fit: bool = True,
+    ):
+        super().__init__(
+            model,
+            scorer,
+            catch_errors=catch_errors,
+            show_warnings=show_warnings,
+            cache_backend=cache_backend,
+            cached_func_options=cached_func_options,
+            clone_before_fit=clone_before_fit,
+        )
+        if not isinstance(self.scorer, ClasswiseSupervisedScorer):
+            raise ValueError("Scorer must be an instance of ClasswiseSupervisedScorer")
+        self.scorer: ClasswiseSupervisedScorer
 
-    # Make the unpacking operator work
-    def __iter__(self):  # No way to type the return Iterator properly
-        return iter((self.idx, self.subset, self.label, self.in_class_subset))
+    def _compute_score(self, model: SupervisedModel, sample: CSSample) -> float:
+        """Computes the score of a fitted model.
 
-    def __hash__(self):
-        array_bytes = self.subset.tobytes() + self.in_class_subset.tobytes()
-        sha256_hash = hashlib.sha256(array_bytes).hexdigest()
-        return int(sha256_hash, base=16)
+        Args:
+            model: fitted model
+            sample: contains a subset of valid indices for the
+                `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
 
-
-class ClasswiseUtility(ModelUtility[CSSample, SupervisedModel]):
-    """
-    FIXME: probably unnecessary, just a test
-    """
-
-    scorer: ClasswiseSupervisedScorer
-
-    def __call__(self, sample: CSSample | None) -> float:
-        if sample is None or len(sample.subset) == 0:
-            return self.scorer.default
-
-        return cast(float, self._utility_wrapper(sample))
+        Returns:
+            Computed score or the scorer's default value in case of an error
+            or a NaN value.
+        """
+        self.scorer.with_label(sample.label)
+        return super()._compute_score(model, sample)
 
     def _utility(self, sample: CSSample) -> float:
-        self.scorer.label = sample.label
-        # TODO: do the thing
-        raise NotImplementedError
+        new_sample = sample.with_subset(np.union1d(sample.subset, sample.ooc_subset))
+        return super()._utility(new_sample)

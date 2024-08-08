@@ -19,5 +19,6 @@ compute the score.
 """
 
 from .modelutility import *  # isort: skip
+from .classwise import *
 from .knn import *
 from .learning import *

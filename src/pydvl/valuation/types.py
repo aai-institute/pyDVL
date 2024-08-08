@@ -16,6 +16,7 @@ __all__ = [
     "NameT",
     "NullaryPredicate",
     "Sample",
+    "CSSample",
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
@@ -104,6 +105,21 @@ class Sample:
             return self
 
         return replace(self, subset=subset)
+
+
+@dataclass(frozen=True)
+class CSSample(Sample):
+    label: int | None
+    ooc_subset: NDArray[IndexT]
+
+    # Make the unpacking operator work
+    def __iter__(self):  # No way to type the return Iterator properly
+        return iter((self.idx, self.subset, self.label, self.ooc_subset))
+
+    def __hash__(self):
+        array_bytes = self.subset.tobytes() + self.ooc_subset.tobytes()
+        sha256_hash = hashlib.sha256(array_bytes).hexdigest()
+        return int(sha256_hash, base=16)
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
