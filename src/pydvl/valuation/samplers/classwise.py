@@ -30,11 +30,13 @@ class ClasswiseSampler(StochasticSamplerMixin, IndexSampler):
         out_of_class: PowersetSampler,
         *,
         min_elements_per_label: int = 1,
+        max_repeated_ooc_sampling: int = 100,
     ):
         super().__init__()
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label
+        self.max_repeated_ooc_sampling = max_repeated_ooc_sampling
 
     def interrupt(self):
         self.in_class.interrupt()
@@ -67,7 +69,11 @@ class ClasswiseSampler(StochasticSamplerMixin, IndexSampler):
                 if self.min_elements_per_label <= 0:
                     ooc_sample = next(self.out_of_class._generate(without_label))
                 else:
-                    while True:
+                    # Using a high number of iterations
+                    # instead of a while True loop to avoid
+                    # having an accidental infinite loop
+                    for i in range(self.max_repeated_ooc_sampling):
+                        i += 1
                         # We make sure that we have at least
                         # `min_elements_per_label` elements per label per sample
                         ooc_sample = next(self.out_of_class._generate(without_label))
@@ -76,6 +82,13 @@ class ClasswiseSampler(StochasticSamplerMixin, IndexSampler):
                         )
                         if n_unique_sample_labels == n_labels - 1:
                             break
+                    else:
+                        raise RuntimeError(
+                            f"Could not find out-of-class sample with at least"
+                            f" {self.min_elements_per_label} elements per sample after retrying"
+                            f" {self.max_repeated_ooc_sampling} times."
+                            f" Consider increasint max_repeated_ooc_sampling"
+                        )
 
                 ic_sample = next(self.in_class._generate(with_label))
                 batch.append(
