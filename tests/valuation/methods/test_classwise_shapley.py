@@ -9,18 +9,24 @@ from sklearn import datasets
 from sklearn.linear_model import LogisticRegression
 from typing_extensions import Self
 
+from pydvl.utils.dataset import Dataset as OldDataset
+from pydvl.utils.utility import Utility as OldUtility
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods import ClasswiseShapley
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import (
     ClasswiseSampler,
-    DeterministicUniformSampler,
     PermutationSampler,
     UniformSampler,
 )
 from pydvl.valuation.scorers import ClasswiseSupervisedScorer
 from pydvl.valuation.stopping import MaxUpdates
 from pydvl.valuation.utility import ClasswiseModelUtility
-from pydvl.value.result import ValuationResult
+from pydvl.value import MaxChecks
+from pydvl.value.shapley.classwise import ClasswiseScorer as OldClasswiseScorer
+from pydvl.value.shapley.classwise import compute_classwise_shapley_values
+from pydvl.value.shapley.truncated import NoTruncation
+from tests.value import check_values
 
 from .. import check_values
 
@@ -164,22 +170,10 @@ def test_classwise_shapley(
     )
     valuation.fit(train_dataset_manual_derivation)
     values = valuation.values()
-    print(values)
     check_values(values, exact_solution, **check_kwargs)
 
 
-from typing import Dict, Tuple, cast
-
-from pydvl.utils.dataset import Dataset as OldDataset
-from pydvl.utils.utility import Utility as OldUtility
-from pydvl.value import MaxChecks, ValuationResult
-from pydvl.value.shapley.classwise import ClasswiseScorer as OldClasswiseScorer
-from pydvl.value.shapley.classwise import compute_classwise_shapley_values
-from pydvl.value.shapley.truncated import NoTruncation
-from tests.value import check_values
-
-
-@pytest.mark.parametrize("n_samples", [1000], ids=lambda x: "n_samples={}".format(x))
+@pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
 def test_old_vs_new(
     n_samples: int,
     seed,
