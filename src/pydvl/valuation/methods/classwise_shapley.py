@@ -60,26 +60,20 @@ $y_i$ and $-y_i$, respectively.
 from __future__ import annotations
 
 import logging
-from typing import Callable, Generator
+from typing import Any, TypeVar
 
 import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
 from pydvl.utils.progress import Progress
-from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers import IndexSampler, PowersetSampler
-from pydvl.valuation.samplers.base import EvaluationStrategy
-from pydvl.valuation.samplers.powerset import NoIndexIteration
+from pydvl.valuation.samplers.classwise import ClasswiseSampler, get_unique_labels
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.stopping import StoppingCriterion
-from pydvl.valuation.types import BatchGenerator, IndexSetT
-from pydvl.valuation.utility.base import UtilityBase
-from pydvl.valuation.utility.classwise import CSSample
-from pydvl.valuation.utility.modelutility import ModelUtility
+from pydvl.valuation.utility.classwise import ClasswiseModelUtility
 from pydvl.valuation.utils import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
@@ -89,75 +83,20 @@ __all__ = ["ClasswiseShapley"]
 
 logger = logging.getLogger(__name__)
 
-
-def unique_labels(array: NDArray) -> NDArray:
-    """Labels of the dataset."""
-    # Object, String, Unicode, Unsigned integer, Signed integer, boolean
-    if array.dtype.kind in "OSUiub":
-        return np.unique(array)
-    raise ValueError("Dataset must be categorical to have unique labels.")
-
-
-class ClasswiseSampler(IndexSampler):
-    def __init__(
-        self,
-        in_class: IndexSampler,
-        out_of_class: PowersetSampler,
-        label: int | None = None,
-    ):
-        super().__init__()
-        self.in_class = in_class
-        self.out_of_class = out_of_class
-        self.label = label
-
-    def for_label(self, label: int) -> ClasswiseSampler:
-        return ClasswiseSampler(self.in_class, self.out_of_class, label)
-
-    def from_data(self, data: Dataset) -> Generator[list[CSSample], None, None]:
-        assert self.label is not None
-
-        without_label = np.where(data.y != self.label)[0]
-        with_label = np.where(data.y == self.label)[0]
-
-        # HACK: the outer sampler is over full subsets of T_{-y_i}
-        self.out_of_class._index_iteration = NoIndexIteration
-
-        for ooc_batch in self.out_of_class.generate_batches(without_label):
-            # NOTE: The inner sampler can be a permutation sampler => we need to
-            #  return batches of the same size as that sampler in order for the
-            #  in_class strategy to work correctly.
-            for ooc_sample in ooc_batch:
-                for ic_batch in self.in_class.generate_batches(with_label):
-                    # FIXME? this sends the same out_of_class_subset for all samples
-                    #   maybe a few 10s of KB... probably irrelevant
-                    yield [
-                        CSSample(
-                            idx=ic_sample.idx,
-                            label=self.label,
-                            subset=ooc_sample.subset,
-                            in_class_subset=ic_sample.subset,
-                        )
-                        for ic_sample in ic_batch
-                    ]
-
-    def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
-        raise AttributeError("Cannot sample from indices directly.")
-
-    def make_strategy(
-        self,
-        utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
-    ) -> EvaluationStrategy[IndexSampler]:
-        return self.in_class.make_strategy(utility, coefficient)
+T = TypeVar("T")
 
 
 class ClasswiseShapley(Valuation):
+    algorithm_name = "Classwise-Shapley"
+
     def __init__(
         self,
-        utility: ModelUtility[CSSample, SupervisedModel],
+        utility: ClasswiseModelUtility,
         sampler: ClasswiseSampler,
         is_done: StoppingCriterion,
-        progress: bool = False,
+        progress: dict[str, Any] | bool = False,
+        *,
+        normalize_values: bool = True,
     ):
         super().__init__()
         self.utility = utility
@@ -167,37 +106,53 @@ class ClasswiseShapley(Valuation):
             raise ValueError("Scorer must be a ClasswiseScorer.")
         self.scorer: ClasswiseSupervisedScorer = utility.scorer
         self.is_done = is_done
-        self.progress = progress
+        self.tqdm_args: dict[str, Any] = {
+            "desc": f"{self.__class__.__name__}: {str(is_done)}"
+        }
+        # HACK: parse additional args for the progress bar if any (we probably want
+        #  something better)
+        if isinstance(progress, bool):
+            self.tqdm_args.update({"disable": not progress})
+        else:
+            self.tqdm_args.update(progress if isinstance(progress, dict) else {})
+        self.normalize_values = normalize_values
 
     def fit(self, data: Dataset):
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations
-            algorithm=f"classwise-shapley",
+            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
             indices=data.indices,
             data_names=data.data_names,
         )
         ensure_backend_has_generator_return()
 
-        parallel = Parallel(return_as="generator_unordered")
-
         self.utility.training_data = data
-        self.labels = unique_labels(data.y)
 
-        with make_parallel_flag() as flag:
-            # FIXME, DUH: this loop needs to be in the sampler or we will never converge
-            for label in self.labels:
-                sampler = self.sampler.for_label(label)
-                strategy = sampler.make_strategy(self.utility)
-                processor = delayed(strategy.process)
+        sample_generator = self.sampler.from_data(data)
+        strategy = self.sampler.make_strategy(self.utility)
+        processor = delayed(strategy.process)
+
+        with Parallel(return_as="generator_unordered") as parallel:
+            with make_parallel_flag() as flag:
                 delayed_evals = parallel(
                     processor(batch=list(batch), is_interrupted=flag)
-                    for batch in sampler.generate_batches(data.indices)
+                    for batch in sample_generator
                 )
-                for evaluation in Progress(delayed_evals, self.is_done):
-                    self.result.update(evaluation.idx, evaluation.update)
+
+                for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
+                    for evaluation in batch:
+                        self.result.update(evaluation.idx, evaluation.update)
+                        if self.is_done(self.result):
+                            flag.set()
+                            self.sampler.interrupt()
+                            break
+
                     if self.is_done(self.result):
-                        flag.set()
                         break
+        if self.normalize_values:
+            self._normalize()
+
+        return self
 
     def _normalize(self) -> ValuationResult:
         r"""
@@ -211,22 +166,24 @@ class ClasswiseShapley(Valuation):
         Returns:
             Normalized ValuationResult object.
         """
-        u = self.utility
+        if self.result is None:
+            raise ValueError("You should call fit before calling _normalize()")
 
-        assert self.result is not None
-        assert self.labels is not None
-        assert u.training_data is not None
+        if self.utility.training_data is None:
+            raise ValueError("You should call fit before calling _normalize()")
 
         logger.info("Normalizing valuation result.")
-        u.model.fit(u.training_data.x, u.training_data.y)
+        unique_labels = get_unique_labels(self.utility.training_data.y)
+        self.utility.model.fit(
+            self.utility.training_data.x, self.utility.training_data.y
+        )
 
-        for idx_label, label in enumerate(self.labels):
-            self.scorer.label = label
-            active_elements = u.training_data.y == label
+        for idx_label, label in enumerate(unique_labels):
+            active_elements = self.utility.training_data.y == label
             indices_label_set = np.where(active_elements)[0]
-            indices_label_set = u.training_data.indices[indices_label_set]
+            indices_label_set = self.utility.training_data.indices[indices_label_set]
 
-            self.scorer.label = label
+            self.scorer.with_label(label)
             in_class_acc, _ = self.scorer.compute_in_and_out_of_class_scores(u.model)
 
             sigma = np.sum(self.result.values[indices_label_set])
