@@ -154,6 +154,31 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
         return cast(float, self._utility_wrapper(sample))
 
+    def _compute_score(self, model: ModelT, sample: SampleT) -> float:
+        """Computes the score of a fitted model.
+
+        Args:
+            model: fitted model
+            sample: contains a subset of valid indices for the
+                `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
+
+        Returns:
+            Computed score or the scorer's default value in case of an error
+            or a NaN value.
+        """
+        try:
+            score = float(self.scorer(model))
+            # Some scorers raise exceptions if they return NaNs, some might not
+            if np.isnan(score):
+                warnings.warn("Scorer returned NaN", RuntimeWarning)
+                return self.scorer.default
+        except Exception as e:
+            if self.catch_errors:
+                warnings.warn(str(e), RuntimeWarning)
+                return self.scorer.default
+            raise
+        return score
+
     def _utility(self, sample: SampleT) -> float:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
@@ -166,7 +191,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
         Args:
             sample: contains a subset of valid indices for the
-                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+                `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
 
         Returns:
             0 if no indices are passed, `scorer.default` if we fail to fit the
@@ -187,11 +212,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                 else:
                     model = self.model
                 model.fit(x_train, y_train)
-                score = float(self.scorer(model))
-                # Some scorers raise exceptions if they return NaNs, some might not
-                if np.isnan(score):
-                    warnings.warn("Scorer returned NaN", RuntimeWarning)
-                    return self.scorer.default
+                score = self._compute_score(model, sample)
                 return score
             except Exception as e:
                 if self.catch_errors:
