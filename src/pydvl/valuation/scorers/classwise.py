@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+from typing_extensions import Self
 
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
@@ -81,7 +82,6 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         range: tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
         out_of_class_discount_fn: Callable[[float], float] = np.exp,
-        initial_label: int | None = None,
         name: str | None = None,
     ):
         disc_score_in_class = in_class_discount_fn(range[1])
@@ -96,11 +96,15 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         )
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
-        self.label = initial_label
+        self.label: int | None = None
         self.num_classes = len(np.unique(self.test_data.y))
 
     def __str__(self) -> str:
         return self.name
+
+    def with_label(self, label: int) -> Self:
+        self.label = label
+        return self
 
     def __call__(self, model: SupervisedModel) -> float:
         (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
@@ -140,6 +144,11 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         Returns:
             Tuple containing the in-class and out-of-class scores.
         """
+        if self.label is None:
+            raise ValueError(
+                "The scorer's label attribute should be set before calling it"
+            )
+
         scorer = self._scorer
         label_set_match = self.test_data.y == self.label
         label_set = np.where(label_set_match)[0]
@@ -149,7 +158,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
 
         complement_label_set = np.where(~label_set_match)[0]
         in_class_score = scorer(
-            model, self.test_data.y[label_set], self.test_data.y[label_set]
+            model, self.test_data.x[label_set], self.test_data.y[label_set]
         )
         out_of_class_score = scorer(
             model,
