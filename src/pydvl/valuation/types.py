@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from enum import Enum
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
@@ -73,6 +72,38 @@ class Sample:
 
         new_subset = np.array(self.subset.tolist() + [self.idx])
         return replace(self, subset=new_subset)
+
+    def with_idx(self, idx: int) -> Self:
+        """Return a copy of sample with idx changed.
+
+        Returns the original sample if idx is the same.
+
+        Args:
+            idx: New value for idx.
+
+        Returns:
+            Sample: A copy of the sample with idx changed.
+        """
+        if self.idx == idx:
+            return self
+
+        return replace(self, idx=idx)
+
+    def with_subset(self, subset: NDArray[IndexT]) -> Self:
+        """Return a copy of sample with subset changed.
+
+        Returns the original sample if subset is the same.
+
+        Args:
+            subset: New value for subset.
+
+        Returns:
+            Sample: A copy of the sample with subset changed.
+        """
+        if np.array_equal(self.subset, subset):
+            return self
+
+        return replace(self, subset=subset)
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
