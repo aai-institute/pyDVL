@@ -12,10 +12,12 @@ from typing_extensions import Self
 from pydvl.utils.dataset import Dataset as OldDataset
 from pydvl.utils.utility import Utility as OldUtility
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.methods import ClasswiseShapley
+from pydvl.valuation.methods import ClasswiseShapleyValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import (
     ClasswiseSampler,
+    DeterministicPermutationSampler,
+    DeterministicUniformSampler,
     PermutationSampler,
     UniformSampler,
 )
@@ -138,7 +140,7 @@ def test_dataset_manual_derivation(train_dataset_manual_derivation) -> Dataset:
     return Dataset(x_test, y_test)
 
 
-@pytest.mark.parametrize("n_samples", [1000], ids=lambda x: "n_samples={}".format(x))
+@pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
 @pytest.mark.parametrize(
     "exact_solution",
     [
@@ -156,12 +158,12 @@ def test_classwise_shapley(
     method_kwargs, exact_solution, check_kwargs = request.getfixturevalue(
         exact_solution
     )
-    in_class_sampler = PermutationSampler()
-    out_of_class_sampler = UniformSampler()
+    in_class_sampler = DeterministicPermutationSampler()
+    out_of_class_sampler = DeterministicUniformSampler()
     sampler = ClasswiseSampler(
         in_class=in_class_sampler, out_of_class=out_of_class_sampler
     )
-    valuation = ClasswiseShapley(
+    valuation = ClasswiseShapleyValuation(
         classwise_shapley_utility,
         sampler=sampler,
         is_done=MaxUpdates(n_samples),
@@ -208,7 +210,7 @@ def test_old_vs_new(
         ClasswiseSupervisedScorer("accuracy", new_test_data),
         catch_errors=False,
     )
-    valuation = ClasswiseShapley(
+    valuation = ClasswiseShapleyValuation(
         new_u,
         sampler=sampler,
         is_done=MaxUpdates(n_samples),

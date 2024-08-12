@@ -67,7 +67,9 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             discount the in-class score.
         out_of_class_discount_fn: Continuous, monotonic increasing function used
             to discount the out-of-class score.
-        initial_label: Set initial label (for the first iteration)
+        rescale_scores: If set to True, the scores will be denormalized. This is
+            particularly useful when the inner score function $a_S$ is calculated by
+            an estimator of the form $\frac{1}{N} \sum_i x_i$.
         name: Name of the scorer. If not provided, the name of the inner scoring
             function will be prefixed by `classwise `.
 
@@ -82,6 +84,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         range: tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
         out_of_class_discount_fn: Callable[[float], float] = np.exp,
+        rescale_scores: bool = True,
         name: str | None = None,
     ):
         disc_score_in_class = in_class_discount_fn(range[1])
@@ -98,6 +101,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label: int | None = None
         self.num_classes = len(np.unique(self.test_data.y))
+        self.rescale_scores = rescale_scores
 
     def __str__(self) -> str:
         return self.name
@@ -108,7 +112,8 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
 
     def __call__(self, model: SupervisedModel) -> float:
         (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
-            model
+            model,
+            rescale_scores=self.rescale_scores,
         )
         disc_score_in_class = self._in_class_discount_fn(in_class_score)
         disc_score_out_of_class = self._out_of_class_discount_fn(out_of_class_score)
@@ -167,6 +172,8 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         )
 
         if rescale_scores:
+            # TODO: This can lead to NaN values
+            #       We should clearly indicate this to users
             n_in_class = np.count_nonzero(self.test_data.y == self.label)
             n_out_of_class = len(self.test_data.y) - n_in_class
             in_class_score *= n_in_class / (n_in_class + n_out_of_class)
