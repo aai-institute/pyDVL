@@ -52,12 +52,11 @@ def roundrobin(
 
 
 def get_unique_labels(array: NDArray) -> NDArray:
-"""
-Returns unique labels in a categorical dataset.
+    """Returns unique labels in a categorical dataset.
 
     Args:
-        array: The input array to find unique labels from. It should be of 
-               categorical types such as Object, String, Unicode, Unsigned 
+        array: The input array to find unique labels from. It should be of
+               categorical types such as Object, String, Unicode, Unsigned
                integer, Signed integer, or Boolean.
 
     Returns:
@@ -65,8 +64,7 @@ Returns unique labels in a categorical dataset.
 
     Raises:
         ValueError: If the input array is not of a categorical type.
-
-"""
+    """
     # Object, String, Unicode, Unsigned integer, Signed integer, boolean
     if array.dtype.kind in "OSUiub":
         return np.unique(array)
@@ -77,6 +75,18 @@ Returns unique labels in a categorical dataset.
 
 
 class ClasswiseSampler(IndexSampler):
+    """Sample permutations of indices and iterate through each returning
+    increasing subsets, as required for the permutation definition of
+    semi-values.
+
+    Args:
+        in_class: Sampling scheme for elements of a given label.
+        out_of_class: Sampling scheme for elements of different labels,
+            i.e., the complement set.
+        min_elements_per_label: Minimum number of elements per label
+            to sample from the complement set, i.e., out of class elements.
+    """
+
     def __init__(
         self,
         in_class: IndexSampler,

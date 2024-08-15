@@ -25,7 +25,6 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
-from typing_extensions import Self
 
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset

@@ -87,6 +87,20 @@ T = TypeVar("T")
 
 
 class ClasswiseShapleyValuation(Valuation):
+    """Class to compute Class-wise Shapley values.
+
+    It proceeds by sampling independent permutations of the index set
+    for each label and index sets sampled from the powerset of the complement
+    (with respect to the currently evaluated label).
+
+    Args:
+        utility: Classwise utility object with model and classwise scoring function.
+        sampler: Classwise sampling scheme to use.
+        is_done: Stopping criterion to use.
+        progress: Whether to show a progress bar.
+        normalize_values: Whether to normalize values after valuation.
+    """
+
     algorithm_name = "Classwise-Shapley"
 
     def __init__(
@@ -103,7 +117,7 @@ class ClasswiseShapleyValuation(Valuation):
         self.sampler = sampler
         self.labels: NDArray | None = None
         if not isinstance(utility.scorer, ClasswiseSupervisedScorer):
-            raise ValueError("Scorer must be a ClasswiseScorer.")
+            raise ValueError("scorer must be an instance of ClasswiseSupervisedScorer")
         self.scorer: ClasswiseSupervisedScorer = utility.scorer
         self.is_done = is_done
         self.tqdm_args: dict[str, Any] = {
