@@ -3,7 +3,6 @@ from typing import Iterator, List, Type, Union
 
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
 
 from pydvl.utils import Seed
 from pydvl.utils.numeric import powerset
@@ -29,6 +28,8 @@ from pydvl.valuation.samplers.permutation import (
     DeterministicPermutationSampler,
     PermutationSampler,
 )
+
+from . import _check_idxs, _check_subsets
 
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
 # See https://github.com/python/typing/issues/213
@@ -129,18 +130,6 @@ def test_loo_sampler_batch_size_1():
         [np.array([0, 1])],
     ]
     _check_subsets(batches, expected_subsets)
-
-
-def _check_idxs(batches, expected):
-    for batch, expected_batch in zip(batches, expected):
-        for sample, expected_idx in zip(batch, expected_batch):
-            assert sample.idx == expected_idx
-
-
-def _check_subsets(batches, expected):
-    for batch, expected_batch in zip(batches, expected):
-        for sample, expected_subset in zip(batch, expected_batch):
-            assert_array_equal(sample.subset, expected_subset)
 
 
 @pytest.mark.parametrize(
