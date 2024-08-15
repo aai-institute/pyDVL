@@ -79,14 +79,14 @@ from pydvl.valuation.utils import (
     make_parallel_flag,
 )
 
-__all__ = ["ClasswiseShapley"]
+__all__ = ["ClasswiseShapleyValuation"]
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
 
-class ClasswiseShapley(Valuation):
+class ClasswiseShapleyValuation(Valuation):
     algorithm_name = "Classwise-Shapley"
 
     def __init__(
