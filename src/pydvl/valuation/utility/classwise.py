@@ -36,21 +36,10 @@ class ClasswiseModelUtility(ModelUtility[CSSample, SupervisedModel]):
             raise ValueError("Scorer must be an instance of ClasswiseSupervisedScorer")
         self.scorer: ClasswiseSupervisedScorer
 
-    def _compute_score(self, model: SupervisedModel, sample: CSSample) -> float:
-        """Computes the score of a fitted model.
-
-        Args:
-            model: fitted model
-            sample: contains a subset of valid indices for the
-                `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
-
-        Returns:
-            Computed score or the scorer's default value in case of an error
-            or a NaN value.
-        """
-        self.scorer.with_label(sample.label)
-        return super()._compute_score(model, sample)
-
     def _utility(self, sample: CSSample) -> float:
+        # EXPLANATION: We override this method here because we have to
+        #   * We need to set the label on the scorer
+        #   * We need to combine the in-class and out-of-class subsets
+        self.scorer.with_label(sample.label)
         new_sample = sample.with_subset(np.union1d(sample.subset, sample.ooc_subset))
         return super()._utility(new_sample)
