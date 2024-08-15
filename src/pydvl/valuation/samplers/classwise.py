@@ -23,7 +23,8 @@ def roundrobin(
 ) -> Generator[tuple[U, V], None, None]:
     """Taken samples from batch generators in order until all of them are exhausted.
 
-    This was taken from the official Python documentation.
+    This was heavily inspired by the roundrobin recipe
+    in the official Python documentation for the itertools package.
 
     Examples:
         >>> from pydvl.valuation.samplers.classwise import roundrobin

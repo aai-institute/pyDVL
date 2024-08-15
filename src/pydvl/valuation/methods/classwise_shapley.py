@@ -149,6 +149,7 @@ class ClasswiseShapleyValuation(Valuation):
 
                     if self.is_done(self.result):
                         break
+
         if self.normalize_values:
             self._normalize()
 
