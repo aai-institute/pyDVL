@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from numpy.testing import assert_array_equal
 
-from pydvl.valuation.types import CSSample
+from pydvl.valuation.types import ClasswiseSample
 
 __all__ = ["_check_idxs", "_check_subsets", "_check_classwise_batches"]
 
@@ -20,7 +20,7 @@ def _check_subsets(batches, expected):
 
 
 def _check_classwise_batches(
-    batches: list[list[CSSample]], expected_batches: list[list[CSSample]]
+    batches: list[list[ClasswiseSample]], expected_batches: list[list[ClasswiseSample]]
 ) -> None:
     assert len(batches) == len(
         expected_batches

@@ -7,7 +7,7 @@ from pydvl.valuation.samplers import (
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
 )
-from pydvl.valuation.types import CSSample
+from pydvl.valuation.types import ClasswiseSample
 
 from . import _check_classwise_batches
 
@@ -21,7 +21,7 @@ from . import _check_classwise_batches
             ),
             [
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0]),
                         label=0,
@@ -29,7 +29,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([1, 2]),
                         label=1,
@@ -37,7 +37,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([2, 1]),
                         label=1,
@@ -45,7 +45,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0]),
                         label=0,
@@ -53,7 +53,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0]),
                         label=0,
@@ -69,7 +69,7 @@ from . import _check_classwise_batches
             ),
             [
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0, 1]),
                         label=0,
@@ -77,7 +77,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([1, 0]),
                         label=0,
@@ -85,7 +85,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([2, 3]),
                         label=1,
@@ -93,7 +93,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([3, 2]),
                         label=1,
@@ -101,7 +101,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0, 1]),
                         label=0,
@@ -109,7 +109,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([1, 0]),
                         label=0,
@@ -117,7 +117,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([2, 3]),
                         label=1,
@@ -125,7 +125,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([3, 2]),
                         label=1,
@@ -133,7 +133,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([0, 1]),
                         label=0,
@@ -141,7 +141,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([1, 0]),
                         label=0,
@@ -149,7 +149,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([2, 3]),
                         label=1,
@@ -157,7 +157,7 @@ from . import _check_classwise_batches
                     )
                 ],
                 [
-                    CSSample(
+                    ClasswiseSample(
                         idx=-1,
                         subset=np.asarray([3, 2]),
                         label=1,

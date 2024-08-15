@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
-from pydvl.valuation.types import CSSample, IndexSetT, SampleGenerator
+from pydvl.valuation.types import ClasswiseSample, IndexSetT, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["ClasswiseSampler", "get_unique_labels"]
@@ -78,7 +78,7 @@ class ClasswiseSampler(IndexSampler):
         self.in_class.interrupt()
         self.out_of_class.interrupt()
 
-    def from_data(self, data: Dataset) -> Generator[list[CSSample], None, None]:
+    def from_data(self, data: Dataset) -> Generator[list[ClasswiseSample], None, None]:
         labels = get_unique_labels(data.y)
         n_labels = len(labels)
 
@@ -110,10 +110,10 @@ class ClasswiseSampler(IndexSampler):
 
                 with_label = np.where(data.y == label)[0]
                 for ic_batch in self.in_class.generate_batches(with_label):
-                    batch: list[CSSample] = []
+                    batch: list[ClasswiseSample] = []
                     for ic_sample in ic_batch:
                         batch.append(
-                            CSSample(
+                            ClasswiseSample(
                                 idx=ic_sample.idx,
                                 label=label,
                                 subset=ic_sample.subset,

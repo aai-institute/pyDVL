@@ -16,7 +16,7 @@ __all__ = [
     "NameT",
     "NullaryPredicate",
     "Sample",
-    "CSSample",
+    "ClasswiseSample",
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
@@ -108,7 +108,7 @@ class Sample:
 
 
 @dataclass(frozen=True)
-class CSSample(Sample):
+class ClasswiseSample(Sample):
     label: int
     ooc_subset: NDArray[IndexT]
 
