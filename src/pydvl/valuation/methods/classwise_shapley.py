@@ -184,7 +184,7 @@ class ClasswiseShapleyValuation(Valuation):
             indices_label_set = np.where(active_elements)[0]
             indices_label_set = self.utility.training_data.indices[indices_label_set]
 
-            self.scorer.with_label(label)
+            self.scorer.label = label
             in_class_acc, _ = self.scorer.compute_in_and_out_of_class_scores(
                 self.utility.model
             )

@@ -59,6 +59,6 @@ def test_classwise_scorer(
     scorer = ClasswiseSupervisedScorer("accuracy", test_data)
 
     for label, expected_score in expected_scores.items():
-        scorer.with_label(label)
+        scorer.label = label
         score = scorer(model)
         np.testing.assert_allclose(score, expected_score, atol=1e-2)

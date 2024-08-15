@@ -106,10 +106,6 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
     def __str__(self) -> str:
         return self.name
 
-    def with_label(self, label: int) -> Self:
-        self.label = label
-        return self
-
     def __call__(self, model: SupervisedModel) -> float:
         (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
             model,

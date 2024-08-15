@@ -40,6 +40,6 @@ class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
         # EXPLANATION: We override this method here because we have to
         #   * We need to set the label on the scorer
         #   * We need to combine the in-class and out-of-class subsets
-        self.scorer.with_label(sample.label)
+        self.scorer.label = sample.label
         new_sample = sample.with_subset(np.union1d(sample.subset, sample.ooc_subset))
         return super()._utility(new_sample)
