@@ -109,7 +109,7 @@ class Sample:
 
 @dataclass(frozen=True)
 class CSSample(Sample):
-    label: int | None
+    label: int
     ooc_subset: NDArray[IndexT]
 
     # Make the unpacking operator work
