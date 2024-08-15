@@ -168,7 +168,7 @@ class ClasswiseShapleyValuation(Valuation):
             Normalized ValuationResult object.
         """
         if self.result is None:
-            raise ValueError("You should call fit before calling _normalize()")
+            raise ValueError("You must call fit before calling _normalize()")
 
         if self.utility.training_data is None:
             raise ValueError("You should call fit before calling _normalize()")

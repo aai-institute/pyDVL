@@ -52,11 +52,28 @@ def roundrobin(
 
 
 def get_unique_labels(array: NDArray) -> NDArray:
-    """Labels of the dataset."""
+"""
+Returns unique labels in a categorical dataset.
+
+    Args:
+        array: The input array to find unique labels from. It should be of 
+               categorical types such as Object, String, Unicode, Unsigned 
+               integer, Signed integer, or Boolean.
+
+    Returns:
+        An array of unique labels.
+
+    Raises:
+        ValueError: If the input array is not of a categorical type.
+
+"""
     # Object, String, Unicode, Unsigned integer, Signed integer, boolean
     if array.dtype.kind in "OSUiub":
         return np.unique(array)
-    raise ValueError("Dataset must be categorical to have unique labels.")
+    raise ValueError(
+        f"Input array has an unsupported data type for categorical labels: {array.dtype}. "
+        "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
+    )
 
 
 class ClasswiseSampler(IndexSampler):
