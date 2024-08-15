@@ -151,13 +151,22 @@ class ClasswiseSampler(IndexSampler):
                     yield batch
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        # This is not needed because this sampler is used
+        # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
+        # The weight method is not needed but has to be implemented
+        # because this class inherits from IndexSampler
+        # This is not needed because this class does not use its own evaluation strategy
+        # It instead uses the in-class sampler's evaluation strategy.
         raise AttributeError("The weight should come from the in_class sampler")
 
     def sample_limit(self, indices: IndexSetT) -> int:
+        # The sample list cannot be computed without accessing the label
+        # information and using that to compute the sample limits
+        # of the in-class and out-of-class samplers first.
         raise AttributeError(
             "The sample limit cannot be computed without the label information."
         )
