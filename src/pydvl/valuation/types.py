@@ -39,7 +39,10 @@ class ValueUpdate:
 @dataclass(frozen=True)
 class Sample:
     idx: int | IndexT | None
+    """Index of current sample"""
+
     subset: NDArray[IndexT]
+    """Indices of current sample"""
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
@@ -109,8 +112,14 @@ class Sample:
 
 @dataclass(frozen=True)
 class ClasswiseSample(Sample):
+    """Sample class for classwise shapley valuation"""
+
     label: int
+    """Label of the current sample"""
+
     ooc_subset: NDArray[IndexT]
+    """Indices of out-of-class elements, i.e., those with a label different from
+    this sample's label"""
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
