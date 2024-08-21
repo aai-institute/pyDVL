@@ -12,6 +12,30 @@ __all__ = ["ClasswiseModelUtility"]
 
 
 class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
+    """ModelUtility class that is specific to classwise shapley valuation.
+
+    It expects a classwise scorer and a classification task.
+
+    Args:
+        model: Any supervised model. Typical choices can be found in the
+            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+        scorer: A classwise scoring object.
+        catch_errors: set to `True` to catch the errors when `fit()` fails. This
+            could happen in several steps of the pipeline, e.g. when too little
+            training data is passed, which happens often during Shapley value
+            calculations. When this happens, the [scorer's default
+            value][pydvl.valuation.scorers.SupervisedScorer] is returned as a score and
+            computation continues.
+        show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
+        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+            used to wrap the _utility method of the Utility instance.
+            By default, this is set to None and that means that the utility evaluations
+            will not be cached.
+        cached_func_options: Optional configuration object for cached utility evaluation.
+        clone_before_fit: If `True`, the model will be cloned before calling
+            `fit()`.
+    """
+
     def __init__(
         self,
         model: SupervisedModel,
