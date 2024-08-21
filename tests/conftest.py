@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import numpy as np
 import pytest
-from pymemcache.client import Client
 from pytest import Config, FixtureRequest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
 from pydvl.parallel import available_cpus
-from pydvl.utils import Dataset, MemcachedClientConfig
+from pydvl.utils import Dataset
 from tests.cache import CloudPickleCache
 
 
@@ -85,6 +84,8 @@ def pytorch_seed(seed):
 
 
 def is_memcache_responsive(hostname, port):
+    from pymemcache.client import Client
+
     try:
         client = Client(server=(hostname, port))
         client.flush_all()
@@ -101,15 +102,21 @@ def memcached_service(request) -> Tuple[str, int]:
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service) -> MemcachedClientConfig:
+def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
+    from pydvl.utils import MemcachedClientConfig
+
     return MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
 
 
 @pytest.fixture(scope="function")
-def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientConfig]:
+def memcached_client(
+    memcache_client_config,
+) -> Tuple["Client", "MemcachedClientConfig"]:
     from pymemcache.client import Client
+
+    from pydvl.utils import MemcachedClientConfig
 
     try:
         c = Client(**asdict(memcache_client_config))

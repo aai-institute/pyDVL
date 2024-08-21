@@ -1,48 +1,69 @@
 from __future__ import annotations
 
-import hashlib
-from dataclasses import dataclass, field
-from typing import cast
+import numpy as np
 
-from numpy.typing import NDArray
-
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
-from pydvl.valuation.types import IndexT, Sample
+from pydvl.valuation.types import ClasswiseSample
 from pydvl.valuation.utility import ModelUtility
 
-__all__ = ["CSSample", "ClasswiseUtility"]
+__all__ = ["ClasswiseModelUtility"]
 
 
-@dataclass(frozen=True)
-class CSSample(Sample):
-    label: int | None
-    in_class_subset: NDArray[IndexT]
+class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
+    """ModelUtility class that is specific to classwise shapley valuation.
 
-    # Make the unpacking operator work
-    def __iter__(self):  # No way to type the return Iterator properly
-        return iter((self.idx, self.subset, self.label, self.in_class_subset))
+    It expects a classwise scorer and a classification task.
 
-    def __hash__(self):
-        array_bytes = self.subset.tobytes() + self.in_class_subset.tobytes()
-        sha256_hash = hashlib.sha256(array_bytes).hexdigest()
-        return int(sha256_hash, base=16)
-
-
-class ClasswiseUtility(ModelUtility[CSSample, SupervisedModel]):
+    Args:
+        model: Any supervised model. Typical choices can be found in the
+            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+        scorer: A classwise scoring object.
+        catch_errors: set to `True` to catch the errors when `fit()` fails. This
+            could happen in several steps of the pipeline, e.g. when too little
+            training data is passed, which happens often during Shapley value
+            calculations. When this happens, the [scorer's default
+            value][pydvl.valuation.scorers.SupervisedScorer] is returned as a score and
+            computation continues.
+        show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
+        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+            used to wrap the _utility method of the Utility instance.
+            By default, this is set to None and that means that the utility evaluations
+            will not be cached.
+        cached_func_options: Optional configuration object for cached utility evaluation.
+        clone_before_fit: If `True`, the model will be cloned before calling
+            `fit()`.
     """
-    FIXME: probably unnecessary, just a test
-    """
 
-    scorer: ClasswiseSupervisedScorer
+    def __init__(
+        self,
+        model: SupervisedModel,
+        scorer: ClasswiseSupervisedScorer,
+        *,
+        catch_errors: bool = True,
+        show_warnings: bool = False,
+        cache_backend: CacheBackend | None = None,
+        cached_func_options: CachedFuncConfig | None = None,
+        clone_before_fit: bool = True,
+    ):
+        super().__init__(
+            model,
+            scorer,
+            catch_errors=catch_errors,
+            show_warnings=show_warnings,
+            cache_backend=cache_backend,
+            cached_func_options=cached_func_options,
+            clone_before_fit=clone_before_fit,
+        )
+        if not isinstance(self.scorer, ClasswiseSupervisedScorer):
+            raise ValueError("Scorer must be an instance of ClasswiseSupervisedScorer")
+        self.scorer: ClasswiseSupervisedScorer
 
-    def __call__(self, sample: CSSample | None) -> float:
-        if sample is None or len(sample.subset) == 0:
-            return self.scorer.default
-
-        return cast(float, self._utility_wrapper(sample))
-
-    def _utility(self, sample: CSSample) -> float:
+    def _utility(self, sample: ClasswiseSample) -> float:
+        # EXPLANATION: We override this method here because we have to
+        #   * We need to set the label on the scorer
+        #   * We need to combine the in-class and out-of-class subsets
         self.scorer.label = sample.label
-        # TODO: do the thing
-        raise NotImplementedError
+        new_sample = sample.with_subset(np.union1d(sample.subset, sample.ooc_subset))
+        return super()._utility(new_sample)

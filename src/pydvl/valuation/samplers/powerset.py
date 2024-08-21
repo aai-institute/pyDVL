@@ -40,7 +40,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler, SamplerT
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -57,7 +57,6 @@ __all__ = [
     "AntitheticSampler",
     "DeterministicUniformSampler",
     "LOOSampler",
-    "IndexSampler",
     "PowersetSampler",
     "TruncatedUniformStratifiedSampler",
     "UniformSampler",
@@ -307,7 +306,7 @@ class DeterministicUniformSampler(PowersetSampler):
             for subset in powerset(
                 complement(indices, [idx] if idx is not None else [])
             ):
-                yield Sample(idx, np.array(subset))
+                yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         len_outer = self._index_iteration.length(indices)

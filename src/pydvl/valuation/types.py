@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from enum import Enum
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
@@ -17,6 +16,7 @@ __all__ = [
     "NameT",
     "NullaryPredicate",
     "Sample",
+    "ClasswiseSample",
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
@@ -39,7 +39,10 @@ class ValueUpdate:
 @dataclass(frozen=True)
 class Sample:
     idx: int | IndexT | None
+    """Index of current sample"""
+
     subset: NDArray[IndexT]
+    """Indices of current sample"""
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
@@ -73,6 +76,59 @@ class Sample:
 
         new_subset = np.array(self.subset.tolist() + [self.idx])
         return replace(self, subset=new_subset)
+
+    def with_idx(self, idx: int) -> Self:
+        """Return a copy of sample with idx changed.
+
+        Returns the original sample if idx is the same.
+
+        Args:
+            idx: New value for idx.
+
+        Returns:
+            Sample: A copy of the sample with idx changed.
+        """
+        if self.idx == idx:
+            return self
+
+        return replace(self, idx=idx)
+
+    def with_subset(self, subset: NDArray[IndexT]) -> Self:
+        """Return a copy of sample with subset changed.
+
+        Returns the original sample if subset is the same.
+
+        Args:
+            subset: New value for subset.
+
+        Returns:
+            Sample: A copy of the sample with subset changed.
+        """
+        if np.array_equal(self.subset, subset):
+            return self
+
+        return replace(self, subset=subset)
+
+
+@dataclass(frozen=True)
+class ClasswiseSample(Sample):
+    """Sample class for classwise shapley valuation"""
+
+    label: int
+    """Label of the current sample"""
+
+    ooc_subset: NDArray[IndexT]
+    """Indices of out-of-class elements, i.e., those with a label different from
+    this sample's label"""
+
+    # Make the unpacking operator work
+    def __iter__(self):  # No way to type the return Iterator properly
+        return iter((self.idx, self.subset, self.label, self.ooc_subset))
+
+    def __hash__(self):
+        array_bytes = self.subset.tobytes() + self.ooc_subset.tobytes()
+        sha256_hash = hashlib.sha256(array_bytes).hexdigest()
+        return int(sha256_hash, base=16)
 
 
 SampleT = TypeVar("SampleT", bound=Sample)

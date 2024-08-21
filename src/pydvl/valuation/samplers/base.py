@@ -116,7 +116,7 @@ class IndexSampler(ABC):
 
         # create an empty generator if the indices are empty. `generate_batches` is
         # a generator function because it has a yield statement later in its body.
-        # Inside generator functionn, `return` acts like a `break`, which produces an
+        # Inside generator function, `return` acts like a `break`, which produces an
         # empty generator function. See: https://stackoverflow.com/a/13243870
         if len(indices) == 0:
             return
@@ -125,8 +125,7 @@ class IndexSampler(ABC):
         self._n_samples = 0
         for batch in chunked(self._generate(indices), self.batch_size):
             yield batch
-            # FIXME, BUG: this could be wrong if the batch is not full. Just use lists
-            self._n_samples += self.batch_size
+            self._n_samples += len(batch)
             if self._interrupted:
                 break
 

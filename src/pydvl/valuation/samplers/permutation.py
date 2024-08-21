@@ -169,7 +169,8 @@ class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
                 # FIXME: type checker claims this could be Any (?)
                 idx = cast(IndexT, idx)
                 if not truncated:
-                    curr = self.utility(Sample(idx, permutation[: i + 1]))
+                    new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
+                    curr = self.utility(new_sample)
                 marginal = curr - prev
                 marginal *= self.coefficient(self.n_indices, i)
                 r.append(ValueUpdate(idx, marginal))
