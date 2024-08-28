@@ -18,10 +18,10 @@ from pydvl.influence.torch.influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
-from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
-    PreConditioner,
+from pydvl.influence.torch.preconditioner import (
+    JacobiPreconditioner,
+    NystroemPreconditioner,
+    Preconditioner,
 )
 from pydvl.influence.torch.util import BlockMode, SecondOrderMode
 from pydvl.influence.types import UnsupportedInfluenceModeException
@@ -370,7 +370,7 @@ def direct_influences_from_factors(
     [
         [
             lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
-                model, loss, hessian_regularization=hessian_reg
+                model, loss, regularization=hessian_reg
             ).fit(train_dataLoader),
             1e-1,
         ],
@@ -396,9 +396,9 @@ def direct_influences_from_factors(
             lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
                 model,
                 loss,
-                hessian_regularization=hessian_reg,
-                pre_conditioner=NystroemPreConditioner(10),
-                use_block_cg=True,
+                regularization=hessian_reg,
+                preconditioner=NystroemPreconditioner(10),
+                solve_simultaneously=True,
             ).fit(train_dataLoader),
             1e-4,
         ],
@@ -562,9 +562,8 @@ def test_influences_lissa(
         lambda model, loss, hessian_reg, rank: ArnoldiInfluence(
             model,
             loss,
-            hessian_regularization=hessian_reg,
-            rank_estimate=rank,
-            precompute_grad=True,
+            regularization=hessian_reg,
+            rank=rank,
         ),
         lambda model, loss, hessian_reg, rank: NystroemSketchInfluence(
             model, loss, regularization=hessian_reg, rank=rank
@@ -743,10 +742,10 @@ def test_influences_ekfac(
 @pytest.mark.torch
 @pytest.mark.parametrize("use_block_cg", [True, False])
 @pytest.mark.parametrize(
-    "pre_conditioner",
+    "preconditioner",
     [
-        JacobiPreConditioner(),
-        NystroemPreConditioner(rank=5),
+        JacobiPreconditioner(),
+        NystroemPreconditioner(rank=5),
         None,
     ],
 )
@@ -763,7 +762,7 @@ def test_influences_cg(
     direct_influences,
     direct_factors,
     use_block_cg: bool,
-    pre_conditioner: PreConditioner,
+    preconditioner: Preconditioner,
     device: torch.device,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
@@ -776,8 +775,8 @@ def test_influences_cg(
         loss,
         test_case.hessian_reg,
         maxiter=5,
-        pre_conditioner=pre_conditioner,
-        use_block_cg=use_block_cg,
+        preconditioner=preconditioner,
+        solve_simultaneously=use_block_cg,
     )
     influence_model = influence_model.fit(train_dataloader)
 
@@ -844,6 +843,25 @@ composable_influence_factories = [
     partial(
         NystroemSketchInfluence, rank=10, second_order_mode=SecondOrderMode.GAUSS_NEWTON
     ),
+    partial(ArnoldiInfluence, rank=10, use_woodbury=True),
+    partial(
+        ArnoldiInfluence,
+        rank=10,
+        second_order_mode=SecondOrderMode.GAUSS_NEWTON,
+        use_woodbury=True,
+    ),
+    partial(
+        CgInfluence,
+        maxiter=10,
+        preconditioner=JacobiPreconditioner(),
+        solve_simultaneously=True,
+    ),
+    partial(
+        CgInfluence,
+        maxiter=10,
+        preconditioner=NystroemPreconditioner(rank=5),
+        solve_simultaneously=True,
+    ),
 ]
 
 
@@ -897,7 +915,7 @@ def test_composable_influence(
         x_test, y_test, x_train, y_train, mode=test_case.mode
     )
 
-    threshold = 1 - 1e-3
+    threshold = 1 - 1e-4
     check_correlation(
         direct_influences.reshape(-1), infl_values.reshape(-1), corr_val=threshold
     )

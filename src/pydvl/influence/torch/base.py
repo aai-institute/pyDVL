@@ -3,7 +3,18 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import torch
 from torch.func import functional_call
@@ -12,11 +23,14 @@ from torch.utils.data import DataLoader
 from ..base_influence_function_model import ComposableInfluence
 from ..types import (
     Batch,
+    BatchType,
     BilinearForm,
     BlockMapper,
     GradientProvider,
+    GradientProviderType,
     Operator,
     OperatorGradientComposition,
+    TensorType,
 )
 from .util import (
     BlockMode,
@@ -26,6 +40,9 @@ from .util import (
     align_structure,
     flatten_dimensions,
 )
+
+if TYPE_CHECKING:
+    from .operator import LowRankOperator
 
 
 @dataclass(frozen=True)
@@ -244,7 +261,7 @@ class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor]):
 
 
 class OperatorBilinearForm(
-    BilinearForm[torch.Tensor, TorchBatch, TorchGradientProvider]
+    BilinearForm[torch.Tensor, TorchBatch, TorchGradientProvider],
 ):
     r"""
     Base class for bilinear forms based on an instance of
@@ -257,7 +274,7 @@ class OperatorBilinearForm(
 
     def __init__(
         self,
-        operator: "TensorOperator",
+        operator: TorchOperatorType,
     ):
         self.operator = operator
 
@@ -404,6 +421,75 @@ class DictBilinearForm(OperatorBilinearForm):
     @staticmethod
     def _aggregate_grads(left: torch.Tensor, right: torch.Tensor):
         return torch.einsum("i..., j... -> ij", left, right)
+
+
+class LowRankBilinearForm(OperatorBilinearForm):
+    r"""
+    Specialized bilinear form for operators of the type
+
+    $$ \operatorname{Op}(b) = V D^{-1}V^Tb.$$
+
+    It computes the expressions
+
+    $$ \langle \operatorname{Op}(\nabla_{\theta} \ell(z, \theta)),
+        \nabla_{\theta} \ell(z^{\prime}, \theta) \rangle =
+        \langle V\nabla_{\theta} \ell(z, \theta),
+        D^{-1}V\nabla_{\theta} \ell(z^{\prime}, \theta) \rangle$$
+
+    in an efficient way using [torch.autograd][torch.autograd] functionality.
+    """
+
+    def __init__(self, operator: "LowRankOperator"):
+        super().__init__(operator)
+
+    def grads_inner_prod(
+        self,
+        left: TorchBatch,
+        right: Optional[TorchBatch],
+        gradient_provider: TorchGradientProvider,
+    ) -> torch.Tensor:
+        r"""
+        Computes the gradient inner product of two batches of data, i.e.
+
+        $$ \langle \nabla_{\omega}\ell(\omega, \text{left.x}, \text{left.y}),
+        \nabla_{\omega}\ell(\omega, \text{right.x}, \text{right.y}) \rangle_{B}$$
+
+        where $\nabla_{\omega}\ell(\omega, \cdot, \cdot)$ is represented by the
+        `gradient_provider` and the expression must be understood sample-wise.
+
+        Args:
+            left: The first batch for gradient and inner product computation
+            right: The second batch for gradient and inner product computation,
+                optional; if not provided, the inner product will use the gradient
+                computed for `left` for both arguments.
+            gradient_provider: The gradient provider to compute the gradients.
+
+        Returns:
+            A tensor representing the inner products of the per-sample gradients
+        """
+        op = cast("LowRankOperator", self.operator)
+
+        if op.exact:
+            return super().grads_inner_prod(left, right, gradient_provider)
+
+        V = op.low_rank_representation.projections
+        D = op.low_rank_representation.eigen_vals.clone()
+        regularization = op.regularization
+
+        if regularization is not None:
+            D += regularization
+
+        V_left = gradient_provider.jacobian_prod(left, V.t())
+        D_inv = 1.0 / D
+
+        if right is None:
+            V_right = V_left
+        else:
+            V_right = gradient_provider.jacobian_prod(right, V.t())
+
+        V_right = V_right * D_inv.unsqueeze(-1)
+
+        return torch.einsum("ij, ik -> jk", V_left, V_right)
 
 
 OperatorBilinearFormType = TypeVar(
@@ -653,7 +739,11 @@ class TorchComposableInfluence(
 
     @property
     def n_parameters(self):
-        return sum(block.op.input_size for _, block in self.block_mapper.items())
+        return sum(
+            param.numel()
+            for block in self.parameter_dict.values()
+            for param in block.values()
+        )
 
     @abstractmethod
     def with_regularization(

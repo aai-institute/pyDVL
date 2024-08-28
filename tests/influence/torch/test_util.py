@@ -4,6 +4,8 @@ from typing import Any, Dict, Tuple
 import numpy as np
 import pytest
 
+from pydvl.influence.torch.operator import MatrixOperator
+
 torch = pytest.importorskip("torch")
 import torch.nn
 from numpy.typing import NDArray
@@ -14,7 +16,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from pydvl.influence.torch.functional import (
     create_batch_hvp_function,
     create_hvp_function,
-    lanzcos_low_rank_hessian_approx,
+    operator_spectral_approximation,
 )
 from pydvl.influence.torch.util import (
     BlockMode,
@@ -160,17 +162,15 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     [astuple(tp) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_lanzcos_low_rank_hessian_approx(
+def test_operator_spectral_approximation(
     model_data, batch_size: int, rank_estimate, regularization
 ):
     _, _, _, vec, H_analytical = model_data
-
     reg_H_analytical = H_analytical + regularization * torch.eye(H_analytical.shape[0])
-    low_rank_approx = lanzcos_low_rank_hessian_approx(
-        lambda z: reg_H_analytical @ z,
-        reg_H_analytical.shape,
-        rank_estimate=rank_estimate,
-    )
+
+    op = MatrixOperator(reg_H_analytical)
+
+    low_rank_approx = operator_spectral_approximation(op, rank=rank_estimate)
     approx_result = low_rank_approx.projections @ (
         torch.diag_embed(low_rank_approx.eigen_vals)
         @ (low_rank_approx.projections.t() @ vec.t())
@@ -179,15 +179,15 @@ def test_lanzcos_low_rank_hessian_approx(
 
 
 @pytest.mark.torch
-def test_lanzcos_low_rank_hessian_approx_exception():
+def test_operator_spectral_approximation_exception():
     """
-    In case cuda is not available, and cupy is not installed, the call should raise an import exception
+    In case cuda is not available, and cupy is not installed, the call should raise an
+    import exception
     """
+    op = MatrixOperator(torch.randn(3, 3))
     if not torch.cuda.is_available():
         with pytest.raises(ImportError):
-            lanzcos_low_rank_hessian_approx(
-                lambda x: x, (3, 3), eigen_computation_on_gpu=True
-            )
+            operator_spectral_approximation(op, rank=2, eigen_computation_on_gpu=True)
 
 
 @pytest.mark.parametrize(

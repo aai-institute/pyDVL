@@ -328,7 +328,7 @@ def test_parallel_repeated_training(
         config=cached_func_config,
     )
 
-    def reduce_func(chunks: NDArray[np.float_]) -> float:
+    def reduce_func(chunks: NDArray[np.float64]) -> float:
         return np.sum(chunks).item()
 
     map_reduce_job = MapReduceJob(

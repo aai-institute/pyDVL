@@ -13,7 +13,7 @@ __all__ = ["compute_removal_score"]
 def compute_removal_score(
     u: Utility,
     values: ValuationResult,
-    percentages: Union[NDArray[np.float_], Iterable[float]],
+    percentages: Union[NDArray[np.float64], Iterable[float]],
     *,
     remove_best: bool = False,
     progress: bool = False,

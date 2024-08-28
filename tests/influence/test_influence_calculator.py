@@ -48,7 +48,7 @@ from tests.influence.torch.test_util import are_active_layers_linear
         lambda model, loss, train_dataLoader, hessian_reg: ArnoldiInfluence(
             model,
             loss,
-            hessian_regularization=hessian_reg,
+            regularization=hessian_reg,
         ).fit(train_dataLoader),
     ],
     ids=["cg", "direct", "arnoldi"],
@@ -71,7 +71,7 @@ def influence_model(model_and_data, test_case, influence_factory):
             model,
             loss,
             hessian_reg,
-            use_block_cg=True,
+            solve_simultaneously=True,
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
             model, loss, hessian_reg
@@ -79,7 +79,7 @@ def influence_model(model_and_data, test_case, influence_factory):
         lambda model, loss, train_dataLoader, hessian_reg: ArnoldiInfluence(
             model,
             loss,
-            hessian_regularization=hessian_reg,
+            regularization=hessian_reg,
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: NystroemSketchInfluence(
             model,
@@ -170,7 +170,7 @@ def test_dask_influence_nn(
     inf_model = ArnoldiInfluence(
         model,
         test_case.loss,
-        hessian_regularization=test_case.hessian_reg,
+        regularization=test_case.hessian_reg,
     ).fit(train_dataloader)
 
     converter = TorchNumpyConverter()
@@ -274,7 +274,7 @@ def test_thread_safety_violation_error(
     inf_model = ArnoldiInfluence(
         model,
         test_case.loss,
-        hessian_regularization=test_case.hessian_reg,
+        regularization=test_case.hessian_reg,
     )
     with pytest.raises(ThreadSafetyViolationError):
         DaskInfluenceCalculator(
@@ -294,7 +294,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
     inf_model = ArnoldiInfluence(
         model,
         test_case.loss,
-        hessian_regularization=test_case.hessian_reg,
+        regularization=test_case.hessian_reg,
     ).fit(train_dataloader)
 
     seq_calculator = SequentialInfluenceCalculator(inf_model)
