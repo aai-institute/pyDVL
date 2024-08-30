@@ -32,11 +32,11 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
-# TODO: include tests for multiple values of q, including 0 and 1
 @pytest.mark.parametrize(
     "n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)]
 )
-def test_random_powerset(n, max_subsets):
+@pytest.mark.parametrize("q", [0.0, 0.1, 0.26, 0.49, 0.5, 0.6, 1])
+def test_random_powerset(n, max_subsets, q):
     """Tests frequency of items in sets and frequencies of set sizes.
 
     By Hoeffding for a Bernoulli, we have for each item in the set:
@@ -53,11 +53,11 @@ def test_random_powerset(n, max_subsets):
     s = np.arange(n)
     item_counts = np.zeros_like(s, dtype=np.float64)
     size_counts = np.zeros(n + 1)
-    for subset in random_powerset(s, n_samples=max_subsets):
+    for subset in random_powerset(s, n_samples=max_subsets, q=q):
         size_counts[len(subset)] += 1
         for item in subset:
             item_counts[item] += 1
-    q = 0.5
+
     eps = 0.1
     item_frequencies = item_counts / max_subsets
 
@@ -65,9 +65,14 @@ def test_random_powerset(n, max_subsets):
         np.abs(item_frequencies - q) > eps
     ) < max_subsets * 2 * np.exp(-2 * max_subsets * eps**2)
 
-    true_size_counts = np.array([np.math.comb(n, j) for j in range(n + 1)])
+    # True distribution of set sizes follows a binomial distribution
+    # with parameters n and q
+    def binomial_pmf(j: int):
+        return np.math.comb(n, j) * q**j * (1-q)**(n-j)
+
+    true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
     assert np.allclose(
-        true_size_counts / 2**n, size_counts / max_subsets, atol=1 / (1 + n)
+        true_size_counts, size_counts / max_subsets, atol=1 / (1 + n)
     )
 
 
