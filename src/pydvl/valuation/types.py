@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
+from typing import Callable, Generator, Iterable, Protocol, TypeAlias, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -24,7 +24,7 @@ __all__ = [
     "ValueUpdate",
 ]
 
-IndexT = np.int_
+IndexT: TypeAlias = np.int_
 IndexSetT = NDArray[IndexT]
 NameT = Union[np.object_, np.int_]
 NullaryPredicate = Callable[[], bool]
