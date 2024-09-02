@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from typing import Callable, Generator, Iterable, Protocol, TypeAlias, TypeVar, Union
+from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import Self
+from typing_extensions import Self, TypeAlias
 
 __all__ = [
     "BatchGenerator",
