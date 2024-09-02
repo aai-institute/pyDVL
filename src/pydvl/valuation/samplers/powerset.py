@@ -306,10 +306,8 @@ class DeterministicUniformSampler(PowersetSampler):
             for subset in powerset(
                 complement(indices, [idx] if idx is not None else [])
             ):
-                yield Sample(
-                    idx,
-                    np.asarray(cast(Collection[IndexT], subset), dtype=indices.dtype),
-                )
+                typed_subset: Collection[IndexT] = subset
+                yield Sample(idx, np.asarray(typed_subset, dtype=indices.dtype))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         len_outer = self._index_iteration.length(indices)
