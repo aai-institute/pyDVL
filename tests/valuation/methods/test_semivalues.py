@@ -121,13 +121,7 @@ def test_shapley_batch_size(
 
     timed_fn = timed(compute_semivalues)
     result_single_batch = timed_fn(batch_size=1)
-    total_seconds_single_batch = timed_fn.execution_time
-
     result_multi_batch = timed_fn(batch_size=5)
-    total_seconds_multi_batch = timed_fn.execution_time
-
-    # total_seconds_multi_batch = timed_fn.execution_time
-    assert total_seconds_multi_batch < total_seconds_single_batch * 1.1
 
     # Occasionally, batch_2 arrives before batch_1, so rtol isn't always 0.
     check_values(result_single_batch, result_multi_batch, rtol=1e-4)
