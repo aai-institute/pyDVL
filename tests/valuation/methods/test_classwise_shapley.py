@@ -195,13 +195,14 @@ def test_old_vs_new(
         done=MaxChecks(n_samples),
         truncation=NoTruncation(),
         done_sample_complements=MaxChecks(1),
+        seed=seed,
     )
 
     new_train_data = Dataset(old_data.x_train, old_data.y_train)
     new_test_data = Dataset(old_data.x_test, old_data.y_test)
 
-    in_class_sampler = PermutationSampler()
-    out_of_class_sampler = UniformSampler()
+    in_class_sampler = PermutationSampler(seed=seed)
+    out_of_class_sampler = UniformSampler(seed=seed)
     sampler = ClasswiseSampler(
         in_class=in_class_sampler,
         out_of_class=out_of_class_sampler,
