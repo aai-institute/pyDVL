@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Collection, Generator, Iterable, Type
+from typing import Callable, Collection, Generator, Iterable, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -306,8 +306,10 @@ class DeterministicUniformSampler(PowersetSampler):
             for subset in powerset(
                 complement(indices, [idx] if idx is not None else [])
             ):
-                subset: Collection[IndexT] = subset
-                yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
+                yield Sample(
+                    idx,
+                    np.asarray(cast(Collection[IndexT], subset), dtype=indices.dtype),
+                )
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         len_outer = self._index_iteration.length(indices)
