@@ -9,5 +9,5 @@
     "notebooks/msr_banzhaf_digits.ipynb::": 86.62082037599998,
     "notebooks/shapley_basic_spotify.ipynb::": 15.088616748999982,
     "notebooks/shapley_knn_flowers.ipynb::": 6.810235208000023,
-    "notebooks/shapley_utility_learning.ipynb::": 24.370409832999997,
+    "notebooks/shapley_utility_learning.ipynb::": 24.370409832999997
 }

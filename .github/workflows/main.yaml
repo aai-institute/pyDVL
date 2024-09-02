@@ -89,12 +89,12 @@ jobs:
       fail-fast: false
       matrix:
         python_version: ["3.8", "3.9", "3.10", "3.11"]
-        group_number: [1, 2, 3, 4]
+        group_number: [1, 2]
     name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
       python_version: ${{ matrix.python_version }}
-      split_size: 4
+      split_size: 2
       group_number: ${{ matrix.group_number }}
     needs: [code-quality]
 
