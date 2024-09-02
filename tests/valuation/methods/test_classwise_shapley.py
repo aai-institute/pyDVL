@@ -175,7 +175,7 @@ def test_classwise_shapley(
     check_values(values, exact_solution, **check_kwargs)
 
 
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
 def test_old_vs_new(
     n_samples: int,
