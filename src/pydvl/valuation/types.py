@@ -25,9 +25,9 @@ __all__ = [
 ]
 
 IndexT: TypeAlias = np.int_
-IndexSetT = NDArray[IndexT]
-NameT = Union[np.object_, np.int_]
-NullaryPredicate = Callable[[], bool]
+IndexSetT: TypeAlias = NDArray[IndexT]
+NameT: TypeAlias = Union[np.object_, np.int_]
+NullaryPredicate: TypeAlias = Callable[[], bool]
 
 
 @dataclass(frozen=True)
