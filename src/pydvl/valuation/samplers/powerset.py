@@ -205,7 +205,7 @@ class PowersetSampler(IndexSampler, ABC):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler]):
+class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler, ValueUpdate]):
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
@@ -246,7 +246,7 @@ class LOOSampler(IndexSampler):
         return len(indices)
 
 
-class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler]):
+class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler, ValueUpdate]):
     """Computes marginal values for LOO."""
 
     def __init__(

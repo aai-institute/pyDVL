@@ -36,6 +36,9 @@ class ValueUpdate:
     update: float
 
 
+ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate)
+
+
 @dataclass(frozen=True)
 class Sample:
     idx: int | IndexT | None

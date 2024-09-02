@@ -7,7 +7,7 @@ import numpy as np
 
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler, SamplerT
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -58,7 +58,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler):
         return MSREvaluationStrategy(self, utility, coefficient)
 
 
-class MSREvaluationStrategy(EvaluationStrategy):
+class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
     """Evaluation strategy for Maximum Sample Re-use (MSR) valuation.
 
     The MSR evaluation strategy makes one utility evaluation per sample but generates

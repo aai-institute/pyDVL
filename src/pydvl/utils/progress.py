@@ -10,8 +10,8 @@ from tqdm.auto import tqdm
 
 # This is needed to avoid circular import errors
 if TYPE_CHECKING:
-    from pydvl.value.result import ValuationResult
-    from pydvl.value.stopping import StoppingCriterion
+    from pydvl.valuation.result import ValuationResult
+    from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["log_duration", "Progress", "repeat_indices"]
 

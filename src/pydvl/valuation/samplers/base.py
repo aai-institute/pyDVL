@@ -20,6 +20,7 @@ from pydvl.valuation.types import (
     SampleBatch,
     SampleGenerator,
     ValueUpdate,
+    ValueUpdateT,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
@@ -194,7 +195,7 @@ class IndexSampler(ABC):
 SamplerT = TypeVar("SamplerT", bound=IndexSampler)
 
 
-class EvaluationStrategy(ABC, Generic[SamplerT]):
+class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
     """An evaluation strategy for samplers.
 
     Implements the processing strategy for batches returned by an
@@ -265,7 +266,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT]):
     @abstractmethod
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
-    ) -> list[ValueUpdate]:
+    ) -> list[ValueUpdateT]:
         """Processes batches of samples using the evaluator, with the strategy
         required for the sampler.
 

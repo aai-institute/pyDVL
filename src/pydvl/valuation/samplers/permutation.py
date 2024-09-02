@@ -139,7 +139,9 @@ class DeterministicPermutationSampler(PermutationSampler):
         return out
 
 
-class PermutationEvaluationStrategy(EvaluationStrategy[PermutationSampler]):
+class PermutationEvaluationStrategy(
+    EvaluationStrategy[PermutationSampler, ValueUpdate]
+):
     """Computes marginal values for permutation sampling schemes.
 
     This strategy iterates over permutations from left to right, computing the marginal

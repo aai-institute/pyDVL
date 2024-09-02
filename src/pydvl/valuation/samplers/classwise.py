@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import cycle, islice
-from typing import Callable, Generator, Iterable, TypeVar
+from typing import Callable, Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,7 +9,12 @@ from numpy.typing import NDArray
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
-from pydvl.valuation.types import ClasswiseSample, IndexSetT, SampleGenerator
+from pydvl.valuation.types import (
+    ClasswiseSample,
+    IndexSetT,
+    SampleGenerator,
+    ValueUpdate,
+)
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["ClasswiseSampler", "get_unique_labels"]
@@ -19,7 +24,7 @@ V = TypeVar("V")
 
 
 def roundrobin(
-    batch_generators: dict[U, Iterable[V]]
+    batch_generators: Mapping[U, Iterable[V]]
 ) -> Generator[tuple[U, V], None, None]:
     """Taken samples from batch generators in order until all of them are exhausted.
 
@@ -67,7 +72,7 @@ def get_unique_labels(array: NDArray) -> NDArray:
     """
     # Object, String, Unicode, Unsigned integer, Signed integer, boolean
     if array.dtype.kind in "OSUiub":
-        return np.unique(array)
+        return cast(NDArray, np.unique(array))
     raise ValueError(
         f"Input array has an unsupported data type for categorical labels: {array.dtype}. "
         "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
@@ -175,5 +180,5 @@ class ClasswiseSampler(IndexSampler):
         self,
         utility: UtilityBase,
         coefficient: Callable[[int, int], float] | None = None,
-    ) -> EvaluationStrategy[IndexSampler]:
+    ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
         return self.in_class.make_strategy(utility, coefficient)
