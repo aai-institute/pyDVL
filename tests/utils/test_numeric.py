@@ -68,12 +68,10 @@ def test_random_powerset(n, max_subsets, q):
     # True distribution of set sizes follows a binomial distribution
     # with parameters n and q
     def binomial_pmf(j: int):
-        return np.math.comb(n, j) * q**j * (1-q)**(n-j)
+        return np.math.comb(n, j) * q**j * (1 - q) ** (n - j)
 
     true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
-    assert np.allclose(
-        true_size_counts, size_counts / max_subsets, atol=1 / (1 + n)
-    )
+    assert np.allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
 
 
 @pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
