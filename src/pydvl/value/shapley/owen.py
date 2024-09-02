@@ -97,7 +97,7 @@ def _owen_sampling_shapley(
         for j, q in enumerate(q_steps):
             for s in random_powerset(subset, n_samples=n_samples, q=q, seed=rng):
                 marginal = u({idx}.union(s)) - u(s)
-                if method == OwenAlgorithm.Antithetic:
+                if method == OwenAlgorithm.Antithetic and q != 0.5:
                     s_complement = np.setxor1d(subset, s, assume_unique=True)
                     marginal += u({idx}.union(s_complement)) - u(s_complement)
                     marginal /= 2
