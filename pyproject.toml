@@ -29,6 +29,15 @@ filterwarnings = "ignore::DeprecationWarning:pkg_resources.*:"
 [tool.coverage.run]
 branch = true
 parallel = true
+omit = [
+    "src/pydvl(value",
+    "*/.tox/*/lib/python*/site-packages/pydvl/value",
+    "*/.tox/pypy*/site-packages/pydvl/value",
+    "*/.tox\\*\\Lib\\site-packages\tpydvl\tvalue",
+    "*/src/pydvl/value",
+    "*\\src\\pydvl\\value",
+]
+
 
 [tool.coverage.paths]
 source = [
