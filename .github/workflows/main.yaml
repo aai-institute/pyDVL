@@ -79,7 +79,7 @@ jobs:
     uses: ./.github/workflows/run-tests-workflow.yaml
     secrets: inherit
     with:
-      split_size: 2
+      split_size: 1
       group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
@@ -94,7 +94,7 @@ jobs:
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
       python_version: ${{ matrix.python_version }}
-      split_size: 2
+      split_size: 1
       group_number: ${{ matrix.group_number }}
     needs: [code-quality]
 
