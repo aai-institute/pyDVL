@@ -74,12 +74,12 @@ jobs:
       fail-fast: false
       matrix:
         python_version: ["3.8", "3.9", "3.10", "3.11"]
-        group_number: [1]
+        group_number: [1, 2, 3, 4]
     name: Run Tests - Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-tests-workflow.yaml
     secrets: inherit
     with:
-      split_size: 1
+      split_size: 4
       group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
@@ -89,14 +89,28 @@ jobs:
       fail-fast: false
       matrix:
         python_version: ["3.8", "3.9", "3.10", "3.11"]
-        group_number: [1]
+        group_number: [1, 2, 3, 4]
     name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
       python_version: ${{ matrix.python_version }}
-      split_size: 1
+      split_size: 4
       group_number: ${{ matrix.group_number }}
-    needs: [code-quality]
+    needs: [code-quality, group-tests]
+
+  legacy-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: [ "3.11" ]
+        group_number: [ 1, 2, 3, 4 ]
+    name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
+    uses: ./.github/workflows/run-legacy-tests-workflow.yaml
+    with:
+      python_version: ${{ matrix.python_version }}
+      split_size: 4
+      group_number: ${{ matrix.group_number }}
+    needs: [ code-quality, group-tests, notebook-tests ]
 
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
