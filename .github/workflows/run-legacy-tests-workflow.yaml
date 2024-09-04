@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run Legacy Tests
 
 on:
   workflow_call:
@@ -21,7 +21,7 @@ env:
   PY_COLORS: 1
 
 jobs:
-  run-tests:
+  run-legacy-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
