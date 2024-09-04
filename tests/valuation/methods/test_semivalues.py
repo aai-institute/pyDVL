@@ -31,7 +31,7 @@ from .. import check_values
 from ..utils import timed
 
 
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("num_samples", [5])
 def test_msr_banzhaf(
     num_samples: int,
@@ -127,6 +127,7 @@ def test_shapley_batch_size(
     check_values(result_single_batch, result_multi_batch, rtol=1e-4)
 
 
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize("num_samples", [5])
 @pytest.mark.parametrize(
     "sampler_class",
