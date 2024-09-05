@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 from contextlib import contextmanager
 
 import joblib
@@ -68,20 +69,14 @@ def test_data_shapley_valuation(train_data, utility, n_jobs):
     assert len(got) == len(train_data)
 
 
-@pytest.mark.parametrize(
-    "n_jobs",
-    [
-        1,
-        pytest.param(
-            2,
-            marks=[
-                pytest.mark.xfail(
-                    reason="Bad interaction between parallelization and batching"
-                )
-            ],
-        ),
-    ],
-)
+n_jobs_list = [1]
+
+# FIXME: in the CI pipeline, trying to run multiple jobs with joblib crashes the worker
+if not os.getenv("CI"):
+    n_jobs_list.append(2)
+
+
+@pytest.mark.parametrize("n_jobs", n_jobs_list)
 def test_data_beta_shapley_valuation(train_data, utility, n_jobs):
     valuation = BetaShapleyValuation(
         utility,
