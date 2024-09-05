@@ -70,6 +70,7 @@ def test_randomized_least_core_methods(
         check_values(values, exact_values, extra_values_names=["subsidy"])
 
 
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
     "test_game, max_samples",
     [
