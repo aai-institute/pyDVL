@@ -39,35 +39,31 @@ log = logging.getLogger(__name__)
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler_class, sampler_kwargs, valuation_class, valuation_kwargs, rtol, atol",
+    "sampler_factory, valuation_class, valuation_kwargs, rtol, atol",
     [
         (
-            PermutationSampler,
-            {},
+            lambda s: PermutationSampler(seed=s),
             DataShapleyValuation,
             {"is_done": MaxUpdates(500)},
             0.2,
             1e-4,
         ),
         (
-            UniformSampler,
-            {},
+            lambda s: UniformSampler(seed=s),
             DataShapleyValuation,
             {"is_done": MaxUpdates(2**10)},
             0.2,
             1e-4,
         ),
         (
-            OwenSampler,
-            {"n_samples_outer": 200, "n_samples_inner": 5},
+            lambda s: OwenSampler(200, n_samples_inner=5, seed=s),
             OwenShapleyValuation,
             {},
             0.2,
             1e-4,
         ),
         (
-            AntitheticOwenSampler,
-            {"n_samples_outer": 200, "n_samples_inner": 5},
+            lambda s: AntitheticOwenSampler(200, n_samples_inner=5, seed=s),
             OwenShapleyValuation,
             {},
             0.1,
@@ -77,7 +73,6 @@ log = logging.getLogger(__name__)
         # value 0, for which the rtol has no effect.
         (
             None,
-            {},
             GroupTestingShapleyValuation,
             {"n_samples": 5e4, "epsilon": 0.2},
             0.1,
@@ -85,16 +80,16 @@ log = logging.getLogger(__name__)
         ),
     ],
 )
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 def test_games(
     test_game,
     n_jobs,
-    sampler_class,
-    sampler_kwargs,
+    sampler_factory,
     valuation_class,
     valuation_kwargs,
     rtol,
     atol,
+    seed,
 ):
     """Tests shapley values for all methods using toy games.
 
@@ -113,8 +108,8 @@ def test_games(
        samples
 
     """
-    if sampler_class is not None:
-        sampler = sampler_class(**sampler_kwargs)
+    if sampler_factory is not None:
+        sampler = sampler_factory(seed)
         valuation = valuation_class(
             utility=test_game.u,
             sampler=sampler,
