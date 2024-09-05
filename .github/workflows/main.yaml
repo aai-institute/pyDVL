@@ -104,7 +104,7 @@ jobs:
       matrix:
         python_version: [ "3.11" ]
         group_number: [ 1, 2, 3, 4 ]
-    name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
+    name: Run Legacy tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-legacy-tests-workflow.yaml
     with:
       python_version: ${{ matrix.python_version }}
