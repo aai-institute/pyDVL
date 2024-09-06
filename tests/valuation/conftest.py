@@ -19,10 +19,10 @@ from pydvl.valuation.games import (
     ShoesGame,
     SymmetricVotingGame,
 )
+from pydvl.valuation.methods.naive import combinatorial_exact_shapley
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.scorers import SupervisedScorer
 from pydvl.valuation.utility import ModelUtility
-from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 from ..conftest import num_workers
 from . import polynomial

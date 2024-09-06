@@ -25,7 +25,7 @@ from pydvl.valuation.samplers import (
     UniformSampler,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates, MinUpdates
+from pydvl.valuation.stopping import HistoryDeviation, MaxUpdates, MinUpdates
 
 from .. import check_values
 from ..utils import timed

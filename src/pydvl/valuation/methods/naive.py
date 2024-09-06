@@ -29,7 +29,7 @@ from pydvl.parallel import (
 )
 from pydvl.utils import Utility, powerset
 from pydvl.utils.status import Status
-from pydvl.value.result import ValuationResult
+from pydvl.valuation.result import ValuationResult
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 
