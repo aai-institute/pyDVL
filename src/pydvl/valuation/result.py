@@ -263,7 +263,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
         if indices is None:
             indices = np.arange(len(self._values), dtype=np.int_)
-        self._indices = np.array(indices, dtype=np.int_, copy=False)
+        self._indices = np.array(indices, dtype=indices.dtype, copy=False)
         self._positions = {idx: pos for pos, idx in enumerate(indices)}
 
         self._sort_positions: NDArray[np.int_] = np.arange(
