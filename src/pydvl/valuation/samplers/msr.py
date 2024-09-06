@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
@@ -81,7 +82,7 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
 
     def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
         u_value = self.utility(sample)
-        mask = np.zeros(self.n_indices, dtype=bool)
+        mask: NDArray[np.bool_] = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True
 
         updates = []

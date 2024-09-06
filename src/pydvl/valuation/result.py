@@ -262,9 +262,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise ValueError("Data names must be unique")
 
         if indices is None:
-            indices = np.arange(len(self._values), dtype=np.int_)
-        self._indices = np.array(indices, dtype=indices.dtype, copy=False)
-        self._positions = {idx: pos for pos, idx in enumerate(indices)}
+            self._indices = np.arange(len(self._values), dtype=np.int_)
+        else:
+            self._indices = np.asarray(indices)
+
+        self._positions = {idx: pos for pos, idx in enumerate(self._indices)}
 
         self._sort_positions: NDArray[np.int_] = np.arange(
             len(self._values), dtype=np.int_

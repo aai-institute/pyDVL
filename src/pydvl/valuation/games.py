@@ -95,7 +95,7 @@ class DummyGameUtility(UtilityBase):
         if self.training_data is None:
             raise ValueError("Utility object has no training data.")
 
-        idxs = np.array(sample.subset, dtype=np.int32)
+        idxs: NDArray[np.int32] = np.array(sample.subset, dtype=np.int32)
         try:
             score: float = self.score(self.training_data.x[idxs])
         except (KeyboardInterrupt, SystemExit):

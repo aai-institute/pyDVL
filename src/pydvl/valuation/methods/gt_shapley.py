@@ -290,7 +290,7 @@ def _calculate_utility_differences(
         The utility differences.
 
     """
-    betas = masks.astype(np.int_)
+    betas: NDArray[np.int_] = masks.astype(np.int_)
     n_samples = len(utility_values)
 
     z = _calculate_z(n_obs)
