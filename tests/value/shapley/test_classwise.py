@@ -10,7 +10,6 @@ from numpy.typing import NDArray
 from packaging import version
 from sklearn import datasets
 from sklearn.linear_model import LogisticRegression
-from value import check_values
 
 from pydvl.utils import Dataset
 from pydvl.utils import Dataset as OldDataset
@@ -28,12 +27,7 @@ from pydvl.valuation import (
 )
 from pydvl.valuation.stopping import MaxUpdates
 from pydvl.value import ClasswiseScorer as OldClasswiseScorer
-from pydvl.value import (
-    MaxChecks,
-    NoTruncation,
-    ValuationResult,
-    compute_classwise_shapley_values,
-)
+from pydvl.value import MaxChecks, ValuationResult
 from pydvl.value.shapley.classwise import (
     ClasswiseScorer,
     compute_classwise_shapley_values,
