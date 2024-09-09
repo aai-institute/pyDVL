@@ -11,7 +11,6 @@ from packaging import version
 from sklearn import datasets
 from sklearn.linear_model import LogisticRegression
 
-from pydvl.utils import Dataset
 from pydvl.utils import Dataset as OldDataset
 from pydvl.utils import Utility
 from pydvl.utils import Utility as OldUtility
@@ -412,7 +411,7 @@ class ClosedFormLinearClassifier:
 
 @pytest.fixture(scope="function")
 def classwise_shapley_utility(
-    dataset_manual_derivation: Dataset,
+    dataset_manual_derivation: OldDataset,
 ) -> Utility:
     return Utility(
         ClosedFormLinearClassifier(),
@@ -423,7 +422,7 @@ def classwise_shapley_utility(
 
 
 @pytest.fixture(scope="function")
-def dataset_manual_derivation() -> Dataset:
+def dataset_manual_derivation() -> OldDataset:
     """
     See [classwise.py][pydvl.value.shapley.classwise] for more details.
     """
@@ -431,7 +430,7 @@ def dataset_manual_derivation() -> Dataset:
     y_train = np.array([0, 0, 1, 1])
     x_test = x_train
     y_test = np.array([0, 0, 0, 1])
-    return Dataset(x_train, y_train, x_test, y_test)
+    return OldDataset(x_train, y_train, x_test, y_test)
 
 
 @pytest.fixture(scope="function")
