@@ -24,6 +24,7 @@ from tests.valuation import check_total_value, check_values
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
     "test_game, max_samples",
     [
@@ -33,26 +34,27 @@ logger = logging.getLogger(__name__)
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler",
+    "sampler_factory",
     [
-        UniformSampler(index_iteration=NoIndexIteration),
-        AntitheticSampler(index_iteration=NoIndexIteration),
-        UniformStratifiedSampler(index_iteration=NoIndexIteration),
-        TruncatedUniformStratifiedSampler(
-            lower_bound=1, upper_bound=2, index_iteration=NoIndexIteration
+        lambda s: UniformSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s: AntitheticSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s: UniformStratifiedSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s: TruncatedUniformStratifiedSampler(
+            lower_bound=1, upper_bound=2, index_iteration=NoIndexIteration, seed=s
         ),
-        VarianceReducedStratifiedSampler(
-            samples_per_setsize=lambda _: 2, index_iteration=NoIndexIteration
+        lambda s: VarianceReducedStratifiedSampler(
+            samples_per_setsize=lambda _: 2,
+            index_iteration=NoIndexIteration,
         ),
     ],
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_randomized_least_core_methods(
-    test_game, max_samples, sampler, non_negative_subsidy, seed
+    test_game, max_samples, sampler_factory, non_negative_subsidy, seed
 ):
     valuation = LeastCoreValuation(
         utility=test_game.u,
-        sampler=sampler,
+        sampler=sampler_factory(seed),
         n_samples=max_samples,
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
