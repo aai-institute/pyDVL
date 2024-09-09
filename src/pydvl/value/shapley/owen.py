@@ -9,7 +9,7 @@
 import operator
 from enum import Enum
 from functools import reduce
-from typing import Optional, Sequence
+from typing import Optional, Sequence, cast
 
 import numpy as np
 from deprecate import deprecated
@@ -90,14 +90,18 @@ def _owen_sampling_shapley(
     done = MinUpdates(1)
 
     for idx in repeat_indices(
-        indices, result=result, done=done, disable=not progress, position=job_id
+        indices,
+        result=result,  # type:ignore
+        done=done,  # type:ignore
+        disable=not progress,
+        position=job_id,
     ):
         e = np.zeros(max_q)
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         for j, q in enumerate(q_steps):
             for s in random_powerset(subset, n_samples=n_samples, q=q, seed=rng):
                 marginal = u({idx}.union(s)) - u(s)
-                if method == OwenAlgorithm.Antithetic and q != 0.5:
+                if method == OwenAlgorithm.Antithetic:
                     s_complement = np.setxor1d(subset, s, assume_unique=True)
                     marginal += u({idx}.union(s_complement)) - u(s_complement)
                     marginal /= 2

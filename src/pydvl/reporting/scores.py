@@ -31,6 +31,7 @@ def compute_removal_score(
     Returns:
         Dictionary that maps the percentages to their respective scores.
     """
+
     # Sanity checks
     if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
         raise ValueError("All percentages should be in the range [0.0, 1.0)")

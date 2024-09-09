@@ -6,22 +6,13 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import numpy as np
 import pytest
-from pymemcache.client import Client
 from pytest import Config, FixtureRequest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
 from pydvl.parallel import available_cpus
-from pydvl.utils import Dataset, MemcachedClientConfig
+from pydvl.utils import Dataset
 from tests.cache import CloudPickleCache
-from tests.tolerate import (
-    TolerateErrorFixture,
-    TolerateErrorsSession,
-    wrap_pytest_function,
-)
-
-if TYPE_CHECKING:
-    from _pytest.terminal import TerminalReporter
 
 
 def pytest_addoption(parser):
@@ -35,19 +26,6 @@ def pytest_addoption(parser):
         "--slow-tests",
         action="store_true",
         help="Run tests marked as slow using the @slow marker",
-    )
-    group = parser.getgroup("tolerate")
-    group.addoption(
-        "--tolerate-verbose",
-        action="store_true",
-        default=False,
-        help="Dump diagnostic and progress information.",
-    )
-    group.addoption(
-        "--tolerate-quiet",
-        action="store_true",
-        default=False,
-        help="Disable reporting. Verbose mode takes precedence.",
     )
     parser.addoption(
         "--with-cuda",
@@ -106,6 +84,8 @@ def pytorch_seed(seed):
 
 
 def is_memcache_responsive(hostname, port):
+    from pymemcache.client import Client
+
     try:
         client = Client(server=(hostname, port))
         client.flush_all()
@@ -122,15 +102,21 @@ def memcached_service(request) -> Tuple[str, int]:
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service) -> MemcachedClientConfig:
+def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
+    from pydvl.utils import MemcachedClientConfig
+
     return MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
 
 
 @pytest.fixture(scope="function")
-def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientConfig]:
+def memcached_client(
+    memcache_client_config,
+) -> Tuple["Client", "MemcachedClientConfig"]:
     from pymemcache.client import Client
+
+    from pydvl.utils import MemcachedClientConfig
 
     try:
         c = Client(**asdict(memcache_client_config))
@@ -209,16 +195,10 @@ def pytest_xdist_auto_num_workers(config) -> Optional[int]:
 
 
 ################################################################################
-# Tolerate Errors and CloudPickleCache Plugins
+# CloudPickleCache Plugins
 
 
 def pytest_configure(config: "Config"):
-    config.addinivalue_line(
-        "markers",
-        "tolerate: mark a test to swallow errors up to a certain threshold. "
-        "Use to test (ε,δ)-approximations.",
-    )
-    config._tolerate_session = TolerateErrorsSession(config)
     config.cloud_pickle_cache = CloudPickleCache.for_config(config, _ispytest=True)
 
     config.addinivalue_line(
@@ -240,31 +220,6 @@ def pytest_runtest_setup(item: pytest.Item):
     if marker:
         if not item.config.getoption("--slow-tests"):
             pytest.skip("slow test")
-
-
-@pytest.fixture(scope="function")
-def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(request.node)
-    return fixture
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_call(item: pytest.Function):
-    marker = item.get_closest_marker("tolerate")
-    has_fixture = hasattr(item, "funcargs") and isinstance(
-        item.funcargs.get("tolerate"), TolerateErrorFixture
-    )
-    if marker:
-        if not has_fixture:
-            wrap_pytest_function(item)
-    yield
-
-
-def pytest_terminal_summary(
-    terminalreporter: "TerminalReporter", exitstatus: int, config: "Config"
-):
-    tolerate_session = terminalreporter.config._tolerate_session
-    tolerate_session.display(terminalreporter)
 
 
 def is_osx_arm64():

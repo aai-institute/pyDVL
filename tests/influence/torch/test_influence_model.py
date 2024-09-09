@@ -7,7 +7,6 @@ from numpy.typing import NDArray
 from scipy.stats import pearsonr, spearmanr
 
 from pydvl.influence.base_influence_function_model import (
-    NotFittedException,
     NotImplementedLayerRepresentationException,
 )
 from pydvl.influence.torch.influence_function_model import (
@@ -26,6 +25,7 @@ from pydvl.influence.torch.preconditioner import (
 )
 from pydvl.influence.torch.util import BlockMode, SecondOrderMode
 from pydvl.influence.types import UnsupportedInfluenceModeException
+from pydvl.utils.exceptions import NotFittedException
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")

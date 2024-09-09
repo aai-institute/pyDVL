@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 import torch
 
-from ..base_influence_function_model import NotFittedException
+from ...utils.exceptions import NotFittedException
 from .functional import LowRankProductRepresentation, operator_nystroem_approximation
 
 if TYPE_CHECKING:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Tuple, cast
 
 import numpy as np
@@ -6,8 +8,24 @@ import pytest
 import sklearn
 from numpy.typing import NDArray
 from packaging import version
+from sklearn import datasets
+from sklearn.linear_model import LogisticRegression
 
-from pydvl.utils import Dataset, Utility, powerset
+from pydvl.utils import Dataset as OldDataset
+from pydvl.utils import Utility
+from pydvl.utils import Utility as OldUtility
+from pydvl.utils import powerset
+from pydvl.valuation import (
+    ClasswiseModelUtility,
+    ClasswiseSampler,
+    ClasswiseShapleyValuation,
+    ClasswiseSupervisedScorer,
+    Dataset,
+    PermutationSampler,
+    UniformSampler,
+)
+from pydvl.valuation.stopping import MaxUpdates
+from pydvl.value import ClasswiseScorer as OldClasswiseScorer
 from pydvl.value import MaxChecks, ValuationResult
 from pydvl.value.shapley.classwise import (
     ClasswiseScorer,
@@ -393,7 +411,7 @@ class ClosedFormLinearClassifier:
 
 @pytest.fixture(scope="function")
 def classwise_shapley_utility(
-    dataset_manual_derivation: Dataset,
+    dataset_manual_derivation: OldDataset,
 ) -> Utility:
     return Utility(
         ClosedFormLinearClassifier(),
@@ -404,7 +422,7 @@ def classwise_shapley_utility(
 
 
 @pytest.fixture(scope="function")
-def dataset_manual_derivation() -> Dataset:
+def dataset_manual_derivation() -> OldDataset:
     """
     See [classwise.py][pydvl.value.shapley.classwise] for more details.
     """
@@ -412,7 +430,7 @@ def dataset_manual_derivation() -> Dataset:
     y_train = np.array([0, 0, 1, 1])
     x_test = x_train
     y_test = np.array([0, 0, 0, 1])
-    return Dataset(x_train, y_train, x_test, y_test)
+    return OldDataset(x_train, y_train, x_test, y_test)
 
 
 @pytest.fixture(scope="function")
@@ -430,3 +448,49 @@ def dataset_left_right_margins(
     y = y.astype(int)
     x = np.expand_dims(x, -1)
     return x, y, {"left_margin": left_margin, "right_margin": right_margin}
+
+
+@pytest.mark.flaky(reruns=2)
+@pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
+def test_old_vs_new(
+    n_samples: int,
+    seed,
+):
+    model = LogisticRegression(random_state=seed)
+    old_data = OldDataset.from_sklearn(
+        datasets.load_iris(),
+        train_size=0.05,
+        random_state=seed,
+        stratify_by_target=True,
+    )
+    old_scorer = OldClasswiseScorer("accuracy", initial_label=0)
+    old_u = OldUtility(model=model, data=old_data, scorer=old_scorer)
+    old_values = compute_classwise_shapley_values(
+        old_u,
+        done=MaxChecks(n_samples),
+        truncation=NoTruncation(),
+        done_sample_complements=MaxChecks(1),
+        seed=seed,
+    )
+
+    new_train_data = Dataset(old_data.x_train, old_data.y_train)
+    new_test_data = Dataset(old_data.x_test, old_data.y_test)
+
+    in_class_sampler = PermutationSampler(seed=seed)
+    out_of_class_sampler = UniformSampler(seed=seed)
+    sampler = ClasswiseSampler(
+        in_class=in_class_sampler,
+        out_of_class=out_of_class_sampler,
+    )
+    new_u = ClasswiseModelUtility(
+        model,
+        ClasswiseSupervisedScorer("accuracy", new_test_data),
+        catch_errors=False,
+    )
+    valuation = ClasswiseShapleyValuation(
+        new_u,
+        sampler=sampler,
+        is_done=MaxUpdates(n_samples),
+    )
+    valuation.fit(new_train_data)
+    check_values(valuation.values(), old_values, atol=1e-1, rtol=1e-1)

@@ -1,24 +1,25 @@
 """ This module contains types, protocols, decorators and generic function
 transformations. Some of it probably belongs elsewhere.
 """
+
 from __future__ import annotations
 
-from abc import ABCMeta
-from typing import Any, Optional, Protocol, TypeVar, Union, cast
+from typing import Any, Optional, Protocol, TypeVar, Union, cast, runtime_checkable
 
 import numpy as np
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
-    "ensure_seed_sequence",
-    "LossFunction",
+    "BaseModel",
     "IndexT",
-    "NameT",
+    "LossFunction",
     "MapFunction",
+    "NameT",
     "ReduceFunction",
     "Seed",
     "SupervisedModel",
+    "ensure_seed_sequence",
 ]
 
 IndexT = TypeVar("IndexT", bound=np.int_)
@@ -42,15 +43,27 @@ class LossFunction(Protocol):
         ...
 
 
-class SupervisedModel(Protocol):
-    """This is the minimal Protocol that valuation methods require from
-    models in order to work.
+@runtime_checkable
+class BaseModel(Protocol):
+    """This is the minimal model protocol with the method `fit()`"""
 
-    All that is needed are the standard sklearn methods `fit()`, `predict()` and
+    def fit(self, x: NDArray, y: NDArray | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+
+@runtime_checkable
+class SupervisedModel(Protocol):
+    """This is the standard sklearn Protocol with the methods `fit()`, `predict()` and
     `score()`.
     """
 
-    def fit(self, x: NDArray, y: NDArray):
+    def fit(self, x: NDArray, y: NDArray | None):
         """Fit the model to the data
 
         Args:
@@ -70,7 +83,7 @@ class SupervisedModel(Protocol):
         """
         pass
 
-    def score(self, x: NDArray, y: NDArray) -> float:
+    def score(self, x: NDArray, y: NDArray | None) -> float:
         """Compute the score of the model given test data
 
         Args:

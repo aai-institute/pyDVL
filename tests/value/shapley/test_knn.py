@@ -1,14 +1,19 @@
 import logging
 
 import numpy as np
+import pytest
 from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.parallel.backend import available_cpus
+from pydvl.utils import Dataset as OldDataset
+from pydvl.utils import Utility as OldUtility
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.score import Scorer
 from pydvl.utils.utility import Utility
+from pydvl.valuation import KNNClassifierUtility, KNNShapleyValuation
+from pydvl.value import knn_shapley as old_knn_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
@@ -56,3 +61,23 @@ def test_knn_montecarlo_match(seed):
     top_knn = knn_values.indices[-2:]
     top_exact = exact_values.indices[-4:]
     assert np.all([k in top_exact for k in top_knn])
+
+
+@pytest.mark.xfail(reason="Suspected bug in old implementation.")
+def test_old_vs_new(seed, data):
+    model = KNeighborsClassifier(n_neighbors=5)
+    old_data = OldDataset.from_sklearn(
+        datasets.load_iris(),
+        train_size=0.05,
+        random_state=seed,
+        stratify_by_target=True,
+    )
+    old_u = OldUtility(model=model, data=old_data)
+    old_values = old_knn_shapley(old_u, progress=False).values
+
+    data_train, data_test = data
+    utility = KNNClassifierUtility(model=model, test_data=data_test)
+    new_valuation = KNNShapleyValuation(utility, progress=False)
+    new_values = new_valuation.fit(data_train).values().values
+
+    np.testing.assert_allclose(new_values, old_values, atol=1e-2, rtol=1e-2)

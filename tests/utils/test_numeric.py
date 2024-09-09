@@ -6,6 +6,7 @@ from pydvl.utils.numeric import (
     random_matrix_with_condition_number,
     random_powerset,
     random_powerset_label_min,
+    random_subset,
     random_subset_of_size,
     running_moments,
 )
@@ -31,11 +32,11 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
-# TODO: include tests for multiple values of q, including 0 and 1
 @pytest.mark.parametrize(
     "n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)]
 )
-def test_random_powerset(n, max_subsets):
+@pytest.mark.parametrize("q", [0.0, 0.1, 0.26, 0.49, 0.5, 0.6, 1])
+def test_random_powerset(n, max_subsets, q):
     """Tests frequency of items in sets and frequencies of set sizes.
 
     By Hoeffding for a Bernoulli, we have for each item in the set:
@@ -52,11 +53,11 @@ def test_random_powerset(n, max_subsets):
     s = np.arange(n)
     item_counts = np.zeros_like(s, dtype=np.float64)
     size_counts = np.zeros(n + 1)
-    for subset in random_powerset(s, n_samples=max_subsets):
+    for subset in random_powerset(s, n_samples=max_subsets, q=q):
         size_counts[len(subset)] += 1
         for item in subset:
             item_counts[item] += 1
-    q = 0.5
+
     eps = 0.1
     item_frequencies = item_counts / max_subsets
 
@@ -64,10 +65,13 @@ def test_random_powerset(n, max_subsets):
         np.abs(item_frequencies - q) > eps
     ) < max_subsets * 2 * np.exp(-2 * max_subsets * eps**2)
 
-    true_size_counts = np.array([np.math.comb(n, j) for j in range(n + 1)])
-    assert np.allclose(
-        true_size_counts / 2**n, size_counts / max_subsets, atol=1 / (1 + n)
-    )
+    # True distribution of set sizes follows a binomial distribution
+    # with parameters n and q
+    def binomial_pmf(j: int):
+        return np.math.comb(n, j) * q**j * (1 - q) ** (n - j)
+
+    true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
+    assert np.allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
 
 
 @pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
@@ -251,6 +255,27 @@ def test_running_moments():
         assert np.allclose(variances, true_variances)
 
 
+def test_running_moment_initialization():
+    """We often use running moments for updates in ValuationResult where the means
+    and variances are initialized to zero. This test makes sure that case is handled
+    correctly.
+
+    """
+    got_mean, got_var = running_moments(
+        previous_avg=0.0, previous_variance=0.0, count=0, new_value=1.0
+    )
+
+    assert got_mean == 1.0
+    assert got_var == 0.0  # TODO: shouldn't this be undefined?
+
+    got_mean, got_var = running_moments(
+        previous_avg=got_mean, previous_variance=got_var, count=1, new_value=2.0
+    )
+
+    assert np.isclose(got_mean, 1.5)
+    assert np.isclose(got_var, np.var([1.0, 2.0]))
+
+
 @pytest.mark.parametrize(
     "min_elements_per_label,num_elements_per_label,num_labels,check_num_samples",
     [(0, 10, 3, 1000), (1, 10, 3, 1000), (2, 10, 3, 1000)],
@@ -273,3 +298,13 @@ def test_random_powerset_label_min(
 
         if idx == check_num_samples:
             break
+
+
+@pytest.mark.flaky(reruns=1)
+def test_size_of_random_subset():
+    """This test discovered an actual bug where (1 - q) was used instead of q."""
+    subset = random_subset(np.arange(10), q=0)
+    assert len(subset) == 0
+
+    subset = random_subset(np.arange(10), q=1)
+    assert len(subset) == 10

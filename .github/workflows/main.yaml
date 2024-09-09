@@ -98,6 +98,20 @@ jobs:
       group_number: ${{ matrix.group_number }}
     needs: [code-quality]
 
+  legacy-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: [ "3.11" ]
+        group_number: [ 1, 2, 3, 4 ]
+    name: Run Legacy tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
+    uses: ./.github/workflows/run-legacy-tests-workflow.yaml
+    with:
+      python_version: ${{ matrix.python_version }}
+      split_size: 4
+      group_number: ${{ matrix.group_number }}
+    needs: [ code-quality ]
+
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest

@@ -47,7 +47,7 @@ import math
 import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Union, cast
 
 import numpy as np
 from deprecate import deprecated
@@ -292,7 +292,11 @@ def _combinatorial_montecarlo_shapley(
     rng = np.random.default_rng(seed)
 
     for idx in repeat_indices(
-        indices, result=result, done=done, disable=not progress, position=job_id
+        indices,
+        result=result,  # type:ignore
+        done=done,  # type:ignore
+        disable=not progress,
+        position=job_id,
     ):
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)

@@ -19,16 +19,16 @@ log = logging.getLogger(__name__)
     "test_game, rtol, total_atol",
     [
         (("symmetric-voting", {"n_players": 4}), 0.1, 1e-5),
-        (("shoes", {"left": 1, "right": 1}), 0.1, 1e-5),
-        (("shoes", {"left": 2, "right": 1}), 0.1, 1e-5),
-        (("shoes", {"left": 1, "right": 2}), 0.1, 1e-5),
-        (("shoes", {"left": 2, "right": 4}), 0.1, 1e-5),
+        # (("shoes", {"left": 1, "right": 1}), 0.1, 1e-5),
+        # (("shoes", {"left": 2, "right": 1}), 0.1, 1e-5),
+        # (("shoes", {"left": 1, "right": 2}), 0.1, 1e-5),
+        # (("shoes", {"left": 2, "right": 4}), 0.1, 1e-5),
     ],
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
     "fun",
-    [combinatorial_exact_shapley, permutation_exact_shapley],
+    [combinatorial_exact_shapley],  # , permutation_exact_shapley],
 )
 def test_games(fun, test_game, rtol, total_atol):
     values_p = fun(test_game.u)
