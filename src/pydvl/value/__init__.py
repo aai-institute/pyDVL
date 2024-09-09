@@ -6,6 +6,15 @@ See [Data valuation][data-valuation] for an introduction to the concepts
 and methods implemented here.
 """
 
+import warnings
+
+msg = (
+    "The package pydvl.value was deprecated since v0.10.0 in favor of "
+    "pydvl.valuation. It will be removed in v0.12.0."
+)
+
+warnings.warn(msg, FutureWarning)
+
 from .result import *  # isort: skip
 from ..utils import Dataset, Scorer, Utility
 from .least_core import *
