@@ -96,7 +96,7 @@ jobs:
       python_version: ${{ matrix.python_version }}
       split_size: 4
       group_number: ${{ matrix.group_number }}
-    needs: [code-quality, group-tests]
+    needs: [code-quality]
 
   legacy-tests:
     strategy:
@@ -110,7 +110,7 @@ jobs:
       python_version: ${{ matrix.python_version }}
       split_size: 4
       group_number: ${{ matrix.group_number }}
-    needs: [ code-quality, group-tests, notebook-tests ]
+    needs: [ code-quality ]
 
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
