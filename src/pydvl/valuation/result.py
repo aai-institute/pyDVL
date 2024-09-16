@@ -249,22 +249,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._sort_order = None
         self._extra_values = extra_values or {}
 
-        # Yuk...
-        if data_names is None:
-            if indices is not None:
-                self._names = np.copy(indices)
-            else:
-                self._names = np.arange(len(self._values), dtype=np.int_)
-        else:
-            self._names = np.array(data_names, copy=True)
-
-        if len(np.unique(self._names)) != len(self._names):
-            raise ValueError("Data names must be unique")
-
-        if indices is None:
-            self._indices = np.arange(len(self._values), dtype=np.int_)
-        else:
-            self._indices = np.asarray(indices)
+        self._indices = self._create_indices_array(indices, len(self._values))
+        self._names = self._create_names_array(data_names, self._indices)
 
         self._positions = {idx: pos for pos, idx in enumerate(self._indices)}
 
@@ -798,15 +784,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Returns:
             Object with the results.
         """
-        if indices is None:
-            indices = np.arange(n_samples, dtype=np.int_)
-        else:
-            indices = np.array(indices, dtype=np.int_)
-
-        if data_names is None:
-            data_names = np.array(indices)
-        else:
-            data_names = np.array(data_names)
+        indices = cls._create_indices_array(indices, n_samples)
+        data_names = cls._create_names_array(data_names, indices)
 
         return cls(
             algorithm=algorithm,
@@ -817,3 +796,32 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
         )
+
+    @staticmethod
+    def _create_indices_array(
+        indices: Sequence[IndexT] | NDArray[IndexT] | None, n_samples: int
+    ) -> NDArray[IndexT]:
+
+        if indices is None:
+            index_array: NDArray[IndexT] = np.arange(n_samples, dtype=np.int_)
+        elif isinstance(indices, np.ndarray):
+            index_array = indices.copy()
+        else:
+            index_array = np.asarray(indices)
+
+        return index_array
+
+    @staticmethod
+    def _create_names_array(
+        data_names: Sequence[NameT] | NDArray[NameT] | None, indices: NDArray[IndexT]
+    ) -> NDArray[NameT]:
+
+        if data_names is None:
+            names = np.array(indices, copy=True)
+        else:
+            names = np.array(data_names, copy=True)
+
+        if len(np.unique(names)) != len(names):
+            raise ValueError("Data names must be unique")
+
+        return names
