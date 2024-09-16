@@ -1,0 +1,3 @@
+mypy==1.5.1
+types-tqdm
+pandas-stubs
