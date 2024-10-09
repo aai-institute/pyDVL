@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from numpy.typing import NDArray
 from scipy.stats import norm, t
 
-from pydvl.value import ValuationResult
+from pydvl.valuation.result import ValuationResult
 
 
 @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
