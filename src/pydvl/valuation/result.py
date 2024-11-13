@@ -557,10 +557,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         # taken from the result with the name.
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
-                other._names = other._names.astype(self._names.dtype)
                 logger.warning(
                     f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
                 )
+                other._names = other._names.astype(self._names.dtype)
             else:
                 raise TypeError(
                     f"Cannot cast ValuationResult.names from "
@@ -801,7 +801,6 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def _create_indices_array(
         indices: Sequence[IndexT] | NDArray[IndexT] | None, n_samples: int
     ) -> NDArray[IndexT]:
-
         if indices is None:
             index_array: NDArray[IndexT] = np.arange(n_samples, dtype=np.int_)
         elif isinstance(indices, np.ndarray):
@@ -815,9 +814,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def _create_names_array(
         data_names: Sequence[NameT] | NDArray[NameT] | None, indices: NDArray[IndexT]
     ) -> NDArray[NameT]:
-
         if data_names is None:
-            names = np.array(indices, copy=True)
+            names = np.array(indices, copy=True, dtype=object)
         else:
             names = np.array(data_names, copy=True)
 
