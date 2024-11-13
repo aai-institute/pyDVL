@@ -1,3 +1,8 @@
+"""
+DELETE THIS FILE:
+Temporary support for least_core_basic.ipynb until it no longer requires
+compute_removal_score_legacy
+"""
 from __future__ import annotations
 
 from typing import Iterable
