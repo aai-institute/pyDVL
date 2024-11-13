@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier
 
+from pydvl.valuation import Dataset
 from pydvl.valuation.scorers import SupervisedScorer, SupervisedScorerCallable
 
 
@@ -20,7 +21,7 @@ class KNNClassifierScorer(SupervisedScorer):
 
     """
 
-    def __init__(self, test_data):
+    def __init__(self, test_data: Dataset):
         def scoring(model: KNeighborsClassifier, X: NDArray, y: NDArray) -> float:
             probs = model.predict_proba(X)
             label_to_pos = {label: i for i, label in enumerate(model.classes_)}
