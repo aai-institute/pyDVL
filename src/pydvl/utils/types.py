@@ -4,6 +4,7 @@ transformations. Some of it probably belongs elsewhere.
 
 from __future__ import annotations
 
+import sys
 from typing import Any, Optional, Protocol, TypeVar, Union, cast, runtime_checkable
 
 import numpy as np
@@ -11,6 +12,7 @@ from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
+    "BaggingModel",
     "BaseModel",
     "IndexT",
     "LossFunction",
@@ -20,6 +22,7 @@ __all__ = [
     "Seed",
     "SupervisedModel",
     "ensure_seed_sequence",
+    "is_bagging_model",
 ]
 
 IndexT = TypeVar("IndexT", bound=np.int_)
@@ -94,6 +97,20 @@ class SupervisedModel(Protocol):
             The score of the model on `(x, y)`
         """
         pass
+
+
+def is_bagging_model(model: SupervisedModel) -> bool:
+    """Any model with the attributes `n_estimators` and `max_samples` is considered a
+    bagging model."""
+    return hasattr(model, "n_estimators") and hasattr(model, "max_samples")
+
+
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+
+    BaggingModel = Annotated[SupervisedModel, is_bagging_model]
+else:
+    BaggingModel = SupervisedModel
 
 
 def ensure_seed_sequence(
