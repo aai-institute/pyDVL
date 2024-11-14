@@ -314,7 +314,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def stderr(self) -> NDArray[np.float_]:
         """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self._variances / np.maximum(1, self.counts))
+            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
         )
 
     @property
