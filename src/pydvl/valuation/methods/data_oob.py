@@ -1,11 +1,12 @@
 r"""
 This module implements the method described in (Kwon and Zou, 2023)<sup><a
-href="kwon_data_2023">1</a></sup>. It fits a bagging classifier or regressor to the data
-with a given model as base estimator. A data point's value is the average loss of the
-estimators which were not fit on it.
+href="kwon_data_2023">1</a></sup>.
+
+A data point's Data-OOB value is defined for bagging models. It is the average loss of
+the estimators which were not fit on it.
 
 Let $w_{bj}\in Z$ be the number of times the j-th datum $(x_j, y_j)$ is selected
-in the b-th bootstrap dataset.
+in the b-th bootstrap dataset. The Data-OOB value is computed as follows:
 
 $$
 \psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i,
@@ -15,10 +16,6 @@ $$
 
 where $T: Y \times Y \rightarrow \mathbb{R}$ is a score function that represents the
 goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
-
-!!! Warning
-    This implementation is a placeholder and does not match exactly the method described
-    in the paper.
 
 ## References
 
@@ -35,14 +32,20 @@ from typing import TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.base import is_classifier, is_regressor
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from sklearn.base import is_classifier
 
-from pydvl.utils.types import Seed, SupervisedModel
+# HACK: we use some private sklearn stuff to obtain the indices of the bootstrap samples
+#  in RandomForest and ExtraTrees, which do not have the `estimators_samples_` attribute.
+from sklearn.ensemble._forest import (
+    _generate_unsampled_indices,
+    _get_n_samples_bootstrap,
+)
+from sklearn.utils.validation import check_is_fitted
+
+from pydvl.utils.types import BaggingModel, LossFunction
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.types import LossFunction
 
 T = TypeVar("T", bound=np.number)
 
@@ -52,90 +55,87 @@ logger = logging.getLogger(__name__)
 class DataOOBValuation(Valuation):
     """Computes Data Out-Of-Bag values.
 
-    !!! tip
-        `n_estimators` and `max_samples` must be tuned jointly to ensure that all
-        samples are at least 1 time out-of-bag, otherwise the result could include a
-        NaN value for that datum.
+    This class implements the method described in (Kwon and Zou,
+    2023)<sup><a href="kwon_data_2023">1</a></sup>.
 
     Args:
-        data: dataset
-        model:
-        n_estimators: Number of estimators used in the bagging procedure.
-        max_samples: The fraction of samples to draw to train each base estimator.
-        loss: A function taking as parameters model prediction and corresponding
-            data labels(y_true, y_pred) and returning an array of point-wise errors.
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        model: A fitted bagging model. Bagging models in sklearn include
+            [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]], RandomForest*,
+            ExtraTrees*, or any model which defines an attribute `estimators_` and uses
+            bootstrapped subsamples to compute predictions.
+        loss: A loss function to compare the true values with the predictions. If `None`,
+            it uses point-wise accuracy for classifiers and negative $l_2$ distance for
+            regressors.
 
     Returns:
         Object with the data values.
-
-    FIXME: this is an extended pydvl implementation of the Data-OOB valuation method
-      which just bags whatever model is passed to it. The paper only considers bagging
-      models as input.
     """
 
     def __init__(
         self,
-        model: SupervisedModel,
-        n_estimators: int,
-        max_samples: float = 0.8,
+        model: BaggingModel,
         loss: LossFunction | None = None,
-        seed: Seed | None = None,
     ):
         super().__init__()
         self.model = model
-        self.n_estimators = n_estimators
-        self.max_samples = max_samples
         self.loss = loss
-        self.rng = np.random.default_rng(seed)
 
     def fit(self, data: Dataset):
         # TODO: automate str representation for all Valuations
         algorithm_name = f"Data-OOB-{str(self.model)}"
-        self.result = ValuationResult.zeros(
+        self.result = ValuationResult.empty(
             algorithm=algorithm_name,
             indices=data.indices,
             data_names=data.data_names,
         )
 
-        random_state = np.random.RandomState(self.rng.bit_generator)
-
-        if is_classifier(self.model):
-            logger.info(f"Training BaggingClassifier using {self.model}")
-            bag = BaggingClassifier(
-                self.model,
-                n_estimators=self.n_estimators,
-                max_samples=self.max_samples,
-                random_state=random_state,
-            )
-            if self.loss is None:
-                self.loss = point_wise_accuracy
-        elif is_regressor(self.model):
-            logger.info(f"Training BaggingRegressor using {self.model}")
-            bag = BaggingRegressor(
-                self.model,
-                n_estimators=self.n_estimators,
-                max_samples=self.max_samples,
-                random_state=random_state,
-            )
-            if self.loss is None:
-                self.loss = neg_l2_distance
-        else:
+        # We depart from common practice in pyDVL and perform a runtime check because
+        # this is one of a few model-specific valuation methods.
+        if not isinstance(self.model, BaggingModel):
             raise Exception(
-                "Model has to be a classifier or a regressor in sklearn format."
+                "The model has to be an sklearn-compatible bagging model, including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "ExtraTrees*, and any model which defines n_estimators, max_samples, "
+                "and after fitting estimators_ and uses bootstrapped subsamples to "
+                "compute predictions."
             )
 
-        bag.fit(data.x, data.y)
-        for est, samples in zip(bag.estimators_, bag.estimators_samples_):
-            oob_idx = np.setxor1d(data.indices, np.unique(samples))
+        check_is_fitted(
+            self.model,
+            msg="The bagging model has to be fitted before calling the valuation method.",
+        )
+        # This should always be present after fitting
+        estimators = getattr(self.model, "estimators_")
+
+        if self.loss is None:
+            self.loss = (
+                point_wise_accuracy if is_classifier(self.model) else neg_l2_distance
+            )
+
+        if hasattr(self.model, "estimators_samples_"):  # Bagging(Classifier|Regressor)
+            unsampled_indices = [
+                np.setxor1d(data.indices, np.unique(sampled))
+                for sampled in self.model.estimators_samples_
+            ]
+        else:  # RandomForest*, ExtraTrees*, IsolationForest
+            n_samples_bootstrap = _get_n_samples_bootstrap(
+                len(data), self.model.max_samples
+            )
+            unsampled_indices = []
+            for i, est in enumerate(estimators):
+                oob_indices = _generate_unsampled_indices(
+                    est.random_state, len(data.indices), n_samples_bootstrap
+                )
+                unsampled_indices.append(oob_indices)
+
+        for est, oob_indices in zip(estimators, unsampled_indices):
             array_loss = self.loss(
-                y_true=data.y[oob_idx],
-                y_pred=est.predict(data.x[oob_idx]),
+                y_true=data.y[oob_indices],
+                y_pred=est.predict(data.x[oob_indices]),
             )
             self.result += ValuationResult(
                 algorithm=algorithm_name,
-                indices=oob_idx,
+                indices=oob_indices,
                 values=array_loss,
                 counts=np.ones_like(array_loss, dtype=data.indices.dtype),
             )
