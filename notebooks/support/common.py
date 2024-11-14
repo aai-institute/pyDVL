@@ -609,7 +609,7 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
 
 
 @filecache(path=Path("adult_data.pkl"))
-def load_adult_data():
+def load_adult_data() -> pd.DataFrame:
     data_url = (
         "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
     )
