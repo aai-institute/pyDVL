@@ -682,7 +682,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             else self._indices[self._sort_positions],
             columns=[column],
         )
-        df[column + "_stderr"] = self.stderr[self._sort_positions]
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod
