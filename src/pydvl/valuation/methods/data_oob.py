@@ -42,7 +42,7 @@ from sklearn.ensemble._forest import (
 )
 from sklearn.utils.validation import check_is_fitted
 
-from pydvl.utils.types import BaggingModel, LossFunction
+from pydvl.utils.types import BaggingModel, PointwiseScore
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
@@ -63,9 +63,9 @@ class DataOOBValuation(Valuation):
             [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]], RandomForest*,
             ExtraTrees*, or any model which defines an attribute `estimators_` and uses
             bootstrapped subsamples to compute predictions.
-        loss: A loss function to compare the true values with the predictions. If `None`,
-            it uses point-wise accuracy for classifiers and negative $l_2$ distance for
-            regressors.
+        score: A callable for point-wise comparison of true values with the predictions.
+            If `None`, uses point-wise accuracy for classifiers and negative $l_2$
+            distance for regressors.
 
     Returns:
         Object with the data values.
@@ -74,11 +74,11 @@ class DataOOBValuation(Valuation):
     def __init__(
         self,
         model: BaggingModel,
-        loss: LossFunction | None = None,
+        score: PointwiseScore | None = None,
     ):
         super().__init__()
         self.model = model
-        self.loss = loss
+        self.score = score
 
     def fit(self, data: Dataset):
         # TODO: automate str representation for all Valuations
@@ -107,8 +107,8 @@ class DataOOBValuation(Valuation):
         # This should always be present after fitting
         estimators = getattr(self.model, "estimators_")
 
-        if self.loss is None:
-            self.loss = (
+        if self.score is None:
+            self.score = (
                 point_wise_accuracy if is_classifier(self.model) else neg_l2_distance
             )
 
@@ -129,33 +129,37 @@ class DataOOBValuation(Valuation):
                 unsampled_indices.append(oob_indices)
 
         for est, oob_indices in zip(estimators, unsampled_indices):
-            array_loss = self.loss(
+            score_array = self.score(
                 y_true=data.y[oob_indices],
                 y_pred=est.predict(data.x[oob_indices]),
             )
             self.result += ValuationResult(
                 algorithm=algorithm_name,
                 indices=oob_indices,
-                values=array_loss,
-                counts=np.ones_like(array_loss, dtype=data.indices.dtype),
+                values=score_array,
+                counts=np.ones_like(score_array, dtype=data.indices.dtype),
             )
 
 
 def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
-    r"""Point-wise 0-1 loss between two arrays
+    """Point-wise accuracy, or 0-1 score between two arrays.
+
+    Higher is better.
 
     Args:
         y_true: Array of true values (e.g. labels)
         y_pred: Array of estimated values (e.g. model predictions)
 
     Returns:
-        Array with point-wise 0-1 losses between labels and model predictions
+        Array with point-wise 0-1 accuracy between labels and model predictions
     """
     return np.array(y_pred == y_true, dtype=y_pred.dtype)
 
 
 def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
-    r"""Point-wise negative $l_2$ distance between two arrays
+    r"""Point-wise negative $l_2$ distance between two arrays.
+
+    Higher is better.
 
     Args:
         y_true: Array of true values (e.g. labels)

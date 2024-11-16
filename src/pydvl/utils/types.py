@@ -14,7 +14,7 @@ __all__ = [
     "BaggingModel",
     "BaseModel",
     "IndexT",
-    "LossFunction",
+    "PointwiseScore",
     "MapFunction",
     "NameT",
     "ReduceFunction",
@@ -39,7 +39,7 @@ class ReduceFunction(Protocol[R]):
         ...
 
 
-class LossFunction(Protocol):
+class PointwiseScore(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
         ...
 

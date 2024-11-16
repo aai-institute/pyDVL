@@ -15,7 +15,7 @@ from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from tqdm.auto import tqdm
 
 from pydvl.utils import Seed, Utility
-from pydvl.utils.types import LossFunction
+from pydvl.utils.types import PointwiseScore
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_data_oob"]
@@ -28,7 +28,7 @@ def compute_data_oob(
     *,
     n_est: int = 10,
     max_samples: float = 0.8,
-    loss: Optional[LossFunction] = None,
+    loss: Optional[PointwiseScore] = None,
     n_jobs: Optional[int] = None,
     seed: Optional[Seed] = None,
     progress: bool = False,
