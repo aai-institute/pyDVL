@@ -73,7 +73,7 @@ def plot_ci_array(
     data: NDArray,
     level: float,
     type: Literal["normal", "t", "auto"] = "normal",
-    abscissa: Optional[Sequence[str]] = None,
+    abscissa: Optional[Sequence[Any]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
@@ -110,15 +110,13 @@ def plot_ci_array(
         variances=variances,
         counts=np.ones_like(means, dtype=np.int_) * m,
         indices=np.arange(n),
-        data_names=np.array(abscissa, dtype=str)
-        if abscissa is not None
-        else np.arange(n, dtype=str),
     )
 
     return plot_ci_values(
         dummy,
         level=level,
         type=type,
+        abscissa=abscissa,
         mean_color=mean_color,
         shade_color=shade_color,
         ax=ax,
@@ -130,15 +128,13 @@ def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
-    abscissa: Optional[Sequence[str]] = None,
+    abscissa: Optional[Sequence[Any]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
     **kwargs,
 ):
     """Plot values and a confidence interval.
-
-    Uses `values.data_names` for the x-axis.
 
     Supported intervals are based on the normal and the t distributions.
 
@@ -176,7 +172,8 @@ def plot_ci_values(
         ) from None
 
     if abscissa is None:
-        abscissa = [str(i) for i, _ in enumerate(values)]
+        abscissa = range(len(values))
+
     bound = score * values.stderr
 
     if ax is None:
@@ -190,6 +187,7 @@ def plot_ci_values(
         color=shade_color,
     )
     ax.plot(abscissa, values.values, color=mean_color, **kwargs)
+    ax.set_xlim(left=min(abscissa), right=max(abscissa))
     return ax
 
 
