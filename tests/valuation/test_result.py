@@ -86,12 +86,14 @@ def test_iter(names, ranks_asc, dummy_values):
 def test_todataframe(ranks_asc, dummy_values):
     df = dummy_values.to_dataframe()
     assert "dummy_valuator" in df.columns
-    assert "dummy_valuator_stderr" in df.columns
+    assert "dummy_valuator_variances" in df.columns
+    assert "dummy_valuator_counts" in df.columns
     assert np.alltrue(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(column="val")
     assert "val" in df.columns
-    assert "val_stderr" in df.columns
+    assert "val_variances" in df.columns
+    assert "val_counts" in df.columns
     assert np.alltrue(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(use_names=True)
