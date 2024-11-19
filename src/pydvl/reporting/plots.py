@@ -111,6 +111,7 @@ def plot_ci_array(
         counts=np.ones_like(means, dtype=np.int_) * m,
         indices=np.arange(n),
     )
+    dummy.sort(key="value")
 
     return plot_ci_values(
         dummy,
@@ -139,7 +140,8 @@ def plot_ci_values(
     Supported intervals are based on the normal and the t distributions.
 
     Args:
-        values: The valuation result.
+        values: The valuation result. The object must be sorted by calling
+            `ValuationResult.sort()`.
         level: The confidence level.
         type: The type of confidence interval to use. If "auto", uses "norm" if
             the minimum number of updates for all indices is greater than 30,
@@ -155,6 +157,7 @@ def plot_ci_values(
     Returns:
         The matplotlib axes.
     """
+    assert values._sort_order is not None, "Values must be sorted first."
 
     ppfs = {
         "normal": norm.ppf,
