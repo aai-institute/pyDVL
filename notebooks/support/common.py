@@ -12,8 +12,12 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.metrics import f1_score
+from sklearn.model_selection import StratifiedKFold, train_test_split, cross_val_predict
+from sklearn.preprocessing import TargetEncoder
 
-from pydvl.utils import Dataset
+from pydvl.valuation.dataset import Dataset
 
 from .types import Losses
 
@@ -579,9 +583,13 @@ def plot_corrupted_influences_distribution(
 def filecache(path: Path) -> Callable[[Callable], Callable]:
     """Wraps a function to cache its output on disk.
 
-    There is no hashing of the arguments of the function. This function merely
+    There is no hashing of the arguments of the function. This decorator merely
     checks whether `filename` exists and if so, loads the output from it, and if
     not it calls the function and saves the output to `filename`.
+
+    The decorated function accepts an additional keyword argument `_force_reload`
+    which, if set to `True`, calls the wrapped function to recompute the output and
+    overwrites the cached file.
 
     Args:
         fun: Function to wrap.
@@ -592,10 +600,13 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
 
     def decorator(fun: Callable) -> Callable:
         @wraps(fun)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, _force_rebuild: bool = False, **kwargs) -> Any:
             try:
                 with path.open("rb") as fd:
                     print(f"Found cached file: {path.name}.")
+                    if _force_rebuild:
+                        print("Ignoring and rebuilding...")
+                        raise FileNotFoundError
                     return pickle.load(fd)
             except (FileNotFoundError, EOFError, pickle.UnpicklingError):
                 result = fun(*args, **kwargs)
@@ -608,8 +619,14 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
     return decorator
 
 
-@filecache(path=Path("adult_data.pkl"))
-def load_adult_data() -> pd.DataFrame:
+@filecache(path=Path("adult_data_raw.pkl"))
+def load_adult_data_raw() -> pd.DataFrame:
+    """
+    Downloads the adult dataset from UCI and returns it as a pandas DataFrame.
+
+    Returns:
+        The adult dataset as a pandas DataFrame.
+    """
     data_url = (
         "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
     )
@@ -637,7 +654,7 @@ def load_adult_data() -> pd.DataFrame:
         "workclass": "category",
         "fnlwgt": int,
         "education": "category",
-        "education-num": int,
+        "education-num": int,  # increasing level of education
         "marital-status": "category",
         "occupation": "category",
         "relationship": "category",
@@ -650,28 +667,172 @@ def load_adult_data() -> pd.DataFrame:
         "income": "category",
     }
 
-    data_adult = pd.read_csv(
+    return pd.read_csv(
         data_url,
         names=column_names,
         sep=",\s*",
         engine="python",
         na_values="?",
         dtype=data_types,
-        nrows=2000,
     )
 
-    # Drop categorical columns
-    data_adult = data_adult.drop(
-        columns=[
-            "workclass",
-            "education",
-            "marital-status",
-            "occupation",
-            "relationship",
-            "race",
-            "sex",
-            "native-country",
-        ]
+
+def load_adult_data(
+    train_size: float = 0.7, random_state: Optional[int] = None
+) -> Tuple[Dataset, Dataset]:
+    """
+    Loads the adult dataset from UCI and performs some preprocessing.
+
+    The data is preprocessed by performing target encoding of the categorical variables,
+    dropping the "education" column and dropping NaNs
+
+    Ideally the encoding would be done in a pipeline, but we are trying to remove as
+    much complexity from the notebooks as possible.
+
+    Args:
+        train_size: fraction of the data to use for training
+        random_state: random state for reproducibility
+
+    Returns:
+        A tuple with training and test datasets.
+    """
+
+    df = load_adult_data_raw()
+    column_names = df.columns.tolist()
+
+    df["income"] = df["income"].cat.codes
+    df.drop(columns=["education"], inplace=True)  # education-num is enough
+    df.dropna(inplace=True)
+    column_names.remove("education")
+    column_names.remove("income")
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        df.drop(columns=["income"]).values,
+        df["income"].values,
+        train_size=train_size,
+        random_state=random_state,
+        stratify=df["income"].values,
     )
 
-    return data_adult
+    te = TargetEncoder(target_type="binary", random_state=random_state)
+    x_train = te.fit_transform(x_train, y_train)
+    x_test = te.transform(x_test)
+
+    return (
+        Dataset(x_train, y_train, feature_names=column_names, target_names=["income"]),
+        Dataset(x_test, y_test, feature_names=column_names, target_names=["income"]),
+    )
+
+
+def subsample_dataset(data: Dataset, fraction: float) -> Dataset:
+    """Subsamples a dataset at random.
+    Args:
+        data: Dataset to subsample
+        fraction: Fraction of the dataset to keep. Range [0,1)
+
+    Returns:
+        The subsampled dataset
+    """
+    assert 0 <= fraction < 1, "Fraction must be in the range [0,1)"
+    subsample_mask = np.random.rand(len(data)) < fraction
+
+    return Dataset(
+        data.x[subsample_mask],
+        data.y[subsample_mask],
+        feature_names=data.feature_names,
+        target_names=data.target_names,
+    )
+
+
+def to_dataframe(dataset: Dataset) -> pd.DataFrame:
+    """
+    Converts a dataset to a pandas DataFrame
+
+    Args:
+        dataset: Dataset to convert
+
+    Returns:
+        A pandas DataFrame
+    """
+    y = dataset.y[:, np.newaxis] if dataset.y.ndim == 1 else dataset.y
+    df = pd.DataFrame(dataset.x, columns=dataset.feature_names).assign(
+        **{name: y[:, i] for i, name in enumerate(dataset.target_names)}
+    )
+    return df
+
+
+class ConstantBinaryClassifier(BaseEstimator):
+    def __init__(self, p: float, random_state: int | None = None):
+        """A classifier that always predicts class 0 with probability p and class 1
+        with probability 1-p.
+
+        The prediction is fixed upon fitting the model and constant for all
+        outputs, i.e. the same prediction is returned for all samples. Call
+        `fit()` again to resample the prediction.
+
+        Args:
+            p: probability that this estimator always predicts class 0
+            random_state:
+        """
+        self.p = p
+        self.prediction: int | None = None
+        self.random_state = random_state
+
+    def fit(self, X, y):
+        rng = np.random.default_rng(self.random_state)
+        n_outputs = y.shape[1] if y.ndim > 1 else 1
+        self.prediction = (rng.random(n_outputs) > self.p).astype(int)
+
+    def predict(self, X):
+        return np.repeat(self.prediction, len(X))
+
+
+class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
+    """
+    A wrapper that tunes the decision threshold of a binary classifier to maximize
+    a given metric, using cross-fitting on the training data.
+    """
+
+    def __init__(
+        self,
+        base_estimator,
+        n_splits: int = 5,
+        metric=f1_score,
+        n_jobs: int = -1,
+        random_state: int | None = None,
+    ):
+        self.base_estimator = base_estimator
+        self.n_splits = n_splits
+        self.metric = metric
+        self.optimal_threshold_: float | None = None
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+
+    def fit(self, X, y):
+        # We find an optimal decision threshold using out-of-sample predictions
+        cv_strategy = StratifiedKFold(
+            n_splits=self.n_splits, shuffle=True, random_state=self.random_state
+        )
+        y_proba_cv = cross_val_predict(
+            self.base_estimator,
+            X,
+            y,
+            cv=cv_strategy,
+            method="predict_proba",
+            n_jobs=self.n_jobs,
+        )[:, 1]
+
+        thresholds = np.linspace(0, 1, 100)
+        f1_scores = [self.metric(y, y_proba_cv >= t) for t in thresholds]
+        self.optimal_threshold = thresholds[np.argmax(f1_scores)]
+
+        # Then we fit the model on the entire dataset
+        self.base_estimator.fit(X, y)
+        return self
+
+    def predict(self, X):
+        y_proba = self.base_estimator.predict_proba(X)[:, 1]
+        return (y_proba >= self.optimal_threshold).astype(int)
+
+    def __getattr__(self, item):
+        return getattr(self.base_estimator, item)

@@ -23,7 +23,7 @@ def compute_removal_score(
     remove_best: bool = False,
     progress: bool = False,
 ) -> dict[float, float]:
-    r"""Fits model and computes score on the test set after incrementally removing
+    """Fits model and computes score on the test set after incrementally removing
     a percentage of data points from the training set, based on their values.
 
     Args:

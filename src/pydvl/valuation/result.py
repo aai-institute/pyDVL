@@ -670,9 +670,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 DataFrame's index.
 
         Returns:
-            A dataframe with two columns, one for the values, with name
-                given as explained in `column`, and another with standard errors for
-                approximate algorithms. The latter will be named `column+'_stderr'`.
+            A dataframe with three columns: `name`, `name_variances` and
+                `name_counts`, where `name` is the value of argument `column`.
         """
         column = column or self._algorithm
         df = pd.DataFrame(

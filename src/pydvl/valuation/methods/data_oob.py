@@ -121,12 +121,12 @@ class DataOOBValuation(Valuation):
             n_samples_bootstrap = _get_n_samples_bootstrap(
                 len(data), self.model.max_samples
             )
-            unsampled_indices = []
-            for i, est in enumerate(estimators):
-                oob_indices = _generate_unsampled_indices(
+            unsampled_indices = [
+                _generate_unsampled_indices(
                     est.random_state, len(data.indices), n_samples_bootstrap
                 )
-                unsampled_indices.append(oob_indices)
+                for est in estimators
+            ]
 
         for est, oob_indices in zip(estimators, unsampled_indices):
             score_array = self.score(
