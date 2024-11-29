@@ -678,7 +678,7 @@ def load_adult_data_raw() -> pd.DataFrame:
 
 
 def load_adult_data(
-    train_size: float = 0.7, random_state: Optional[int] = None
+    train_size: float = 0.7, subsample: float = 1.0, random_state: Optional[int] = None
 ) -> Tuple[Dataset, Dataset]:
     """
     Loads the adult dataset from UCI and performs some preprocessing.
@@ -690,7 +690,8 @@ def load_adult_data(
     much complexity from the notebooks as possible.
 
     Args:
-        train_size: fraction of the data to use for training
+        subsample: fraction of the data to keep. Range [0,1]
+        train_size: fraction of the (subsampled) data to use for training
         random_state: random state for reproducibility
 
     Returns:
@@ -698,6 +699,8 @@ def load_adult_data(
     """
 
     df = load_adult_data_raw()
+    if subsample < 1:
+        df = df.sample(frac=subsample, random_state=random_state)
     column_names = df.columns.tolist()
 
     df["income"] = df["income"].cat.codes
@@ -721,26 +724,6 @@ def load_adult_data(
     return (
         Dataset(x_train, y_train, feature_names=column_names, target_names=["income"]),
         Dataset(x_test, y_test, feature_names=column_names, target_names=["income"]),
-    )
-
-
-def subsample_dataset(data: Dataset, fraction: float) -> Dataset:
-    """Subsamples a dataset at random.
-    Args:
-        data: Dataset to subsample
-        fraction: Fraction of the dataset to keep. Range [0,1)
-
-    Returns:
-        The subsampled dataset
-    """
-    assert 0 <= fraction < 1, "Fraction must be in the range [0,1)"
-    subsample_mask = np.random.rand(len(data)) < fraction
-
-    return Dataset(
-        data.x[subsample_mask],
-        data.y[subsample_mask],
-        feature_names=data.feature_names,
-        target_names=data.target_names,
     )
 
 

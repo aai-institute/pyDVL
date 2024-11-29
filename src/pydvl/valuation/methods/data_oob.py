@@ -89,23 +89,20 @@ class DataOOBValuation(Valuation):
             data_names=data.data_names,
         )
 
-        # We depart from common practice in pyDVL and perform a runtime check because
-        # this is one of a few model-specific valuation methods.
-        if not isinstance(self.model, BaggingModel):
-            raise Exception(
-                "The model has to be an sklearn-compatible bagging model, including "
-                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
-                "ExtraTrees*, and any model which defines n_estimators, max_samples, "
-                "and after fitting estimators_ and uses bootstrapped subsamples to "
-                "compute predictions."
-            )
-
         check_is_fitted(
             self.model,
             msg="The bagging model has to be fitted before calling the valuation method.",
         )
+
         # This should always be present after fitting
-        estimators = getattr(self.model, "estimators_")
+        try:
+            estimators = self.model.estimators_
+        except AttributeError as e:
+            raise ValueError(
+                    "The model has to be an sklearn-compatible bagging model, including "
+                    "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                    "and ExtraTrees*"
+                    )
 
         if self.score is None:
             self.score = (

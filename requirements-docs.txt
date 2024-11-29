@@ -1,4 +1,5 @@
 griffe==0.42.1
+imblearn
 mike==2.0.0
 markdown-captions
 mkdocs==1.5.3
