@@ -391,11 +391,11 @@ class GroupedDataset(Dataset):
         cls,
         data: Bunch,
         train_size: float = 0.8,
-        random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence | None = None,
+        random_state: int | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, Dataset]:
+    ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
         ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from a
         [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
@@ -434,25 +434,18 @@ class GroupedDataset(Dataset):
             Datasets with the selected sklearn data
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
+            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+                objects.
         """
-        if data_groups is None:
-            raise ValueError(
-                "data_groups must be provided when constructing a GroupedDataset"
-            )
-
-        x_train, x_test, y_train, y_test, data_groups_train, _ = train_test_split(
-            data.data,
-            data.target,
-            data_groups,
+        return cls.from_arrays(
+            X=data.data,
+            y=data.target,
             train_size=train_size,
+            stratify_by_target=stratify_by_target,
+            data_groups=data_groups,
             random_state=random_state,
-            stratify=data.target if stratify_by_target else None,
+            **kwargs,
         )
-
-        training_set = Dataset(x=x_train, y=y_train, **kwargs)
-        test_set = Dataset(x=x_test, y=y_test, **kwargs)
-        return cls.from_dataset(training_set, data_groups_train), test_set
 
     @classmethod
     def from_arrays(
@@ -460,11 +453,11 @@ class GroupedDataset(Dataset):
         X: NDArray,
         y: NDArray,
         train_size: float = 0.8,
-        random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence | None = None,
+        random_state: int | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, Dataset]:
+    ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
         and an ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from X and y
         numpy arrays as returned by the `make_*` functions in
@@ -507,16 +500,18 @@ class GroupedDataset(Dataset):
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
+                constructor.
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
+            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+                objects.
         """
         if data_groups is None:
             raise ValueError(
                 "data_groups must be provided when constructing a GroupedDataset"
             )
-        x_train, x_test, y_train, y_test, data_groups_train, _ = train_test_split(
+        x_train, x_test, y_train, y_test, groups_train, groups_test = train_test_split(
             X,
             y,
             data_groups,
@@ -524,9 +519,9 @@ class GroupedDataset(Dataset):
             random_state=random_state,
             stratify=y if stratify_by_target else None,
         )
-        training_set = Dataset(x=x_train, y=y_train, **kwargs)
-        test_set = Dataset(x=x_test, y=y_test, **kwargs)
-        return cls.from_dataset(training_set, data_groups_train), test_set
+        training_set = cls(x=x_train, y=y_train, data_groups=groups_train, **kwargs)
+        test_set = cls(x=x_test, y=y_test, data_groups=groups_test, **kwargs)
+        return training_set, test_set
 
     @classmethod
     def from_dataset(cls, data: Dataset, data_groups: Sequence[Any]) -> GroupedDataset:
@@ -552,7 +547,7 @@ class GroupedDataset(Dataset):
 
         Returns:
             A [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with the initial
-                [Dataset][pydvl.valuation.dataset.Dataset] grouped by data_groups.
+                [Dataset][pydvl.valuation.dataset.Dataset] grouped by `data_groups`.
         """
         return cls(
             x=data.x,
