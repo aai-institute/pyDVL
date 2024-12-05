@@ -146,10 +146,7 @@ class KNNShapleyValuation(Valuation):
         n_obs = len(y_train)
         n_neighbors = helper_model.get_params()["n_neighbors"]
 
-        # sorts data indices from close to far
-        if x_test.ndim == 1:
-            x_test = x_test.reshape(1, -1)
-
+        # sort data indices from close to far
         sorted_indices = helper_model.kneighbors(
             x_test, n_neighbors=n_obs, return_distance=False
         )
