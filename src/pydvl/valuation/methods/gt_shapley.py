@@ -134,7 +134,7 @@ class GroupTestingShapleyValuation(Valuation):
             problem=problem,
             solver_options=self._solver_options,
             algorithm_name=self.algorithm_name,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         self.result = solution

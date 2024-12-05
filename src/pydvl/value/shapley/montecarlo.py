@@ -40,6 +40,7 @@ as done in Truncated MonteCarlo Shapley (TMCS).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -213,7 +214,7 @@ def permutation_montecarlo_shapley(
 
     seed_sequence = ensure_seed_sequence(seed)
     result = ValuationResult.zeros(
-        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
+        algorithm=algorithm, indices=u.data.indices, data_names=u.data.names
     )
 
     pbar = tqdm(disable=not progress, total=100, unit="%")

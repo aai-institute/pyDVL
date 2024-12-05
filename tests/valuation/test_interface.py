@@ -1,4 +1,4 @@
-"""Simple test for the public user interface documented in turorials."""
+"""Simple test for the public user interface documented in tutorials."""
 
 
 import logging

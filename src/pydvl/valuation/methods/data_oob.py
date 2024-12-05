@@ -96,7 +96,7 @@ class DataOOBValuation(Valuation):
         self.result = ValuationResult.zeros(
             algorithm=algorithm_name,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         random_state = np.random.RandomState(self.rng.bit_generator)

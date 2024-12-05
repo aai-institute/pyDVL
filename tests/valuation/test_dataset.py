@@ -113,14 +113,14 @@ def test_grouped_dataset_results():
         X, y, data_groups=data_groups, train_size=train_size
     )
 
-    v = ValuationResult.zeros(indices=train.indices, data_names=train.data_names)
+    v = ValuationResult.zeros(indices=train.indices, data_names=train.names)
     v2 = ValuationResult(
         indices=train.indices,
         values=np.ones(len(train)),
         variances=np.zeros(len(train)),
-        data_names=train.data_names,
+        data_names=train.names,
     )
     v += v2
     assert np.all(v.values == 1)
-    assert np.all(v.names == np.array(train.data_names))
-    assert np.all([isinstance(x, np.int_) for x in v.names])
+    assert np.all(v.names == np.array(train.names))
+    assert np.all([isinstance(x, object) for x in v.names])

@@ -107,7 +107,7 @@ class KNNShapleyValuation(Valuation):
             algorithm="knn_shapley",
             status=Status.Converged,
             values=values,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         self.result = res

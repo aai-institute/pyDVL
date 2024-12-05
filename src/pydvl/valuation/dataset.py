@@ -144,7 +144,7 @@ class Dataset:
         return self._indices
 
     @property
-    def data_names(self) -> NDArray[np.object_]:
+    def names(self) -> NDArray[np.object_]:
         """Names of each individual datapoint.
 
         Used for reporting Shapley values.
@@ -294,6 +294,7 @@ class GroupedDataset(Dataset):
         data_groups: Sequence,
         feature_names: Sequence[str] | None = None,
         target_names: Sequence[str] | None = None,
+        data_names: Sequence[str] | None = None,
         group_names: Sequence[str] | None = None,
         description: str | None = None,
         **kwargs,
@@ -314,6 +315,8 @@ class GroupedDataset(Dataset):
                 valuation.
             feature_names: names of the covariates' features.
             target_names: names of the labels or targets y
+            data_names: names of the data points. For example, if the dataset is a
+                time series, each entry can be a timestamp.
             group_names: names of the groups. If not provided, the labels
                 from `data_groups` will be used.
             description: A textual description of the dataset
@@ -331,13 +334,14 @@ class GroupedDataset(Dataset):
             y=y,
             feature_names=feature_names,
             target_names=target_names,
+            data_names=data_names,
             description=description,
             **kwargs,
         )
 
         if len(data_groups) != len(x):
             raise ValueError(
-                f"data_groups and x_train must have the same length."
+                f"data_groups and x must have the same length."
                 f"Instead got {len(data_groups)=} and {len(x)=}"
             )
 
@@ -365,7 +369,7 @@ class GroupedDataset(Dataset):
     # FIXME this is a misnomer, should be `names` in `Dataset` so that here it
     #  makes sense
     @property
-    def data_names(self):
+    def names(self):
         """Names of the groups."""
         return self._data_names
 

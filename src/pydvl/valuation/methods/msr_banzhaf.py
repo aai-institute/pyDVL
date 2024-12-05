@@ -87,19 +87,19 @@ class MSRBanzhafValuation(SemivalueValuation):
         """
         pos_result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
         neg_result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
         self.result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
@@ -189,7 +189,7 @@ class MSRBanzhafValuation(SemivalueValuation):
             variances=variances,
             counts=counts,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=pos_result.algorithm,
         )
 

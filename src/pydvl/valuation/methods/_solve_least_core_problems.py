@@ -164,7 +164,7 @@ def lc_solve_problem(
         values=values,
         subsidy=subsidy,
         stderr=None,
-        data_names=u.training_data.data_names,
+        data_names=u.training_data.names,
     )
 
 

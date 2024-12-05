@@ -26,7 +26,7 @@ V = TypeVar("V")
 def roundrobin(
     batch_generators: Mapping[U, Iterable[V]]
 ) -> Generator[tuple[U, V], None, None]:
-    """Taken samples from batch generators in order until all of them are exhausted.
+    """Take samples from batch generators in order until all of them are exhausted.
 
     This was heavily inspired by the roundrobin recipe
     in the official Python documentation for the itertools package.
@@ -80,9 +80,9 @@ def get_unique_labels(array: NDArray) -> NDArray:
 
 
 class ClasswiseSampler(IndexSampler):
-    """Sample permutations of indices and iterate through each returning
-    increasing subsets, as required for the permutation definition of
-    semi-values.
+    """A sampler that samples elements from a dataset in two steps, based on the labels.
+
+    Used by the classwise Shapley valuation method.
 
     Args:
         in_class: Sampling scheme for elements of a given label.
