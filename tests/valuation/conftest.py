@@ -99,7 +99,8 @@ def dummy_utility(dummy_train_data, dummy_test_data):
         """
 
         def __init__(self, data: Dataset):
-            self.m = max(data.x)
+            x, _ = data.data()
+            self.m = max(x)
             self.utility = 0
 
         def fit(self, x: NDArray, y: NDArray):
@@ -113,8 +114,9 @@ def dummy_utility(dummy_train_data, dummy_test_data):
 
     model = DummyModel(data)
 
+    x, _ = data.data()
     scorer = SupervisedScorer(
-        model, test_data=test_data, default=0, range=(0, data.x.sum() / data.x.max())
+        model, test_data=test_data, default=0, range=(0, x.sum() / x.max())
     )
 
     return ModelUtility(
@@ -129,7 +131,8 @@ def dummy_utility(dummy_train_data, dummy_test_data):
 def analytic_shapley(dummy_utility, dummy_train_data):
     r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    m = float(max(dummy_train_data.x))
+    x, _ = dummy_train_data.data()
+    m = float(max(x))
     values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",
@@ -147,7 +150,8 @@ def analytic_banzhaf(dummy_utility, dummy_train_data):
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
 
-    m = float(max(dummy_train_data.x))
+    x, _ = dummy_train_data.data()
+    m = float(max(x))
     values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",

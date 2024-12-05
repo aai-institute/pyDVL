@@ -7,28 +7,57 @@ true expected performance). It is therefore convenient to keep both the training
 and the test data grouped to be passed around to methods in [shapley][pydvl.valuation].
 This is done with [Dataset][pydvl.valuation.dataset.Dataset].
 
-This abstraction layer also seamlessly groups data points together if one is interested
-in computing their value as a group, see
-[GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
+These underlying data arrays can be accessed via
+[Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(X, y)`.
+The data can be accessed by indexing the object directly, e.g. `dataset[0]` will return
+the data point corresponding to index 0 in `dataset`. Note however that this is not
+necessarily the same as `dataset.data().x[0]`, which is the first point in the data
+array. This is in particular true for
+[GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
+correspond to multiple data points. 
 
 Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] and to
-fit valuation methods.
+fit (most) valuation methods.
+
+## Grouped datasets and logical indices
+
+It is also possible to group data points together with
+[GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
+
+A call to [Dataset.data(indices)][pydvl.valuation.dataset.Dataset.data] will return the
+data and labels of all samples for the given groups. But `grouped_data[0]` will return
+the data and labels of the first group, not the first data point and will therefore be
+in general different from `grouped_data.data([0])`.
+
+In order to handle groups correctly, Datasets map "logical" indices to "data" indices
+and vice versa. The latter correspond to indices in the data arrays themselves, while
+the former may map to groups of data points.
+
+This is important for valuation methods that require computation on individual data
+points, like KNNShapley or Data-OOB. In these cases, the logical indices are used to
+compute the Shapley values, while the data indices are used internally by the method.
 """
 
 from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, NamedTuple, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
 
-__all__ = ["Dataset", "GroupedDataset"]
+__all__ = ["Dataset", "GroupedDataset", "RawData"]
+
 
 logger = logging.getLogger(__name__)
+
+
+class RawData(NamedTuple):
+    x: NDArray
+    y: NDArray
 
 
 class Dataset:
@@ -36,6 +65,14 @@ class Dataset:
 
     It holds a dataset, together with info on feature names, target names, and
     data names. It is used to pass data around to valuation methods.
+
+    The underlying data arrays can be accessed via
+    [Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple
+    `(X, y)` as a [RawData][pydvl.valuation.dataset.RawData] object. The data can be
+    accessed by indexing the object directly, e.g. `dataset[0]` will return the data
+    point corresponding to index 0 in `dataset`. For this base class, this is the same
+    as `dataset.data([0])`, which is the first point in the data array, but derived
+    classes can behave differently.
     """
 
     _indices: NDArray[np.int_]
@@ -69,7 +106,9 @@ class Dataset:
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y.
         """
-        self.x, self.y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
+        self._x, self._y = check_X_y(
+            x, y, multi_output=multi_output, estimator="Dataset"
+        )
 
         def make_names(s: str, a: np.ndarray) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
@@ -84,37 +123,46 @@ class Dataset:
         if self.target_names is None:
             self.target_names = make_names("y", y)
 
-        if len(self.x.shape) > 1:
-            if len(self.feature_names) != self.x.shape[-1]:
+        if len(self._x.shape) > 1:
+            if len(self.feature_names) != self._x.shape[-1]:
                 raise ValueError("Mismatching number of features and names")
-        if len(self.y.shape) > 1:
-            if len(self.target_names) != self.y.shape[-1]:
+        if len(self._y.shape) > 1:
+            if len(self.target_names) != self._y.shape[-1]:
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
-        self._indices = np.arange(len(self.x), dtype=np.int_)
+        self._indices = np.arange(len(self._x), dtype=np.int_)
         self._data_names = (
             np.array(data_names, dtype=object)
             if data_names is not None
             else self._indices.astype(object)
         )
 
-    def __getitem__(self, idx: int | slice | Iterable) -> tuple:
-        return self.x[idx], self.y[idx]
+    def __getitem__(self, idx: int | slice | Iterable) -> Dataset:
+        if isinstance(idx, int):
+            idx = [idx]
+        return Dataset(
+            x=self._x[idx],
+            y=self._y[idx],
+            feature_names=self.feature_names,
+            target_names=self.target_names,
+            data_names=self._data_names[idx],
+            description="(SLICED): " + self.description,
+        )
 
     def feature(self, name: str) -> tuple[slice, int]:
         try:
-            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
+            return np.index_exp[:, self.feature_names.index(name)]
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_data(self, indices: Iterable[int] | None = None) -> tuple[NDArray, NDArray]:
+    def data(self, indices: Iterable[int] | None = None) -> RawData:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
-        This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to retrieve
-        subsets of the data from indices. It is typically **not needed in
-        algorithms**.
+        This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
+        retrieve subsets of the data from indices. It is typically **not needed in
+        valuation algorithms**.
 
         Args:
             indices: Optional indices that will be used to select points from
@@ -126,8 +174,44 @@ class Dataset:
                 training data. Otherwise, the entire dataset.
         """
         if indices is None:
-            return self.x, self.y
-        return self.x[indices], self.y[indices]
+            return RawData(self._x, self._y)
+        return RawData(self._x[indices], self._y[indices])
+
+    def data_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+        """Returns a subset of indices.
+
+        This is equivalent to using `Dataset.indices[logical_indices]` but allows
+        subclasses to define special behaviour, e.g. when indices in `Dataset` do not
+        match the indices in the data.
+
+        For `Dataset`, this is a simple pass-through.
+
+        Args:
+            indices: A set of indices held by this object
+
+        Returns:
+            The indices of the data points in the data array.
+        """
+        if indices is None:
+            return self._indices
+        return self._indices[indices]
+
+    def logical_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+        """Returns the indices in this Dataset for the given indices in the data array.
+
+        This is equivalent to using `Dataset.indices[data_indices]` but allows
+        subclasses to define special behaviour, e.g. when indices in `Dataset` do not
+        match the indices in the data.
+
+        Args:
+            indices: A set of indices in the data array.
+
+        Returns:
+            The abstract indices for the given data indices.
+        """
+        if indices is None:
+            return self._indices
+        return self._indices[indices]
 
     def target(self, name: str) -> tuple[slice, int]:
         try:
@@ -154,13 +238,13 @@ class Dataset:
     @property
     def dim(self) -> int:
         """Returns the number of dimensions of a sample."""
-        return int(self.x.shape[1]) if len(self.x.shape) > 1 else 1
+        return int(self._x.shape[1]) if len(self._x.shape) > 1 else 1
 
     def __str__(self):
         return self.description
 
     def __len__(self):
-        return len(self.x)
+        return len(self._x)
 
     @classmethod
     def from_sklearn(
@@ -291,7 +375,7 @@ class GroupedDataset(Dataset):
         self,
         x: NDArray,
         y: NDArray,
-        data_groups: Sequence,
+        data_groups: Sequence[int],
         feature_names: Sequence[str] | None = None,
         target_names: Sequence[str] | None = None,
         data_names: Sequence[str] | None = None,
@@ -301,23 +385,23 @@ class GroupedDataset(Dataset):
     ):
         """Class for grouping datasets.
 
-        Used for calculating Shapley values of subsets of the data considered
-        as logical units. For instance, one can group by value of a categorical
-        feature, by bin into which a continuous feature falls, or by label.
+        Used for calculating values of subsets of the data considered as logical units.
+        For instance, one can group by value of a categorical feature, by bin into which
+        a continuous feature falls, or by label.
 
         Args:
             x: training data
             y: labels of training data
             data_groups: Iterable of the same length as `x_train` containing
-                a group label for each training data point. The label can be of any
-                type, e.g. `str` or `int`. Data points with the same label will
-                then be grouped by this object and considered as one for effects of
-                valuation.
+                a group id for each training data point. Data points with the same
+                id will then be grouped by this object and considered as one for
+                effects of valuation. Group ids are assumed to be zero-based consecutive
+                integers
             feature_names: names of the covariates' features.
             target_names: names of the labels or targets y
             data_names: names of the data points. For example, if the dataset is a
                 time series, each entry can be a timestamp.
-            group_names: names of the groups. If not provided, the labels
+            group_names: names of the groups. If not provided, the numerical group ids
                 from `data_groups` will be used.
             description: A textual description of the dataset
             kwargs: Additional keyword arguments to pass to the
@@ -327,7 +411,8 @@ class GroupedDataset(Dataset):
             Added `group_names` and forwarding of `kwargs`
 
         !!! tip "Changed in version 0.10.0"
-            No longer holds split data, but only x,y and group information.
+            No longer holds split data, but only x, y and group information. Added
+                methods to retrieve indices for groups and vicecersa.
         """
         super().__init__(
             x=x,
@@ -345,35 +430,50 @@ class GroupedDataset(Dataset):
                 f"Instead got {len(data_groups)=} and {len(x)=}"
             )
 
-        self.groups: OrderedDict[Any, list[int]] = OrderedDict(
+        # data index -> abstract index (group id)
+        self.data_to_group = np.array(data_groups, dtype=int)
+        # abstract index (group id) -> data index
+        self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
             {k: [] for k in set(data_groups)}
         )
-        for idx, group in enumerate(data_groups):
-            self.groups[group].append(idx)
-        self.group_items = list(self.groups.items())
-        self._indices = np.arange(len(self.groups.keys()))
-        self._data_names = (
+        for data_idx, group_idx in enumerate(self.data_to_group):
+            self.group_to_data[group_idx].append(data_idx)  # type: ignore
+        self._indices = np.array(list(self.group_to_data.keys()))
+        self._group_names = (
             np.array(group_names, dtype=object)
             if group_names is not None
-            else np.array(list(self.groups.keys()), dtype=object)
+            else np.array(list(self.group_to_data.keys()), dtype=object)
         )
 
     def __len__(self):
-        return len(self.groups)
+        return len(self._indices)
+
+    def __getitem__(self, idx: int | slice | Iterable) -> GroupedDataset:
+        if isinstance(idx, int):
+            idx = [idx]
+        return GroupedDataset(
+            x=self._x[self.data_indices(idx)],
+            y=self._y[self.data_indices(idx)],
+            data_groups=self.data_to_group[self.data_indices(idx)],
+            feature_names=self.feature_names,
+            target_names=self.target_names,
+            data_names=self._data_names[self.data_indices(idx)],
+            group_names=self._group_names[idx],
+            description="(SLICED): " + self.description,
+        )
 
     @property
     def indices(self):
         """Indices of the groups."""
         return self._indices
 
-    # FIXME this is a misnomer, should be `names` in `Dataset` so that here it
-    #  makes sense
     @property
-    def names(self):
+    def names(self) -> NDArray[object]:
         """Names of the groups."""
-        return self._data_names
+        # FIXME? this shadows _data_names (but it can still be accessed...)
+        return self._group_names
 
-    def get_data(self, indices: Iterable[int] | None = None) -> tuple[NDArray, NDArray]:
+    def data(self, indices: Iterable[int] | None = None) -> RawData:
         """Returns the data and labels of all samples in the given groups.
 
         Args:
@@ -381,14 +481,39 @@ class GroupedDataset(Dataset):
                 all data from all groups are returned.
 
         Returns:
-            Tuple of training data x and labels y.
+            Tuple of training data `x` and labels `y`.
+        """
+        return super().data(self.data_indices(indices))
+
+    def data_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+        """Returns the indices of the samples in the given groups.
+
+        Args:
+            indices: group indices whose elements to return. If `None`,
+                all indices from all groups are returned.
+
+        Returns:
+            Indices of the samples in the given groups.
         """
         if indices is None:
-            indices = self.indices
-        data_indices = [
-            idx for group_id in indices for idx in self.group_items[group_id][1]
-        ]
-        return super().get_data(data_indices)
+            indices = self._indices
+        if isinstance(indices, slice):
+            indices = range(*indices.indices(len(self.group_to_data)))
+        return np.concatenate([self.group_to_data[i] for i in indices], dtype=np.int_)  # type: ignore
+
+    def logical_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+        """Returns the group indices for the given data indices.
+
+        Args:
+            indices: indices of the data points in the data array. If `None`,
+                the group indices for all data points are returned.
+
+        Returns:
+            Group indices for the given data indices.
+        """
+        if indices is None:
+            return self.data_to_group
+        return self.data_to_group[indices]
 
     @classmethod
     def from_sklearn(
@@ -554,8 +679,8 @@ class GroupedDataset(Dataset):
                 [Dataset][pydvl.valuation.dataset.Dataset] grouped by `data_groups`.
         """
         return cls(
-            x=data.x,
-            y=data.y,
+            x=data._x,
+            y=data._y,
             data_groups=data_groups,
             feature_names=data.feature_names,
             target_names=data.target_names,

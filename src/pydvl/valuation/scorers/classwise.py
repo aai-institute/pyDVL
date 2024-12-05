@@ -99,7 +99,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label: int | None = None
-        self.num_classes = len(np.unique(self.test_data._y))
+        self.num_classes = len(np.unique(self.test_data.data().y))
         self.rescale_scores = rescale_scores
 
     def __str__(self) -> str:
@@ -150,7 +150,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             )
 
         scorer = self._scorer
-        label_set_match = self.test_data._y == self.label
+        label_set_match = self.test_data.data().y == self.label
         label_set = np.where(label_set_match)[0]
 
         if len(label_set) == 0:
