@@ -42,7 +42,8 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from typing import Any, NamedTuple, Sequence
+from dataclasses import dataclass
+from typing import Any, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -55,7 +56,8 @@ __all__ = ["Dataset", "GroupedDataset", "RawData"]
 logger = logging.getLogger(__name__)
 
 
-class RawData(NamedTuple):
+@dataclass(frozen=True)
+class RawData:
     x: NDArray
     y: NDArray
 
