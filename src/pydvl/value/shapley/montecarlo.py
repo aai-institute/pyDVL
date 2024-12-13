@@ -214,7 +214,7 @@ def permutation_montecarlo_shapley(
 
     seed_sequence = ensure_seed_sequence(seed)
     result = ValuationResult.zeros(
-        algorithm=algorithm, indices=u.data.indices, data_names=u.data.names
+        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
     )
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
