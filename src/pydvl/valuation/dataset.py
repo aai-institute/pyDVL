@@ -42,7 +42,7 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from typing import Any, Iterable, NamedTuple, Sequence
+from typing import Any, NamedTuple, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -133,12 +133,12 @@ class Dataset:
         self.description = description or "No description"
         self._indices = np.arange(len(self._x), dtype=np.int_)
         self._data_names = (
-            np.array(data_names, dtype=object)
+            np.array(data_names, dtype=str)
             if data_names is not None
-            else self._indices.astype(object)
+            else self._indices.astype(str)
         )
 
-    def __getitem__(self, idx: int | slice | Iterable) -> Dataset:
+    def __getitem__(self, idx: int | slice | Sequence[int]) -> Dataset:
         if isinstance(idx, int):
             idx = [idx]
         return Dataset(
@@ -146,7 +146,7 @@ class Dataset:
             y=self._y[idx],
             feature_names=self.feature_names,
             target_names=self.target_names,
-            data_names=self._data_names[idx],
+            data_names=self._data_names[idx],  # type: ignore
             description="(SLICED): " + self.description,
         )
 
@@ -156,7 +156,7 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def data(self, indices: Iterable[int] | None = None) -> RawData:
+    def data(self, indices: int | slice | Sequence[int] | None = None) -> RawData:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
@@ -177,7 +177,7 @@ class Dataset:
             return RawData(self._x, self._y)
         return RawData(self._x[indices], self._y[indices])
 
-    def data_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+    def data_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
         """Returns a subset of indices.
 
         This is equivalent to using `Dataset.indices[logical_indices]` but allows
@@ -196,7 +196,7 @@ class Dataset:
             return self._indices
         return self._indices[indices]
 
-    def logical_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+    def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
         """Returns the indices in this Dataset for the given indices in the data array.
 
         This is equivalent to using `Dataset.indices[data_indices]` but allows
@@ -392,7 +392,7 @@ class GroupedDataset(Dataset):
         Args:
             x: training data
             y: labels of training data
-            data_groups: Iterable of the same length as `x_train` containing
+            data_groups: Sequence of the same length as `x_train` containing
                 a group id for each training data point. Data points with the same
                 id will then be grouped by this object and considered as one for
                 effects of valuation. Group ids are assumed to be zero-based consecutive
@@ -448,7 +448,7 @@ class GroupedDataset(Dataset):
     def __len__(self):
         return len(self._indices)
 
-    def __getitem__(self, idx: int | slice | Iterable) -> GroupedDataset:
+    def __getitem__(self, idx: int | slice | Sequence[int]) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
         return GroupedDataset(
@@ -468,12 +468,12 @@ class GroupedDataset(Dataset):
         return self._indices
 
     @property
-    def names(self) -> NDArray[object]:
+    def names(self) -> NDArray[np.object_]:
         """Names of the groups."""
         # FIXME? this shadows _data_names (but it can still be accessed...)
         return self._group_names
 
-    def data(self, indices: Iterable[int] | None = None) -> RawData:
+    def data(self, indices: int | slice | Sequence[int] | None = None) -> RawData:
         """Returns the data and labels of all samples in the given groups.
 
         Args:
@@ -485,7 +485,9 @@ class GroupedDataset(Dataset):
         """
         return super().data(self.data_indices(indices))
 
-    def data_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+    def data_indices(
+        self, indices: int | slice | Sequence[int] | None = None
+    ) -> NDArray[np.int_]:
         """Returns the indices of the samples in the given groups.
 
         Args:
@@ -501,7 +503,7 @@ class GroupedDataset(Dataset):
             indices = range(*indices.indices(len(self.group_to_data)))
         return np.concatenate([self.group_to_data[i] for i in indices], dtype=np.int_)  # type: ignore
 
-    def logical_indices(self, indices: Iterable[int] | None = None) -> NDArray[np.int_]:
+    def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
         """Returns the group indices for the given data indices.
 
         Args:
@@ -521,7 +523,6 @@ class GroupedDataset(Dataset):
         data: Bunch,
         train_size: float = 0.8,
         stratify_by_target: bool = False,
-        data_groups: Sequence | None = None,
         random_state: int | None = None,
         **kwargs,
     ) -> tuple[GroupedDataset, GroupedDataset]:
@@ -583,7 +584,6 @@ class GroupedDataset(Dataset):
         y: NDArray,
         train_size: float = 0.8,
         stratify_by_target: bool = False,
-        data_groups: Sequence | None = None,
         random_state: int | None = None,
         **kwargs,
     ) -> tuple[GroupedDataset, GroupedDataset]:
