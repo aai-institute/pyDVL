@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, List, Literal, Optional, OrderedDict, Sequence
+from typing import Any, List, Literal, Optional, OrderedDict, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,9 +62,9 @@ def shaded_mean_std(
     ax.fill_between(abscissa, mean - std, mean + std, alpha=0.3, color=shade_color)
     ax.plot(abscissa, mean, color=mean_color, **kwargs)
 
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_title(title or "")
+    ax.set_xlabel(xlabel or "")
+    ax.set_ylabel(ylabel or "")
 
     return ax
 
@@ -110,9 +110,11 @@ def plot_ci_array(
         variances=variances,
         counts=np.ones_like(means, dtype=np.int_) * m,
         indices=np.arange(n),
-        data_names=np.array(abscissa, dtype=str)
-        if abscissa is not None
-        else np.arange(n, dtype=str),
+        data_names=(
+            np.array(abscissa, dtype=str)
+            if abscissa is not None
+            else np.arange(n, dtype=str)
+        ),
     )
 
     return plot_ci_values(
@@ -135,7 +137,7 @@ def plot_ci_values(
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
     **kwargs,
-):
+) -> plt.Axes:
     """Plot values and a confidence interval.
 
     Uses `values.data_names` for the x-axis.
@@ -163,9 +165,11 @@ def plot_ci_values(
     ppfs = {
         "normal": norm.ppf,
         "t": partial(t.ppf, df=values.counts - 1),
-        "auto": norm.ppf
-        if np.min(values.counts) > 30
-        else partial(t.ppf, df=values.counts - 1),
+        "auto": (
+            norm.ppf
+            if np.min(values.counts) > 30
+            else partial(t.ppf, df=values.counts - 1)
+        ),
     }
 
     try:
@@ -264,9 +268,9 @@ def plot_shapley(
     yerr = norm.ppf(1 - level / 2) * df[f"{prefix}_stderr"]
 
     ax.errorbar(x=df.index, y=df[prefix], yerr=yerr, fmt="o", capsize=6)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
+    ax.set_xlabel(xlabel or "")
+    ax.set_ylabel(ylabel or "")
+    ax.set_title(title or "")
     plt.xticks(rotation=60)
     return ax
 
@@ -288,7 +292,7 @@ def plot_influence_distribution(
     ax.set_xlabel("Influence values")
     ax.set_ylabel("Number of samples")
     ax.set_title(f"Distribution of influences {title_extra}")
-    return ax
+    return cast(plt.Axes, ax)
 
 
 def plot_influence_distribution_by_label(

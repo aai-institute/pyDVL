@@ -152,13 +152,13 @@ class Dataset:
             y=self._y[idx],
             feature_names=self.feature_names,
             target_names=self.target_names,
-            data_names=self._data_names[idx],  # type: ignore
+            data_names=self._data_names[idx],
             description="(SLICED): " + self.description,
         )
 
     def feature(self, name: str) -> tuple[slice, int]:
         try:
-            return np.index_exp[:, self.feature_names.index(name)]
+            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
