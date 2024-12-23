@@ -153,8 +153,7 @@ class Game(ABC):
         )
 
     @abstractmethod
-    def _score(self, X: NDArray) -> float:
-        ...
+    def _score(self, X: NDArray) -> float: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_players={self.n_players})"
@@ -579,7 +578,7 @@ class MinimumSpanningTreeGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        exact_values = 2 * np.ones_like(self.data.data().x)
+        exact_values = 2.0 * np.ones_like(self.data.data().x)
         result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,

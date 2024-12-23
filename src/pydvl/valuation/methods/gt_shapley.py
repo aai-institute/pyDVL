@@ -24,6 +24,7 @@ You can read more [in the documentation][data-valuation].
     https://arxiv.org/pdf/2302.11431).
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -45,7 +46,7 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.types import IndexSetT, NameT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -308,7 +309,7 @@ def solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
     algorithm_name: str,
-    data_names: NDArray[np.object_],
+    data_names: NDArray[NameT],
 ) -> ValuationResult:
     """Solve the group testing problem and create a ValuationResult.
 

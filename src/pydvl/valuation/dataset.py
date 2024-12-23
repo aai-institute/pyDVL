@@ -43,7 +43,7 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Sequence, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -60,6 +60,10 @@ logger = logging.getLogger(__name__)
 class RawData:
     x: NDArray
     y: NDArray
+
+    # Make the unpacking operator work
+    def __iter__(self):  # No way to type the return Iterator properly
+        return iter((self.x, self.y))
 
 
 class Dataset:
@@ -78,15 +82,17 @@ class Dataset:
     """
 
     _indices: NDArray[np.int_]
-    _data_names: NDArray[np.object_]
+    _data_names: NDArray[np.str_]
+    feature_names: list[str]
+    target_names: list[str]
 
     def __init__(
         self,
         x: NDArray,
         y: NDArray,
-        feature_names: Sequence[str] | None = None,
-        target_names: Sequence[str] | None = None,
-        data_names: Sequence[str] | None = None,
+        feature_names: Sequence[str] | NDArray[np.str_] | None = None,
+        target_names: Sequence[str] | NDArray[np.str_] | None = None,
+        data_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
         multi_output: bool = False,
     ):
@@ -116,14 +122,12 @@ class Dataset:
             n = a.shape[1] if len(a.shape) > 1 else 1
             return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
 
-        self.feature_names = feature_names
-        self.target_names = target_names
-
-        if self.feature_names is None:
-            self.feature_names = make_names("x", x)
-
-        if self.target_names is None:
-            self.target_names = make_names("y", y)
+        self.feature_names = (
+            list(feature_names) if feature_names is not None else make_names("x", x)
+        )
+        self.target_names = (
+            list(target_names) if target_names is not None else make_names("y", y)
+        )
 
         if len(self._x.shape) > 1:
             if len(self.feature_names) != self._x.shape[-1]:
@@ -135,9 +139,9 @@ class Dataset:
         self.description = description or "No description"
         self._indices = np.arange(len(self._x), dtype=np.int_)
         self._data_names = (
-            np.array(data_names, dtype=str)
+            np.array(data_names, dtype=np.str_)
             if data_names is not None
-            else self._indices.astype(str)
+            else self._indices.astype(np.str_)
         )
 
     def __getitem__(self, idx: int | slice | Sequence[int]) -> Dataset:
@@ -158,7 +162,9 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def data(self, indices: int | slice | Sequence[int] | None = None) -> RawData:
+    def data(
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
+    ) -> RawData:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
@@ -230,7 +236,7 @@ class Dataset:
         return self._indices
 
     @property
-    def names(self) -> NDArray[np.object_]:
+    def names(self) -> NDArray[np.str_]:
         """Names of each individual datapoint.
 
         Used for reporting Shapley values.
@@ -373,15 +379,17 @@ class Dataset:
 
 
 class GroupedDataset(Dataset):
+    _group_names: NDArray[np.str_]
+
     def __init__(
         self,
         x: NDArray,
         y: NDArray,
-        data_groups: Sequence[int],
-        feature_names: Sequence[str] | None = None,
-        target_names: Sequence[str] | None = None,
-        data_names: Sequence[str] | None = None,
-        group_names: Sequence[str] | None = None,
+        data_groups: Sequence[int] | NDArray[np.int_],
+        feature_names: Sequence[str] | NDArray[np.str_] | None = None,
+        target_names: Sequence[str] | NDArray[np.str_] | None = None,
+        data_names: Sequence[str] | NDArray[np.str_] | None = None,
+        group_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
         **kwargs,
     ):
@@ -433,18 +441,18 @@ class GroupedDataset(Dataset):
             )
 
         # data index -> abstract index (group id)
-        self.data_to_group = np.array(data_groups, dtype=int)
+        self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
             {k: [] for k in set(data_groups)}
         )
         for data_idx, group_idx in enumerate(self.data_to_group):
             self.group_to_data[group_idx].append(data_idx)  # type: ignore
-        self._indices = np.array(list(self.group_to_data.keys()))
+        self._indices = np.array(list(self.group_to_data.keys()), dtype=np.int_)
         self._group_names = (
-            np.array(group_names, dtype=object)
+            np.array(group_names, dtype=np.str_)
             if group_names is not None
-            else np.array(list(self.group_to_data.keys()), dtype=object)
+            else np.array(list(self.group_to_data.keys()), dtype=np.str_)
         )
 
     def __len__(self):
@@ -470,12 +478,14 @@ class GroupedDataset(Dataset):
         return self._indices
 
     @property
-    def names(self) -> NDArray[np.object_]:
+    def names(self) -> NDArray[np.str_]:
         """Names of the groups."""
         # FIXME? this shadows _data_names (but it can still be accessed...)
         return self._group_names
 
-    def data(self, indices: int | slice | Sequence[int] | None = None) -> RawData:
+    def data(
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
+    ) -> RawData:
         """Returns the data and labels of all samples in the given groups.
 
         Args:
@@ -488,7 +498,7 @@ class GroupedDataset(Dataset):
         return super().data(self.data_indices(indices))
 
     def data_indices(
-        self, indices: int | slice | Sequence[int] | None = None
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> NDArray[np.int_]:
         """Returns the indices of the samples in the given groups.
 
@@ -519,13 +529,37 @@ class GroupedDataset(Dataset):
             return self.data_to_group
         return self.data_to_group[indices]
 
+    @overload
     @classmethod
     def from_sklearn(
         cls,
         data: Bunch,
         train_size: float = 0.8,
-        stratify_by_target: bool = False,
         random_state: int | None = None,
+        stratify_by_target: bool = False,
+        **kwargs,
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+
+    @overload
+    @classmethod
+    def from_sklearn(
+        cls,
+        data: Bunch,
+        train_size: float = 0.8,
+        random_state: int | None = None,
+        stratify_by_target: bool = False,
+        data_groups: Sequence[int] | None = None,
+        **kwargs,
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+
+    @classmethod
+    def from_sklearn(
+        cls,
+        data: Bunch,
+        train_size: float = 0.8,
+        random_state: int | None = None,
+        stratify_by_target: bool = False,
+        data_groups: Sequence[int] | None = None,
         **kwargs,
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
@@ -545,7 +579,6 @@ class GroupedDataset(Dataset):
 
         Args:
             data: scikit-learn Bunch object. The following attributes are supported:
-
                 - `data`: covariates.
                 - `target`: target variables (labels).
                 - `feature_names` (**optional**): the feature names.
@@ -569,15 +602,41 @@ class GroupedDataset(Dataset):
             Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
                 objects.
         """
+
         return cls.from_arrays(
             X=data.data,
             y=data.target,
             train_size=train_size,
+            random_state=random_state,
             stratify_by_target=stratify_by_target,
             data_groups=data_groups,
-            random_state=random_state,
             **kwargs,
         )
+
+    @overload
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: int | None = None,
+        stratify_by_target: bool = False,
+        **kwargs,
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+
+    @overload
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: int | None = None,
+        stratify_by_target: bool = False,
+        data_groups: Sequence[int] | None = None,
+        **kwargs,
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
 
     @classmethod
     def from_arrays(
@@ -585,8 +644,9 @@ class GroupedDataset(Dataset):
         X: NDArray,
         y: NDArray,
         train_size: float = 0.8,
-        stratify_by_target: bool = False,
         random_state: int | None = None,
+        stratify_by_target: bool = False,
+        data_groups: Sequence[int] | None = None,
         **kwargs,
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
@@ -638,6 +698,7 @@ class GroupedDataset(Dataset):
             Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
                 objects.
         """
+
         if data_groups is None:
             raise ValueError(
                 "data_groups must be provided when constructing a GroupedDataset"
@@ -655,7 +716,7 @@ class GroupedDataset(Dataset):
         return training_set, test_set
 
     @classmethod
-    def from_dataset(cls, data: Dataset, data_groups: Sequence[Any]) -> GroupedDataset:
+    def from_dataset(cls, data: Dataset, data_groups: Sequence[int]) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
 
