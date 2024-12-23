@@ -538,7 +538,8 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+    ) -> tuple[GroupedDataset, GroupedDataset]:
+        ...
 
     @overload
     @classmethod
@@ -550,7 +551,8 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+    ) -> tuple[GroupedDataset, GroupedDataset]:
+        ...
 
     @classmethod
     def from_sklearn(
@@ -623,7 +625,8 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+    ) -> tuple[GroupedDataset, GroupedDataset]:
+        ...
 
     @overload
     @classmethod
@@ -636,7 +639,8 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]: ...
+    ) -> tuple[GroupedDataset, GroupedDataset]:
+        ...
 
     @classmethod
     def from_arrays(

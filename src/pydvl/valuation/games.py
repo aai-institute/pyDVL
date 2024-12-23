@@ -153,7 +153,8 @@ class Game(ABC):
         )
 
     @abstractmethod
-    def _score(self, X: NDArray) -> float: ...
+    def _score(self, X: NDArray) -> float:
+        ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_players={self.n_players})"
