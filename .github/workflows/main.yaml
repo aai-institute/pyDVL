@@ -25,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Python 3.8
+    - name: Setup Python 3.9
       uses: ./.github/actions/python
       with:
-        python_version: 3.8
+        python_version: 3.9
     - uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
@@ -58,10 +58,10 @@ jobs:
       with:
         fetch-depth: 0
         lfs: true
-    - name: Setup Python 3.8
+    - name: Setup Python 3.9
       uses: ./.github/actions/python
       with:
-        python_version: 3.8
+        python_version: 3.9
     - name: Install Pandoc
       uses: r-lib/actions/setup-pandoc@v2
       with:
@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
         group_number: [1, 2, 3, 4]
     name: Run Tests - Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-tests-workflow.yaml
@@ -88,7 +88,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
         group_number: [1, 2, 3, 4]
     name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
@@ -124,10 +124,10 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Setup Python 3.8
+      - name: Setup Python 3.9
         uses: ./.github/actions/python
         with:
-          python_version: 3.8
+          python_version: 3.9
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:

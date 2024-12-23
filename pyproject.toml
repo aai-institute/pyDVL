@@ -73,7 +73,7 @@ load-plugins = ["pylint_json2html"]
 output-format = "jsonextended"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 mypy_path = './src/'
 ignore_missing_imports = true
 warn_return_any = true
