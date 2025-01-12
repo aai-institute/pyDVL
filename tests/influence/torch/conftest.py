@@ -6,6 +6,9 @@ from numpy.typing import NDArray
 from torch.optim import LBFGS
 from torch.utils.data import DataLoader
 
+from pydvl.influence.torch.util import flatten_dimensions
+from tests.influence.conftest import linear_hessian_analytical, linear_model
+
 DATA_OUTPUT_NOISE: float = 0.01
 
 
@@ -71,3 +74,37 @@ def device(request):
         return torch.device("cuda")
     else:
         return torch.device("cpu")
+
+
+def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
+    """
+    Given numpy arrays representing the model $xA^t + b$, the function returns the corresponding torch model
+    :param A:
+    :param b:
+    :return:
+    """
+    output_dimension, input_dimension = tuple(A.shape)
+    model = torch.nn.Linear(input_dimension, output_dimension)
+    model.eval()
+    model.weight.data = torch.as_tensor(A, dtype=torch.get_default_dtype())
+    model.bias.data = torch.as_tensor(b, dtype=torch.get_default_dtype())
+    return model
+
+
+@pytest.fixture
+def model_data(request):
+    dimension, condition_number, train_size = request.param
+    A, b = linear_model(dimension, condition_number)
+    x = torch.rand(train_size, dimension[-1])
+    y = torch.rand(train_size, dimension[0])
+    torch_model = linear_torch_model_from_numpy(A, b)
+    vec = flatten_dimensions(
+        tuple(
+            torch.rand(*p.shape)
+            for name, p in torch_model.named_parameters()
+            if p.requires_grad
+        )
+    )
+    H_analytical = linear_hessian_analytical((A, b), x.numpy())
+    H_analytical = torch.as_tensor(H_analytical)
+    return torch_model, x, y, vec, H_analytical.to(torch.float32)

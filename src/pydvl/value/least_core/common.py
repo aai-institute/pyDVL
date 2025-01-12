@@ -15,7 +15,7 @@ from pydvl.parallel import (
     _maybe_init_parallel_backend,
 )
 from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = [
     "_solve_least_core_linear_program",
