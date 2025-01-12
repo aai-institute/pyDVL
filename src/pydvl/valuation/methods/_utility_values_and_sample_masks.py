@@ -104,4 +104,4 @@ def compute_utility_values_and_sample_masks(
             masks.extend(m)
             u_values.extend(v)
 
-    return np.array(u_values), np.row_stack(masks)
+    return np.array(u_values), np.vstack(masks)
