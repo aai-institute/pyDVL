@@ -4600,7 +4600,7 @@ It computes all constraints for the linear problem by evaluating the utility on
 every subset of the training data, and returns as exact a value as the utility
 function allows (see what this means in <a class="autorefs autorefs-internal" href="../#problems-of-data-values">Problems of Data
 Values</a>).</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.value</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_least_core_values</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;exact&quot;</span><span class="p">)</span>
 </span></code></pre></div>
@@ -4619,7 +4619,7 @@ with high probability. I.e. the following property holds with probability
 <p>where <span class="arithmatex">\(e^{*}\)</span> is the optimal least core subsidy. This approximation is
 also implemented in
 <a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/#pydvl.value.least_core.compute_least_core_values">compute_least_core_values</a>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.value</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_least_core_values</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>   <span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;montecarlo&quot;</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span>
@@ -4637,7 +4637,7 @@ multiple experiments: use
 <a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/montecarlo/#pydvl.value.least_core.montecarlo.mclc_prepare_problem">mclc_prepare_problem</a> to prepare a
 list of problems to solve, then solve them in parallel with
 <a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/common/#pydvl.value.least_core.common.lc_solve_problems">lc_solve_problems</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.value.least_core</span> <span class="kn">import</span> <span class="n">mclc_prepare_problem</span><span class="p">,</span> <span class="n">lc_solve_problems</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.value.least_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">mclc_prepare_problem</span><span class="p">,</span> <span class="n">lc_solve_problems</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">n_experiments</span> <span class="o">=</span> <span class="mi">10</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">mclc_prepare_problem</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
