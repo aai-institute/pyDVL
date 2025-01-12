@@ -33,8 +33,7 @@ class SupervisedScorerCallable(Protocol):
 
     def __call__(
         self, model: SupervisedModel, X: NDArray[Any], y: NDArray[Any]
-    ) -> float:
-        ...
+    ) -> float: ...
 
 
 class SupervisedScorer(Scorer):

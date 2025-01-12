@@ -2,6 +2,7 @@
 This module contains routines for numerical computations used across the
 library.
 """
+
 from __future__ import annotations
 
 from itertools import chain, combinations
@@ -273,8 +274,7 @@ def random_matrix_with_condition_number(
 @overload
 def running_moments(
     previous_avg: float, previous_variance: float, count: int, new_value: float
-) -> Tuple[float, float]:
-    ...
+) -> Tuple[float, float]: ...
 
 
 @overload
@@ -283,8 +283,7 @@ def running_moments(
     previous_variance: NDArray[np.float64],
     count: int,
     new_value: NDArray[np.float64],
-) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
-    ...
+) -> Tuple[NDArray[np.float64], NDArray[np.float64]]: ...
 
 
 def running_moments(

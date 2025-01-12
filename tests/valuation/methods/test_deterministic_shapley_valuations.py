@@ -1,4 +1,5 @@
 """Test the deterministic Shapley valuation methods (combinatorial and permutation)."""
+
 import logging
 
 import numpy as np

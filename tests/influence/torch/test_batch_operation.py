@@ -11,7 +11,7 @@ from pydvl.influence.torch.batch_operation import (
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
-from .test_util import model_data, test_parameters, torch
+from .test_util import test_parameters, torch  # noqa: F811
 
 
 @pytest.mark.torch

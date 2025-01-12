@@ -29,7 +29,7 @@ import logging
 import warnings
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Union
 
 import torch
 from scipy.sparse.linalg import ArpackNoConvergence

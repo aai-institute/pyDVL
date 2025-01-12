@@ -35,7 +35,6 @@ from .batch_operation import (
     HessianBatchOperation,
 )
 from .functional import (
-    create_hvp_function,
     create_per_sample_gradient_function,
     create_per_sample_mixed_derivative_function,
     gauss_newton,
@@ -1437,7 +1436,6 @@ class NystroemSketchInfluence(TorchComposableInfluence[LowRankOperator]):
         data: DataLoader,
         regularization: Optional[float],
     ) -> TorchOperatorGradientComposition:
-
         assert regularization is not None
         regularization = cast(float, regularization)
 

@@ -17,7 +17,6 @@ This module contains Shapley computations for K-Nearest Neighbours.
 from typing import Dict, Union
 
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from tqdm.auto import tqdm
 

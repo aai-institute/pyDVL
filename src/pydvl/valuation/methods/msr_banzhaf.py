@@ -11,6 +11,7 @@ This module implements the MSR-Banzhaf valuation method, as described in
     Statistics, pp. 6388-6421.
 
 """
+
 from __future__ import annotations
 
 import numpy as np

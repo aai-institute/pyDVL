@@ -15,8 +15,7 @@ class Valuation(ABC):
         self.result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset):
-        ...
+    def fit(self, data: Dataset): ...
 
     def values(self, sort: bool = False) -> ValuationResult:
         """Returns a copy of the valuation result.

@@ -151,14 +151,12 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
         if x is None and y is not None:
             raise ValueError(
-                "Providing labels y, without providing model input x "
-                "is not supported"
+                "Providing labels y, without providing model input x is not supported"
             )
 
         if x is not None and y is None:
             raise ValueError(
-                "Providing model input x, without providing labels y "
-                "is not supported"
+                "Providing model input x, without providing labels y is not supported"
             )
 
         return self._influences(x_test, y_test, x, y, mode)
@@ -446,8 +444,7 @@ class ComposableInfluence(
             right_batch = None
         elif y is None:
             raise ValueError(
-                "Providing model input x, without providing labels y "
-                "is not supported"
+                "Providing model input x, without providing labels y is not supported"
             )
         else:
             right_batch = self._create_batch(x, y)

@@ -13,6 +13,7 @@ This module contains Shapley computations for K-Nearest Neighbours.
     the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
 
 """
+
 from __future__ import annotations
 
 import numpy as np

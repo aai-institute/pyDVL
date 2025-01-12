@@ -6,16 +6,14 @@
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
+
 import abc
 import logging
-from typing import Optional, cast
+from typing import Optional
 
 import numpy as np
 
-from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility, running_moments
-from pydvl.value import ValuationResult
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
