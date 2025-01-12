@@ -58,7 +58,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 88
-fix = true
+fix = false
 target-version = "py39"
 
 [tool.ruff.lint]
@@ -69,10 +69,15 @@ ignore = [
     "E501",  # line too long (HACK: we should really stick to 88 chars)
     "E741",  # Checks for 'l', 'O', or 'I' as variable names (hard to read)
     "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E402"
-
 ]
 isort.known-first-party = ["pydvl"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["E402"]
+"tests/influence/*.py" = ["E402"]
+# Avoid removing imports of fixtures in tests
+# (https://github.com/astral-sh/ruff/issues/10662)
+"tests/**/*.py" = ["F811", "F401"]
 
 [tool.mypy]
 python_version = "3.9"
