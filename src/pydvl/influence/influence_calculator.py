@@ -357,6 +357,7 @@ class DaskInfluenceCalculator:
             self._validate_dimensions_not_chunked(y)
         else:
             x, y = x_test, y_test
+        assert x is not None and y is not None  # For the type checker's benefit
 
         def func(
             x_test_numpy: NDArray,

@@ -286,7 +286,7 @@ def _solve_least_core_linear_program(
                 "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
-        subsidy = cast(NDArray[np.float_], e.value).item()
+        subsidy = cast(NDArray[np.float64], e.value).item()
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:

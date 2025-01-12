@@ -26,7 +26,7 @@ class Scorer(ABC):
 
     default: float
     name: str
-    range: NDArray[np.float_]
+    range: NDArray[np.float64]
 
     @abstractmethod
     def __call__(self, model) -> float: ...

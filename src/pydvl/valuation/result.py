@@ -205,9 +205,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     """
 
     _indices: NDArray[IndexT]
-    _values: NDArray[np.float_]
+    _values: NDArray[np.float64]
     _counts: NDArray[np.int_]
-    _variances: NDArray[np.float_]
+    _variances: NDArray[np.float64]
     _data: Dataset
     _names: NDArray[NameT]
     _algorithm: str
@@ -219,8 +219,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def __init__(
         self,
         *,
-        values: Sequence[np.float_] | NDArray[np.float_],
-        variances: Sequence[np.float_] | NDArray[np.float_] | None = None,
+        values: Sequence[np.float64] | NDArray[np.float64],
+        variances: Sequence[np.float64] | NDArray[np.float64] | None = None,
         counts: Sequence[np.int_] | NDArray[np.int_] | None = None,
         indices: Sequence[IndexT] | NDArray[IndexT] | None = None,
         data_names: Sequence[NameT] | NDArray[NameT] | None = None,
@@ -311,12 +311,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._sort_order = reverse
 
     @property
-    def values(self) -> NDArray[np.float_]:
+    def values(self) -> NDArray[np.float64]:
         """The values, possibly sorted."""
         return self._values[self._sort_positions]
 
     @property
-    def variances(self) -> NDArray[np.float_]:
+    def variances(self) -> NDArray[np.float64]:
         """Variances of the marginals from which values were computed, possibly sorted.
 
         Note that this is not the variance of the value estimate, but the sample
@@ -326,10 +326,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         return self._variances[self._sort_positions]
 
     @property
-    def stderr(self) -> NDArray[np.float_]:
+    def stderr(self) -> NDArray[np.float64]:
         """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self._variances / np.maximum(1, self.counts))
+            NDArray[np.float64], np.sqrt(self._variances / np.maximum(1, self.counts))
         )
 
     @property
@@ -686,9 +686,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         column = column or self._algorithm
         df = pd.DataFrame(
             self._values[self._sort_positions],
-            index=self._names[self._sort_positions]
-            if use_names
-            else self._indices[self._sort_positions],
+            index=(
+                self._names[self._sort_positions]
+                if use_names
+                else self._indices[self._sort_positions]
+            ),
             columns=[column],
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]

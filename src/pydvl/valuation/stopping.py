@@ -585,7 +585,7 @@ class HistoryDeviation(StoppingCriterion):
         pin_converged: If `True`, once an index has converged, it is pinned
     """
 
-    _memory: NDArray[np.float_]
+    _memory: NDArray[np.float64]
 
     def __init__(
         self,

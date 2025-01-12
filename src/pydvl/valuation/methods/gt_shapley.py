@@ -350,11 +350,11 @@ def solve_group_testing_problem(
         values = (
             np.nan * np.ones_like(n_obs)
             if not hasattr(v.value, "__len__")
-            else cast(NDArray[np.float_], v.value)
+            else cast(NDArray[np.float64], v.value)
         )
         status = Status.Failed
     else:
-        values = cast(NDArray[np.float_], v.value)
+        values = cast(NDArray[np.float64], v.value)
         status = Status.Converged
 
     result = ValuationResult(

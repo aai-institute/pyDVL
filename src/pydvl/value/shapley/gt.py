@@ -310,11 +310,11 @@ def group_testing_shapley(
         values = (
             np.nan * np.ones_like(u.data.indices)
             if not hasattr(v.value, "__len__")
-            else cast(NDArray[np.float_], v.value)
+            else cast(NDArray[np.float64], v.value)
         )
         status = Status.Failed
     else:
-        values = cast(NDArray[np.float_], v.value)
+        values = cast(NDArray[np.float64], v.value)
         status = Status.Converged
 
     return ValuationResult(
