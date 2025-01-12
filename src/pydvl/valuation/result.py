@@ -238,15 +238,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = np.array(values, copy=False)
+        self._values = np.asarray(values)
         self._variances = (
-            np.zeros_like(values)
-            if variances is None
-            else np.array(variances, copy=False)
+            np.zeros_like(values) if variances is None else np.asarray(variances)
         )
-        self._counts = (
-            np.ones_like(values) if counts is None else np.array(counts, copy=False)
-        )
+        self._counts = np.ones_like(values) if counts is None else np.asarray(counts)
         self._sort_order = None
         self._extra_values = extra_values or {}
 
