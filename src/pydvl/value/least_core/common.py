@@ -1,7 +1,7 @@
 import itertools
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Optional, Sequence, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
@@ -286,7 +286,7 @@ def _solve_least_core_linear_program(
                 "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
-        subsidy = e.value.item()
+        subsidy = cast(NDArray[np.float_], e.value).item()
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:

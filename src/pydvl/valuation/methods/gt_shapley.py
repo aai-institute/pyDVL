@@ -24,6 +24,7 @@ You can read more [in the documentation][data-valuation].
     https://arxiv.org/pdf/2302.11431).
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -347,11 +348,13 @@ def solve_group_testing_problem(
     if cp_problem.status != "optimal":
         log.warning(f"cvxpy returned status {cp_problem.status}")
         values = (
-            np.nan * np.ones_like(n_obs) if not hasattr(v.value, "__len__") else v.value
+            np.nan * np.ones_like(n_obs)
+            if not hasattr(v.value, "__len__")
+            else cast(NDArray[np.float_], v.value)
         )
         status = Status.Failed
     else:
-        values = v.value
+        values = cast(NDArray[np.float_], v.value)
         status = Status.Converged
 
     result = ValuationResult(
