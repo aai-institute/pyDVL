@@ -31,6 +31,7 @@ from pydvl.influence.torch.util import (
     TorchNumpyConverter,
 )
 from pydvl.influence.types import UnsupportedInfluenceModeException
+from tests.influence.torch.test_influence_model import model_and_data, test_case
 from tests.influence.torch.test_util import are_active_layers_linear
 
 
