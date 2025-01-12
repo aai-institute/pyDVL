@@ -36,7 +36,7 @@ jobs:
     - name: Lint Code
       run: |
         pre-commit run --all --show-diff-on-failure
-        python build_scripts/run_pylint.py | (pylint-json2html -f jsonextended -o pylint.html)
+        ruff check src/ --fix
       shell: bash
     - name: Generate mypy cache key
       id: generate-mypy-cache-key
