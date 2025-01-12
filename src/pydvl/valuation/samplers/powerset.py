@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Collection, Generator, Iterable, Type, cast
+from typing import Callable, Generator, Iterable, Type
 
 import numpy as np
 from numpy.typing import NDArray
@@ -79,13 +79,11 @@ class IndexIteration(ABC):
         self._indices = indices
 
     @abstractmethod
-    def __iter__(self) -> Generator[IndexT | None, None, None]:
-        ...
+    def __iter__(self) -> Generator[IndexT | None, None, None]: ...
 
     @staticmethod
     @abstractmethod
-    def length(indices: IndexSetT) -> int | None:
-        ...
+    def length(indices: IndexSetT) -> int | None: ...
 
 
 class SequentialIndexIteration(IndexIteration):

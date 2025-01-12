@@ -48,7 +48,7 @@ import math
 import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
-from typing import Optional, Sequence, Union, cast
+from typing import Optional, Sequence, Union
 
 import numpy as np
 from deprecate import deprecated

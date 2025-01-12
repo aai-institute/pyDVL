@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 from .base import (
     LowRankBilinearForm,
-    OperatorBilinearForm,
     TensorDictOperator,
     TensorOperator,
     TorchBatch,
@@ -25,7 +24,6 @@ from .batch_operation import (
 )
 from .functional import LowRankProductRepresentation
 from .preconditioner import Preconditioner
-from .util import LossType
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +60,6 @@ class _AveragingBatchOperator(
         return self.batch_operation.input_dict_structure
 
     def _apply_to_dict(self, mat: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-
         tensor_dicts = (
             self.batch_operation.apply_to_dict(TorchBatch(x, y), mat)
             for x, y in self.dataloader
@@ -387,7 +384,6 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
         progress: bool = False,
         warn_on_max_iteration: bool = True,
     ):
-
         if regularization is not None and regularization < 0:
             raise ValueError("regularization must be non-negative")
 
@@ -457,8 +453,8 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
                 mean_residual = torch.mean(torch.abs(residual / h_estimate))
                 logger.debug(
                     f"Terminated Lissa after {k} iterations with "
-                    f"{max_residual*100:.2f} % max residual and"
-                    f" mean residual {mean_residual*100:.5f} %"
+                    f"{max_residual * 100:.2f} % max residual and"
+                    f" mean residual {mean_residual * 100:.5f} %"
                 )
                 is_converged = True
                 break
@@ -470,8 +466,8 @@ class LissaOperator(TensorOperator, Generic[BatchOperationType]):
                 log_level,
                 f"Reached max number of iterations {self.maxiter} without "
                 f"achieving the desired tolerance {self.rtol}.\n "
-                f"Achieved max residual {max_residual*100:.2f} % and"
-                f" {mean_residual*100:.5f} % mean residual",
+                f"Achieved max residual {max_residual * 100:.2f} % and"
+                f" {mean_residual * 100:.5f} % mean residual",
             )
         return h_estimate / self.scale
 
@@ -510,7 +506,6 @@ class LowRankOperator(TensorOperator):
         regularization: Optional[float] = None,
         exact: bool = True,
     ):
-
         if exact and (regularization is None or regularization <= 0):
             raise ValueError("regularization must be positive when exact=True")
         elif regularization is not None and regularization < 0:
@@ -551,14 +546,12 @@ class LowRankOperator(TensorOperator):
         return self
 
     def _apply_to_vec(self, vec: torch.Tensor) -> torch.Tensor:
-
         if vec.ndim == 1:
             return self._apply_to_mat(vec.unsqueeze(0)).squeeze()
 
         return self._apply_to_mat(vec)
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-
         D = self._low_rank_representation.eigen_vals.clone()
         V = self._low_rank_representation.projections
 
@@ -652,7 +645,6 @@ class CgOperator(TensorOperator):
         use_block_cg: bool = False,
         warn_on_max_iteration: bool = True,
     ):
-
         if regularization is not None and regularization < 0:
             raise ValueError("regularization must be non-negative")
 
@@ -713,7 +705,6 @@ class CgOperator(TensorOperator):
         return self._apply_to_mat(vec.unsqueeze(0))
 
     def _apply_to_mat(self, mat: torch.Tensor) -> torch.Tensor:
-
         if self.use_block_cg:
             return self._solve_pbcg(mat)
 
@@ -740,7 +731,6 @@ class CgOperator(TensorOperator):
         b: torch.Tensor,
         tol: float,
     ) -> torch.Tensor:
-
         x0 = torch.clone(b)
         maxiter = self.maxiter
         if maxiter is None:
@@ -797,7 +787,6 @@ class CgOperator(TensorOperator):
         self,
         rhs: torch.Tensor,
     ):
-
         # The block variant of conjugate gradient is known to suffer from breakdown,
         # due to the possibility of rank deficiency of the iterates of the parameter
         # matrix P^tAP, which destabilizes the direct solver.

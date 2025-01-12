@@ -1,7 +1,7 @@
 import itertools
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Optional, Sequence, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
@@ -15,7 +15,7 @@ from pydvl.parallel import (
     _maybe_init_parallel_backend,
 )
 from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -199,21 +199,21 @@ def lc_solve_problems(
 
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
-    map_reduce_job: MapReduceJob[
-        "LeastCoreProblem", "List[ValuationResult]"
-    ] = MapReduceJob(
-        inputs=problems,
-        map_func=_map_func,
-        map_kwargs=dict(
-            u=u,
-            algorithm=algorithm,
-            non_negative_subsidy=non_negative_subsidy,
-            solver_options=solver_options,
-            **options,
-        ),
-        reduce_func=lambda x: list(itertools.chain(*x)),
-        parallel_backend=parallel_backend,
-        n_jobs=n_jobs,
+    map_reduce_job: MapReduceJob["LeastCoreProblem", "List[ValuationResult]"] = (
+        MapReduceJob(
+            inputs=problems,
+            map_func=_map_func,
+            map_kwargs=dict(
+                u=u,
+                algorithm=algorithm,
+                non_negative_subsidy=non_negative_subsidy,
+                solver_options=solver_options,
+                **options,
+            ),
+            reduce_func=lambda x: list(itertools.chain(*x)),
+            parallel_backend=parallel_backend,
+            n_jobs=n_jobs,
+        )
     )
     solutions = map_reduce_job()
 
@@ -286,7 +286,7 @@ def _solve_least_core_linear_program(
                 "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
-        subsidy = e.value.item()
+        subsidy = cast(NDArray[np.float64], e.value).item()
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:

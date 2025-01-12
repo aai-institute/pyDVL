@@ -10,9 +10,10 @@ concepts and methods implemented here.
     probably change.
 
 """
-from .influence_calculator import (
+
+from .influence_calculator import (  # noqa: F401
     DaskInfluenceCalculator,
     DisableClientSingleThreadCheck,
     SequentialInfluenceCalculator,
 )
-from .types import InfluenceMode
+from .types import InfluenceMode  # noqa: F401

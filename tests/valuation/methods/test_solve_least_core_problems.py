@@ -12,7 +12,6 @@ from .. import check_values
     indirect=True,
 )
 def test_lc_solve_problems(test_game):
-
     test_game.u = test_game.u.with_dataset(test_game.data)
     problem = test_game.least_core_problem()
 

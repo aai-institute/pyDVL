@@ -24,6 +24,7 @@ best point removal, but can show some
       26th International Conference on Artificial Intelligence and Statistics,
       6388–6421. PMLR, 2023.
 """
+
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
 __all__ = ["DataBanzhafValuation"]

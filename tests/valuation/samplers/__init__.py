@@ -22,9 +22,9 @@ def _check_subsets(batches, expected):
 def _check_classwise_batches(
     batches: list[list[ClasswiseSample]], expected_batches: list[list[ClasswiseSample]]
 ) -> None:
-    assert len(batches) == len(
-        expected_batches
-    ), f"{len(batches)=} != {len(expected_batches)=}"
+    assert len(batches) == len(expected_batches), (
+        f"{len(batches)=} != {len(expected_batches)=}"
+    )
     for batch, expected_batch in zip(batches, expected_batches):
         for sample, expected_sample in zip(batch, expected_batch):
             assert_array_equal(sample.subset, expected_sample.subset)

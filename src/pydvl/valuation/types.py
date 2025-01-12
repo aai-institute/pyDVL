@@ -152,5 +152,4 @@ class UtilityEvaluation:
 
 
 class LossFunction(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
-        ...
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...

@@ -1,9 +1,8 @@
-from typing import Callable, Tuple, Type
+from typing import Callable
 
 from scipy.special import expit
 
 from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import SupervisedScorer
 
 __all__ = ["compose_score", "sigmoid"]

@@ -507,6 +507,7 @@ class EkfacRepresentation:
         evecs_g: The g eigenvectors of the ekfac representation.
         diags: The diagonal elements of the factorized Hessian matrix.
     """
+
     layer_names: Iterable[str]
     layers_module: Iterable[torch.nn.Module]
     evecs_a: Iterable[torch.Tensor]
@@ -624,14 +625,14 @@ class BlockMode(Enum):
         FULL: Groups all parameters together.
     """
 
-    LAYER_WISE: str = "layer_wise"
-    PARAMETER_WISE: str = "parameter_wise"
-    FULL: str = "full"
+    LAYER_WISE = "layer_wise"
+    PARAMETER_WISE = "parameter_wise"
+    FULL = "full"
 
 
 class SecondOrderMode(Enum):
-    HESSIAN: str = "hessian"
-    GAUSS_NEWTON: str = "gauss_newton"
+    HESSIAN = "hessian"
+    GAUSS_NEWTON = "gauss_newton"
 
 
 @dataclass
