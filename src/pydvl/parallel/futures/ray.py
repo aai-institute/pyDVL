@@ -240,7 +240,7 @@ class _WorkItem:
         self.future.object_ref = ref  # type: ignore
 
     if sys.version_info >= (3, 9):
-        __class_getitem__ = classmethod(types.GenericAlias)
+        __class_getitem__ = classmethod(types.GenericAlias)  # type: ignore
 
 
 class _WorkItemManagerThread(threading.Thread):
