@@ -43,6 +43,7 @@ together. Empty results are discarded when added to other results. Finally,
 samples random values uniformly.
 
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -374,16 +375,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
-        ...
+    def __getitem__(self, key: int) -> ValueItem: ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: slice) -> List[ValueItem]: ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -409,16 +407,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: int, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
@@ -593,7 +588,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             other_shared_names = np.take(other_names, both_pos)
 
             if np.any(this_shared_names != other_shared_names):
-                raise ValueError(f"Mismatching names in ValuationResults")
+                raise ValueError("Mismatching names in ValuationResults")
 
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names

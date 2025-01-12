@@ -10,7 +10,7 @@ from sklearn.base import clone
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.types import BaseModel
 from pydvl.valuation.scorers import Scorer
-from pydvl.valuation.types import Sample, SampleT
+from pydvl.valuation.types import SampleT
 
 __all__ = ["ModelUtility"]
 

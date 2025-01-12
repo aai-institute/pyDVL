@@ -29,5 +29,4 @@ class Scorer(ABC):
     range: NDArray[np.float_]
 
     @abstractmethod
-    def __call__(self, model) -> float:
-        ...
+    def __call__(self, model) -> float: ...

@@ -6,7 +6,6 @@ from typing import NamedTuple, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
-from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
 from pydvl.utils import Status
@@ -18,7 +17,6 @@ __all__ = [
     "_solve_least_core_linear_program",
     "_solve_egalitarian_least_core_quadratic_program",
     "lc_solve_problem",
-    "lc_solve_problems",
     "LeastCoreProblem",
 ]
 

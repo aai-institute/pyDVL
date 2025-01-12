@@ -24,7 +24,7 @@ V = TypeVar("V")
 
 
 def roundrobin(
-    batch_generators: Mapping[U, Iterable[V]]
+    batch_generators: Mapping[U, Iterable[V]],
 ) -> Generator[tuple[U, V], None, None]:
     """Taken samples from batch generators in order until all of them are exhausted.
 

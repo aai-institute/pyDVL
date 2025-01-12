@@ -10,9 +10,7 @@ from pydvl.valuation import (
     BetaShapleyValuation,
     DataBanzhafValuation,
     DataShapleyValuation,
-    DeltaShapleyValuation,
     MSRBanzhafValuation,
-    SemivalueValuation,
 )
 from pydvl.valuation.samplers import (
     AntitheticPermutationSampler,

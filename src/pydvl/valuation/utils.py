@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from multiprocessing import shared_memory
 
 from joblib._parallel_backends import (
@@ -33,23 +34,19 @@ def ensure_backend_has_generator_return():
 
 class Flag(ABC):
     @abstractmethod
-    def set(self):
-        ...
+    def set(self): ...
 
     @abstractmethod
-    def reset(self):
-        ...
+    def reset(self): ...
 
     @abstractmethod
-    def __call__(self):
-        ...
+    def __call__(self): ...
 
     def __bool__(self):  # some syntactic sugar
         return self.__call__()
 
     @abstractmethod
-    def unlink(self):
-        ...
+    def unlink(self): ...
 
 
 class ThreadingFlag(Flag):
@@ -92,9 +89,6 @@ class MultiprocessingFlag(Flag):
     def unlink(self):
         self._flag.close()
         self._flag.unlink()
-
-
-from contextlib import contextmanager
 
 
 @contextmanager

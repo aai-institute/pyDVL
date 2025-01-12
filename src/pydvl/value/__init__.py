@@ -15,12 +15,12 @@ msg = (
 
 warnings.warn(msg, FutureWarning)
 
-from .result import *  # isort: skip
-from ..utils import Dataset, Scorer, Utility
-from .least_core import *
-from .loo import *
-from .oob import *
-from .sampler import *
-from .semivalues import *
-from .shapley import *
-from .stopping import *
+from ..utils import Dataset, Scorer, Utility  # noqa
+from .least_core import *  # noqa: E402
+from .loo import *  # noqa: E402
+from .oob import *  # noqa: E402
+from .result import *  # noqa: E402
+from .sampler import *  # noqa: E402
+from .semivalues import *  # noqa: E402
+from .shapley import *  # noqa: E402
+from .stopping import *  # noqa: E402

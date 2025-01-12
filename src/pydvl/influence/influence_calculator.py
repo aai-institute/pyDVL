@@ -385,7 +385,9 @@ class DaskInfluenceCalculator:
         ):
             row = []
             for x_chunk, y_chunk, chunk_size in zip(
-                x.to_delayed(), y.to_delayed(), x_chunk_sizes  # type:ignore
+                x.to_delayed(),
+                y.to_delayed(),
+                x_chunk_sizes,  # type:ignore
             ):
                 if mode == InfluenceMode.Up:
                     block_shape = (test_chunk_size, chunk_size)

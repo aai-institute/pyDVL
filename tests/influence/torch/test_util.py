@@ -7,7 +7,7 @@ import pytest
 from pydvl.influence.torch.operator import MatrixOperator
 
 torch = pytest.importorskip("torch")
-import torch.nn
+import torch.nn  # noqa: F811
 from numpy.typing import NDArray
 from scipy.stats import pearsonr, spearmanr
 from torch.nn.functional import mse_loss

@@ -68,7 +68,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             to discount the out-of-class score.
         rescale_scores: If set to True, the scores will be denormalized. This is
             particularly useful when the inner score function $a_S$ is calculated by
-            an estimator of the form $\frac{1}{N} \sum_i x_i$.
+            an estimator of the form $\frac{1}{N} \\sum_i x_i$.
         name: Name of the scorer. If not provided, the name of the inner scoring
             function will be prefixed by `classwise `.
 

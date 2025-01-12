@@ -264,7 +264,7 @@ def group_testing_shapley(
     samples_per_job = max(1, n_samples // parallel_backend.effective_n_jobs(n_jobs))
 
     def reducer(
-        results_it: Iterable[Tuple[NDArray, NDArray]]
+        results_it: Iterable[Tuple[NDArray, NDArray]],
     ) -> Tuple[NDArray, NDArray]:
         return np.concatenate(list(x[0] for x in results_it)).astype(
             np.float64

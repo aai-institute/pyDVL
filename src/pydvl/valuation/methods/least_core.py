@@ -134,13 +134,13 @@ class ExactLeastCoreValuation(LeastCoreValuation):
 
     $$
     \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
-    \end{array}
+    \text{minimize} & \\displaystyle{e} & \\
+    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
+    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) &, \forall S \\subseteq N \\
+    \\end{array}
     $$
 
-    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
+    Where $N = \\{1, 2, \\dots, n\\}$ are the training set's indices.
 
     Args:
         utility: Utility object with model, data and scoring function.
@@ -184,11 +184,11 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
 
     $$
     \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
-    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
-    \end{array}
+    \text{minimize} & \\displaystyle{e} & \\
+    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
+    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) & ,
+    \forall S \\in \\{S_1, S_2, \\dots, S_m \\overset{\\mathrm{iid}}{\\sim} U(2^N) \\}
+    \\end{array}
     $$
 
     Where:

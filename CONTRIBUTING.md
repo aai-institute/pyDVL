@@ -89,9 +89,9 @@ failing pipelines. tox will:
 * run the test suite
 * build the documentation
 * build and test installation of the package.
-* generate coverage and pylint reports in html, as well as badges.
+* generate coverage reports in html, as well as badges.
 
-You can configure pytest, coverage and pylint by adjusting
+You can configure pytest, coverage and ruff by adjusting
 [pyproject.toml](pyproject.toml).
 
 Besides the usual unit tests, most algorithms are tested using pytest. This

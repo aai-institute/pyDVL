@@ -40,6 +40,7 @@ as done in Truncated MonteCarlo Shapley (TMCS).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,7 +48,7 @@ import math
 import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
-from typing import Optional, Sequence, Union, cast
+from typing import Optional, Sequence, Union
 
 import numpy as np
 from deprecate import deprecated

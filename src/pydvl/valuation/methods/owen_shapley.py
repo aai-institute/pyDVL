@@ -7,7 +7,6 @@ from typing_extensions import Self
 from pydvl.utils import Status
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods.semivalue import SemivalueValuation
-from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.powerset import OwenSampler
 from pydvl.valuation.stopping import NoStopping
 from pydvl.valuation.utility.base import UtilityBase

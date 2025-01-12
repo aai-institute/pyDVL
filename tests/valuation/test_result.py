@@ -52,7 +52,7 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
     try:
-        import pandas
+        import pandas  # noqa: F401
 
         df = dummy_values.to_dataframe(use_names=False)
         assert np.alltrue(df.index.values == ranks_asc)

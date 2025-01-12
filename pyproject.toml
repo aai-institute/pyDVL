@@ -6,11 +6,6 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-# Black-compatible settings for isort
-# See https://black.readthedocs.io/en/stable/compatible_configs.html
-[tool.isort]
-profile = "black"
-
 [tool.pytest.ini_options]
 addopts = "--failed-first --splitting-algorithm least_duration --cov-report=term-missing --cov-report=xml --durations=30 --verbose"
 testpaths = [
@@ -61,16 +56,23 @@ exclude_lines = [
     "^if __name__ == ['\"]__main__['\"]:$",
 ]
 
-[tool.pylint.messages_control]
-disable = [
-    "I0011", # reasoning
+[tool.ruff]
+line-length = 88
+fix = true
+target-version = "py39"
+
+[tool.ruff.lint]
+extend-select = ["I", "F", "E", "W"]  # Common linting rules from Pylint and Flake8
+ignore = [
+    "F403",
+    "F405",
+    "E501",  # line too long (HACK: we should really stick to 88 chars)
+    "E741",  # Checks for 'l', 'O', or 'I' as variable names (hard to read)
+    "E731",  # Do not assign a `lambda` expression, use a `def`
+    "E402"
+
 ]
-
-[tool.pylint.master]
-load-plugins = ["pylint_json2html"]
-
-[tool.pylint.reports]
-output-format = "jsonextended"
+isort.known-first-party = ["pydvl"]
 
 [tool.mypy]
 python_version = "3.9"
@@ -78,6 +80,3 @@ mypy_path = './src/'
 ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true
-
-[tool.black]
-line-length = 88

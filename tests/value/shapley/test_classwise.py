@@ -12,9 +12,8 @@ from sklearn import datasets
 from sklearn.linear_model import LogisticRegression
 
 from pydvl.utils import Dataset as OldDataset
-from pydvl.utils import Utility
+from pydvl.utils import Utility, powerset
 from pydvl.utils import Utility as OldUtility
-from pydvl.utils import powerset
 from pydvl.valuation import (
     ClasswiseModelUtility,
     ClasswiseSampler,
@@ -115,9 +114,9 @@ def classwise_shapley_exact_solution_no_default() -> Tuple[Dict, ValuationResult
 
 
 @pytest.fixture(scope="function")
-def classwise_shapley_exact_solution_no_default_allow_empty_set() -> (
-    Tuple[Dict, ValuationResult, Dict]
-):
+def classwise_shapley_exact_solution_no_default_allow_empty_set() -> Tuple[
+    Dict, ValuationResult, Dict
+]:
     r"""
     Note that this special case doesn't set the utility to 0 if the permutation is
     empty and additionally allows $S^{(k)} = \emptyset$. See

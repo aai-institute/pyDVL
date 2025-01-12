@@ -13,6 +13,7 @@ $$ \frac{1}{|B|} \sum_{b in B}m(b)\cdot v$$,
 which is useful in the case that keeping $B$ in memory is not feasible.
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -73,7 +74,6 @@ class _ModelBasedBatchOperation(ABC):
     def apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
-
         if mat_dict.keys() != self.params_to_restrict_to.keys():
             raise ValueError(
                 "The keys of the matrix dictionary must match the keys of the "
@@ -205,7 +205,6 @@ class HessianBatchOperation(_ModelBasedBatchOperation):
     def _apply_to_dict(
         self, batch: TorchBatch, mat_dict: Dict[str, torch.Tensor]
     ) -> Dict[str, torch.Tensor]:
-
         func = self._create_seq_func(*batch)
 
         if self._has_batch_dim_dict(mat_dict):
@@ -484,7 +483,6 @@ class InverseHarmonicMeanBatchOperation(_ModelBasedBatchOperation):
     def _generate_inverse_rank_one_updates(
         x: List[torch.Tensor], v: List[torch.Tensor], regularization: float
     ) -> Generator[torch.Tensor, None, None]:
-
         x_v_iterator = enumerate(zip(x, v))
         index, (x_, v_) = next(x_v_iterator)
 

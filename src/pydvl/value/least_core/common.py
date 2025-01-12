@@ -199,21 +199,21 @@ def lc_solve_problems(
 
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
-    map_reduce_job: MapReduceJob[
-        "LeastCoreProblem", "List[ValuationResult]"
-    ] = MapReduceJob(
-        inputs=problems,
-        map_func=_map_func,
-        map_kwargs=dict(
-            u=u,
-            algorithm=algorithm,
-            non_negative_subsidy=non_negative_subsidy,
-            solver_options=solver_options,
-            **options,
-        ),
-        reduce_func=lambda x: list(itertools.chain(*x)),
-        parallel_backend=parallel_backend,
-        n_jobs=n_jobs,
+    map_reduce_job: MapReduceJob["LeastCoreProblem", "List[ValuationResult]"] = (
+        MapReduceJob(
+            inputs=problems,
+            map_func=_map_func,
+            map_kwargs=dict(
+                u=u,
+                algorithm=algorithm,
+                non_negative_subsidy=non_negative_subsidy,
+                solver_options=solver_options,
+                **options,
+            ),
+            reduce_func=lambda x: list(itertools.chain(*x)),
+            parallel_backend=parallel_backend,
+            n_jobs=n_jobs,
+        )
     )
     solutions = map_reduce_job()
 

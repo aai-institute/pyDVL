@@ -143,7 +143,7 @@ class GroupTestingShapleyValuation(Valuation):
 
 
 def compute_n_samples(epsilon: float, delta: float, n_obs: int) -> int:
-    """Compute the minimal sample size with epsilon-delta guarantees.
+    r"""Compute the minimal sample size with epsilon-delta guarantees.
 
     Based on the formula in Theorem 4 of
     (Jia, R. et al., 2023)<sup><a href="#jia_update_2023">2</a></sup>

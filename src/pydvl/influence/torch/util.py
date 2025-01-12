@@ -507,6 +507,7 @@ class EkfacRepresentation:
         evecs_g: The g eigenvectors of the ekfac representation.
         diags: The diagonal elements of the factorized Hessian matrix.
     """
+
     layer_names: Iterable[str]
     layers_module: Iterable[torch.nn.Module]
     evecs_a: Iterable[torch.Tensor]

@@ -241,7 +241,8 @@ def test_hoeffding_bound_montecarlo(
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
+    "a, b, num_points",
+    [(2, 0, 21)],  # training set will have 0.3 * 21 ~= 6 samples
 )
 @pytest.mark.parametrize(
     "sampler_class, sampler_kwargs, valuation_class, valuation_kwargs",
@@ -329,7 +330,8 @@ def test_linear_montecarlo_with_outlier(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
+    "a, b, num_points, num_groups",
+    [(2, 0, 21, 2)],  # 24*0.3=6 samples in 2 groups
 )
 @pytest.mark.parametrize(
     "sampler_class, kwargs",
