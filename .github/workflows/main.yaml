@@ -22,7 +22,7 @@ env:
 jobs:
   code-quality:
     name: Lint code and check type hints
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Setup Python 3.9
@@ -52,7 +52,7 @@ jobs:
 
   docs:
     name: Build Docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -114,7 +114,7 @@ jobs:
 
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [docs, group-tests, notebook-tests]
     if: ${{ github.ref == 'refs/heads/develop' }}
     concurrency:
