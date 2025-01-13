@@ -1,41 +1,44 @@
 """
 This module contains convenience classes to handle data and groups thereof.
 
-Model-based value computations require evaluation of a scoring function (the *utility*).
-This is typically the performance of the model on a test set (as an approximation to its
-true expected performance). It is therefore convenient to keep both the training data
-and the test data grouped to be passed around to methods in [shapley][pydvl.valuation].
-This is done with [Dataset][pydvl.valuation.dataset.Dataset].
+Value computations with supervised models benefit from a unified interface to handle
+data. This module provides two classes to handle data and labels, as well as feature
+names and other information:
+[Dataset][pydvl.valuation.dataset.Dataset]
+and [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. Objects of both types can
+be used to construct [scorers][pydvl.valuation.scorers] and to fit (most) valuation
+methods.
 
-These underlying data arrays can be accessed via
-[Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(X, y)`.
-The data can be accessed by indexing the object directly, e.g. `dataset[0]` will return
-the data point corresponding to index 0 in `dataset`. Note however that this is not
-necessarily the same as `dataset.data().x[0]`, which is the first point in the data
-array. This is in particular true for
+The underlying data arrays can always be accessed via
+[Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+
+Slicing the object, e.g. `dataset[0]`, will return a new `Dataset` with the data
+corresponding to that slice. Note however that the contents of the new object, i.e.
+`dataset[0].data().x`, may not be the same as `dataset.data().x[0]`, which is the first
+point in the original data array. This is in particular true for
 [GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
 correspond to multiple data points.
 
-Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] and to
-fit (most) valuation methods.
 
 ## Grouped datasets and logical indices
 
-It is also possible to group data points together with
+As mentioned above, it is also possible to group data points together with
 [GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
-
-A call to [Dataset.data(indices)][pydvl.valuation.dataset.Dataset.data] will return the
-data and labels of all samples for the given groups. But `grouped_data[0]` will return
-the data and labels of the first group, not the first data point and will therefore be
-in general different from `grouped_data.data([0])`.
-
 In order to handle groups correctly, Datasets map "logical" indices to "data" indices
 and vice versa. The latter correspond to indices in the data arrays themselves, while
 the former may map to groups of data points.
 
-This is important for valuation methods that require computation on individual data
-points, like KNNShapley or Data-OOB. In these cases, the logical indices are used to
-compute the Shapley values, while the data indices are used internally by the method.
+A call to [GroupedDataset.data(indices)][pydvl.valuation.dataset.GroupedDataset.data]
+will return the data and labels of all samples for the given groups. But
+`grouped_data[0]` will return the data and labels of the first group, not the first data
+point and will therefore be in general different from `grouped_data.data([0])`.
+
+Grouping data can be useful to reduce computation time, e.g. for Shapley-based methods.
+
+It is important to keep in mind the distinction between logical and data indices for
+valuation methods that require computation on individual data points, like KNNShapley or
+Data-OOB. In these cases, the logical indices are used to compute the Shapley values,
+while the data indices are used internally by the method.
 """
 
 from __future__ import annotations
@@ -113,6 +116,8 @@ class Dataset:
 
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y.
+        !!! tip "Changed in version 0.10.0"
+            Slicing now return a new `Dataset` object, not raw data.
         """
         self._x, self._y = check_X_y(
             x, y, multi_output=multi_output, estimator="Dataset"
@@ -205,7 +210,7 @@ class Dataset:
         return self._indices[indices]
 
     def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
-        """Returns the indices in this Dataset for the given indices in the data array.
+        """Returns the indices in this `Dataset` for the given indices in the data array.
 
         This is equivalent to using `Dataset.indices[data_indices]` but allows
         subclasses to define special behaviour, e.g. when indices in `Dataset` do not
