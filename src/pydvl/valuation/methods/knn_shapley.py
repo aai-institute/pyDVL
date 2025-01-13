@@ -16,6 +16,8 @@ This module contains Shapley computations for K-Nearest Neighbours.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from joblib.parallel import Parallel, delayed, get_active_backend
 from more_itertools import chunked
@@ -127,7 +129,7 @@ class KNNShapleyValuation(Valuation):
         x_test: NDArray,
         y_test: NDArray,
         y_train: NDArray,
-    ) -> np.ndarray:
+    ) -> NDArray[np.float64]:
         """Compute the Shapley value using a set of test points.
 
         The Shapley value for a training point is computed over the whole test set by
@@ -168,4 +170,4 @@ class KNNShapleyValuation(Valuation):
                 ) / max(n_neighbors, i)
                 # 1/max(K, i) = 1/K * min{K, i}/i as in the paper
 
-        return values.sum(axis=0)
+        return cast(NDArray[np.float64], values.sum(axis=0))
