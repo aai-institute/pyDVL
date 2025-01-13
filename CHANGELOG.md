@@ -37,11 +37,11 @@
   approximation
   [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
 
-## Fixed
+### Fixed
+
 - Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
   as the old aliases are removed in NumPy 2.0
   [PR #604](https://github.com/aai-institute/pyDVL/pull/604)
-
 - Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
   as the probability of an element being sampled
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
@@ -53,6 +53,10 @@
 
 ### Changed
 
+- Introduced the concept of logical vs data indices for `Dataset`, and
+  `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
+  Also, both now return objects of the same type when slicing.
+  [PR #631](https://github.com/aai-institute/pyDVL/pull/631)
 - Use tighter bounds for the calculation of the minimal sample size that guarantees
   an epsilon-delta approximation in group testing (Jia et al. 2023)
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
