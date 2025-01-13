@@ -46,7 +46,7 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.types import IndexSetT, NameT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ class GroupTestingShapleyValuation(Valuation):
             problem=problem,
             solver_options=self._solver_options,
             algorithm_name=self.algorithm_name,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         self.result = solution
@@ -309,7 +309,7 @@ def solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
     algorithm_name: str,
-    data_names: NDArray[np.object_],
+    data_names: NDArray[NameT],
 ) -> ValuationResult:
     """Solve the group testing problem and create a ValuationResult.
 

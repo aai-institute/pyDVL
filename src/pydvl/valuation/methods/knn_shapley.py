@@ -79,11 +79,13 @@ class KNNShapleyValuation(Valuation):
         ```
 
         """
-        self.helper_model = self.helper_model.fit(data.x)
-        n_obs = len(data.x)
+        self.helper_model = self.helper_model.fit(data.data().x)
+        n_obs = len(data.data().x)
         n_test = len(self.utility.test_data)
 
-        generator = zip(self.utility.test_data.x, self.utility.test_data.y)
+        generator = zip(
+            self.utility.test_data.data().x, self.utility.test_data.data().y
+        )
 
         generator_with_progress = tqdm(
             generator,
@@ -95,7 +97,7 @@ class KNNShapleyValuation(Valuation):
         with Parallel(return_as="generator") as parallel:
             results = parallel(
                 delayed(self._compute_values_for_one_test_point)(
-                    self.helper_model, x, y, data.y
+                    self.helper_model, x, y, data.data().y
                 )
                 for x, y in generator_with_progress
             )
@@ -108,7 +110,7 @@ class KNNShapleyValuation(Valuation):
             algorithm="knn_shapley",
             status=Status.Converged,
             values=values,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         self.result = res

@@ -96,7 +96,7 @@ class DataOOBValuation(Valuation):
         self.result = ValuationResult.zeros(
             algorithm=algorithm_name,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         random_state = np.random.RandomState(self.rng.bit_generator)
@@ -126,16 +126,15 @@ class DataOOBValuation(Valuation):
                 "Model has to be a classifier or a regressor in sklearn format."
             )
 
-        bag.fit(data.x, data.y)
-        for est, samples in zip(bag.estimators_, bag.estimators_samples_):
-            oob_idx = np.setxor1d(data.indices, np.unique(samples))
-            array_loss = self.loss(
-                y_true=data.y[oob_idx],
-                y_pred=est.predict(data.x[oob_idx]),
-            )
+        bag.fit(*data.data())
+        for est, sample_indices in zip(bag.estimators_, bag.estimators_samples_):
+            ib_indices = data.logical_indices(sample_indices)
+            oob_indices = np.setdiff1d(data.indices, ib_indices)
+            x, y = data.data(oob_indices)
+            array_loss = self.loss(y_true=y, y_pred=est.predict(x))
             self.result += ValuationResult(
                 algorithm=algorithm_name,
-                indices=oob_idx,
+                indices=oob_indices,
                 values=array_loss,
                 counts=np.ones_like(array_loss, dtype=data.indices.dtype),
             )

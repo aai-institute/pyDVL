@@ -12,7 +12,8 @@ from .. import check_total_value, check_values
 @pytest.fixture(scope="function")
 def analytic_loo(dummy_train_data):
     r"""Scores are i/m, so v(i) = U(D) - U(D\{i})] = i/m"""
-    m = float(max(dummy_train_data.x))
+    x, _ = dummy_train_data.data()
+    m = float(max(x))
     values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",

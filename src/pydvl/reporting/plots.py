@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, List, Literal, Optional, OrderedDict, Sequence
+from typing import Any, List, Literal, Optional, OrderedDict, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -292,7 +292,7 @@ def plot_influence_distribution(
     ax.set_xlabel("Influence values")
     ax.set_ylabel("Number of samples")
     ax.set_title(f"Distribution of influences {title_extra}")
-    return ax
+    return cast(plt.Axes, ax)
 
 
 def plot_influence_distribution_by_label(

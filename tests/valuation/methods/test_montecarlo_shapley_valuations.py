@@ -296,7 +296,7 @@ def test_linear_montecarlo_with_outlier(
     )
 
     outlier_idx = np.random.randint(len(data_train))
-    data_train.y[outlier_idx] -= 100
+    data_train.data().y[outlier_idx] -= 100
 
     utility = ModelUtility(
         LinearRegression(),

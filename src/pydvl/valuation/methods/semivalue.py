@@ -98,7 +98,7 @@ class SemivalueValuation(Valuation):
             # TODO: automate str representation for all Valuations (and find something better)
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
         ensure_backend_has_generator_return()
 
