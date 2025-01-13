@@ -16,8 +16,11 @@ This module contains Shapley computations for K-Nearest Neighbours.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
-from joblib import Parallel, delayed
+from joblib.parallel import Parallel, delayed, get_active_backend
+from more_itertools import chunked
 from numpy.typing import NDArray
 from sklearn.neighbors import NearestNeighbors
 from tqdm.auto import tqdm
@@ -25,7 +28,7 @@ from typing_extensions import Self
 
 from pydvl.utils.status import Status
 from pydvl.valuation.base import Valuation
-from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.utility import KNNClassifierUtility
 
@@ -65,7 +68,7 @@ class KNNShapleyValuation(Valuation):
         calculates the Shapley values directly.
 
         In contrast to other data valuation models, the runtime increases linearly
-        with the size of the test dataset.
+        with the size of the dataset.
 
         Calculating the KNN valuation is a computationally expensive task that
         can be parallelized. To do so, call the `fit()` method inside a
@@ -79,14 +82,18 @@ class KNNShapleyValuation(Valuation):
         ```
 
         """
-        self.helper_model = self.helper_model.fit(data.data().x)
-        n_obs = len(data.data().x)
+
+        if isinstance(data, GroupedDataset):
+            raise TypeError("GroupedDataset is not supported by KNNShapleyValuation")
+
+        x_train, y_train = data.data()
+        self.helper_model = self.helper_model.fit(x_train)
         n_test = len(self.utility.test_data)
 
-        generator = zip(
-            self.utility.test_data.data().x, self.utility.test_data.data().y
-        )
-
+        _, n_jobs = get_active_backend()
+        batch_size = (n_test // n_jobs) + (1 if n_test % n_jobs else 0)
+        x_test, y_test = self.utility.test_data.data()
+        generator = zip(chunked(x_test, batch_size), chunked(y_test, batch_size))
         generator_with_progress = tqdm(
             generator,
             total=n_test,
@@ -94,14 +101,14 @@ class KNNShapleyValuation(Valuation):
             position=0,
         )
 
-        with Parallel(return_as="generator") as parallel:
+        with Parallel(return_as="generator_unordered") as parallel:
             results = parallel(
-                delayed(self._compute_values_for_one_test_point)(
-                    self.helper_model, x, y, data.data().y
+                delayed(self._compute_values_for_test_points)(
+                    self.helper_model, np.array(x_test), np.array(y_test), y_train
                 )
-                for x, y in generator_with_progress
+                for x_test, y_test in generator_with_progress
             )
-            values = np.zeros(n_obs)
+            values = np.zeros(len(data))
             for res in results:
                 values += res
             values /= n_test
@@ -117,43 +124,50 @@ class KNNShapleyValuation(Valuation):
         return self
 
     @staticmethod
-    def _compute_values_for_one_test_point(
-        helper_model: NearestNeighbors, x: NDArray, y: int, y_train: NDArray
-    ) -> np.ndarray:
-        """Compute the Shapley value for a single test data point.
+    def _compute_values_for_test_points(
+        helper_model: NearestNeighbors,
+        x_test: NDArray,
+        y_test: NDArray,
+        y_train: NDArray,
+    ) -> NDArray[np.float64]:
+        """Compute the Shapley value using a set of test points.
 
-        The shapley values of the whole test set are the average of the shapley values
-        of the single test data points.
+        The Shapley value for a training point is computed over the whole test set by
+        averaging the Shapley values of the single test data points.
 
         Args:
             helper_model: A fitted NearestNeighbors model.
-            x: A single test data point.
-            y: The correct label of the test data point.
-            y_train: The training labels.
+            x_test: The test data points.
+            y_test: The test labels.
+            y_train: The labels for the training points to be valued.
 
         Returns:
-            The Shapley values for the test data point.
+            The Shapley values for the training data points.
 
         """
         n_obs = len(y_train)
         n_neighbors = helper_model.get_params()["n_neighbors"]
 
-        # sorts data indices from close to far
+        # sort data indices from close to far
         sorted_indices = helper_model.kneighbors(
-            x.reshape(1, -1), n_neighbors=n_obs, return_distance=False
-        )[0]
+            x_test, n_neighbors=n_obs, return_distance=False
+        )
 
-        values = np.zeros(n_obs)
+        values = np.zeros(shape=(len(x_test), n_obs))
 
-        idx = sorted_indices[-1]
-        values[idx] = float(y_train[idx] == y) / n_obs
-        # reverse range because we want to go from far to close
-        for i in range(n_obs - 1, 0, -1):
-            prev_idx = sorted_indices[i]
-            idx = sorted_indices[i - 1]
-            values[idx] = values[prev_idx]
-            values[idx] += (int(y_train[idx] == y) - int(y_train[prev_idx] == y)) / max(
-                n_neighbors, i
-            )
+        for query, neighbors in enumerate(sorted_indices):
+            label = y_test[query]
+            # Initialize the farthest neighbor's value
+            idx = neighbors[-1]
+            values[query][idx] = float(y_train[idx] == label) / n_obs
+            # reverse range because we want to go from far to close
+            for i in range(n_obs - 1, 0, -1):
+                prev_idx = neighbors[i]
+                idx = neighbors[i - 1]
+                values[query][idx] = values[query][prev_idx]
+                values[query][idx] += (
+                    int(y_train[idx] == label) - int(y_train[prev_idx] == label)
+                ) / max(n_neighbors, i)
+                # 1/max(K, i) = 1/K * min{K, i}/i as in the paper
 
-        return values
+        return cast(NDArray[np.float64], values.sum(axis=0))
