@@ -4,16 +4,18 @@
 
 ### Added
 
-- Refactor Classwise Shapley valuation with the interfaces and sampler architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616).
-- Refactoring KNN Shapley values with the new sampler architecture [PR #610](https://github.com/aai-institute/pyDVL/pull/610).
-- Refactoring MSR Banzhaf semivalues with the new sampler architecture.
+- Refactor Classwise Shapley valuation with the interfaces and sampler
+  architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616)
+- Refactor KNN Shapley values with the new sampler architecture
+  [PR #610](https://github.com/aai-institute/pyDVL/pull/610)
+- Refactor MSR Banzhaf semivalues with the new sampler architecture.
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
-- Refactoring group-testing shapley values with new sampler architecture
+- Refactor group-testing shapley values with new sampler architecture
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
-- Refactoring of least-core data valuation methods with more supported sampling methods
-  and consistent interface.
+- Refactor least-core data valuation methods with more supported sampling
+  methods and consistent interface.
   [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
-- Refactoring of owen shapley valuation with new sampler architecture
+- Refactor Owen-Shapley valuation with new sampler architecture
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 - New method `InverseHarmonicMeanInfluence`, implementation for the paper
   `DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
@@ -53,6 +55,8 @@
 
 ### Changed
 
+- Uniformly distribute test points across processes for KNNShapley. Fail for
+  `GroupedDataset` [PR #632](https://github.com/aai-institute/pyDVL/pull/632)
 - Introduced the concept of logical vs data indices for `Dataset`, and
   `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
   Also, both now return objects of the same type when slicing.
