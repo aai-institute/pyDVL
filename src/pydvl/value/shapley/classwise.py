@@ -41,9 +41,9 @@ $y_i$ and $-y_i$, respectively.
     $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
 
     in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
-    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
-    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
-    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
+    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy
+    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting
+    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and
     $\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
@@ -57,6 +57,7 @@ $y_i$ and $-y_i$, respectively.
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
 
 """
+
 import logging
 import numbers
 from concurrent.futures import FIRST_COMPLETED, Future, wait

@@ -47,7 +47,7 @@ pip install -r requirements-dev.txt -r requirements-docs.txt
 With conda:
 
 ```shell
-conda create -n pydvl python=3.8
+conda create -n pydvl python=3.9
 conda activate pydvl
 pip install -r requirements-dev.txt -r requirements-docs.txt
 ```
@@ -89,9 +89,9 @@ failing pipelines. tox will:
 * run the test suite
 * build the documentation
 * build and test installation of the package.
-* generate coverage and pylint reports in html, as well as badges.
+* generate coverage reports in html, as well as badges.
 
-You can configure pytest, coverage and pylint by adjusting
+You can configure pytest, coverage and ruff by adjusting
 [pyproject.toml](pyproject.toml).
 
 Besides the usual unit tests, most algorithms are tested using pytest. This
@@ -537,11 +537,11 @@ on the job id to be unique (but then you'll see warnings for the workflows
 without that job id).
 
 ```shell
-# Run only the main tests for python 3.8 after a push event (implicit) 
+# Run only the main tests for python 3.9 after a push event (implicit) 
 act -W .github/workflows/run-tests-workflow.yaml \
     -j run-tests \
     --input tests_to_run=base\
-    --input python_version=3.8
+    --input python_version=3.9
 ```
 
 Other common flags are: 

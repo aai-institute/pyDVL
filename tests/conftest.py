@@ -2,7 +2,7 @@ import logging
 import os
 import platform
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pytest
@@ -102,7 +102,7 @@ def memcached_service(request) -> Tuple[str, int]:
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
+def memcache_client_config(memcached_service) -> "MemcachedClientConfig":  # noqa: F821
     from pydvl.utils import MemcachedClientConfig
 
     return MemcachedClientConfig(
@@ -113,10 +113,8 @@ def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
 @pytest.fixture(scope="function")
 def memcached_client(
     memcache_client_config,
-) -> Tuple["Client", "MemcachedClientConfig"]:
+) -> Tuple["Client", "MemcachedClientConfig"]:  # noqa: F821
     from pymemcache.client import Client
-
-    from pydvl.utils import MemcachedClientConfig
 
     try:
         c = Client(**asdict(memcache_client_config))

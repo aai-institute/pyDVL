@@ -185,12 +185,10 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
                 yield np.random.choice(self._outer_indices, size=1).item()
 
     @overload
-    def __getitem__(self, key: slice) -> PowersetSampler[IndexT]:
-        ...
+    def __getitem__(self, key: slice) -> PowersetSampler[IndexT]: ...
 
     @overload
-    def __getitem__(self, key: list[int]) -> PowersetSampler[IndexT]:
-        ...
+    def __getitem__(self, key: list[int]) -> PowersetSampler[IndexT]: ...
 
     def __getitem__(self, key: slice | list[int]) -> PowersetSampler[IndexT]:
         if isinstance(key, slice) or isinstance(key, Iterable):
@@ -212,8 +210,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
         return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[SampleT]:
-        ...
+    def __iter__(self) -> Iterator[SampleT]: ...
 
     @classmethod
     @abc.abstractmethod

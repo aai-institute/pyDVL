@@ -25,6 +25,7 @@ class Preconditioner(ABC):
     condition number than $A + \lambda \operatorname{I}$.
 
     """
+
     _reg: Optional[float]
 
     @property
@@ -256,7 +257,6 @@ class NystroemPreconditioner(Preconditioner):
         self._reg = regularization
 
     def _solve(self, rhs: torch.Tensor):
-
         rhs_is_one_dim = rhs.ndim == 1
         b = torch.atleast_2d(rhs).t() if rhs_is_one_dim else rhs
 

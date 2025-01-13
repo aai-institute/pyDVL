@@ -40,7 +40,7 @@ python -c "import pydvl; print(pydvl.__version__)"
 
 ## Dependencies
 
-pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
+pyDVL requires Python >= 3.9, [numpy](https://numpy.org/),
 [scikit-learn](https://scikit-learn.org/stable/), [scipy](https://scipy.org/),
 [cvxpy](https://www.cvxpy.org/) for the core methods, and
 [joblib](https://joblib.readthedocs.io/en/stable/) for parallelization locally.

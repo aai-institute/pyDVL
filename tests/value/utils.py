@@ -4,7 +4,7 @@ import time
 from copy import deepcopy
 from functools import wraps
 from logging import getLogger
-from typing import Callable, Optional, Protocol, Tuple, TypeVar
+from typing import Callable, Protocol, Tuple, TypeVar
 
 from pydvl.utils.types import Seed
 
@@ -35,8 +35,7 @@ class TimedCallable(Protocol):
 
     execution_time: float
 
-    def __call__(self, *args, **kwargs) -> ReturnT:
-        ...
+    def __call__(self, *args, **kwargs) -> ReturnT: ...
 
 
 def timed(fun: Callable[..., ReturnT]) -> TimedCallable:

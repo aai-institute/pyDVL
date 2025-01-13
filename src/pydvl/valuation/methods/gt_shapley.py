@@ -24,6 +24,7 @@ You can read more [in the documentation][data-valuation].
     https://arxiv.org/pdf/2302.11431).
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -45,7 +46,7 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.types import IndexSetT, NameT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ class GroupTestingShapleyValuation(Valuation):
 
 
 def compute_n_samples(epsilon: float, delta: float, n_obs: int) -> int:
-    """Compute the minimal sample size with epsilon-delta guarantees.
+    r"""Compute the minimal sample size with epsilon-delta guarantees.
 
     Based on the formula in Theorem 4 of
     (Jia, R. et al., 2023)<sup><a href="#jia_update_2023">2</a></sup>
@@ -308,7 +309,7 @@ def solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
     algorithm_name: str,
-    data_names: NDArray[np.object_],
+    data_names: NDArray[NameT],
 ) -> ValuationResult:
     """Solve the group testing problem and create a ValuationResult.
 
@@ -347,11 +348,13 @@ def solve_group_testing_problem(
     if cp_problem.status != "optimal":
         log.warning(f"cvxpy returned status {cp_problem.status}")
         values = (
-            np.nan * np.ones_like(n_obs) if not hasattr(v.value, "__len__") else v.value
+            np.nan * np.ones_like(n_obs)
+            if not hasattr(v.value, "__len__")
+            else cast(NDArray[np.float64], v.value)
         )
         status = Status.Failed
     else:
-        values = v.value
+        values = cast(NDArray[np.float64], v.value)
         status = Status.Converged
 
     result = ValuationResult(

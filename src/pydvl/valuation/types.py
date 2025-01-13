@@ -26,7 +26,7 @@ __all__ = [
 
 IndexT: TypeAlias = np.int_
 IndexSetT: TypeAlias = NDArray[IndexT]
-NameT: TypeAlias = Union[np.object_, np.int_]
+NameT: TypeAlias = Union[np.object_, np.int_, np.str_]
 NullaryPredicate: TypeAlias = Callable[[], bool]
 
 
@@ -152,5 +152,4 @@ class UtilityEvaluation:
 
 
 class LossFunction(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
-        ...
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...

@@ -37,25 +37,34 @@
   approximation
   [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
 
-## Fixed
+### Fixed
+
 - Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
   as the old aliases are removed in NumPy 2.0
   [PR #604](https://github.com/aai-institute/pyDVL/pull/604)
-
 - Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
   as the probability of an element being sampled
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
 - Fix a bug in the calculation of variance estimates for MSR Banzhaf
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
 - Fix a bug in KNN Shapley values. See [Issue 613](https://github.com/aai-institute/pyDVL/issues/613) for details.
-
+- Backport the KNN Shapley fix to the `value` module
+  [PR #633](https://github.com/aai-institute/pyDVL/pull/633) 
 
 ### Changed
 
+- Introduced the concept of logical vs data indices for `Dataset`, and
+  `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
+  Also, both now return objects of the same type when slicing.
+  [PR #631](https://github.com/aai-institute/pyDVL/pull/631)
 - Use tighter bounds for the calculation of the minimal sample size that guarantees
   an epsilon-delta approximation in group testing (Jia et al. 2023)
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
+- Dropped black, isort and pylint from the CI pipeline, in favour of ruff
+  [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
 - **Breaking Changes**
+  - Dropped support for python 3.8 after EOL
+    [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
   - Rename parameter `hessian_regularization` of `DirectInfluence`
     to `regularization` and change the type annotation to allow
     for block-wise regularization parameters

@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.torch.operator import HessianOperator
 
-from .test_util import model_data, test_parameters
+from .test_util import test_parameters
 
 
 @pytest.mark.torch
