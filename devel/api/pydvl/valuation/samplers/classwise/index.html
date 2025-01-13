@@ -4622,9 +4622,8 @@
             Bases: <code><a class="autorefs autorefs-internal" title="pydvl.valuation.samplers.base.IndexSampler" href="../base/#pydvl.valuation.samplers.base.IndexSampler">IndexSampler</a></code></p>
 
   
-      <p>Sample permutations of indices and iterate through each returning
-increasing subsets, as required for the permutation definition of
-semi-values.</p>
+      <p>A sampler that samples elements from a dataset in two steps, based on the labels.</p>
+<p>Used by the classwise Shapley valuation method.</p>
 
 
 
@@ -4842,7 +4841,7 @@ to sample from the complement set, i.e., out of class elements.</p>
 
   <div class="doc doc-contents ">
   
-      <p>Taken samples from batch generators in order until all of them are exhausted.</p>
+      <p>Take samples from batch generators in order until all of them are exhausted.</p>
 <p>This was heavily inspired by the roundrobin recipe
 in the official Python documentation for the itertools package.</p>
 
@@ -4941,7 +4940,7 @@ in the official Python documentation for the itertools package.</p>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">def</span><span class="w"> </span><span class="nf">roundrobin</span><span class="p">(</span>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="n">batch_generators</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">U</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]],</span>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Taken samples from batch generators in order until all of them are exhausted.</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Take samples from batch generators in order until all of them are exhausted.</span>
 </span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>
 </span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    This was heavily inspired by the roundrobin recipe</span>
 </span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    in the official Python documentation for the itertools package.</span>
