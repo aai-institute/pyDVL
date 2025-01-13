@@ -14,7 +14,7 @@ the data point corresponding to index 0 in `dataset`. Note however that this is 
 necessarily the same as `dataset.data().x[0]`, which is the first point in the data
 array. This is in particular true for
 [GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
-correspond to multiple data points. 
+correspond to multiple data points.
 
 Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] and to
 fit (most) valuation methods.
@@ -538,8 +538,7 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]:
-        ...
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
 
     @overload
     @classmethod
@@ -551,8 +550,7 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]:
-        ...
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
 
     @classmethod
     def from_sklearn(
@@ -625,8 +623,7 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]:
-        ...
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
 
     @overload
     @classmethod
@@ -639,8 +636,7 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
         **kwargs,
-    ) -> tuple[GroupedDataset, GroupedDataset]:
-        ...
+    ) -> tuple[GroupedDataset, GroupedDataset]: ...
 
     @classmethod
     def from_arrays(
