@@ -5306,16 +5306,18 @@
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Refactor Classwise Shapley valuation with the interfaces and sampler architecture <a href="https://github.com/aai-institute/pyDVL/pull/616">PR #616</a>.</li>
-<li>Refactoring KNN Shapley values with the new sampler architecture <a href="https://github.com/aai-institute/pyDVL/pull/610">PR #610</a>.</li>
-<li>Refactoring <abbr title="Maximum Sample Reuse">MSR</abbr> Banzhaf semivalues with the new sampler architecture.
+<li>Refactor Classwise Shapley valuation with the interfaces and sampler
+  architecture <a href="https://github.com/aai-institute/pyDVL/pull/616">PR #616</a></li>
+<li>Refactor KNN Shapley values with the new sampler architecture
+  <a href="https://github.com/aai-institute/pyDVL/pull/610">PR #610</a></li>
+<li>Refactor <abbr title="Maximum Sample Reuse">MSR</abbr> Banzhaf semivalues with the new sampler architecture.
   <a href="https://github.com/aai-institute/pyDVL/pull/605">PR #605</a></li>
-<li>Refactoring group-testing shapley values with new sampler architecture
+<li>Refactor group-testing shapley values with new sampler architecture
   <a href="https://github.com/aai-institute/pyDVL/pull/602">PR #602</a></li>
-<li>Refactoring of least-core data valuation methods with more supported sampling methods
-  and consistent interface.
+<li>Refactor least-core data valuation methods with more supported sampling
+  methods and consistent interface.
   <a href="https://github.com/aai-institute/pyDVL/pull/580">PR #580</a></li>
-<li>Refactoring of owen shapley valuation with new sampler architecture
+<li>Refactor Owen-Shapley valuation with new sampler architecture
   <a href="https://github.com/aai-institute/pyDVL/pull/597">PR #597</a></li>
 <li>New method <code>InverseHarmonicMeanInfluence</code>, implementation for the paper
   <code>DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
@@ -5355,6 +5357,8 @@
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>Uniformly distribute test points across processes for KNNShapley. Fail for
+  <code>GroupedDataset</code> <a href="https://github.com/aai-institute/pyDVL/pull/632">PR #632</a></li>
 <li>Introduced the concept of logical vs data indices for <code>Dataset</code>, and
   <code>GroupedDataset</code>, fixing inconsistencies in how the latter operates on indices.
   Also, both now return objects of the same type when slicing.
