@@ -14,7 +14,7 @@ from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import f1_score
-from sklearn.model_selection import StratifiedKFold, train_test_split, cross_val_predict
+from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn.preprocessing import TargetEncoder
 
 from pydvl.valuation.dataset import Dataset
@@ -460,7 +460,7 @@ def corrupt_imagenet(
     fraction_to_corrupt: float,
     avg_influences: NDArray[np.float64],
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
-    """Given the preprocessed tiny imagenet dataset (or a subset of it), 
+    """Given the preprocessed tiny imagenet dataset (or a subset of it),
     it takes a fraction of the images with the highest influence and (randomly)
     flips their labels.
 
@@ -670,7 +670,7 @@ def load_adult_data_raw() -> pd.DataFrame:
     return pd.read_csv(
         data_url,
         names=column_names,
-        sep=",\s*",
+        sep=r",\s*",
         engine="python",
         na_values="?",
         dtype=data_types,

@@ -19,7 +19,6 @@ from pydvl.valuation.types import (
     NullaryPredicate,
     SampleBatch,
     SampleGenerator,
-    ValueUpdate,
     ValueUpdateT,
 )
 from pydvl.valuation.utility.base import UtilityBase

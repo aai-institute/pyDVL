@@ -9,7 +9,7 @@
 import operator
 from enum import Enum
 from functools import reduce
-from typing import Optional, Sequence, cast
+from typing import Optional, Sequence
 
 import numpy as np
 from deprecate import deprecated
@@ -51,7 +51,7 @@ def _owen_sampling_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""This is the algorithm as detailed in the paper: to compute the outer
     integral over q ∈ [0,1], use uniformly distributed points for evaluation
@@ -132,7 +132,7 @@ def owen_sampling_shapley(
     parallel_backend: Optional[ParallelBackend] = None,
     config: Optional[ParallelConfig] = None,
     progress: bool = False,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
     (Okhrati and Lipani, 2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.

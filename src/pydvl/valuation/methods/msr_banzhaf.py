@@ -11,6 +11,7 @@ This module implements the MSR-Banzhaf valuation method, as described in
     Statistics, pp. 6388-6421.
 
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -87,19 +88,19 @@ class MSRBanzhafValuation(SemivalueValuation):
         """
         pos_result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
         neg_result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
         self.result = ValuationResult.zeros(
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=self.algorithm_name,
         )
 
@@ -189,7 +190,7 @@ class MSRBanzhafValuation(SemivalueValuation):
             variances=variances,
             counts=counts,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
             algorithm=pos_result.algorithm,
         )
 

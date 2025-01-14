@@ -85,6 +85,7 @@ instead.
     [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
     In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
+
 from __future__ import annotations
 
 import logging
@@ -267,8 +268,8 @@ class MSRFutureProcessor(FutureProcessor):
         Then, this processor computes marginals based on the utility value and the index set provided.
 
         The final formula that gives the Banzhaf semivalue using MSR is:
-        $$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\ni i}} U(S)
-        - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+        $$\\hat{\\phi}_{MSR}(i) = \frac{1}{|\\mathbf{S}_{\ni i}|} \\sum_{S \\in \\mathbf{S}_{\ni i}} U(S)
+        - \frac{1}{|\\mathbf{S}_{\not{\ni} i}|} \\sum_{S \\in \\mathbf{S}_{\not{\ni} i}} U(S)$$
 
         Args:
             future_result: Result of the parallel computing jobs comprised of

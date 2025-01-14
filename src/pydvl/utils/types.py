@@ -1,4 +1,4 @@
-""" This module contains types, protocols, decorators and generic function
+"""This module contains types, protocols, decorators and generic function
 transformations. Some of it probably belongs elsewhere.
 """
 
@@ -30,18 +30,15 @@ Seed = Union[int, Generator]
 
 
 class MapFunction(Protocol[R]):
-    def __call__(self, *args: Any, **kwargs: Any) -> R:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> R: ...
 
 
 class ReduceFunction(Protocol[R]):
-    def __call__(self, *args: Any, **kwargs: Any) -> R:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> R: ...
 
 
 class PointwiseScore(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
-        ...
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
 
 
 @runtime_checkable
@@ -127,7 +124,7 @@ class BaggingModel(Protocol):
 
 
 def ensure_seed_sequence(
-    seed: Optional[Union[Seed, SeedSequence]] = None
+    seed: Optional[Union[Seed, SeedSequence]] = None,
 ) -> SeedSequence:
     """
     If the passed seed is a SeedSequence object then it is returned as is. If it is

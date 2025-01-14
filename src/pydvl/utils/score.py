@@ -6,7 +6,7 @@ Scorers are the fundamental building block of many data valuation methods. They
 are typically used by the [Utility][pydvl.utils.utility.Utility] class to
 evaluate the quality of a model when trained on subsets of the training data.
 
-Scorers can be constructed in the same way as in scikit-learn: either from 
+Scorers can be constructed in the same way as in scikit-learn: either from
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
 [make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
@@ -17,6 +17,7 @@ data valuation methods (like
 [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]) to
 estimate the number of samples required for a certain quality of approximation.
 """
+
 from typing import Callable, Optional, Protocol, Tuple, Union
 
 import numpy as np
@@ -38,8 +39,7 @@ __all__ = [
 class ScorerCallable(Protocol):
     """Signature for a scorer"""
 
-    def __call__(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        ...
+    def __call__(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float: ...
 
 
 class Scorer:

@@ -147,8 +147,7 @@ logger = logging.getLogger(__name__)
 class StoppingCriterionCallable(Protocol):
     """Signature for a stopping criterion"""
 
-    def __call__(self, result: ValuationResult) -> Status:
-        ...
+    def __call__(self, result: ValuationResult) -> Status: ...
 
 
 class StoppingCriterion(abc.ABC):
@@ -472,7 +471,7 @@ class NoStopping(StoppingCriterion):
         return 0.0
 
     def __str__(self) -> str:
-        return f"NoStopping()"
+        return "NoStopping()"
 
 
 class MinUpdates(StoppingCriterion):
@@ -586,7 +585,7 @@ class HistoryDeviation(StoppingCriterion):
         pin_converged: If `True`, once an index has converged, it is pinned
     """
 
-    _memory: NDArray[np.float_]
+    _memory: NDArray[np.float64]
 
     def __init__(
         self,

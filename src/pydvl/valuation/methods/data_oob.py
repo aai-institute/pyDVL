@@ -86,7 +86,7 @@ class DataOOBValuation(Valuation):
         self.result = ValuationResult.empty(
             algorithm=algorithm_name,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         check_is_fitted(
@@ -97,12 +97,12 @@ class DataOOBValuation(Valuation):
         # This should always be present after fitting
         try:
             estimators = self.model.estimators_
-        except AttributeError as e:
+        except AttributeError:
             raise ValueError(
-                    "The model has to be an sklearn-compatible bagging model, including "
-                    "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
-                    "and ExtraTrees*"
-                    )
+                "The model has to be an sklearn-compatible bagging model, including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "and ExtraTrees*"
+            )
 
         if self.score is None:
             self.score = (
@@ -126,10 +126,8 @@ class DataOOBValuation(Valuation):
             ]
 
         for est, oob_indices in zip(estimators, unsampled_indices):
-            score_array = self.score(
-                y_true=data.y[oob_indices],
-                y_pred=est.predict(data.x[oob_indices]),
-            )
+            subset = data[oob_indices].data()
+            score_array = self.score(y_true=subset.y, y_pred=est.predict(subset.x))
             self.result += ValuationResult(
                 algorithm=algorithm_name,
                 indices=oob_indices,

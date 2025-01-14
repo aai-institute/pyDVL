@@ -33,8 +33,7 @@ class SupervisedScorerCallable(Protocol):
 
     def __call__(
         self, model: SupervisedModel, X: NDArray[Any], y: NDArray[Any]
-    ) -> float:
-        ...
+    ) -> float: ...
 
 
 class SupervisedScorer(Scorer):
@@ -95,7 +94,7 @@ class SupervisedScorer(Scorer):
         self.name = name
 
     def __call__(self, model: SupervisedModel) -> float:
-        return self._scorer(model, self.test_data.x, self.test_data.y)
+        return self._scorer(model, *self.test_data.data())
 
     def __str__(self) -> str:
         return self.name

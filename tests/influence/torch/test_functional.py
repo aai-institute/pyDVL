@@ -9,7 +9,7 @@ from tests.influence.conftest import (
 
 torch = pytest.importorskip("torch")
 import numpy as np
-import torch
+import torch  # noqa: F811
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -27,7 +27,7 @@ from pydvl.influence.torch.functional import (
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
 from .conftest import DATA_OUTPUT_NOISE, linear_mvp_model
-from .test_util import model_data, test_parameters
+from .test_util import test_parameters
 
 
 @pytest.mark.torch
@@ -212,20 +212,20 @@ def test_randomized_nystroem_approximation(dim: int, rank: int):
 
     # Parameters
     input_type = torch.float32
-    mat_vec_device = torch.device("cpu")
+    # mat_vec_device = torch.device("cpu")
 
     # Call the function under test
     result = randomized_nystroem_approximation(mat_vec, dim, rank, input_type)
 
     # Check if the result is an instance of LowRankProductRepresentation
-    assert isinstance(
-        result, LowRankProductRepresentation
-    ), "Result should be an instance of LowRankProductRepresentation"
+    assert isinstance(result, LowRankProductRepresentation), (
+        "Result should be an instance of LowRankProductRepresentation"
+    )
 
     # Reconstruct the approximation of A from the result
     U, Sigma = result.projections, result.eigen_vals
     A_approx = torch.matmul(U, U.t() * Sigma.unsqueeze(-1))
     # Verify that the approximation is close to the original A
-    assert torch.allclose(
-        A, A_approx, atol=1e-5, rtol=1e-3
-    ), "The approximation should be close to the original matrix within a tolerance"
+    assert torch.allclose(A, A_approx, atol=1e-5, rtol=1e-3), (
+        "The approximation should be close to the original matrix within a tolerance"
+    )

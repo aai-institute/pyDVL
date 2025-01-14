@@ -44,7 +44,7 @@ def compute_removal_score(
 
     if len(values) != len(training_data.indices):
         raise ValueError(
-            f"The number of values, {len(values) }, should be equal to the number of data indices, {len(training_data.indices)}"
+            f"The number of values, {len(values)}, should be equal to the number of data indices, {len(training_data.indices)}"
         )
 
     scores = {}

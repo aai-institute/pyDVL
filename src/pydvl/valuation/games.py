@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Iterable, Tuple
+from typing import Tuple
 
 import numpy as np
 import scipy as sp
@@ -66,23 +66,6 @@ class DummyGameDataset(Dataset):
             description=description,
         )
 
-    def get_data(self, indices: Iterable[int] | None = None) -> Tuple[NDArray, NDArray]:
-        """Returns the subsets of the train set instead of the test set.
-
-        Args:
-            indices: Indices into the training data.
-
-        Returns:
-            Subset of the train data.
-        """
-        if indices is None:
-            return self.x, self.y
-        elif not isinstance(indices, np.ndarray):
-            indices = np.array(indices)
-        x = self.x[indices]
-        y = self.y[indices]
-        return x, y
-
 
 class DummyGameUtility(UtilityBase):
     def __init__(self, score):
@@ -96,8 +79,9 @@ class DummyGameUtility(UtilityBase):
             raise ValueError("Utility object has no training data.")
 
         idxs: NDArray[np.int32] = np.array(sample.subset, dtype=np.int32)
+        x, _ = self.training_data.data(idxs)
         try:
-            score: float = self.score(self.training_data.x[idxs])
+            score: float = self.score(x)
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
@@ -169,8 +153,7 @@ class Game(ABC):
         )
 
     @abstractmethod
-    def _score(self, X: NDArray) -> float:
-        ...
+    def _score(self, X: NDArray) -> float: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_players={self.n_players})"
@@ -218,8 +201,8 @@ class SymmetricVotingGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -343,8 +326,8 @@ class AsymmetricVotingGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=self.exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -414,8 +397,8 @@ class ShoesGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -437,8 +420,8 @@ class ShoesGame(Game):
             indices=self.data.indices,
             values=exact_values,
             subsidy=subsidy,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -526,8 +509,8 @@ class AirportGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=self.exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -595,14 +578,14 @@ class MinimumSpanningTreeGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        exact_values = 2 * np.ones_like(self.data.x)
+        exact_values = 2.0 * np.ones_like(self.data.data().x)
         result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -667,8 +650,8 @@ class MinerGame(Game):
             indices=self.data.indices,
             values=values,
             subsidy=subsidy,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -729,6 +712,6 @@ def _exact_a_lb(n_players):
         )
     else:
         raise NotImplementedError(
-            f"Exact A_lb matrix is not implemented for more than 4 players."
+            "Exact A_lb matrix is not implemented for more than 4 players."
         )
     return a_lb.astype(float)

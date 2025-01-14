@@ -211,7 +211,7 @@ class TrainingManager:
                 losses = self.load()
                 print("Cached model found, loading...")
                 return losses
-            except:
+            except:  # noqa
                 print(f"No pretrained model found. Training for {n_epochs} epochs:")
 
         optimizer = Adam(self.model.parameters(), lr=lr)

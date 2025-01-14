@@ -1,4 +1,4 @@
-from typing import Literal, Protocol
+from typing import Protocol
 
 import pandas as pd
 from joblib import Parallel, delayed, parallel_config
@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from pydvl.reporting.scores import compute_removal_score
 from pydvl.utils.types import BaseModel, ensure_seed_sequence
-from pydvl.valuation import Dataset, ModelUtility, SupervisedScorer
+from pydvl.valuation import Dataset, ModelUtility
 from pydvl.valuation.base import Valuation
 
 

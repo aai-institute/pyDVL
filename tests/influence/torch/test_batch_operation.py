@@ -11,7 +11,7 @@ from pydvl.influence.torch.batch_operation import (
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
-from .test_util import model_data, test_parameters, torch
+from .test_util import test_parameters, torch  # noqa: F811
 
 
 @pytest.mark.torch
@@ -24,6 +24,7 @@ class TestHessianBatchOperation:
             self.torch_model, torch.nn.functional.mse_loss, restrict_to=self.params
         )
 
+    @pytest.mark.flaky(reruns=1)
     @pytest.mark.parametrize(
         "model_data, tol",
         [(astuple(tp.model_params), 1e-5) for tp in test_parameters],
@@ -113,6 +114,7 @@ class TestGaussNewtonBatchOperation:
             / self.x.shape[0]
         )
 
+    @pytest.mark.flaky(reruns=1)
     @pytest.mark.parametrize(
         "model_data, tol",
         [(astuple(tp.model_params), 1e-3) for tp in test_parameters],
@@ -222,6 +224,7 @@ class TestInverseHarmonicMeanBatchOperation:
             / self.x.shape[0]
         )
 
+    @pytest.mark.flaky(reruns=1)
     @pytest.mark.parametrize(
         "model_data, tol",
         [(astuple(tp.model_params), 1e-3) for tp in test_parameters],

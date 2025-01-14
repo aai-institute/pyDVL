@@ -32,9 +32,7 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
-@pytest.mark.parametrize(
-    "n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)]
-)
+@pytest.mark.parametrize("n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)])
 @pytest.mark.parametrize("q", [0.0, 0.1, 0.26, 0.49, 0.5, 0.6, 1])
 def test_random_powerset(n, max_subsets, q):
     """Tests frequency of items in sets and frequencies of set sizes.
@@ -144,7 +142,7 @@ def test_random_subset_of_size(n, size, exception):
     "n, size",
     [(10, 3), (1000, 40)],
 )
-def test_random_subset_of_size_stochastic(n, size, seed, seed_alt):
+def test_random_subset_of_size_stochastic_unequal(n, size, seed, seed_alt):
     """
     Test that the same seeds produce the same results, and different seeds produce
     different results for method :func:`random_subset_of_size`.
@@ -159,7 +157,7 @@ def test_random_subset_of_size_stochastic(n, size, seed, seed_alt):
     "n, size",
     [(10, 3), (1000, 40)],
 )
-def test_random_subset_of_size_stochastic(n, size, seed):
+def test_random_subset_of_size_stochastic_equal(n, size, seed):
     """
     Test that the same seeds produce the same results, and different seeds produce
     different results for method :func:`random_subset_of_size`.

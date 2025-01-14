@@ -5,7 +5,7 @@ This is the simplest example of marginal-contribution-based valuation method. It
 defined as:
 
 $$
-v_\text{LOO}(i) = U(I) - U(I \setminus \{i\}),
+v_\text{LOO}(i) = U(I) - U(I \\setminus \\{i\\}),
 $$
 
 where $U$ is the utility function, $I$ is the set of all data points, and $i$ is the
@@ -14,6 +14,7 @@ data point of interest.
 Strictly speaking, LOO can be seen as a [semivalue][pydvl.valuation.semivalue] where the
 coefficients are zero except for $k=|D|-1$,
 """
+
 from __future__ import annotations
 
 from pydvl.valuation.methods.semivalue import SemivalueValuation

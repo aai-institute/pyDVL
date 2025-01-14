@@ -22,13 +22,13 @@ env:
 jobs:
   code-quality:
     name: Lint code and check type hints
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Python 3.8
+    - name: Setup Python 3.9
       uses: ./.github/actions/python
       with:
-        python_version: 3.8
+        python_version: 3.9
     - uses: actions/cache@v4
       with:
         path: ~/.cache/pre-commit
@@ -36,7 +36,7 @@ jobs:
     - name: Lint Code
       run: |
         pre-commit run --all --show-diff-on-failure
-        python build_scripts/run_pylint.py | (pylint-json2html -f jsonextended -o pylint.html)
+        ruff check src/ --fix
       shell: bash
     - name: Generate mypy cache key
       id: generate-mypy-cache-key
@@ -52,16 +52,16 @@ jobs:
 
   docs:
     name: Build Docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         lfs: true
-    - name: Setup Python 3.8
+    - name: Setup Python 3.9
       uses: ./.github/actions/python
       with:
-        python_version: 3.8
+        python_version: 3.9
     - name: Install Pandoc
       uses: r-lib/actions/setup-pandoc@v2
       with:
@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
         group_number: [1, 2, 3, 4]
     name: Run Tests - Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-tests-workflow.yaml
@@ -88,7 +88,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3.8", "3.9", "3.10", "3.11"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
         group_number: [1, 2, 3, 4]
     name: Run Notebook tests -  Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-notebook-tests-workflow.yaml
@@ -114,7 +114,7 @@ jobs:
 
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [docs, group-tests, notebook-tests]
     if: ${{ github.ref == 'refs/heads/develop' }}
     concurrency:
@@ -124,10 +124,10 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Setup Python 3.8
+      - name: Setup Python 3.9
         uses: ./.github/actions/python
         with:
-          python_version: 3.8
+          python_version: 3.9
       - name: Install Pandoc
         uses: r-lib/actions/setup-pandoc@v2
         with:

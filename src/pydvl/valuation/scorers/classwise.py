@@ -68,7 +68,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             to discount the out-of-class score.
         rescale_scores: If set to True, the scores will be denormalized. This is
             particularly useful when the inner score function $a_S$ is calculated by
-            an estimator of the form $\frac{1}{N} \sum_i x_i$.
+            an estimator of the form $\frac{1}{N} \\sum_i x_i$.
         name: Name of the scorer. If not provided, the name of the inner scoring
             function will be prefixed by `classwise `.
 
@@ -99,7 +99,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label: int | None = None
-        self.num_classes = len(np.unique(self.test_data.y))
+        self.num_classes = len(np.unique(self.test_data.data().y))
         self.rescale_scores = rescale_scores
 
     def __str__(self) -> str:
@@ -150,27 +150,22 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             )
 
         scorer = self._scorer
-        label_set_match = self.test_data.y == self.label
+        label_set_match = self.test_data.data().y == self.label
         label_set = np.where(label_set_match)[0]
 
         if len(label_set) == 0:
             return 0, 1 / max(1, self.num_classes - 1)
 
         complement_label_set = np.where(~label_set_match)[0]
-        in_class_score = scorer(
-            model, self.test_data.x[label_set], self.test_data.y[label_set]
-        )
-        out_of_class_score = scorer(
-            model,
-            self.test_data.x[complement_label_set],
-            self.test_data.y[complement_label_set],
-        )
+        in_class_score = scorer(model, *self.test_data.data(label_set))
+        out_of_class_score = scorer(model, *self.test_data.data(complement_label_set))
 
         if rescale_scores:
             # TODO: This can lead to NaN values
             #       We should clearly indicate this to users
-            n_in_class = np.count_nonzero(self.test_data.y == self.label)
-            n_out_of_class = len(self.test_data.y) - n_in_class
+            _, y_test = self.test_data.data()
+            n_in_class = np.count_nonzero(y_test == self.label)
+            n_out_of_class = len(y_test) - n_in_class
             in_class_score *= n_in_class / (n_in_class + n_out_of_class)
             out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)
 

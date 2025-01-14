@@ -43,6 +43,7 @@ together. Empty results are discarded when added to other results. Finally,
 samples random values uniformly.
 
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -204,9 +205,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     """
 
     _indices: NDArray[IndexT]
-    _values: NDArray[np.float_]
+    _values: NDArray[np.float64]
     _counts: NDArray[np.int_]
-    _variances: NDArray[np.float_]
+    _variances: NDArray[np.float64]
     _data: Dataset
     _names: NDArray[NameT]
     _algorithm: str
@@ -218,8 +219,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def __init__(
         self,
         *,
-        values: Sequence[np.float_] | NDArray[np.float_],
-        variances: Sequence[np.float_] | NDArray[np.float_] | None = None,
+        values: Sequence[np.float64] | NDArray[np.float64],
+        variances: Sequence[np.float64] | NDArray[np.float64] | None = None,
         counts: Sequence[np.int_] | NDArray[np.int_] | None = None,
         indices: Sequence[IndexT] | NDArray[IndexT] | None = None,
         data_names: Sequence[NameT] | NDArray[NameT] | None = None,
@@ -237,15 +238,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = np.array(values, copy=False)
+        self._values = np.asarray(values)
         self._variances = (
-            np.zeros_like(values)
-            if variances is None
-            else np.array(variances, copy=False)
+            np.zeros_like(values) if variances is None else np.asarray(variances)
         )
-        self._counts = (
-            np.ones_like(values) if counts is None else np.array(counts, copy=False)
-        )
+        self._counts = np.ones_like(values) if counts is None else np.asarray(counts)
         self._sort_order = None
         self._extra_values = extra_values or {}
 
@@ -296,12 +293,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._sort_order = reverse
 
     @property
-    def values(self) -> NDArray[np.float_]:
+    def values(self) -> NDArray[np.float64]:
         """The values, possibly sorted."""
         return self._values[self._sort_positions]
 
     @property
-    def variances(self) -> NDArray[np.float_]:
+    def variances(self) -> NDArray[np.float64]:
         """Variances of the marginals from which values were computed, possibly sorted.
 
         Note that this is not the variance of the value estimate, but the sample
@@ -311,10 +308,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         return self._variances[self._sort_positions]
 
     @property
-    def stderr(self) -> NDArray[np.float_]:
+    def stderr(self) -> NDArray[np.float64]:
         """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+            NDArray[np.float64], np.sqrt(self.variances / np.maximum(1, self.counts))
         )
 
     @property
@@ -360,16 +357,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
-        ...
+    def __getitem__(self, key: int) -> ValueItem: ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: slice) -> List[ValueItem]: ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -395,16 +389,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: int, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
@@ -579,7 +570,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             other_shared_names = np.take(other_names, both_pos)
 
             if np.any(this_shared_names != other_shared_names):
-                raise ValueError(f"Mismatching names in ValuationResults")
+                raise ValueError("Mismatching names in ValuationResults")
 
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names
@@ -676,9 +667,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         column = column or self._algorithm
         df = pd.DataFrame(
             self._values[self._sort_positions],
-            index=self._names[self._sort_positions]
-            if use_names
-            else self._indices[self._sort_positions],
+            index=(
+                self._names[self._sort_positions]
+                if use_names
+                else self._indices[self._sort_positions]
+            ),
             columns=[column],
         )
         df[column + "_variances"] = self.variances[self._sort_positions]

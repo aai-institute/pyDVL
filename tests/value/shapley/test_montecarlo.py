@@ -82,7 +82,7 @@ def test_games(
         parallel_backend=parallel_backend,
         seed=seed,
         progress=True,
-        **kwargs
+        **kwargs,
     )
 
     exact_values = test_game.shapley_values()
@@ -124,7 +124,7 @@ def test_seed(
         n_jobs=n_jobs,
         parallel_backend=parallel_backend,
         seeds=(seed, seed, seed_alt),
-        **deepcopy(kwargs)
+        **deepcopy(kwargs),
     )
     np.testing.assert_equal(values_1.values, values_2.values)
     with pytest.raises(AssertionError):
@@ -168,7 +168,8 @@ def test_hoeffding_bound_montecarlo(
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
+    "a, b, num_points",
+    [(2, 0, 21)],  # training set will have 0.3 * 21 ~= 6 samples
 )
 @pytest.mark.parametrize("scorer, total_atol", [(squashed_r2, 0.2)])
 @pytest.mark.parametrize(
@@ -222,7 +223,8 @@ def test_linear_montecarlo_with_outlier(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
+    "a, b, num_points, num_groups",
+    [(2, 0, 21, 2)],  # 24*0.3=6 samples in 2 groups
 )
 @pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1)])
 @pytest.mark.parametrize(

@@ -57,7 +57,7 @@ def log_duration(_func=None, *, log_level=logging.DEBUG):
             duration = time() - start_time
             logger.log(
                 log_level,
-                f"Function '{func_name}' completed. " f"Duration: {duration:.2f} sec",
+                f"Function '{func_name}' completed. Duration: {duration:.2f} sec",
             )
             return result
 

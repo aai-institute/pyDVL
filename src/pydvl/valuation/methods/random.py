@@ -3,7 +3,7 @@ This module implements a trivial random valuation method.
 
 """
 
-from pydvl.utils import BaseModel, Seed
+from pydvl.utils import Seed
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult

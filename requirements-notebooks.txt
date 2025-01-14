@@ -1,5 +1,6 @@
 datasets==2.21.0
-distributed==2023.5.0
+dask==2024.8.0
+distributed==2024.8.0
 imblearn
 pillow==10.4.0
 torch==2.2.0

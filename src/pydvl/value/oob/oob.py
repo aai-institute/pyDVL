@@ -6,6 +6,7 @@
 In: Published at ICML 2023
 
 """
+
 from typing import Optional, TypeVar
 
 import numpy as np

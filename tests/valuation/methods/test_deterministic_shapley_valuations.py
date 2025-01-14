@@ -1,4 +1,5 @@
 """Test the deterministic Shapley valuation methods (combinatorial and permutation)."""
+
 import logging
 
 import numpy as np
@@ -115,7 +116,7 @@ def test_linear_with_outlier(
     scorer = SupervisedScorer(scorer_name, data_test, default=0)
 
     outlier_idx = np.random.randint(len(data_train))
-    data_train.y[outlier_idx] -= 100
+    data_train.data().y[outlier_idx] -= 100
 
     utility = ModelUtility(
         LinearRegression(),
@@ -204,7 +205,7 @@ def test_polynomial_with_outlier(
 ):
     (data_train, data_test), _ = polynomial_dataset
     outlier_idx = np.random.randint(len(data_train))
-    data_train.y[outlier_idx] *= 100
+    data_train.data().y[outlier_idx] *= 100
 
     scorer = SupervisedScorer(scorer_name, data_test, default=0)
 
