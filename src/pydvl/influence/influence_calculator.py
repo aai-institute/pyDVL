@@ -357,6 +357,7 @@ class DaskInfluenceCalculator:
             self._validate_dimensions_not_chunked(y)
         else:
             x, y = x_test, y_test
+        assert x is not None and y is not None  # For the type checker's benefit
 
         def func(
             x_test_numpy: NDArray,
@@ -385,7 +386,9 @@ class DaskInfluenceCalculator:
         ):
             row = []
             for x_chunk, y_chunk, chunk_size in zip(
-                x.to_delayed(), y.to_delayed(), x_chunk_sizes  # type:ignore
+                x.to_delayed(),
+                y.to_delayed(),
+                x_chunk_sizes,  # type:ignore
             ):
                 if mode == InfluenceMode.Up:
                     block_shape = (test_chunk_size, chunk_size)

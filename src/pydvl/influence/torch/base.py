@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Dict,
-    Generic,
     Iterable,
     List,
     Optional,
@@ -23,14 +22,11 @@ from torch.utils.data import DataLoader
 from ..base_influence_function_model import ComposableInfluence
 from ..types import (
     Batch,
-    BatchType,
     BilinearForm,
     BlockMapper,
     GradientProvider,
-    GradientProviderType,
     Operator,
     OperatorGradientComposition,
-    TensorType,
 )
 from .util import (
     BlockMode,
@@ -528,7 +524,6 @@ class TensorOperator(Operator[torch.Tensor, OperatorBilinearForm], ABC):
             )
 
     def _apply(self, tensor: torch.Tensor) -> torch.Tensor:
-
         if tensor.ndim == 2:
             return self._apply_to_mat(tensor.to(self.device))
 

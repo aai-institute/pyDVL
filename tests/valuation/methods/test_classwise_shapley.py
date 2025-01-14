@@ -124,7 +124,7 @@ def test_dataset_manual_derivation(train_dataset_manual_derivation) -> Dataset:
     """
     See [classwise.py][pydvl.valuation.methods.classwise] for more details.
     """
-    x_test = train_dataset_manual_derivation.x
+    x_test, _ = train_dataset_manual_derivation.data()
     y_test = np.array([0, 0, 0, 1])
     return Dataset(x_test, y_test)
 

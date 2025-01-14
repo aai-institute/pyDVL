@@ -31,19 +31,19 @@ def dummy_values(values, names):
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
     dummy_values.sort(key="value")
-    assert np.alltrue([it.value for it in dummy_values] == sorted(values))
-    assert np.alltrue(dummy_values.indices == ranks_asc)
-    assert np.alltrue(
+    assert np.all([it.value for it in dummy_values] == sorted(values))
+    assert np.all(dummy_values.indices == ranks_asc)
+    assert np.all(
         [it.value for it in reversed(dummy_values)] == sorted(values, reverse=True)
     )
 
     dummy_values.sort(reverse=True)
-    assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
-    assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
+    assert np.all([it.value for it in dummy_values] == sorted(values, reverse=True))
+    assert np.all(dummy_values.indices == list(reversed(ranks_asc)))
 
     dummy_values.sort(key="index")
-    assert np.alltrue(dummy_values.indices == list(range(len(values))))
-    assert np.alltrue([it.value for it in dummy_values] == values)
+    assert np.all(dummy_values.indices == list(range(len(values))))
+    assert np.all([it.value for it in dummy_values] == values)
 
 
 @pytest.mark.parametrize(
@@ -52,19 +52,19 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
     try:
-        import pandas
+        import pandas  # noqa: F401
 
         df = dummy_values.to_dataframe(use_names=False)
-        assert np.alltrue(df.index.values == ranks_asc)
+        assert np.all(df.index.values == ranks_asc)
 
         df = dummy_values.to_dataframe(use_names=True)
-        assert np.alltrue(df.index.values == sorted_names)
-        assert np.alltrue(df["dummy_valuator"].values == sorted(values))
+        assert np.all(df.index.values == sorted_names)
+        assert np.all(df["dummy_valuator"].values == sorted(values))
 
         dummy_values.sort(reverse=True)
         df = dummy_values.to_dataframe(use_names=True)
-        assert np.alltrue(df.index.values == list(reversed(sorted_names)))
-        assert np.alltrue(df["dummy_valuator"].values == sorted(values, reverse=True))
+        assert np.all(df.index.values == list(reversed(sorted_names)))
+        assert np.all(df["dummy_valuator"].values == sorted(values, reverse=True))
     except ImportError:
         pass
 
@@ -97,7 +97,7 @@ def test_todataframe(ranks_asc, dummy_values):
     assert np.alltrue(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(use_names=True)
-    assert np.alltrue(df.index.values == [it.name for it in dummy_values])
+    assert np.all(df.index.values == [it.name for it in dummy_values])
 
 
 @pytest.mark.parametrize(
@@ -387,7 +387,7 @@ def test_adding_different_indices(
     [
         ([0, 1, 2], np.int64, ["a", "b", "c"], "<U1"),
         ([4, 1, 7], np.int64, [4, 1, 7], np.int64),
-        ([4, 1, 7], np.int64, [4, 1, 7], np.float_),
+        ([4, 1, 7], np.int64, [4, 1, 7], np.float64),
     ],
 )
 def test_types(indices, index_t, data_names, name_t):
@@ -396,7 +396,7 @@ def test_types(indices, index_t, data_names, name_t):
 
     v = ValuationResult(
         indices=np.array(indices, dtype=index_t),
-        values=np.ones(len(indices), dtype=np.float_),
+        values=np.ones(len(indices), dtype=np.float64),
         data_names=np.array(data_names, dtype=name_t),
     )
     assert v.indices.dtype == index_t

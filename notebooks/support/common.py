@@ -456,7 +456,7 @@ def corrupt_imagenet(
     fraction_to_corrupt: float,
     avg_influences: NDArray[np.float64],
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
-    """Given the preprocessed tiny imagenet dataset (or a subset of it), 
+    """Given the preprocessed tiny imagenet dataset (or a subset of it),
     it takes a fraction of the images with the highest influence and (randomly)
     flips their labels.
 
@@ -653,7 +653,7 @@ def load_adult_data() -> pd.DataFrame:
     data_adult = pd.read_csv(
         data_url,
         names=column_names,
-        sep=",\s*",
+        sep=r",\s*",
         engine="python",
         na_values="?",
         dtype=data_types,

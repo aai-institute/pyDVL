@@ -30,7 +30,7 @@ from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
 
-import torch
+import torch  # noqa: F811
 import torch.nn.functional as F
 from pytest_cases import fixture, parametrize, parametrize_with_cases
 from torch import nn

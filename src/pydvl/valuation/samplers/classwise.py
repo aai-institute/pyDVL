@@ -24,9 +24,9 @@ V = TypeVar("V")
 
 
 def roundrobin(
-    batch_generators: Mapping[U, Iterable[V]]
+    batch_generators: Mapping[U, Iterable[V]],
 ) -> Generator[tuple[U, V], None, None]:
-    """Taken samples from batch generators in order until all of them are exhausted.
+    """Take samples from batch generators in order until all of them are exhausted.
 
     This was heavily inspired by the roundrobin recipe
     in the official Python documentation for the itertools package.
@@ -80,9 +80,9 @@ def get_unique_labels(array: NDArray) -> NDArray:
 
 
 class ClasswiseSampler(IndexSampler):
-    """Sample permutations of indices and iterate through each returning
-    increasing subsets, as required for the permutation definition of
-    semi-values.
+    """A sampler that samples elements from a dataset in two steps, based on the labels.
+
+    Used by the classwise Shapley valuation method.
 
     Args:
         in_class: Sampling scheme for elements of a given label.
@@ -111,7 +111,7 @@ class ClasswiseSampler(IndexSampler):
         self.out_of_class.interrupt()
 
     def from_data(self, data: Dataset) -> Generator[list[ClasswiseSample], None, None]:
-        labels = get_unique_labels(data.y)
+        labels = get_unique_labels(data.data().y)
         n_labels = len(labels)
 
         # HACK: the outer sampler is over full subsets of T_{-y_i}
@@ -124,7 +124,7 @@ class ClasswiseSampler(IndexSampler):
         out_of_class_batch_generators = {}
 
         for label in labels:
-            without_label = np.where(data.y != label)[0]
+            without_label = np.where(data.data().y != label)[0]
             out_of_class_batch_generators[label] = self.out_of_class.generate_batches(
                 without_label
             )
@@ -135,12 +135,12 @@ class ClasswiseSampler(IndexSampler):
                     # We make sure that we have at least
                     # `min_elements_per_label` elements per label per sample
                     n_unique_sample_labels = len(
-                        get_unique_labels(data.y[ooc_sample.subset])
+                        get_unique_labels(data.data().y[ooc_sample.subset])
                     )
                     if n_unique_sample_labels < n_labels - 1:
                         continue
 
-                with_label = np.where(data.y == label)[0]
+                with_label = np.where(data.data().y == label)[0]
                 for ic_batch in self.in_class.generate_batches(with_label):
                     batch: list[ClasswiseSample] = []
                     for ic_sample in ic_batch:

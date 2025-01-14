@@ -10,7 +10,7 @@ from sklearn.base import clone
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.types import BaseModel
 from pydvl.valuation.scorers import Scorer
-from pydvl.valuation.types import Sample, SampleT
+from pydvl.valuation.types import SampleT
 
 __all__ = ["ModelUtility"]
 
@@ -201,7 +201,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         if self.training_data is None:
             raise ValueError("No training data provided")
 
-        x_train, y_train = self.training_data.get_data(sample.subset)
+        x_train, y_train = self.training_data.data(sample.subset)
 
         with warnings.catch_warnings():
             if not self.show_warnings:

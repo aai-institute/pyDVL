@@ -86,7 +86,7 @@ class DataOOBValuation(Valuation):
         self.result = ValuationResult.empty(
             algorithm=algorithm_name,
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         # We depart from common practice in pyDVL and perform a runtime check because

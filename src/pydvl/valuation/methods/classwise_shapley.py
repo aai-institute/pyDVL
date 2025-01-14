@@ -68,7 +68,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
-from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.classwise import ClasswiseSampler, get_unique_labels
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
@@ -132,11 +132,17 @@ class ClasswiseShapleyValuation(Valuation):
         self.normalize_values = normalize_values
 
     def fit(self, data: Dataset):
+        # TODO?
+        if isinstance(data, GroupedDataset):
+            raise ValueError(
+                "GroupedDataset is not supported for ClasswiseShapleyValuation"
+            )
+
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
         ensure_backend_has_generator_return()
 
@@ -188,13 +194,12 @@ class ClasswiseShapleyValuation(Valuation):
             raise ValueError("You should call fit before calling _normalize()")
 
         logger.info("Normalizing valuation result.")
-        unique_labels = get_unique_labels(self.utility.training_data.y)
-        self.utility.model.fit(
-            self.utility.training_data.x, self.utility.training_data.y
-        )
+        x, y = self.utility.training_data.data()
+        unique_labels = get_unique_labels(y)
+        self.utility.model.fit(x, y)
 
         for idx_label, label in enumerate(unique_labels):
-            active_elements = self.utility.training_data.y == label
+            active_elements = y == label
             indices_label_set = np.where(active_elements)[0]
             indices_label_set = self.utility.training_data.indices[indices_label_set]
 

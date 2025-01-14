@@ -4,7 +4,7 @@ pandas>=1.3
 scikit-learn>=1.3
 scipy>=1.7.0
 cvxpy>=1.3.0
-joblib @ git+https://github.com/joblib/joblib@c2087dbdeec9824c45822670395a8a0c45be2211
+joblib>=1.4.0
 cloudpickle
 tqdm
 matplotlib

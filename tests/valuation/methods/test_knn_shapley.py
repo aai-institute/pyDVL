@@ -4,7 +4,7 @@ from joblib import parallel_config
 from sklearn import datasets
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.methods import DataShapleyValuation, KNNShapleyValuation
 from pydvl.valuation.samplers import PermutationSampler
 from pydvl.valuation.stopping import MinUpdates
@@ -49,3 +49,17 @@ def test_against_montecarlo(n_jobs, data, montecarlo_results):
     np.testing.assert_allclose(
         results.values, montecarlo_results.values, atol=1e-2, rtol=1e-2
     )
+
+
+def test_unsupported_grouped_dataset(data):
+    train, test = data
+    data_groups = np.zeros(len(train))
+    grouped = GroupedDataset.from_dataset(train, data_groups)
+
+    utility = KNNClassifierUtility(
+        model=KNeighborsClassifier(n_neighbors=1), test_data=test
+    )
+    valuation = KNNShapleyValuation(utility, progress=False)
+
+    with pytest.raises(TypeError, match="GroupedDataset is not supported"):
+        valuation.fit(grouped)

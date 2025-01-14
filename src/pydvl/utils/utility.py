@@ -23,7 +23,7 @@ for testing and for demonstration purposes.
     learning](https://arxiv.org/abs/2107.06336). arXiv preprint arXiv:2107.06336.
 
 """
-import hashlib
+
 import logging
 import warnings
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast

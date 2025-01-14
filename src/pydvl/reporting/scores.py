@@ -23,7 +23,7 @@ def compute_removal_score(
     remove_best: bool = False,
     progress: bool = False,
 ) -> dict[float, float]:
-    r"""Fits model and computes score on the test set after incrementally removing
+    """Fits model and computes score on the test set after incrementally removing
     a percentage of data points from the training set, based on their values.
 
     Args:
@@ -44,7 +44,7 @@ def compute_removal_score(
 
     if len(values) != len(training_data.indices):
         raise ValueError(
-            f"The number of values, {len(values) }, should be equal to the number of data indices, {len(training_data.indices)}"
+            f"The number of values, {len(values)}, should be equal to the number of data indices, {len(training_data.indices)}"
         )
 
     scores = {}

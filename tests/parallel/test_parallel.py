@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from pydvl.parallel import MapReduceJob, RayParallelBackend, init_parallel_backend
+from pydvl.parallel import MapReduceJob, RayParallelBackend
 from pydvl.utils.types import Seed
 
 from ..conftest import num_workers

@@ -3,6 +3,7 @@ DELETE THIS FILE:
 Temporary support for least_core_basic.ipynb until it no longer requires
 compute_removal_score_legacy
 """
+
 from __future__ import annotations
 
 from typing import Iterable
@@ -45,7 +46,7 @@ def compute_removal_score_legacy(
 
     if len(values) != len(u.data.indices):
         raise ValueError(
-            f"The number of values, {len(values) }, should be equal to the number of data indices, {len(u.data.indices)}"
+            f"The number of values, {len(values)}, should be equal to the number of data indices, {len(u.data.indices)}"
         )
 
     scores = {}
