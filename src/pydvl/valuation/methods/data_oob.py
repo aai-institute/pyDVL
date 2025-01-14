@@ -129,10 +129,8 @@ class DataOOBValuation(Valuation):
                 unsampled_indices.append(oob_indices)
 
         for est, oob_indices in zip(estimators, unsampled_indices):
-            score_array = self.score(
-                y_true=data.y[oob_indices],
-                y_pred=est.predict(data.x[oob_indices]),
-            )
+            subset = data[oob_indices].data()
+            score_array = self.score(y_true=subset.y, y_pred=est.predict(subset.x))
             self.result += ValuationResult(
                 algorithm=algorithm_name,
                 indices=oob_indices,

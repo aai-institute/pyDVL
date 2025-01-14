@@ -88,13 +88,13 @@ def test_todataframe(ranks_asc, dummy_values):
     assert "dummy_valuator" in df.columns
     assert "dummy_valuator_variances" in df.columns
     assert "dummy_valuator_counts" in df.columns
-    assert np.alltrue(df.index.values == ranks_asc)
+    assert np.all(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(column="val")
     assert "val" in df.columns
     assert "val_variances" in df.columns
     assert "val_counts" in df.columns
-    assert np.alltrue(df.index.values == ranks_asc)
+    assert np.all(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(use_names=True)
     assert np.all(df.index.values == [it.name for it in dummy_values])
