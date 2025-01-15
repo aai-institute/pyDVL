@@ -1,4 +1,6 @@
-"""Specialized scorer for k-nearest neighbors models."""
+"""
+Specialized scorer for k-nearest neighbors models.
+"""
 
 from typing import cast
 
@@ -6,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.valuation import Dataset
+from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers import SupervisedScorer, SupervisedScorerCallable
 
 
@@ -14,7 +16,7 @@ class KNNClassifierScorer(SupervisedScorer):
     """Scorer for KNN classifier models  based on the KNN likelihood.
 
     Typically, users will not create instances of this class directly but indirectly
-    by using `pydvl.valuation.utility.KNNUtility`.
+    by using [KNNUtility][pydvl.valuation.utility.KNNUtility].
 
     Args:
         test_data: The test data to evaluate the model on.
