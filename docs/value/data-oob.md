@@ -1,4 +1,4 @@
-from valuation.test_interface import datasets---
+---
 title: Data-OOB
 ---
 
@@ -43,7 +43,7 @@ from pydvl.valuation import DataOOBValuation, Dataset
 
 train, test = Dataset(...), Dataset(...)
 model = RandomForestClassifier(...)
-model.fit(train.x, train.y)
+model.fit(*train.data())
 valuation = DataOOBValuation(model)
 valuation.fit(train)
 values = valuation.values()
@@ -75,7 +75,7 @@ train, test = Dataset(...), Dataset(...)
 model = BaggingClassifier(
     estimator=KNeighborsClassifier(n_neighbors=10),
     n_estimators=20)
-model.fit(train.x, train.y)
+model.fit(*train.data())
 valuation = DataOOBValuation(model)
 valuation.fit(train)
 values = valuation.values()
@@ -88,50 +88,40 @@ low_values = values[:int(0.05*len(train))]  # select lowest 5%
 
 ### Off-topic: When not to use bagging as the main model
 
-Here are some guidelines for when bagging might not be beneficial:
+Here are some guidelines for when bagging might unnecessarily increase
+computational cost, or even be detrimental:
 
-1. **Low-Variance Models**: Models like linear regression, support vector
+1. **Low-variance models**: Models like linear regression, support vector
    machines, or other inherently stable algorithms typically have low variance.
-   In such cases, bagging may not provide significant benefits and could even
-   increase computational cost unnecessarily.
+   However, even these models can benefit from bagging in certain scenarios,
+   particularly with noisy data or when there are influential outliers.
 
-2. **When the Model Is Already Highly Regularized**: If a model is regularized
+2. **When the model is already highly regularized**: If a model is regularized
    (e.g., Lasso, Ridge, or Elastic Net), it is already tuned to avoid
-   overfitting and reduce variance. Bagging might be redundant or offer marginal
-   improvements at best.
+   overfitting and reduce variance, so bagging might not provide much of a
+   benefit for its high computational cost.
 
-3. **When Data Is Limited**: Bagging works by creating multiple subsets of the
+3. **When data is limited**: Bagging works by creating multiple subsets of the
    data via bootstrapping. If the dataset is too small, the bootstrap samples
    might overlap significantly or exclude important patterns, reducing the
-   effectiveness of the approach.
-
-4. **When Features Are Highly Correlated**: If features are highly correlated,
-   the individual models trained on different bootstrap samples may end up being
-   too similar. This limits the diversity among the models, reducing the
    effectiveness of bagging.
+
+4. **When features are highly correlated**: If features are highly correlated,
+   the individual models trained on different bootstrap samples may end up being
+   too similar.
    
-5. **For Models That Are Not Easily Overfitted**: If the base model doesn't
-   overfit the data (e.g., nearest neighbors or models with strong pruning
-   mechanisms like heavily regularized decision trees), bagging might not yield
-   substantial variance reduction.
+5. **For inherently stable models**: Models that are naturally resistant to
+   changes in the training data (like nearest neighbors) may not benefit
+   significantly from bagging's variance reduction properties.
 
-6. **When Computational Resources Are Limited**: Bagging increases computational
-   cost because it involves training multiple models. For computationally
-   expensive algorithms or resource-constrained scenarios, bagging may be
-   impractical.
-
-7. **When Interpretability Is Critical**: Bagging produces an ensemble of
+6. **When interpretability is critical**: Bagging produces an ensemble of
    models, which makes the overall model less interpretable compared to a single
-   model. If interpretability is crucial for the application, bagging might not
-   be suitable.
+   model. There are however manye techniques to maintain interpretability, like 
+   partial dependence plots.
 
-8. **When the Model Does Not Benefit from Resampling**: Some models, such as
-   nearest neighbors, depend heavily on the full dataset. Subsampling through
-   bootstrapping can reduce their performance instead of improving it.
-
-9. **When Overfitting Is Already Controlled by Other Means**: If
-   cross-validation, regularization, or pruning is already effectively
-   controlling overfitting, bagging may offer little additional benefit.
+7. **When the bias-variance trade-off favors bias reduction**: If the model's 
+   error is primarily due to bias rather than variance, techniques that address
+   bias (like boosting) might be more appropriate than bagging.
 
 ## Transferring values
 
