@@ -96,7 +96,7 @@ class DataOOBValuation(Valuation):
 
         # This should always be present after fitting
         try:
-            estimators = self.model.estimators_
+            estimators = self.model.estimators_  # type: ignore
         except AttributeError:
             raise ValueError(
                 "The model has to be an sklearn-compatible bagging model, including "
@@ -131,6 +131,7 @@ class DataOOBValuation(Valuation):
             self.result += ValuationResult(
                 algorithm=algorithm_name,
                 indices=oob_indices,
+                names=data[oob_indices].names,
                 values=score_array,
                 counts=np.ones_like(score_array, dtype=data.indices.dtype),
             )
