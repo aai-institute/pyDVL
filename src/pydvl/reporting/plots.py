@@ -12,6 +12,15 @@ from scipy.stats import norm, t
 
 from pydvl.valuation.result import ValuationResult
 
+__all__ = [
+    "plot_ci_array",
+    "plot_ci_values",
+    "plot_shapley",
+    "plot_influence_distribution",
+    "plot_influence_distribution_by_label",
+    "spearman_correlation",
+]
+
 
 @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
 def shaded_mean_std(

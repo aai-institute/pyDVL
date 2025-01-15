@@ -780,6 +780,10 @@ class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
     This is used to counteract class imbalance in the dataset. Note however that
     upsampling or downsampling the dataset can perform equally well or better, while
     being simpler to implement and faster to train.
+
+    !!! Note
+        This class is a left-over from a previous version of the Data-OOB notebook and
+        should probably be removed.
     """
 
     def __init__(

@@ -9,7 +9,7 @@ percentage of data removed. By repeating this process multiple times, we can get
 estimate of the stability of the valuation method.
 
 The experiment can be run in parallel with the
-[run_removal_experiment][pydvl.support.removal_experiment.run_removal_experiment]
+[run_removal_experiment][pydvl.reporting.point_removal.run_removal_experiment]
 function. In order to call it, we need to define 3 types of factories:
 
 1. A factory that returns a train-test split of the data given a random state
