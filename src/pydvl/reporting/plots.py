@@ -216,9 +216,7 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
     for i, a in enumerate(vv):
         for j, b in enumerate(vv):
-            from scipy.stats._stats_py import SpearmanrResult
-
-            spearman: SpearmanrResult = sp.stats.spearmanr(
+            spearman = sp.stats.spearmanr(
                 list(a.keys())[:num_values], list(b.keys())[:num_values]
             )
             r[i][j] = (
