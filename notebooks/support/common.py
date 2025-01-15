@@ -776,6 +776,10 @@ class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
     """
     A wrapper that tunes the decision threshold of a binary classifier to maximize
     a given metric, using cross-fitting on the training data.
+
+    This is used to counteract class imbalance in the dataset. Note however that
+    upsampling or downsampling the dataset can perform equally well or better, while
+    being simpler to implement and faster to train.
     """
 
     def __init__(

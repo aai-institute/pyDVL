@@ -174,8 +174,7 @@ class Dataset:
         indices.
 
         This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
-        retrieve subsets of the data from indices. It is typically **not needed in
-        valuation algorithms**.
+        retrieve subsets of the data from indices.
 
         Args:
             indices: Optional indices that will be used to select points from
