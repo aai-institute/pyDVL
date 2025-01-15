@@ -116,7 +116,7 @@ def plot_ci_array(
             else np.arange(n, dtype=str)
         ),
     )
-    dummy.sort(key="value")
+    dummy.sort(key="index")
 
     return plot_ci_values(
         dummy,
