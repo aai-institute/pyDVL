@@ -192,6 +192,20 @@ def test_getitem_returns_correct_dataset(idx, expected_x, expected_y, expected_n
 
 
 @pytest.mark.parametrize(
+    "idx",
+    [[0], slice(0, 2), [0, 2]],
+)
+def test_dataset_slice_data_access(idx):
+    dataset = Dataset(
+        x=np.array([[1, 2], [3, 4], [5, 6]]),
+        y=np.array([0, 1, 0]),
+        data_names=["a", "b", "c"],
+    )
+    assert np.array_equal(dataset[idx].data().x, dataset.data().x[idx])
+    assert np.array_equal(dataset[idx].data().y, dataset.data().y[idx])
+
+
+@pytest.mark.parametrize(
     "x, y, feature_names, target_names, multi_output, expected_exception",
     [
         (

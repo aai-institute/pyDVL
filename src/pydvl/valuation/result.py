@@ -246,22 +246,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._sort_order = None
         self._extra_values = extra_values or {}
 
-        # Yuk...
-        if data_names is None:
-            if indices is not None:
-                self._names = np.copy(indices)
-            else:
-                self._names = np.arange(len(self._values), dtype=np.int_)
-        else:
-            self._names = np.array(data_names, copy=True)
-
-        if len(np.unique(self._names)) != len(self._names):
-            raise ValueError("Data names must be unique")
-
-        if indices is None:
-            self._indices = np.arange(len(self._values), dtype=np.int_)
-        else:
-            self._indices = np.asarray(indices)
+        self._indices = self._create_indices_array(indices, len(self._values))
+        self._names = self._create_names_array(data_names, self._indices)
 
         self._positions = {idx: pos for pos, idx in enumerate(self._indices)}
 
@@ -325,7 +311,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def stderr(self) -> NDArray[np.float64]:
         """Standard errors of the value estimates, possibly sorted."""
         return cast(
-            NDArray[np.float64], np.sqrt(self._variances / np.maximum(1, self.counts))
+            NDArray[np.float64], np.sqrt(self.variances / np.maximum(1, self.counts))
         )
 
     @property
@@ -562,10 +548,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         # taken from the result with the name.
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
-                other._names = other._names.astype(self._names.dtype)
                 logger.warning(
                     f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
                 )
+                other._names = other._names.astype(self._names.dtype)
             else:
                 raise TypeError(
                     f"Cannot cast ValuationResult.names from "
@@ -575,8 +561,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         both_pos = np.intersect1d(this_pos, other_pos)
 
         if len(both_pos) > 0:
-            this_names: NDArray = np.empty_like(indices, dtype=object)
-            other_names: NDArray = np.empty_like(indices, dtype=object)
+            this_names: NDArray = np.empty_like(indices, dtype=np.str_)
+            other_names: NDArray = np.empty_like(indices, dtype=np.str_)
             this_names[this_pos] = self._names
             other_names[other_pos] = other._names
 
@@ -675,9 +661,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 DataFrame's index.
 
         Returns:
-            A dataframe with two columns, one for the values, with name
-                given as explained in `column`, and another with standard errors for
-                approximate algorithms. The latter will be named `column+'_stderr'`.
+            A dataframe with three columns: `name`, `name_variances` and
+                `name_counts`, where `name` is the value of argument `column`.
         """
         column = column or self._algorithm
         df = pd.DataFrame(
@@ -689,7 +674,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             ),
             columns=[column],
         )
-        df[column + "_stderr"] = self.stderr[self._sort_positions]
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod
@@ -791,15 +777,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Returns:
             Object with the results.
         """
-        if indices is None:
-            indices = np.arange(n_samples, dtype=np.int_)
-        else:
-            indices = np.array(indices, dtype=np.int_)
-
-        if data_names is None:
-            data_names = np.array(indices)
-        else:
-            data_names = np.array(data_names)
+        indices = cls._create_indices_array(indices, n_samples)
+        data_names = cls._create_names_array(data_names, indices)
 
         return cls(
             algorithm=algorithm,
@@ -810,3 +789,30 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
         )
+
+    @staticmethod
+    def _create_indices_array(
+        indices: Sequence[IndexT] | NDArray[IndexT] | None, n_samples: int
+    ) -> NDArray[IndexT]:
+        if indices is None:
+            index_array: NDArray[IndexT] = np.arange(n_samples, dtype=np.int_)
+        elif isinstance(indices, np.ndarray):
+            index_array = indices.copy()
+        else:
+            index_array = np.asarray(indices)
+
+        return index_array
+
+    @staticmethod
+    def _create_names_array(
+        data_names: Sequence[NameT] | NDArray[NameT] | None, indices: NDArray[IndexT]
+    ) -> NDArray[NameT]:
+        if data_names is None:
+            names = np.array(indices, copy=True, dtype=np.str_)
+        else:
+            names = np.array(data_names, copy=True)
+
+        if len(np.unique(names)) != len(names):
+            raise ValueError("Data names must be unique")
+
+        return names

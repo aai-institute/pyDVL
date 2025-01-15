@@ -149,7 +149,9 @@ class Dataset:
             else self._indices.astype(np.str_)
         )
 
-    def __getitem__(self, idx: int | slice | Sequence[int]) -> Dataset:
+    def __getitem__(
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+    ) -> Dataset:
         if isinstance(idx, int):
             idx = [idx]
         return Dataset(
@@ -174,8 +176,7 @@ class Dataset:
         indices.
 
         This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
-        retrieve subsets of the data from indices. It is typically **not needed in
-        valuation algorithms**.
+        retrieve subsets of the data from indices.
 
         Args:
             indices: Optional indices that will be used to select points from
@@ -463,7 +464,9 @@ class GroupedDataset(Dataset):
     def __len__(self):
         return len(self._indices)
 
-    def __getitem__(self, idx: int | slice | Sequence[int]) -> GroupedDataset:
+    def __getitem__(
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+    ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
         return GroupedDataset(

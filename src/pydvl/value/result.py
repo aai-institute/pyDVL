@@ -551,10 +551,10 @@ class ValuationResult(
         # taken from the result with the name.
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
-                other._names = other._names.astype(self._names.dtype)
                 logger.warning(
                     f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
                 )
+                other._names = other._names.astype(self._names.dtype)
             else:
                 raise TypeError(
                     f"Cannot cast ValuationResult.names from "

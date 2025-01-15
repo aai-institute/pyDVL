@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.status import Status
-from pydvl.valuation import ValuationResult
+from pydvl.value.result import ValuationResult
 
 
 @pytest.fixture

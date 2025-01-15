@@ -11,9 +11,10 @@ from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
+    "BaggingModel",
     "BaseModel",
     "IndexT",
-    "LossFunction",
+    "PointwiseScore",
     "MapFunction",
     "NameT",
     "ReduceFunction",
@@ -36,7 +37,7 @@ class ReduceFunction(Protocol[R]):
     def __call__(self, *args: Any, **kwargs: Any) -> R: ...
 
 
-class LossFunction(Protocol):
+class PointwiseScore(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
 
 
@@ -89,6 +90,35 @@ class SupervisedModel(Protocol):
 
         Returns:
             The score of the model on `(x, y)`
+        """
+        pass
+
+
+@runtime_checkable
+class BaggingModel(Protocol):
+    """Any model with the attributes `n_estimators` and `max_samples` is considered a
+    bagging model."""
+
+    n_estimators: int
+    max_samples: float
+
+    def fit(self, x: NDArray, y: NDArray | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+    def predict(self, x: NDArray) -> NDArray:
+        """Compute predictions for the input
+
+        Args:
+            x: Independent variables for which to compute predictions
+
+        Returns:
+            Predictions for the input
         """
         pass
 

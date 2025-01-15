@@ -10,7 +10,16 @@ from matplotlib.axes import Axes
 from numpy.typing import NDArray
 from scipy.stats import norm, t
 
-from pydvl.value import ValuationResult
+from pydvl.valuation.result import ValuationResult
+
+__all__ = [
+    "plot_ci_array",
+    "plot_ci_values",
+    "plot_shapley",
+    "plot_influence_distribution",
+    "plot_influence_distribution_by_label",
+    "spearman_correlation",
+]
 
 
 @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
@@ -104,7 +113,7 @@ def plot_ci_array(
     means = np.mean(data, axis=0)
     variances = np.var(data, axis=0, ddof=1)
 
-    dummy = ValuationResult[np.int_, np.object_](
+    dummy = ValuationResult(
         algorithm="dummy",
         values=means,
         variances=variances,
@@ -116,11 +125,13 @@ def plot_ci_array(
             else np.arange(n, dtype=str)
         ),
     )
+    dummy.sort(key="index")
 
     return plot_ci_values(
         dummy,
         level=level,
         type=type,
+        abscissa=abscissa,
         mean_color=mean_color,
         shade_color=shade_color,
         ax=ax,
@@ -132,7 +143,7 @@ def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
-    abscissa: Optional[Sequence[str]] = None,
+    abscissa: Optional[Sequence[Any]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
@@ -140,12 +151,11 @@ def plot_ci_values(
 ) -> plt.Axes:
     """Plot values and a confidence interval.
 
-    Uses `values.data_names` for the x-axis.
-
     Supported intervals are based on the normal and the t distributions.
 
     Args:
-        values: The valuation result.
+        values: The valuation result. The object must be sorted by calling
+            `ValuationResult.sort()`.
         level: The confidence level.
         type: The type of confidence interval to use. If "auto", uses "norm" if
             the minimum number of updates for all indices is greater than 30,
@@ -161,6 +171,7 @@ def plot_ci_values(
     Returns:
         The matplotlib axes.
     """
+    assert values._sort_order is not None, "Values must be sorted first."
 
     ppfs = {
         "normal": norm.ppf,
@@ -180,7 +191,8 @@ def plot_ci_values(
         ) from None
 
     if abscissa is None:
-        abscissa = [str(i) for i, _ in enumerate(values)]
+        abscissa = range(len(values))
+
     bound = score * values.stderr
 
     if ax is None:
@@ -194,6 +206,7 @@ def plot_ci_values(
         color=shade_color,
     )
     ax.plot(abscissa, values.values, color=mean_color, **kwargs)
+    ax.set_xlim(left=min(abscissa), right=max(abscissa))
     return ax
 
 
@@ -212,9 +225,7 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
     for i, a in enumerate(vv):
         for j, b in enumerate(vv):
-            from scipy.stats._stats_py import SpearmanrResult
-
-            spearman: SpearmanrResult = sp.stats.spearmanr(
+            spearman = sp.stats.spearmanr(
                 list(a.keys())[:num_values], list(b.keys())[:num_values]
             )
             r[i][j] = (
