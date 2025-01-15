@@ -1,3 +1,26 @@
+"""
+This module implements the standard point removal experiment in data valuation.
+
+It is  a method to evaluate the usefulness and stability of a valuation method. The idea
+is to remove a percentage of the data points from the training set based on their
+valuation, and then retrain the model and evaluate it on a test set. This is done for a
+range of removal percentages, and the performance is measured as a function of the
+percentage of data removed. By repeating this process multiple times, we can get an
+estimate of the stability of the valuation method.
+
+The experiment can be run in parallel with the
+[run_removal_experiment][pydvl.support.removal_experiment.run_removal_experiment]
+function. In order to call it, we need to define 3 types of factories:
+
+1. A factory that returns a train-test split of the data given a random state
+2. A factory that returns a utility that evaluates a model on a given test set.
+   This is used for the performance evaluation. The model need not be the same
+   as the one used for the valuation.
+3. A factory returning a valuation method. The training set is passed to the
+   factory, in case the valuation needs to train something. E.g. for Data-OOB
+   we need the bagging model to be fitted before the valuation is computed.
+"""
+
 from __future__ import annotations
 
 from typing import Protocol
@@ -11,6 +34,14 @@ from pydvl.reporting.scores import compute_removal_score
 from pydvl.utils.types import BaseModel, ensure_seed_sequence
 from pydvl.valuation import Dataset, ModelUtility
 from pydvl.valuation.base import Valuation
+
+__all__ = [
+    "DataSplitFactory",
+    "ModelFactory",
+    "UtilityFactory",
+    "ValuationFactory",
+    "run_removal_experiment",
+]
 
 
 class ModelFactory(Protocol):
@@ -41,16 +72,23 @@ def removal_job(
     random_state: int,
 ) -> tuple[dict, dict]:
     """
+    A job that computes the scores for a single run of the removal experiment.
 
     Args:
-        data_factory:
-        valuation_factory:
-        utility_factory:
-        removal_percentages:
-        random_state:
+        data_factory: A callable that returns a tuple of Datasets (train, test) to use
+            in the experiment.
+        valuation_factory: A callable that returns a Valuation object given a train
+            dataset and a random state. Computing values with this object is the goal
+            of the experiment
+        utility_factory: A callable that returns a ModelUtility object given a test
+            dataset and a random state. This object is used to evaluate the performance
+            of the valuation method by removing data points from the training set and
+            retraining the model, then scoring it on the test set.
+        removal_percentages: As sequence of percentages of data to remove from the
+            training set.
+        random_state: The random state to use in the experiment.
     Returns:
-
-
+        A tuple of dictionaries with the scores for the low and high value removals.
     """
 
     train, test = data_factory(random_state=random_state)
@@ -86,8 +124,8 @@ def run_removal_experiment(
     valuation_factories: list[ValuationFactory],
     utility_factory: UtilityFactory,
     removal_percentages: NDArray,
-    n_runs: int = 20,
-    n_jobs: int = 32,
+    n_runs: int = 1,
+    n_jobs: int = 1,
     random_state: int | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Run the sample removal experiment.
@@ -116,13 +154,15 @@ def run_removal_experiment(
         valuation_factories: A list of callables that return Valuation objects given
             a model, train data, and random state. The training data is typically not
             needed for construction, but bagging models may require it
-        utility_factory: A callable that returns a ModelUtility given test
-            data, potentially with a scoring function
+        utility_factory: A callable that returns a ModelUtility object given a test
+            dataset and a random state. This object is used to evaluate the performance
+            of the valuation method by removing data points from the training set and
+            retraining the model, then scoring it on the test set.
         removal_percentages: The percentage of data to remove from the training set.
             This should be a list of floats between 0 and 1.
-        n_runs: The number of repetitions of the experiment
-        n_jobs: The number of parallel jobs to use
-        random_state: The initial random state
+        n_runs: The number of repetitions of the experiment.
+        n_jobs: The number of parallel jobs to use.
+        random_state: The initial random state.
     Returns:
         A tuple of DataFrames with the scores for the low and high value removals
     """

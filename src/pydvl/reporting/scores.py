@@ -23,11 +23,12 @@ def compute_removal_score(
     remove_best: bool = False,
     progress: bool = False,
 ) -> dict[float, float]:
-    """Fits model and computes score on the test set after incrementally removing
+    """Fits a model and computes its score on a test set after incrementally removing
     a percentage of data points from the training set, based on their values.
 
     Args:
-        u: Utility object with model, data, and scoring function.
+        u: Utility object with model, test data, and scoring function.
+        training_data: Dataset from which to remove data points.
         values: Data values of data instances in the training set.
         percentages: Sequence of removal percentages.
         remove_best: If True, removes data points in order of decreasing valuation.
@@ -42,9 +43,9 @@ def compute_removal_score(
     if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
         raise ValueError("All percentages should be in the range [0.0, 1.0)")
 
-    if len(values) != len(training_data.indices):
+    if len(values) != len(training_data):
         raise ValueError(
-            f"The number of values, {len(values)}, should be equal to the number of data indices, {len(training_data.indices)}"
+            f"The number of values, {len(values)}, should be equal to the number of data points, {len(training_data)}"
         )
 
     scores = {}
