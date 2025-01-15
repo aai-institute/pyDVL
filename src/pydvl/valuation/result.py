@@ -561,8 +561,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         both_pos = np.intersect1d(this_pos, other_pos)
 
         if len(both_pos) > 0:
-            this_names: NDArray = np.empty_like(indices, dtype=object)
-            other_names: NDArray = np.empty_like(indices, dtype=object)
+            this_names: NDArray = np.empty_like(indices, dtype=np.str_)
+            other_names: NDArray = np.empty_like(indices, dtype=np.str_)
             this_names[this_pos] = self._names
             other_names[other_pos] = other._names
 
@@ -808,7 +808,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         data_names: Sequence[NameT] | NDArray[NameT] | None, indices: NDArray[IndexT]
     ) -> NDArray[NameT]:
         if data_names is None:
-            names = np.array(indices, copy=True, dtype=object)
+            names = np.array(indices, copy=True, dtype=np.str_)
         else:
             names = np.array(data_names, copy=True)
 
