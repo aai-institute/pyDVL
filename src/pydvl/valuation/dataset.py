@@ -149,7 +149,9 @@ class Dataset:
             else self._indices.astype(np.str_)
         )
 
-    def __getitem__(self, idx: int | slice | Sequence[int]) -> Dataset:
+    def __getitem__(
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+    ) -> Dataset:
         if isinstance(idx, int):
             idx = [idx]
         return Dataset(
@@ -462,7 +464,9 @@ class GroupedDataset(Dataset):
     def __len__(self):
         return len(self._indices)
 
-    def __getitem__(self, idx: int | slice | Sequence[int]) -> GroupedDataset:
+    def __getitem__(
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+    ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
         return GroupedDataset(
