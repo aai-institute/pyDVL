@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added `run_removal_experiment` for easy removal experiments
+  [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Refactor Classwise Shapley valuation with the interfaces and sampler
   architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616)
 - Refactor KNN Shapley values with the new sampler architecture
@@ -41,6 +43,8 @@
 
 ### Fixed
 
+- Fixed the analysis of the adult dataset in the Data-OOB notebook
+  [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
   as the old aliases are removed in NumPy 2.0
   [PR #604](https://github.com/aai-institute/pyDVL/pull/604)
@@ -67,6 +71,8 @@
 - Dropped black, isort and pylint from the CI pipeline, in favour of ruff
   [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
 - **Breaking Changes**
+  - Changed `DataOOBValuation` to only accept bagged models
+    [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
   - Dropped support for python 3.8 after EOL
     [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
   - Rename parameter `hessian_regularization` of `DirectInfluence`
