@@ -10,5 +10,5 @@ class DataShapleyValuation(SemivalueValuation):
 
     algorithm_name = "Data-Shapley"
 
-    def coefficient(self, n: int, k: int) -> float:
-        return float(1 / math.comb(n - 1, k) / n)
+    def coefficient(self, n: int, k: int, other: float) -> float:
+        return other / math.comb(n - 1, k) / n

@@ -59,6 +59,9 @@
 
 ### Changed
 
+- Changed the way semi-value coefficients are composed with sampler weights in
+  order to avoid `OverflowError` for very small or large values
+  [PR #639](https://github.com/aai-institute/pyDVL/pull/639)
 - Uniformly distribute test points across processes for KNNShapley. Fail for
   `GroupedDataset` [PR #632](https://github.com/aai-institute/pyDVL/pull/632)
 - Introduced the concept of logical vs data indices for `Dataset`, and
