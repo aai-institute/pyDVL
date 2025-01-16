@@ -185,7 +185,7 @@ class IndexSampler(ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> EvaluationStrategy:
         """Returns the strategy for this sampler."""
         ...  # return SomeEvaluationStrategy(self)
@@ -242,7 +242,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         self,
         sampler: SamplerT,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ):
         self.utility = utility
         self.n_indices = (
@@ -256,7 +256,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
             if coefficient is not None:
 
                 def coefficient_fun(n: int, subset_len: int) -> float:
-                    return sampler.weight(n, subset_len) * coefficient(n, subset_len)
+                    return coefficient(n, subset_len, sampler.weight(n, subset_len))
 
                 self.coefficient = coefficient_fun
             else:

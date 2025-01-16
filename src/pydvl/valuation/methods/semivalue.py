@@ -84,12 +84,21 @@ class SemivalueValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
 
     @abstractmethod
-    def coefficient(self, n: int, k: int) -> float:
-        """Computes the coefficient for a given subset size.
+    def coefficient(self, n: int, k: int, other: float) -> float:
+        """Returns the function computing the final coefficient to be used in the
+        semi-value valuation.
+
+        The semi-value coefficient is a function of the number of elements in the set,
+        and the size of the subset for which the coefficient is being computed.
+        Coefficients can be very large or very small, so that simply multiplying them
+        with the rest of the factors in a semi-value computation can lead to overflow or
+        underflow. To avoid this, we pass the other factors to this method, and delegate
+        the choice of whether to multiply or divide to the implementation.
 
         Args:
             n: Total number of elements in the set.
             k: Size of the subset for which the coefficient is being computed
+            other: The other factors in the computation.
         """
         ...
 

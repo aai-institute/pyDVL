@@ -43,9 +43,9 @@ class LOOValuation(SemivalueValuation):
             progress=progress,
         )
 
-    def coefficient(self, n: int, k: int) -> float:
+    def coefficient(self, n: int, k: int, other: float) -> float:
         """
         This is never actually used to filter out sets, because the LOOSampler returns
         only complements of {idx}, but it is required by the abstract class.
         """
-        return 1 if k == n - 1 else 0
+        return other if k == n - 1 else 0

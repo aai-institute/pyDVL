@@ -54,7 +54,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> MSREvaluationStrategy:
         return MSREvaluationStrategy(self, utility, coefficient)
 
@@ -64,10 +64,9 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
 
     The MSR evaluation strategy makes one utility evaluation per sample but generates
     `n_indices` many updates from it. The updates will be used to update two running
-    means that will later be combined into on final value. We send the
-    `ValueUpdate.kind` field to `ValueUpdateKind.POSITVE` or `ValueUpdateKind.NEGATIVE`
+    means that will later be combined into a final value. We send the
+    `ValueUpdate.kind` field to `ValueUpdateKind.POSITIVE` or `ValueUpdateKind.NEGATIVE`
     to decide which of the two running means is going to be updated.
-
     """
 
     def process(
