@@ -602,12 +602,16 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
 
     def decorator(fun: Callable) -> Callable:
         @wraps(fun)
-        def wrapper(*args, _force_rebuild: bool = False, **kwargs) -> Any:
+        def wrapper(
+            *args, _silent: bool = False, _force_rebuild: bool = False, **kwargs
+        ) -> Any:
             try:
                 with path.open("rb") as fd:
-                    print(f"Found cached file: {path.name}.")
+                    if not _silent:
+                        print(f"Found cached file: {path.name}.")
                     if _force_rebuild:
-                        print("Ignoring and rebuilding...")
+                        if not _silent:
+                            print("Ignoring and rebuilding...")
                         raise FileNotFoundError
                     return pickle.load(fd)
             except (FileNotFoundError, EOFError, pickle.UnpicklingError):
@@ -680,7 +684,10 @@ def load_adult_data_raw() -> pd.DataFrame:
 
 
 def load_adult_data(
-    train_size: float = 0.7, subsample: float = 1.0, random_state: Optional[int] = None
+    train_size: float = 0.7,
+    subsample: float = 1.0,
+    random_state: Optional[int] = None,
+    **kwargs,
 ) -> Tuple[Dataset, Dataset]:
     """
     Loads the adult dataset from UCI and performs some preprocessing.
@@ -700,7 +707,7 @@ def load_adult_data(
         A tuple with training and test datasets.
     """
 
-    df = load_adult_data_raw()
+    df = load_adult_data_raw(**kwargs)
     if subsample < 1:
         df = df.sample(frac=subsample, random_state=random_state)
     column_names = df.columns.tolist()
