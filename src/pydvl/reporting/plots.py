@@ -276,7 +276,10 @@ def plot_shapley(
     if ax is None:
         _, ax = plt.subplots()
 
-    yerr = norm.ppf(1 - level / 2) * df[f"{prefix}_stderr"]
+    stderr = np.sqrt(
+        df[f"{prefix}_variances"] / np.maximum(1.0, df[f"{prefix}_counts"])
+    )
+    yerr = norm.ppf(1 - level / 2) / stderr
 
     ax.errorbar(x=df.index, y=df[prefix], yerr=yerr, fmt="o", capsize=6)
     ax.set_xlabel(xlabel or "")
