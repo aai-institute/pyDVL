@@ -222,7 +222,7 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> EvaluationStrategy:
         raise NotImplementedError("This is not a semi-value sampler.")
 

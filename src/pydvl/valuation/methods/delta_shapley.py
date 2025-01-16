@@ -38,5 +38,5 @@ class DeltaShapleyValuation(SemivalueValuation):
         )
         super().__init__(utility, sampler, is_done, progress=progress)
 
-    def coefficient(self, n: int, k: int) -> float:
-        return float(1 / math.comb(n, k))
+    def coefficient(self, n: int, k: int, other: float) -> float:
+        return other / math.comb(n, k)

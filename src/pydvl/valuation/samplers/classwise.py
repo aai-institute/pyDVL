@@ -179,6 +179,6 @@ class ClasswiseSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
         return self.in_class.make_strategy(utility, coefficient)

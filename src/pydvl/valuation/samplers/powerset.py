@@ -179,7 +179,7 @@ class PowersetSampler(IndexSampler, ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> PowersetEvaluationStrategy:
         return PowersetEvaluationStrategy(self, utility, coefficient)
 
@@ -236,7 +236,7 @@ class LOOSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> EvaluationStrategy:
         return LOOEvaluationStrategy(self, utility, coefficient)
 
@@ -251,7 +251,7 @@ class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler, ValueUpdate]):
         self,
         sampler: LOOSampler,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         assert utility.training_data is not None

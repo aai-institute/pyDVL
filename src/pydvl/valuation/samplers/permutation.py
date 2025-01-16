@@ -22,7 +22,7 @@ import logging
 import math
 from copy import copy
 from itertools import permutations
-from typing import Callable, cast
+from typing import Callable
 
 import numpy as np
 
@@ -32,7 +32,6 @@ from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
-    IndexT,
     NullaryPredicate,
     Sample,
     SampleBatch,
@@ -98,7 +97,7 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -152,7 +151,7 @@ class PermutationEvaluationStrategy(
         self,
         sampler: PermutationSampler,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: Callable[[int, int, float], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         self.truncation = copy(sampler.truncation)
@@ -168,8 +167,6 @@ class PermutationEvaluationStrategy(
             curr = prev = self.utility(None)
             permutation = sample.subset
             for i, idx in enumerate(permutation):
-                # FIXME: type checker claims this could be Any (?)
-                idx = cast(IndexT, idx)
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
