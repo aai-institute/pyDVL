@@ -54,15 +54,14 @@ class TorchCNNModel(SupervisedModel):
         self.device = device
         self.model = nn.Sequential(
             nn.Conv2d(
-                out_channels=8, in_channels=1, kernel_size=(3, 3), padding="same"
+                out_channels=8, in_channels=1, kernel_size=(5, 5), padding="same"
             ),
             nn.Conv2d(
                 out_channels=4, in_channels=8, kernel_size=(3, 3), padding="same"
             ),
             nn.MaxPool2d(kernel_size=2),
             nn.Flatten(),
-            nn.Linear(in_features=64, out_features=32),
-            nn.Linear(in_features=32, out_features=10),
+            nn.Linear(in_features=64, out_features=10),
             nn.Softmax(dim=1),
         )
         self.loss = nn.CrossEntropyLoss()
