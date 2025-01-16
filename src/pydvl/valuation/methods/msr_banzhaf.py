@@ -66,8 +66,9 @@ class MSRBanzhafValuation(SemivalueValuation):
             progress=progress,
         )
 
-    def coefficient(self, n: int, k: int) -> float:
-        return 1.0
+    def coefficient(self, n: int, k: int, other: float) -> float:
+        # Coefficient is 1.0 for all n and k
+        return other
 
     def fit(self, data: Dataset) -> Self:
         """Calculate the MSR Banzhaf valuation on a dataset.
