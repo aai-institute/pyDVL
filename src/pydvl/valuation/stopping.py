@@ -126,6 +126,7 @@ from typing import Callable, Protocol, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.stats import spearmanr
 
 from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
@@ -133,12 +134,13 @@ from pydvl.valuation.result import ValuationResult
 __all__ = [
     "make_criterion",
     "AbsoluteStandardError",
-    "StoppingCriterion",
+    "HistoryDeviation",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
     "MaxTime",
-    "HistoryDeviation",
+    "RankCorrelation",
+    "StoppingCriterion",
 ]
 
 logger = logging.getLogger(__name__)
@@ -638,3 +640,86 @@ class HistoryDeviation(StoppingCriterion):
 
     def __str__(self) -> str:
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
+
+
+class RankCorrelation(StoppingCriterion):
+    r"""A check for stability of Spearman correlation between checks.
+
+    When the change in rank correlation between two successive iterations is
+    below a given threshold, the computation is terminated.
+    The criterion computes the Spearman correlation between two successive iterations.
+    The Spearman correlation uses the ordering indices of the given values and
+    correlates them. This means it focuses on the order of the elements instead of their
+    exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
+    converge), the criterion stops the algorithm.
+
+    This criterion is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
+
+    Args:
+        rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
+        modify_result: If `True`, the status of the input
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
+        burn_in: The minimum number of iterations before checking for
+            convergence. This is required because the first correlation is
+            meaningless.
+
+    !!! tip "Added in 0.9.0"
+    """
+
+    def __init__(
+        self,
+        rtol: float,
+        burn_in: int,
+        modify_result: bool = True,
+    ):
+        super().__init__(modify_result=modify_result)
+        if rtol <= 0 or rtol >= 1:
+            raise ValueError("rtol must be in (0, 1)")
+        self.rtol = rtol
+        self.burn_in = burn_in
+        self._memory: NDArray[np.float64] | None = None
+        self._corr = 0.0
+        self._completion = 0.0
+        self._iterations = 0
+
+    def _check(self, r: ValuationResult) -> Status:
+        self._iterations += 1
+        if self._memory is None:
+            self._memory = r.values.copy()
+            self._converged = np.full(len(r), False)
+            return Status.Pending
+
+        corr = spearmanr(self._memory, r.values)[0]
+        self._memory = r.values.copy()
+        self._update_completion(corr)
+        if (
+            np.isclose(corr, self._corr, rtol=self.rtol)
+            and self._iterations > self.burn_in
+        ):
+            self._converged = np.full(len(r), True)
+            logger.debug(
+                f"RankCorrelation has converged with {corr=} in iteration {self._iterations}"
+            )
+            return Status.Converged
+        self._corr = np.nan_to_num(corr, nan=0.0)
+        return Status.Pending
+
+    def _update_completion(self, corr: float) -> None:
+        if np.isnan(corr):
+            self._completion = 0.0
+        elif not np.isclose(corr, self._corr, rtol=self.rtol):
+            self._completion = corr
+            # self.rtol / np.abs(corr - self._corr) might be another option
+        else:
+            self._completion = 1.0
+
+    def completion(self) -> float:
+        return self._completion
+
+    def reset(self):
+        self._memory = None  # type: ignore
+        self._corr = 0.0
+
+    def __str__(self):
+        return f"RankCorrelation(rtol={self.rtol})"
