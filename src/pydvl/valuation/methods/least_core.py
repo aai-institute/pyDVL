@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from typing_extensions import Self
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
@@ -80,7 +81,7 @@ class LeastCoreValuation(Valuation):
         self._n_samples = n_samples
         self._progress = progress
 
-    def fit(self, data: Dataset) -> Valuation:
+    def fit(self, data: Dataset) -> Self:
         """Calculate the least core valuation on a dataset.
 
         This method has to be called before calling `values()`.

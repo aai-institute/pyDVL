@@ -25,6 +25,7 @@ from abc import abstractmethod
 from typing import Any
 
 from joblib import Parallel, delayed
+from typing_extensions import Self
 
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
@@ -102,7 +103,7 @@ class SemivalueValuation(Valuation):
         """
         ...
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
@@ -129,9 +130,5 @@ class SemivalueValuation(Valuation):
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()
-                            break
-
-                    if self.is_done(self.result):
-                        break
-
+                            return self
         return self
