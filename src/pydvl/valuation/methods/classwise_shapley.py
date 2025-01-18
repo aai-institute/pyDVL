@@ -146,6 +146,7 @@ class ClasswiseShapleyValuation(Valuation):
         )
         ensure_backend_has_generator_return()
 
+        self.is_done.reset()
         self.utility.training_data = data
 
         sample_generator = self.sampler.from_data(data)

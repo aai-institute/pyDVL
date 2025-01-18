@@ -223,7 +223,7 @@ class StoppingCriterion(abc.ABC):
         return float(np.mean(self.converged).item())
 
     def reset(self) -> None:
-        pass
+        self._converged = np.full(0, False)
 
     @property
     def converged(self) -> NDArray[np.bool_]:
@@ -349,6 +349,9 @@ class AbsoluteStandardError(StoppingCriterion):
             [zeros()][pydvl.valuation.result.ValuationResult.zeros]. The default is
             set to an arbitrary minimum which is usually enough but may need to
             be increased.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(
@@ -384,6 +387,9 @@ class MaxChecks(StoppingCriterion):
         n_checks: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_checks: int | None, modify_result: bool = True):
@@ -407,6 +413,7 @@ class MaxChecks(StoppingCriterion):
         return 0.0
 
     def reset(self):
+        super().reset()
         self._count = 0
 
     def __str__(self) -> str:
@@ -431,6 +438,9 @@ class MaxUpdates(StoppingCriterion):
         n_updates: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
@@ -456,6 +466,10 @@ class MaxUpdates(StoppingCriterion):
             return self.last_max / self.n_updates
         return 0.0
 
+    def reset(self) -> None:
+        super().reset()
+        self.last_max = 0
+
     def __str__(self) -> str:
         return f"MaxUpdates(n_updates={self.n_updates})"
 
@@ -480,37 +494,44 @@ class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
 
     This checks the `counts` field of a
-    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of times that
-    each index has been updated. For powerset samplers, the minimum of this
-    number is a lower bound for the number of subsets sampled. For
-    permutation samplers, it lower-bounds the amount of permutations sampled.
+    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of times
+    that each index has been updated. For powerset samplers, the minimum of this number
+    is a lower bound for the number of subsets sampled. For permutation samplers, it
+    lower-bounds the amount of permutations sampled.
 
     Args:
         n_updates: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         self.n_updates = n_updates
         self.last_min = 0
+        self._actual_completion = 0.0
 
     def _check(self, result: ValuationResult) -> Status:
         if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
-            try:
-                self.last_min = int(np.min(result.counts))
-                if self.last_min >= self.n_updates:
-                    return Status.Converged
-            except ValueError:  # empty counts array. This should not happen
-                pass
+            progress = np.clip(result.counts, 0, self.n_updates) / self.n_updates
+            self._actual_completion = float(np.mean(progress))
+
+            self.last_min = int(np.min(result.counts))
+            if self.last_min >= self.n_updates:
+                return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_updates:
-            return self.last_min / self.n_updates
-        return 0.0
+        return self._actual_completion
+
+    def reset(self) -> None:
+        super().reset()
+        self.last_min = 0
+        self._actual_completion = 0.0
 
     def __str__(self) -> str:
         return f"MinUpdates(n_updates={self.n_updates})"
@@ -549,6 +570,7 @@ class MaxTime(StoppingCriterion):
         return (time() - self.start) / self.max_seconds
 
     def reset(self):
+        super().reset()
         self.start = time()
 
     def __str__(self) -> str:
@@ -636,6 +658,7 @@ class HistoryDeviation(StoppingCriterion):
         return Status.Pending
 
     def reset(self):
+        super().reset()
         self._memory = None  # type: ignore
 
     def __str__(self) -> str:
@@ -718,8 +741,11 @@ class RankCorrelation(StoppingCriterion):
         return self._completion
 
     def reset(self):
+        super().reset()
         self._memory = None  # type: ignore
         self._corr = 0.0
+        self._completion = 0.0
+        self._iterations = 0
 
     def __str__(self):
         return f"RankCorrelation(rtol={self.rtol})"
