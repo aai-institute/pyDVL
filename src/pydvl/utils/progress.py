@@ -99,28 +99,38 @@ class Progress(Generic[T]):
         self.iterable = iterable
         self.is_done = is_done
         self.total = kwargs.pop("total", 100)
-        self.unit = kwargs.pop("unit", "%")
-        self.desc = kwargs.pop("desc", str(is_done))
-        self.bar_format = "{desc}: {percentage:0.2f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]"
-        self.kwargs = kwargs
-        self.pbar: tqdm | None = None
+        desc = kwargs.pop("desc", str(is_done))
+        unit = kwargs.pop("unit", "%")
+        bar_format = kwargs.pop(
+            "bar_format",
+            "{desc}: {percentage:0.2f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
+        )
+        self.pbar = tqdm(
+            total=self.total,
+            desc=desc,
+            unit=unit,
+            bar_format=bar_format,
+            **kwargs,
+        )
 
     def __iter__(self) -> Iterator[T]:
-        with tqdm(
-            total=self.total,
-            desc=self.desc,
-            unit=self.unit,
-            bar_format=self.bar_format,
-            **self.kwargs,
-        ) as self.pbar:
+        self.pbar.reset()
+        try:
             for item in self.iterable:
-                self.pbar.n = self.total * self.is_done.completion()
-                self.pbar.refresh()
+                self.update()
                 yield item
+        finally:
+            self.update()
+            self.pbar.close()
 
     def __enter__(self):
+        self.pbar.reset()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.pbar is not None:
-            self.pbar.close()
+        self.update()
+        self.pbar.close()
+
+    def update(self):
+        self.pbar.n = self.total * self.is_done.completion()
+        self.pbar.refresh()
