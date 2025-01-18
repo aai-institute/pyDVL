@@ -127,6 +127,7 @@ from typing import Callable, Protocol, Type, cast
 import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import spearmanr
+from typing_extensions import Self
 
 from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
@@ -222,8 +223,9 @@ class StoppingCriterion(abc.ABC):
             return 0.0
         return float(np.mean(self.converged).item())
 
-    def reset(self) -> None:
+    def reset(self) -> Self:
         self._converged = np.full(0, False)
+        return self
 
     @property
     def converged(self) -> NDArray[np.bool_]:
@@ -412,9 +414,9 @@ class MaxChecks(StoppingCriterion):
             return min(1.0, self._count / self.n_checks)
         return 0.0
 
-    def reset(self):
-        super().reset()
+    def reset(self) -> Self:
         self._count = 0
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxChecks(n_checks={self.n_checks})"
@@ -466,9 +468,9 @@ class MaxUpdates(StoppingCriterion):
             return self.last_max / self.n_updates
         return 0.0
 
-    def reset(self) -> None:
-        super().reset()
+    def reset(self) -> Self:
         self.last_max = 0
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxUpdates(n_updates={self.n_updates})"
@@ -528,10 +530,10 @@ class MinUpdates(StoppingCriterion):
     def completion(self) -> float:
         return self._actual_completion
 
-    def reset(self) -> None:
-        super().reset()
+    def reset(self) -> Self:
         self.last_min = 0
         self._actual_completion = 0.0
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MinUpdates(n_updates={self.n_updates})"
@@ -540,13 +542,16 @@ class MinUpdates(StoppingCriterion):
 class MaxTime(StoppingCriterion):
     """Terminate if the computation time exceeds the given number of seconds.
 
-    Checks the elapsed time since construction
+    Checks the elapsed time *since construction*.
 
     Args:
         seconds: Threshold: The computation is terminated if the elapsed time
             between object construction and a _check exceeds this value. If `None`,
             no _check is performed, effectively creating a (never) stopping criterion
             that always returns `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, seconds: float | None, modify_result: bool = True):
@@ -569,9 +574,9 @@ class MaxTime(StoppingCriterion):
             return 0.0
         return (time() - self.start) / self.max_seconds
 
-    def reset(self):
-        super().reset()
+    def reset(self) -> Self:
         self.start = time()
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxTime(seconds={self.max_seconds})"
@@ -657,9 +662,9 @@ class HistoryDeviation(StoppingCriterion):
                     return Status.Converged
         return Status.Pending
 
-    def reset(self):
-        super().reset()
+    def reset(self) -> Self:
         self._memory = None  # type: ignore
+        return super().reset()
 
     def __str__(self) -> str:
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
@@ -740,12 +745,12 @@ class RankCorrelation(StoppingCriterion):
     def completion(self) -> float:
         return self._completion
 
-    def reset(self):
-        super().reset()
+    def reset(self) -> Self:
         self._memory = None  # type: ignore
         self._corr = 0.0
         self._completion = 0.0
         self._iterations = 0
+        return super().reset()
 
     def __str__(self):
         return f"RankCorrelation(rtol={self.rtol})"
