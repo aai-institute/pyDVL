@@ -35,8 +35,8 @@ __all__ = [
     "TruncationPolicy",
     "NoTruncation",
     "FixedTruncation",
-    "DeviationTruncation",
     "RelativeTruncation",
+    "DeviationTruncation",
 ]
 
 

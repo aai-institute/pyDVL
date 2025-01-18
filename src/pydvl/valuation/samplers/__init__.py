@@ -87,6 +87,7 @@ from .classwise import *
 from .msr import *
 from .permutation import *
 from .powerset import *
+from .truncation import *
 
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
 # See https://github.com/python/typing/issues/213
