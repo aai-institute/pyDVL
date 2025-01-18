@@ -107,31 +107,47 @@ def test_minmax_updates():
     maxstop = MaxUpdates(10)
     assert str(maxstop) == "MaxUpdates(n_updates=10)"
     v = ValuationResult.from_random(5)
-    v._counts = np.zeros(5)
+    v._counts = np.zeros(5, dtype=int)
     assert maxstop(v) == Status.Pending
-    v._counts += np.ones(5) * 9
+    v._counts += np.ones(5, dtype=int) * 9
     assert maxstop(v) == Status.Pending
     v._counts[0] += 1
     assert maxstop(v) == Status.Converged
+    assert maxstop.completion() == 1.0
+    assert np.sum(maxstop.converged) >= 1
+    maxstop.reset()
+    assert maxstop.completion() == 0.0
+    assert not maxstop.converged.any()
 
     minstop = MinUpdates(10)
     assert str(minstop) == "MinUpdates(n_updates=10)"
-    v._counts = np.zeros(5)
+    v._counts = np.zeros(5, dtype=int)
     assert minstop(v) == Status.Pending
-    v._counts += np.ones(5) * 9
+    v._counts += np.ones(5, dtype=int) * 9
     assert minstop(v) == Status.Pending
     v._counts[0] += 1
     assert minstop(v) == Status.Pending
-    v._counts += np.ones(5)
+    v._counts += np.ones(5, dtype=int)
     assert minstop(v) == Status.Converged
+    assert minstop.completion() == 1.0
+    assert minstop.converged.all()
+    minstop.reset()
+    assert minstop.completion() == 0.0
+    assert not minstop.converged.any()
 
 
+@pytest.mark.flaky(reruns=1)  # Allow for some flakiness due to timing
 def test_max_time():
     v = ValuationResult.from_random(5)
     done = MaxTime(0.3)
     assert done(v) == Status.Pending
     sleep(0.3)
     assert done(v) == Status.Converged
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert np.isclose(done.completion(), 0, atol=0.01)
+    assert not done.converged.any()
 
 
 @pytest.mark.parametrize("n_steps", [1, 42, 100])
@@ -156,6 +172,11 @@ def test_history_deviation(n_steps, rtol):
         status |= done(v)
 
     assert status == Status.Converged
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
 
 
 def test_standard_error():
@@ -168,6 +189,8 @@ def test_standard_error():
     # Trivial case: no variance.
     v = ValuationResult(values=np.ones(n), variances=np.zeros(n))
     assert done(v)
+    assert done.completion() == 1.0
+    assert done.converged.all()
 
     # Reduce the variance until the criterion is triggered.
     v = ValuationResult(values=np.ones(n), variances=np.ones(n))
@@ -183,6 +206,11 @@ def test_standard_error():
     for _ in range(10):
         v.update(0, 1)
     assert done(v)
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
 
 
 def test_max_checks():
@@ -192,11 +220,17 @@ def test_max_checks():
     done = MaxChecks(None)
     for _ in range(10):
         assert not done(v)
+    assert done.completion() == 0.0
 
     done = MaxChecks(5)
     for _ in range(4):
         assert not done(v)
     assert done(v)
+
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
 
 
 def test_rank_correlation():
@@ -225,3 +259,9 @@ def test_rank_correlation():
     assert not done(v)
     assert not done(v)
     assert done(v)
+
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
