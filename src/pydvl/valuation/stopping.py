@@ -572,7 +572,7 @@ class MaxTime(StoppingCriterion):
     def completion(self) -> float:
         if self.max_seconds is None:
             return 0.0
-        return (time() - self.start) / self.max_seconds
+        return np.clip((time() - self.start) / self.max_seconds, 0.0, 1.0)
 
     def reset(self) -> Self:
         self.start = time()
@@ -737,8 +737,10 @@ class RankCorrelation(StoppingCriterion):
         if np.isnan(corr):
             self._completion = 0.0
         elif not np.isclose(corr, self._corr, rtol=self.rtol):
-            self._completion = corr
-            # self.rtol / np.abs(corr - self._corr) might be another option
+            try:
+                self._completion = np.abs(corr - self._corr) / self._corr
+            except ZeroDivisionError:
+                self._completion = 0.0
         else:
             self._completion = 1.0
 
