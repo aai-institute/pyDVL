@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
@@ -32,6 +31,11 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler):
     """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
 
     This is similar to a UniformSampler without an outer index.
+
+    !!! warning "MSR Valuation"
+        This sampler can only be used with MSR methods, as it requires separate
+        aggregation of two streams of value updates. As of v0.10.0, this reduces to
+        [MSRBanzhafValuation][pydvl.valuation.methods.msr_banzhaf.MSRBanzhafValuation].
 
     Args:
         batch_size: Number of samples to generate in each batch.
@@ -81,7 +85,7 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
 
     def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
         u_value = self.utility(sample)
-        mask: NDArray[np.bool_] = np.zeros(self.n_indices, dtype=bool)
+        mask = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True
 
         updates = []
