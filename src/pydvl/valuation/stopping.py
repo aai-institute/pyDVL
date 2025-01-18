@@ -572,7 +572,7 @@ class MaxTime(StoppingCriterion):
     def completion(self) -> float:
         if self.max_seconds is None:
             return 0.0
-        return np.clip((time() - self.start) / self.max_seconds, 0.0, 1.0)
+        return float(np.clip((time() - self.start) / self.max_seconds, 0.0, 1.0))
 
     def reset(self) -> Self:
         self.start = time()
@@ -685,12 +685,12 @@ class RankCorrelation(StoppingCriterion):
 
     Args:
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
-        modify_result: If `True`, the status of the input
-            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
-            place after the call.
         burn_in: The minimum number of iterations before checking for
             convergence. This is required because the first correlation is
             meaningless.
+        modify_result: If `True`, the status of the input
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
 
     !!! tip "Added in 0.9.0"
     """
@@ -706,14 +706,14 @@ class RankCorrelation(StoppingCriterion):
             raise ValueError("rtol must be in (0, 1)")
         self.rtol = rtol
         self.burn_in = burn_in
-        self._memory: NDArray[np.float64] | None = None
+        self._memory = np.full(0, np.nan)
         self._corr = 0.0
         self._completion = 0.0
         self._iterations = 0
 
     def _check(self, r: ValuationResult) -> Status:
         self._iterations += 1
-        if self._memory is None:
+        if len(self._memory) == 0:
             self._memory = r.values.copy()
             self._converged = np.full(len(r), False)
             return Status.Pending
@@ -748,7 +748,7 @@ class RankCorrelation(StoppingCriterion):
         return self._completion
 
     def reset(self) -> Self:
-        self._memory = None  # type: ignore
+        self._memory = np.full(0, np.nan)
         self._corr = 0.0
         self._completion = 0.0
         self._iterations = 0
