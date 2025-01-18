@@ -6,6 +6,7 @@ from itertools import cycle, takewhile
 from time import time
 from typing import TYPE_CHECKING, Collection, Generic, Iterable, Iterator, TypeVar
 
+from deprecate import deprecated
 from tqdm.auto import tqdm
 
 # This is needed to avoid circular import errors
@@ -18,10 +19,17 @@ __all__ = ["log_duration", "Progress", "repeat_indices"]
 logger = logging.getLogger(__name__)
 
 
+@deprecated(
+    target=True,
+    deprecated_in="0.10.0",
+    remove_in="0.12.0",
+    template_mgs="%(source_name)s used only by the old value module. "
+    "It will be removed in %(remove_in)s.",
+)
 def repeat_indices(
     indices: Collection[int],
-    result: "ValuationResult",
-    done: "StoppingCriterion",
+    result: ValuationResult,
+    done: StoppingCriterion,
     **kwargs,
 ) -> Iterator[int]:
     """Helper function to cycle indefinitely over a collection of indices
