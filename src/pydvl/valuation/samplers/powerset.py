@@ -200,7 +200,7 @@ class PowersetSampler(IndexSampler, ABC):
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset."""
-        return float(2 ** (n - 1)) if n > 0 else 1.0
+        return 2 ** (n - 1) if n > 0 else 1  # type: ignore
 
 
 class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler, ValueUpdate]):
