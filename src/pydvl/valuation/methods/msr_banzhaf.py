@@ -65,6 +65,9 @@ class MSRBanzhafValuation(SemivalueValuation):
             is_done=is_done,
             progress=progress,
         )
+        assert isinstance(sampler, MSRSampler), (
+            "MSRBanzhafValuation only supports MSRSampler"
+        )
 
     def coefficient(self, n: int, k: int, other: float) -> float:
         # Coefficient is 1.0 for all n and k
@@ -72,8 +75,6 @@ class MSRBanzhafValuation(SemivalueValuation):
 
     def fit(self, data: Dataset) -> Self:
         """Calculate the MSR Banzhaf valuation on a dataset.
-
-        This method has to be called before calling `values()`.
 
         Calculating the Banzhaf valuation is a computationally expensive task that
         can be parallelized. To do so, call the `fit()` method inside a
@@ -133,10 +134,7 @@ class MSRBanzhafValuation(SemivalueValuation):
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()
-                            break
-
-                    if self.is_done(self.result):
-                        break
+                            return self
 
         return self
 
