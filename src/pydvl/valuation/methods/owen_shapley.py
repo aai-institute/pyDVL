@@ -76,6 +76,6 @@ class OwenShapleyValuation(SemivalueValuation):
             self.result._status = Status.Converged
         return self
 
-    def coefficient(self, n: int, k: int, other: float) -> float:
+    def coefficient(self, n: int, k: int, weight: float) -> float:
         # Coefficient is 1.0 for all n and k
-        return other
+        return weight

@@ -35,5 +35,5 @@ class DataBanzhafValuation(SemivalueValuation):
 
     algorithm_name = "Data-Banzhaf"
 
-    def coefficient(self, n: int, k: int, other: float) -> float:
-        return float(other / 2 ** (n - 1))
+    def coefficient(self, n: int, k: int, weight: float) -> float:
+        return float(weight / 2 ** (n - 1))

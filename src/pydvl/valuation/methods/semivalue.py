@@ -85,7 +85,7 @@ class SemivalueValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
 
     @abstractmethod
-    def coefficient(self, n: int, k: int, other: float) -> float:
+    def coefficient(self, n: int, k: int, weight: float) -> float:
         """Returns the function computing the final coefficient to be used in the
         semi-value valuation.
 
@@ -99,7 +99,7 @@ class SemivalueValuation(Valuation):
         Args:
             n: Total number of elements in the set.
             k: Size of the subset for which the coefficient is being computed
-            other: The other factors in the computation.
+            weight: The weight coming from the samplers
         """
         ...
 
