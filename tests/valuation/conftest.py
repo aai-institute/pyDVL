@@ -3,6 +3,7 @@ from __future__ import annotations
 import joblib
 import numpy as np
 import pytest
+from joblib import parallel_config
 from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
@@ -13,6 +14,7 @@ from pydvl.parallel import JoblibParallelBackend
 from pydvl.utils import SupervisedModel
 from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
+from pydvl.valuation import DataShapleyValuation, NoStopping, UniformSampler
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.games import (
     AsymmetricVotingGame,
@@ -169,30 +171,37 @@ def analytic_banzhaf(
     return dummy_utility, result
 
 
-@pytest.fixture(scope="function")
-def linear_shapley(cache, linear_dataset, scorer, n_jobs):
+# FIXME: this fixture is not used. Delete or use?
+@pytest.fixture(scope="session")
+def linear_shapley(cache, linear_dataset, scorer_name, n_jobs):
     """This fixture makes use of the cache fixture to avoid recomputing
     exact shapley values for each test run."""
-    args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
+    args_hash = cache.hash_arguments(linear_dataset, scorer_name, n_jobs)
     u_cache_key = f"linear_shapley_u_{args_hash}"
     exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"
     try:
-        u = cache.get(u_cache_key, None)
+        utility = cache.get(u_cache_key, None)
         exact_values = cache.get(exact_values_cache_key, None)
     except Exception:
         cache.clear_cache(cache._cachedir)
         raise
 
-    if u is None:
-        u = ModelUtility(
+    train, test = linear_dataset
+    if utility is None:
+        utility = ModelUtility(
             LinearRegression(),
-            data=linear_dataset,
-            scorer=scorer,
+            scorer=SupervisedScorer(scorer_name, test, default=0),
+        ).with_dataset(train)
+    if exact_values is None:
+        valuation = DataShapleyValuation(
+            utility, UniformSampler(), is_done=NoStopping(), progress=False
         )
-        exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
-        cache.set(u_cache_key, u)
+        with parallel_config(n_jobs=n_jobs):
+            valuation.fit(train)
+        exact_values = valuation.values()
+        cache.set(u_cache_key, utility)
         cache.set(exact_values_cache_key, exact_values)
-    return u, exact_values
+    return utility, exact_values
 
 
 @pytest.fixture(scope="module")
@@ -209,7 +218,7 @@ def cache_backend():
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a: float, b: float, num_points: int):
+def linear_dataset(a: float, b: float, num_points: int) -> tuple[Dataset, Dataset]:
     """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
     x in [-1,1]
 
@@ -220,7 +229,7 @@ def linear_dataset(a: float, b: float, num_points: int):
         train_size: fraction of points to use for training (between 0 and 1)
 
     Returns:
-        Dataset with train/test split. call str() on it to see the parameters
+        train / test split
 
     TODO: This is a duplicate of the fixture in the global conftest.py but using the
     Dataset object from pydvl.valuation
