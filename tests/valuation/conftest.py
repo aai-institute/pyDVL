@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import joblib
 import numpy as np
 import pytest
@@ -66,7 +68,7 @@ def polynomial_pipeline(coefficients):
 
 
 @pytest.fixture(scope="function")
-def dummy_train_data(num_samples):
+def dummy_train_data(num_samples) -> Dataset:
     """Training data used in everything that uses dummy_utility."""
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
@@ -75,7 +77,7 @@ def dummy_train_data(num_samples):
 
 
 @pytest.fixture(scope="function")
-def dummy_test_data(num_samples):
+def dummy_test_data(num_samples) -> Dataset:
     """Test data used in everything that uses dummy_utility."""
     nil = np.zeros((num_samples, 1))
     data = Dataset(
@@ -85,7 +87,7 @@ def dummy_test_data(num_samples):
 
 
 @pytest.fixture(scope="function")
-def dummy_utility(dummy_train_data, dummy_test_data):
+def dummy_utility(dummy_train_data, dummy_test_data) -> ModelUtility:
     """Dummy utility for which we get analytical solutions for several methods."""
     # Indices match values
     data = dummy_train_data
@@ -128,7 +130,9 @@ def dummy_utility(dummy_train_data, dummy_test_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_shapley(dummy_utility, dummy_train_data):
+def analytic_shapley(
+    dummy_utility, dummy_train_data
+) -> tuple[ModelUtility, ValuationResult]:
     r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
     x, _ = dummy_train_data.data()
@@ -145,7 +149,9 @@ def analytic_shapley(dummy_utility, dummy_train_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_banzhaf(dummy_utility, dummy_train_data):
+def analytic_banzhaf(
+    dummy_utility, dummy_train_data
+) -> tuple[ModelUtility, ValuationResult]:
     r"""Scores are i/n, so
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
