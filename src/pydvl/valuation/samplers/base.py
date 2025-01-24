@@ -246,9 +246,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
     ):
         self.utility = utility
         self.n_indices = (
-            len(utility.training_data.indices)
-            if utility.training_data is not None
-            else 0
+            len(utility.training_data) if utility.training_data is not None else 0
         )
         self.coefficient: Callable[[int, int], float] = lambda n, k: 1.0
 
