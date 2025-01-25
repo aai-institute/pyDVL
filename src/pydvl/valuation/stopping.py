@@ -1,8 +1,8 @@
-r"""
+"""
 Stopping criteria for value computations.
 
 This module provides a basic set of stopping criteria, like
-[MaxUpdates][pydvl.valuation.stopping.MaxUpdates],
+[MinUpdates][pydvl.valuation.stopping.MinUpdates],
 [MaxTime][pydvl.valuation.stopping.MaxTime], or
 [HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] among others. These
 can behave in different ways depending on the context. For example,
@@ -15,6 +15,17 @@ Stopping criteria are callables that are evaluated on a
 [ValuationResult][pydvl.valuation.result.ValuationResult] and return a
 [Status][pydvl.utils.status.Status] object. They can be combined using boolean
 operators.
+
+
+## Combining stopping criteria
+
+Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
+be combined with the binary operators `&` (*and*), and `|` (*or*), following the
+truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
+(*not*) is also supported. See
+[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] for details on how
+these operations affect the behavior of the stopping criteria.
+
 
 ## How convergence is determined
 
@@ -30,15 +41,16 @@ This has some practical implications, because some values do tend to converge
 sooner than others. For example, assume we use the criterion
 `AbsoluteStandardError(0.02) | MaxUpdates(1000)`. Then values close to 0 might
 be marked as "converged" rather quickly because they fulfill the first
-criterion, say after 20 iterations, despite being poor estimates. Because other
-indices take much longer to have low standard error and the criterion is a
+criterion, say after 20 iterations, despite being poor estimates (see the section on
+pitfalls below for commentary on stopping criteria based on standard errors).
+Because other indices take longer to reach a low standard error and the criterion is a
 global check, the "converged" ones keep being updated and end up being good
 estimates. In this case, this has been beneficial, but one might not wish for
 converged values to be updated, if one is sure that the criterion is adequate
 for individual values.
 
-[Semi-value methods][pydvl.valuation.methods.semivalue] include a parameter
-`skip_converged` that allows to skip the computation of values that have
+[Semi-value methods][pydvl.valuation.methods.semivalue.SemivalueValuation] include a
+parameter `skip_converged` that allows to skip the computation of values that have
 converged. The way to avoid doing this too early is to use a more stringent
 check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
 `skip_converged=True` this check can still take less time than the first one,
@@ -51,7 +63,7 @@ The choice of a stopping criterion greatly depends on the algorithm and the
 context. A safe bet is to combine a [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
 or a [MaxTime][pydvl.valuation.stopping.MaxTime] with a
 [HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] or an
-[AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError]. The former
+[RankCorrelation][pydvl.valuation.stopping.RankCorrelation]. The former
 will ensure that the computation does not run for too long, while the latter
 will try to achieve results that are stable enough. Note however that if the
 threshold is too strict, one will always end up running until a maximum number
@@ -62,30 +74,53 @@ as described above for semi-values.
 
 ??? Example
     ```python
-    from pydvl.valuation import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
+    from pydvl.valuation import DataBanzhafValuation, MinUpdates, MSRSampler, RankCorrelation
 
-    utility = ...  # some utility object
-    criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
-    values = compute_banzhaf_semivalues(
-        utility,
-        criterion,
-        skip_converged=True,  # skip values that have converged (CAREFUL!)
-    )
+    model = ... # Some sklearn-compatible model
+    scorer = SupervisedScorer("accuracy", test_data, default=0.0)
+    utility = ModelUtility(model, scorer)
+    sampler = MSRSampler(seed=seed)
+    stopping = RankCorrelation(rtol=1e-2, burn_in=32) | MinUpdates(1000)
+    valuation = DataBanzhafValuation(utility=utility, sampler=sampler, is_done=stopping)
+    with parallel_config(n_jobs=4):
+        valuation.fit(trainig_data)
+    result = valuation.values()
+
     ```
-    This will compute the Banzhaf semivalues for `utility` until either the
-    absolute standard error is below `1e-3` or `1000` updates have been
-    performed. The `burn_in` parameter is used to discard the first `32` updates
-    from the computation of the standard error. The `skip_converged` parameter
-    is used to avoid computing more marginals for indices that have converged,
-    which is useful if
-    [AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError] is met
-    before [MaxUpdates][pydvl.valuation.stopping.MaxUpdates] for some indices.
+    This will compute the Banzhaf semivalues for `utility` until either the change in
+    Spearman rank correlation between updates is below `1e-2` or `1000` updates have
+    been performed. The `burn_in` parameter is used to discard the first `32` updates
+    from the computation of the standard error.
 
 !!! Warning
-    Be careful not to reuse the same stopping criterion for different
-    computations. The object has state and will not be reset between calls to
-    value computation methods. If you need to reuse the same criterion, you
-    should create a new instance.
+    Be careful not to reuse the same stopping criterion for different computations. The
+    object has state, which is reset by `fit()` for some valuation methods, but this is
+    **not guaranteed** for all methods. If you need to reuse the same criterion, it's
+    safer to create a new instance.
+
+## Interactions with sampling schemes and other pitfalls of stopping criteria
+
+Different samplers define different "update strategies" for values. For example,
+[MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] updates the `counts` field
+of a [ValuationResult][pydvl.valuation.result.ValuationResult] only for about half of
+the utility evaluations, because it reuses samples. This means that a stopping criterion
+like [MaxChecks][pydvl.valuation.stopping.MaxChecks] will not work as expected, because
+it will count the number of calls to the criterion, not the number of updates to the
+values. In this case, one should use [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
+or, more likely, [MinUpdates][pydvl.valuation.stopping.MinUpdates] instead.
+
+Another pitfall is the interaction with the `skip_converged` parameter of
+[Semi-value methods][pydvl.valuation.methods.semivalue.SemivalueValuation]. If this is
+set to `True`, the stopping criterion should probably be more stringent.
+
+Finally, stopping criteria that rely on the standard error of the values, like
+[AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError], should be
+used with care. The standard error is a measure of the uncertainty of the estimate,
+but **it does not guarantee that the estimate is close to the true value**. For example,
+if the utility function is very noisy, the standard error might be very low, but the
+estimate might be far from the true value. In this case, one might want to use a
+[RankCorrelation][pydvl.valuation.stopping.RankCorrelation] instead, which checks
+whether the rank of the values is stable.
 
 
 ## Creating stopping criteria
@@ -99,15 +134,6 @@ that can be composed with other stopping criteria.
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods `_check` and
 [completion][pydvl.valuation.stopping.StoppingCriterion.completion].
-
-## Combining stopping criteria
-
-Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
-be combined with the binary operators `&` (*and*), and `|` (*or*), following the
-truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
-(*not*) is also supported. See
-[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] for details on how
-these operations affect the behavior of the stopping criteria.
 
 
 ## References
@@ -209,6 +235,7 @@ class StoppingCriterion(abc.ABC):
     def __init__(self, modify_result: bool = True):
         self.modify_result = modify_result
         self._converged = np.full(0, False)
+        self._count = 0
 
     @abc.abstractmethod
     def _check(self, result: ValuationResult) -> Status:
@@ -251,6 +278,7 @@ class StoppingCriterion(abc.ABC):
                 "At least one iteration finished but no results where generated. "
                 "Please check that your scorer and utility return valid numbers."
             )
+        self._count += 1
         status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
@@ -336,6 +364,15 @@ class AbsoluteStandardError(StoppingCriterion):
     [Converged][pydvl.utils.status.Status] if $s_i < \epsilon$ for all $i$ and a
     threshold value $\epsilon \gt 0$.
 
+    !!! Warning
+        This criterion should be used with care. The standard error is a measure of the
+        uncertainty of the estimate, but **it does not guarantee that the estimate is
+        close to the true value**. For example, if the utility function is very noisy,
+        the standard error might be very low, but the estimate might be far from the
+        true value. In this case, one might want to use a
+        [RankCorrelation][pydvl.valuation.stopping.RankCorrelation] instead, which
+        checks whether the rank of the values is stable.
+
     Args:
         threshold: A value is considered to have converged if the standard
             error is below this threshold. A way of choosing it is to pick some
@@ -383,7 +420,14 @@ class AbsoluteStandardError(StoppingCriterion):
 class MaxChecks(StoppingCriterion):
     """Terminate as soon as the number of checks exceeds the threshold.
 
-    A "check" is one call to the criterion.
+    A "check" is one call to the criterion. Note that this might have different
+    interpretations depending on the sampler. For example,
+    [MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] performs a single
+    utility evaluation to update all indices, so that's `len(training_data)` checks for
+    a single training of the model. But it also only changes the `counts` field of the
+    [ValuationResult][pydvl.valuation.result.ValuationResult] for about half of the
+    indices, which is what e.g. [MaxUpdates][pydvl.valuation.stopping.MaxUpdates] checks.
+
 
     Args:
         n_checks: Threshold: if `None`, no _check is performed,
@@ -398,15 +442,14 @@ class MaxChecks(StoppingCriterion):
         super().__init__(modify_result=modify_result)
         if n_checks is not None and n_checks < 1:
             raise ValueError("n_iterations must be at least 1 or None")
-        self.n_checks = n_checks
+        self.n_checks = n_checks or np.inf
         self._count = 0
 
     def _check(self, result: ValuationResult) -> Status:
-        if self.n_checks:
-            self._count += 1
-            if self._count >= self.n_checks:
-                self._converged = np.ones_like(result.values, dtype=bool)
-                return Status.Converged
+        self._count += 1
+        if self._count >= self.n_checks:
+            self._converged = np.ones_like(result.values, dtype=bool)
+            return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
@@ -681,7 +724,7 @@ class RankCorrelation(StoppingCriterion):
     exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
     converge), the criterion stops the algorithm.
 
-    This criterion is used in (Wang et. al.)<sup><a href="wang_data_2023">2</a></sup>.
+    This criterion is used in (Wang et al.)<sup><a href="wang_data_2023">2</a></sup>.
 
     Args:
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
