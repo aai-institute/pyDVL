@@ -21,7 +21,7 @@ from pydvl.valuation.utility.base import UtilityBase
 
 
 class OwenShapleyValuation(SemivalueValuation):
-    """Umbrella class to calculate least-core values with Owen sampling schemes.
+    """Umbrella class to calculate Shapley values with Owen sampling schemes.
 
     Owen shapley values converge to true Shapley values as the number of samples
     increases but have been shown to need fewer samples than other sampling schemes.

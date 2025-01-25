@@ -588,7 +588,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> ValuationResult:
+    def update(self, idx: int | IndexT, new_value: float) -> ValuationResult:
         """Updates the result in place with a new value, using running mean
         and variance.
 

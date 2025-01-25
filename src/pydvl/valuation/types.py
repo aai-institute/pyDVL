@@ -36,7 +36,7 @@ class ValueUpdate:
     update: float
 
 
-ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate)
+ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)
 
 
 @dataclass(frozen=True)
