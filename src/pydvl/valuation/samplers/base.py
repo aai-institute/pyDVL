@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, TypeVar
+from typing import Callable, Generic, Protocol, TypeVar
 
+import numpy as np
 from more_itertools import chunked
 
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
@@ -23,7 +25,7 @@ from pydvl.valuation.types import (
 )
 from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["EvaluationStrategy", "IndexSampler"]
+__all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]
 
 
 # Sequence.register(np.ndarray)  # <- Doesn't seem to work
@@ -31,7 +33,13 @@ __all__ = ["EvaluationStrategy", "IndexSampler"]
 logger = logging.getLogger(__name__)
 
 
-class IndexSampler(ABC):
+class ResultUpdater(Protocol[ValueUpdateT]):
+    """Protocol for result updaters."""
+
+    def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
+
+
+class IndexSampler(ABC, Generic[ValueUpdateT]):
     r"""Samplers are custom iterables over batches of subsets of indices.
 
     Calling `from_indices(indexset)` on a sampler returns a generator over **batches**
@@ -126,6 +134,7 @@ class IndexSampler(ABC):
         for batch in chunked(self._generate(indices), self.batch_size):
             yield batch
             self._n_samples += len(batch)
+            yield batch
             if self._interrupted:
                 break
 
@@ -190,6 +199,26 @@ class IndexSampler(ABC):
         """Returns the strategy for this sampler."""
         ...  # return SomeEvaluationStrategy(self)
 
+    def result_updater(self, result: ValuationResult) -> ResultUpdater[ValueUpdateT]:
+        """Returns a function that updates a valuation result with a value update.
+
+        This is typically just the method provided by the
+        [ValuationResult][pydvl.valuation.result.ValuationResult] class, but some
+        algorithms might require a different update strategy.
+
+        Args:
+            result: The result to update
+        Returns:
+            A callable object that updates the result with a value update
+        """
+
+        def updater(update: ValueUpdateT) -> ValuationResult:
+            assert update.idx is not None
+            result.update(update.idx, update.update)
+            return result
+
+        return updater
+
 
 SamplerT = TypeVar("SamplerT", bound=IndexSampler)
 
@@ -250,15 +279,14 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         )
         self.coefficient: Callable[[int, int], float] = lambda n, k: 1.0
 
-        if sampler is not None:
-            if coefficient is not None:
+        if coefficient is not None:
 
-                def coefficient_fun(n: int, subset_len: int) -> float:
-                    return coefficient(n, subset_len, sampler.weight(n, subset_len))
+            def coefficient_fun(n: int, subset_len: int) -> float:
+                return coefficient(n, subset_len, sampler.weight(n, subset_len))
 
-                self.coefficient = coefficient_fun
-            else:
-                self.coefficient = sampler.weight
+            self.coefficient = coefficient_fun
+        else:
+            self.coefficient = sampler.weight
 
     @abstractmethod
     def process(
@@ -274,8 +302,9 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
             wire.
 
         Args:
-            batch:
-            is_interrupted:
+            batch: A batch of samples to process.
+            is_interrupted: A predicate that returns True if the processing should be
+                interrupted.
 
         Yields:
             Updates to values as tuples (idx, update)

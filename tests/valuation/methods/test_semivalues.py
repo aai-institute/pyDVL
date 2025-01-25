@@ -5,12 +5,11 @@ import numpy as np
 import pytest
 from joblib import parallel_config
 
-from pydvl.utils.types import Seed
 from pydvl.valuation import (
     BetaShapleyValuation,
     DataBanzhafValuation,
+    Dataset,
     DataShapleyValuation,
-    MSRBanzhafValuation,
 )
 from pydvl.valuation.samplers import (
     AntitheticPermutationSampler,
@@ -27,34 +26,6 @@ from pydvl.valuation.stopping import HistoryDeviation, MaxUpdates, MinUpdates
 
 from .. import check_values
 from ..utils import timed
-
-
-@pytest.mark.flaky(reruns=2)
-@pytest.mark.parametrize("num_samples", [5])
-def test_msr_banzhaf(
-    num_samples: int,
-    analytic_banzhaf,
-    dummy_train_data,
-    n_jobs,
-    seed: Seed,
-):
-    u, exact_values = analytic_banzhaf
-
-    valuation = MSRBanzhafValuation(
-        utility=u,
-        sampler=MSRSampler(seed=seed),
-        is_done=MinUpdates(500 * num_samples),
-        progress=False,
-    )
-    with parallel_config(n_jobs=n_jobs):
-        valuation.fit(dummy_train_data)
-
-    values = valuation.values()
-
-    check_values(values, exact_values, atol=0.025)
-
-    # Check order
-    assert np.array_equal(np.argsort(exact_values), np.argsort(values))
 
 
 @pytest.mark.parametrize("n", [10, 100])
@@ -136,17 +107,17 @@ def test_shapley_batch_size(
         PermutationSampler,
         AntitheticSampler,
         AntitheticPermutationSampler,
+        MSRSampler,
     ],
 )
 def test_banzhaf(
     num_samples: int,
-    analytic_banzhaf,
-    dummy_train_data,
     sampler_class: Type[PowersetSampler],
-    n_jobs: int,
-    seed,
+    analytic_banzhaf: tuple,
+    dummy_train_data: Dataset,
+    seed: int,
 ):
-    u, exact_values = analytic_banzhaf
+    u, exact_result = analytic_banzhaf
 
     if issubclass(sampler_class, StochasticSamplerMixin):
         sampler = sampler_class(seed=seed)
@@ -156,12 +127,16 @@ def test_banzhaf(
     valuation = DataBanzhafValuation(
         utility=u,
         sampler=sampler,
-        is_done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
+        is_done=MinUpdates(500 * num_samples),
         progress=False,
     )
 
-    with parallel_config(n_jobs=n_jobs):
+    # More than one job doubles the time for this test
+    with parallel_config(n_jobs=1):
         valuation.fit(dummy_train_data)
-    values = valuation.values()
+    result = valuation.values()
 
-    check_values(values, exact_values, rtol=0.2)
+    check_values(result, exact_result, atol=0.025)
+
+    # Check order
+    assert np.array_equal(np.argsort(exact_result.values), np.argsort(result.values))

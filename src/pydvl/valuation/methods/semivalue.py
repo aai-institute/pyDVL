@@ -117,6 +117,7 @@ class SemivalueValuation(Valuation):
 
         strategy = self.sampler.make_strategy(self.utility, self.coefficient)
         processor = delayed(strategy.process)
+        updater = self.sampler.result_updater(self.result)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
@@ -125,8 +126,8 @@ class SemivalueValuation(Valuation):
                     for batch in self.sampler.generate_batches(data.indices)
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
-                    for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
+                    for update in batch:
+                        self.result = updater(update)
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()

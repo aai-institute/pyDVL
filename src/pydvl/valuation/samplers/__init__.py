@@ -63,6 +63,12 @@ the marginal evaluations for `PowersetSampler` or the successive evaluations for
 [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] and set the
 `strategy_cls` attribute of the sampler to this class.
 
+Finally, if the sampler requires a dedicated result updater, you must override
+[result_updater()][pydvl.valuation.samplers.base.IndexSampler.result_updater] to return
+a callable that updates a [ValuationResult][pydvl.valuation.result.ValuationResult] with
+one evaluation [ValueUpdate][pydvl.valuation.types.ValueUpdate]. This is used e.g. for
+the [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] which uses two running means
+for positive and negative updates.
 
 !!! tip "Changed in version 0.10.0"
     All the samplers in this module have been changed to work with the new
