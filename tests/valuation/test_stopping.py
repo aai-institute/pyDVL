@@ -103,6 +103,36 @@ def test_make_criterion():
     assert (C() | F())(v) == Status.Converged
 
 
+def test_count_update_composite_criteria():
+    """Test that the field _count in sub-criteria is updated correctly for composite
+    criteria."""
+
+    class P(StoppingCriterion):
+        def _check(self, result: ValuationResult) -> Status:
+            return Status.Pending
+
+    c1 = P()
+    c2 = P()
+
+    c = c1 & c2
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Pending
+    assert c._count == 1
+    assert c1._count == c2._count == 1
+
+    c = c1 | c2
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Pending
+    assert c._count == 1
+    assert c1._count == c2._count == 2
+
+    c = ~c1
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Converged
+    assert c._count == 1
+    assert c1._count == 3
+
+
 def test_minmax_updates():
     maxstop = MaxUpdates(10)
     assert str(maxstop) == "MaxUpdates(n_updates=10)"
