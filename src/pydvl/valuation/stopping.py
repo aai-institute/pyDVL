@@ -278,6 +278,7 @@ class StoppingCriterion(abc.ABC):
                 "At least one iteration finished but no results where generated. "
                 "Please check that your scorer and utility return valid numbers."
             )
+
         self._count += 1
         status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
@@ -285,24 +286,38 @@ class StoppingCriterion(abc.ABC):
         return status
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            other._count += 1
+            return self._check(result) & other._check(result)
+
         return make_criterion(
-            fun=lambda result: self._check(result) & other._check(result),
+            fun=fun,
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
             name=f"{str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            other._count += 1
+            return self._check(result) | other._check(result)
+
         return make_criterion(
-            fun=lambda result: self._check(result) | other._check(result),
+            fun=fun,
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
             name=f"{str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            return ~self._check(result)
+
         return make_criterion(
-            fun=lambda result: ~self._check(result),
+            fun=fun,
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
             name=f"NOT {str(self)}",
