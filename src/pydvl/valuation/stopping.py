@@ -166,6 +166,7 @@ __all__ = [
     "MaxUpdates",
     "MinUpdates",
     "MaxTime",
+    "NoStopping",
     "RankCorrelation",
     "StoppingCriterion",
 ]
