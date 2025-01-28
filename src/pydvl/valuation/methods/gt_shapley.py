@@ -5,7 +5,7 @@ done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
 !!! Warning
-    This method is very inefficient. Potential improvements to the
+    Group Testing is very inefficient. Potential improvements to the
     implementation notwithstanding, convergence seems to be very slow (in terms
     of evaluations of the utility required). We recommend other Monte Carlo
     methods instead.

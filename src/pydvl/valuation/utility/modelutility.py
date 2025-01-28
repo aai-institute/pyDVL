@@ -37,7 +37,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
-    if it is a Sci-Kit Learn model, otherwise a copy is created using
+    if it is a Scikit-Learn model, otherwise a copy is created using
     [copy.deepcopy][]
 
     Since evaluating the scoring function requires retraining the model and that
