@@ -98,8 +98,9 @@ class ClasswiseSampler(IndexSampler):
         out_of_class: PowersetSampler,
         *,
         min_elements_per_label: int = 1,
+        batch_size: int = 1,
     ):
-        super().__init__()
+        super().__init__(batch_size=batch_size)
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label

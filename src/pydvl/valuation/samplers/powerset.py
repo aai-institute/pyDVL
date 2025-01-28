@@ -291,12 +291,12 @@ class DeterministicUniformSampler(PowersetSampler):
 
     def __init__(
         self,
+        batch_size: int = 1,
         index_iteration: Type[
             SequentialIndexIteration | NoIndexIteration
         ] = SequentialIndexIteration,
-        batch_size: int = 1,
     ):
-        super().__init__(index_iteration=index_iteration, batch_size=batch_size)
+        super().__init__(batch_size=batch_size, index_iteration=index_iteration)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
@@ -415,10 +415,13 @@ class TruncatedUniformStratifiedSampler(UniformStratifiedSampler):
         *,
         lower_bound: int,
         upper_bound: int,
+        batch_size: int = 1,
         index_iteration: Type[IndexIteration] = SequentialIndexIteration,
         seed: Seed | None = None,
     ):
-        super().__init__(index_iteration=index_iteration, seed=seed)
+        super().__init__(
+            batch_size=batch_size, index_iteration=index_iteration, seed=seed
+        )
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
@@ -456,10 +459,13 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     def __init__(
         self,
         samples_per_setsize: Callable[[int], int],
+        batch_size: int = 1,
         index_iteration: Type[IndexIteration] = SequentialIndexIteration,
         seed: Seed | None = None,
     ):
-        super().__init__(index_iteration=index_iteration, seed=seed)
+        super().__init__(
+            batch_size=batch_size, index_iteration=index_iteration, seed=seed
+        )
         self.samples_per_setsize = samples_per_setsize
         # HACK: closure around the argument to avoid weight() being an instance method
         # FIXME: is this the correct weight anyway?
