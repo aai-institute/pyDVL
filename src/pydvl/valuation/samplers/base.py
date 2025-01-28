@@ -134,7 +134,6 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         for batch in chunked(self._generate(indices), self.batch_size):
             yield batch
             self._n_samples += len(batch)
-            yield batch
             if self._interrupted:
                 break
 
