@@ -457,8 +457,9 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self,
         samples_per_setsize: Callable[[int], int],
         index_iteration: Type[IndexIteration] = SequentialIndexIteration,
+        seed: Seed | None = None,
     ):
-        super().__init__(index_iteration=index_iteration)
+        super().__init__(index_iteration=index_iteration, seed=seed)
         self.samples_per_setsize = samples_per_setsize
         # HACK: closure around the argument to avoid weight() being an instance method
         # FIXME: is this the correct weight anyway?
