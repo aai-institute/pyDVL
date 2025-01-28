@@ -91,6 +91,7 @@ from typing import Union
 from .base import *
 from .classwise import *
 from .msr import *
+from .owen import *
 from .permutation import *
 from .powerset import *
 from .truncation import *
@@ -104,4 +105,6 @@ StochasticSampler = Union[
     UniformStratifiedSampler,
     TruncatedUniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
+    OwenSampler,
+    AntitheticOwenSampler,
 ]

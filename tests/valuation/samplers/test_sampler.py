@@ -1,46 +1,36 @@
 from itertools import islice, takewhile
-from typing import Iterator, List, Type, Union
+from typing import Iterator, Type
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
-from pydvl.utils import Seed
 from pydvl.utils.numeric import powerset
+from pydvl.utils.types import Seed
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
+    AntitheticPermutationSampler,
     AntitheticSampler,
+    DeterministicPermutationSampler,
     DeterministicUniformSampler,
+    FiniteOwenSampler,
     IndexIteration,
     LOOSampler,
     MSRSampler,
     NoIndexIteration,
     OwenSampler,
+    PermutationSampler,
     PowersetSampler,
     RandomIndexIteration,
     SequentialIndexIteration,
+    StochasticSampler,
     TruncatedUniformStratifiedSampler,
     UniformSampler,
     UniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
 )
-from pydvl.valuation.samplers.permutation import (
-    AntitheticPermutationSampler,
-    DeterministicPermutationSampler,
-    PermutationSampler,
-)
 
 from . import _check_idxs, _check_subsets
-
-# TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
-# See https://github.com/python/typing/issues/213
-StochasticSampler = Union[
-    UniformSampler,
-    PermutationSampler,
-    AntitheticSampler,
-    UniformStratifiedSampler,
-    AntitheticPermutationSampler,
-    MSRSampler,
-]
 
 
 def test_deterministic_uniform_sampler_batch_size_1():
@@ -132,30 +122,35 @@ def test_loo_sampler_batch_size_1():
     _check_subsets(batches, expected_subsets)
 
 
-@pytest.mark.parametrize(
-    "sampler",
+SAMPLERS = pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs",
     [
-        DeterministicUniformSampler(),
-        UniformSampler(),
-        DeterministicPermutationSampler(),
-        PermutationSampler(),
-        AntitheticSampler(),
-        UniformStratifiedSampler(),
-        AntitheticPermutationSampler(),
-        LOOSampler(),
-        UniformSampler(index_iteration=RandomIndexIteration),
-        UniformStratifiedSampler(index_iteration=RandomIndexIteration),
-        AntitheticSampler(index_iteration=RandomIndexIteration),
-        TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
-        VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
-        OwenSampler(n_samples_outer=4),
-        AntitheticOwenSampler(n_samples_outer=2),
-        MSRSampler(),
+        (DeterministicUniformSampler, dict()),
+        (UniformSampler, dict()),
+        (DeterministicPermutationSampler, dict()),
+        (PermutationSampler, dict()),
+        (AntitheticSampler, dict()),
+        (UniformStratifiedSampler, dict()),
+        (AntitheticPermutationSampler, dict()),
+        (LOOSampler, dict()),
+        (UniformSampler, dict(index_iteration=RandomIndexIteration)),
+        (UniformStratifiedSampler, dict(index_iteration=RandomIndexIteration)),
+        (AntitheticSampler, dict(index_iteration=RandomIndexIteration)),
+        (TruncatedUniformStratifiedSampler, dict(lower_bound=1, upper_bound=2)),
+        (VarianceReducedStratifiedSampler, dict(samples_per_setsize=lambda _: 2)),
+        (FiniteOwenSampler, dict(n_samples_outer=4)),
+        (OwenSampler, dict()),
+        (AntitheticOwenSampler, dict()),
+        (MSRSampler, dict()),
     ],
 )
+
+
+@SAMPLERS
 @pytest.mark.parametrize("indices", [np.array([]), np.array([0, 1, 2])])
-def test_proper(sampler, indices):
+def test_proper(sampler_cls, sampler_kwargs, indices):
     """Test that the sampler generates subsets of the correct sets"""
+    sampler = sampler_cls(**sampler_kwargs)
     max_iterations = 2 ** (len(indices))
     samples = takewhile(
         lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
@@ -170,34 +165,15 @@ def test_proper(sampler, indices):
         assert set(subset) in subsets
 
 
-@pytest.mark.parametrize(
-    "sampler",
-    [
-        DeterministicUniformSampler(),
-        UniformSampler(),
-        DeterministicPermutationSampler(),
-        PermutationSampler(),
-        AntitheticSampler(),
-        UniformStratifiedSampler(),
-        AntitheticPermutationSampler(),
-        LOOSampler(),
-        UniformSampler(index_iteration=RandomIndexIteration),
-        UniformStratifiedSampler(index_iteration=RandomIndexIteration),
-        AntitheticSampler(index_iteration=RandomIndexIteration),
-        TruncatedUniformStratifiedSampler(lower_bound=1, upper_bound=2),
-        VarianceReducedStratifiedSampler(samples_per_setsize=lambda _: 2),
-        OwenSampler(n_samples_outer=4),
-        AntitheticOwenSampler(n_samples_outer=2),
-        MSRSampler(),
-    ],
-)
-def test_sample_counter(sampler):
+@SAMPLERS
+def test_sample_counter(sampler_cls, sampler_kwargs):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
     that was not caused by existing tests.
 
     """
+    sampler = sampler_cls(**sampler_kwargs)
     indices = np.array([0, 1, 2])
     max_iterations = 2 ** (len(indices))
     samples = list(
@@ -216,8 +192,7 @@ def test_sample_counter(sampler):
         (DeterministicUniformSampler(index_iteration=NoIndexIteration), 8),
         (DeterministicPermutationSampler(), 6),
         (LOOSampler(), 3),
-        (OwenSampler(n_samples_outer=4, n_samples_inner=2), 4 * 2 * 3),
-        (AntitheticOwenSampler(n_samples_outer=3, n_samples_inner=2), 2 * 3 * 2 * 3),
+        (FiniteOwenSampler(n_samples_outer=4, n_samples_inner=2), 4 * 2 * 3),
     ],
 )
 def test_length_for_finite_samplers(sampler, expected_length):
@@ -308,7 +283,7 @@ def test_proper_stochastic(sampler_class, index_iteration, indices, seed, seed_a
 def _create_seeded_sample_iter(
     sampler_t: Type[StochasticSampler],
     index_iteration: Type[IndexIteration],
-    indices: List,
+    indices: NDArray[np.int_],
     seed: Seed,
 ) -> Iterator:
     max_iterations = len(indices)
@@ -323,10 +298,10 @@ def _create_seeded_sample_iter(
 
 
 @pytest.mark.flaky(reruns=1)
-def test_owen_sampler():
+def test_finite_owen_sampler():
     n_outer = 5
     n_inner = 100
-    sampler = OwenSampler(
+    sampler = FiniteOwenSampler(
         n_samples_outer=n_outer, n_samples_inner=n_inner, batch_size=1
     )
     indices = np.arange(5000)
@@ -355,40 +330,17 @@ def test_owen_sampler():
 def test_antithetic_owen_sampler():
     n_outer = 3
     n_inner = 100
-    sampler = AntitheticOwenSampler(
-        n_samples_outer=n_outer, n_samples_inner=n_inner, batch_size=1
-    )
+    sampler = AntitheticOwenSampler(n_samples_inner=n_inner, batch_size=1)
     indices = np.arange(5000)
 
-    # extract samples for the first and second index
+    # extract samples
     n_samples = n_outer * n_inner
     samples = [b[0] for b in islice(sampler.generate_batches(indices), n_samples * 4)]
-    samples_0 = samples[: n_samples * 2 : 2]
-    samples_0_complement = samples[1 : 2 * n_samples : 2]
-    samples_1 = samples[2 * n_samples :: 2]
-    samples_1_complement = samples[2 * n_samples + 1 :: 2]
 
-    # check that indices are correct
-    assert all(sample.idx == 0 for sample in samples_0)
-    assert all(sample.idx == 0 for sample in samples_0_complement)
-    assert all(sample.idx == 1 for sample in samples_1)
-    assert all(sample.idx == 1 for sample in samples_1_complement)
-
-    # check that the sample_sizes are close to expected sizes
-    for samples in [samples_0, samples_1]:
-        _check_sample_sizes(
-            samples,
-            n_samples_outer=n_outer,
-            n_indices=len(indices),
-            probs=np.array([0.0, 0.25, 0.5]),
-        )
-    for samples in [samples_0_complement, samples_1_complement]:
-        _check_sample_sizes(
-            samples,
-            n_samples_outer=n_outer,
-            n_indices=len(indices),
-            probs=np.array([1.0, 0.75, 0.5]),
-        )
+    # check that the sample sizes are close to expected sizes
+    sizes = np.array([len(sample.subset) for sample in samples])
+    avg_sizes = sizes.reshape(n_outer, -1).mean(axis=1)
+    assert np.allclose(avg_sizes, len(indices) // 2, rtol=0.01)
 
 
 def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
