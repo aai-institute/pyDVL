@@ -55,7 +55,7 @@ practical use, since the fraction $\alpha$ is of course unknown in practice.
 
 ### Rank stability
 
-Introduced in [@wang_data_2022], one can  look at how stable the top $k$% of
+Introduced in [@wang_data_2023], one can  look at how stable the top $k$% of
 the values is across runs. Rank stability of a method is necessary but not
 sufficient for good results. Ideally one wants to identify high-value points
 reliably (good precision and recall) and consistently (good rank stability).

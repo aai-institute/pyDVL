@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class TorchBatch(Batch):
     """
-    A convenience class for handling batches of data. Validates, the alignment
+    A convenience class for handling batches of data. Validates the alignment
     of the first dimension (batch dimension) of the input and target tensor
 
     Attributes:
@@ -75,22 +75,22 @@ class TorchBatch(Batch):
 
 class TorchGradientProvider(GradientProvider[TorchBatch, torch.Tensor]):
     r"""
-    Compute per-sample gradients of a function defined by
+    Computes per-sample gradients of a function defined by
     a [torch.nn.Module][torch.nn.Module] and a loss function using
     [torch.func][torch.func].
 
     Consider a function
 
-    $$ \ell: \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \times \mathbb{R}^{n} \times
-        \mathbb{R}^{n}, \quad \ell(\omega_1, \omega_2, x, y) =
-        \operatorname{loss}(f(\omega_1, \omega_2; x), y) $$
+    $$ \ell: \mathbb{R}^{d_1} \times \mathbb{R}^{d_2} \times \mathbb{R}^{n}
+        \times \mathbb{R}^{n}, \quad \ell(\omega_1, \omega_2, x, y) =
+        \operatorname{loss}(f(\omega_1, \omega_2; x), y), $$
 
-    e.g. a two layer neural network $f$ with a loss function, then this object should
-    compute the expressions:
+    e.g. a two layer neural network $f$ with a loss function. This object
+    computes the expressions:
 
     $$ \nabla_{\omega_{i}}\ell(\omega_1, \omega_2, x, y),
-    \nabla_{\omega_{i}}\nabla_{x}\ell(\omega_1, \omega_2, x, y),
-    \nabla_{\omega}\ell(\omega_1, \omega_2, x, y) \cdot v$$
+       \nabla_{\omega_{i}}\nabla_{x}\ell(\omega_1, \omega_2, x, y),
+       \nabla_{\omega}\ell(\omega_1, \omega_2, x, y) \cdot v. $$
 
     """
 
