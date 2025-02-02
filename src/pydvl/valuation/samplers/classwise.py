@@ -1,3 +1,27 @@
+"""
+Class-wise sampler for the [class-wise Shapley][intro-to-cw-shapley] valuation method.
+
+The class-wise Shapley method, introduced by Schoch et al., 2022[^1], uses a so-called
+*set-conditional marginal Shapley value* that requires selectively sampling subsets of
+data points with the same or a different class from that of the data point of interest.
+
+This sampling scheme is divided into an outer and an inner sampler. The outer one is any
+subclass of [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] that
+generates subsets of the complement set of the data point of interest. The inner sampler
+is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], typically
+(and in the paper) a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
+
+## References
+
+[^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
+    Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
+    Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
+    the Thirty-Sixth Conference on Neural Information Processing Systems
+    (NeurIPS). New Orleans, Louisiana, USA, 2022.
+
+"""
+
 from __future__ import annotations
 
 from itertools import cycle, islice
@@ -82,7 +106,8 @@ def get_unique_labels(array: NDArray) -> NDArray:
 class ClasswiseSampler(IndexSampler):
     """A sampler that samples elements from a dataset in two steps, based on the labels.
 
-    Used by the classwise Shapley valuation method.
+    Used by the [class-wise Shapley valuation
+    method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 
     Args:
         in_class: Sampling scheme for elements of a given label.
@@ -163,11 +188,9 @@ class ClasswiseSampler(IndexSampler):
 
     @staticmethod
     def weight(n: int, subset_len: int) -> float:
-        # The weight method is not needed but has to be implemented
-        # because this class inherits from IndexSampler
-        # This is not needed because this class does not use its own evaluation strategy
-        # It instead uses the in-class sampler's evaluation strategy.
-        raise AttributeError("The weight should come from the in_class sampler")
+        # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
+        # method should never be called.
+        raise AttributeError("The weight should come from the in-class sampler")
 
     def sample_limit(self, indices: IndexSetT) -> int:
         # The sample list cannot be computed without accessing the label

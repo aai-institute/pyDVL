@@ -49,7 +49,7 @@ __all__ = ["AntitheticOwenSampler", "FiniteOwenSampler", "OwenSampler"]
 
 
 class FiniteOwenSampler(StochasticSamplerMixin, PowersetSampler):
-    """A finite sampler for Owen shapley values.
+    """A finite Owen sampler for Shapley values.
 
     For each index $i$ the Owen sampler loops over a deterministic grid of probabilities
     (containing `n_samples_outer` entries between 0 and 1) and then draws
