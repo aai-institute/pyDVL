@@ -8,8 +8,7 @@ repos:
         # HACK: ruff-pre-commit ignores pyproject.toml
         # https://github.com/astral-sh/ruff-pre-commit/issues/54
         args: [ "--extend-per-file-ignores", "tests/**/*.py:F811",
-                "--extend-per-file-ignores", "tests/**/*.py:F401",
-                "--fix" ]
+                "--extend-per-file-ignores", "tests/**/*.py:F401" ]
       - id: ruff-format
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
