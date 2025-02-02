@@ -14,4 +14,4 @@ repos:
     rev: 0.6.1
     hooks:
       - id: nbstripout
-        args: ["--keep-output", "--keep-count", "--drop-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm"]
+        args: [ "--keep-output", "--keep-count", "--drop-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm" ]

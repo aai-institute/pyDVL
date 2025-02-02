@@ -71,6 +71,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
     ??? Example
         ``` pycon
         >>>from pydvl.valuation.samplers import DeterministicUniformSampler
+        >>>import numpy as np
         >>>sampler = DeterministicUniformSampler()
         >>>for idx, s in sampler.generate_batches(np.arange(2)):
         >>>    print(s, end="")
@@ -260,8 +261,9 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
     Args:
         sampler: Required to setup some strategies. Be careful not to store it in the
             object when subclassing!
-        utility: Required to setup some strategies. Be careful not to store it in the
-            object when subclassing!
+        utility: Required to setup some strategies and to process the samples. Since
+            this contains the training data, it is expensive to pickle and send to
+            workers.
         coefficient: An additional coefficient to multiply marginals with. This
             depends on the valuation method, hence the delayed setup.
     """
