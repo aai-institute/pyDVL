@@ -35,12 +35,12 @@ from typing import Type
 import numpy as np
 
 from pydvl.utils import Seed, random_subset
+from pydvl.utils.numeric import complement
 from pydvl.valuation.samplers.powerset import (
     IndexIteration,
     PowersetSampler,
     RandomIndexIteration,
     SequentialIndexIteration,
-    complement,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
@@ -97,7 +97,7 @@ class FiniteOwenSampler(StochasticSamplerMixin, PowersetSampler):
             start=0, stop=self._q_stop, num=self._n_samples_outer
         )
         for idx in self.index_iterator(indices):
-            _complement = complement(indices, [idx] if idx is not None else [])
+            _complement = complement(indices, [idx])
             for prob in probabilities:
                 for _ in range(self._n_samples_inner):
                     subset = random_subset(_complement, q=prob, seed=self._rng)
@@ -148,7 +148,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
                 0, self._q_stop + np.finfo(float).eps, size=len(indices)
             )
             for idx, prob in zip(self.index_iterator(indices), probs):
-                _complement = complement(indices, [idx] if idx is not None else [])
+                _complement = complement(indices, [idx])
                 for _ in range(self._n_samples_inner):
                     subset = random_subset(_complement, q=prob, seed=self._rng)
                     yield Sample(idx, subset)
@@ -201,8 +201,7 @@ class AntitheticOwenSampler(OwenSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for sample in super()._generate(indices):
             idx, subset = sample
-            _exclude = [idx] if idx is not None else []
-            _exclude += subset.tolist()
+            _exclude = [idx] + subset.tolist()
             _antithetic_subset = complement(indices, _exclude)
             yield sample
             yield Sample(idx, _antithetic_subset)

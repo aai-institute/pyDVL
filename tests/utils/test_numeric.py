@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.numeric import (
+    complement,
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
@@ -11,6 +12,21 @@ from pydvl.utils.numeric import (
     running_moments,
 )
 from pydvl.utils.types import Seed
+
+
+@pytest.mark.parametrize(
+    "include, exclude, expected",
+    [
+        (np.array([1, 2, 3, 4, 5]), [2, 3], np.array([1, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [None], np.array([1, 2, 3, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [], np.array([1, 2, 3, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [1, 2, 3, 4, 5], np.array([])),
+        (np.array([]), [1, 2], np.array([])),
+    ],
+)
+def test_complement(include, exclude, expected):
+    result = complement(include, exclude)
+    assert np.array_equal(result, expected)
 
 
 def test_powerset():

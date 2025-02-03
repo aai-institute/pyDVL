@@ -38,7 +38,12 @@ from typing import Callable, Generator, Iterable, Type
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
+from pydvl.utils.numeric import (
+    complement,
+    powerset,
+    random_subset,
+    random_subset_of_size,
+)
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
@@ -66,7 +71,6 @@ __all__ = [
     "SequentialIndexIteration",
     "RandomIndexIteration",
     "NoIndexIteration",
-    "complement",
 ]
 
 
@@ -121,21 +125,6 @@ class NoIndexIteration(IndexIteration):
     @staticmethod
     def length(indices: IndexSetT) -> int:
         return 0
-
-
-def complement(include: IndexSetT, exclude: Iterable[IndexT]) -> NDArray[IndexT]:
-    """Returns the complement of the set of indices excluding the given
-    indices.
-
-    Args:
-        include: The set of indices to consider.
-        exclude: The indices to exclude from the complement.
-
-    Returns:
-        The complement of the set of indices excluding the given indices.
-    """
-    _exclude = [i for i in exclude if i is not None]
-    return np.setxor1d(include, _exclude).astype(np.int_)
 
 
 class PowersetSampler(IndexSampler, ABC):
@@ -300,9 +289,7 @@ class DeterministicUniformSampler(PowersetSampler):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
-            for subset in powerset(  # type:ignore
-                complement(indices, [idx] if idx is not None else [])
-            ):
+            for subset in powerset(complement(indices, [idx])):
                 yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
@@ -357,10 +344,7 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             for idx in self.index_iterator(indices):
-                subset = random_subset(
-                    complement(indices, [idx] if idx is not None else []),
-                    seed=self._rng,
-                )
+                subset = random_subset(complement(indices, [idx]), seed=self._rng)
                 yield Sample(idx, subset)
 
 
@@ -376,7 +360,7 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             for idx in self.index_iterator(indices):
-                _complement = complement(indices, [idx] if idx is not None else [])
+                _complement = complement(indices, [idx])
                 subset = random_subset(_complement, seed=self._rng)
                 yield Sample(idx, subset)
                 yield Sample(idx, complement(_complement, subset))
@@ -392,9 +376,7 @@ class UniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             for idx in self.index_iterator(indices):
                 k = int(self._rng.choice(np.arange(len(indices)), size=1).item())
                 subset = random_subset_of_size(
-                    complement(indices, [idx] if idx is not None else []),
-                    size=k,
-                    seed=self._rng,
+                    complement(indices, [idx]), size=k, seed=self._rng
                 )
                 yield Sample(idx, subset)
 
@@ -432,9 +414,7 @@ class TruncatedUniformStratifiedSampler(UniformStratifiedSampler):
                     low=self.lower_bound, high=self.upper_bound + 1, size=1
                 ).item()
                 subset = random_subset_of_size(
-                    complement(indices, [idx] if idx is not None else []),
-                    size=k,
-                    seed=self._rng,
+                    complement(indices, [idx]), size=k, seed=self._rng
                 )
                 yield Sample(idx, subset)
 
@@ -474,7 +454,7 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             for idx in self.index_iterator(indices):
-                from_set = complement(indices, [idx] if idx is not None else [])
+                from_set = complement(indices, [idx])
                 for k in range(1, len(from_set)):
                     for _ in range(self.samples_per_setsize(k)):
                         subset = random_subset_of_size(from_set, size=k, seed=self._rng)

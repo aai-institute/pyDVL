@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     overload,
@@ -23,6 +24,7 @@ from numpy.typing import NDArray
 from pydvl.utils.types import Seed
 
 __all__ = [
+    "complement",
     "running_moments",
     "num_samples_permutation_hoeffding",
     "powerset",
@@ -35,6 +37,24 @@ __all__ = [
 ]
 
 T = TypeVar("T", bound=np.generic)
+
+
+def complement(
+    include: NDArray[T], exclude: NDArray[T] | Sequence[T | None]
+) -> NDArray[T]:
+    """Returns the complement of the set of indices excluding the given
+    indices.
+
+    Args:
+        include: The set of indices to consider.
+        exclude: The indices to exclude from the complement. These must be a subset
+            of `include`. If an index is `None` it is ignored.
+
+    Returns:
+        The complement of the set of indices excluding the given indices.
+    """
+    _exclude = np.array([i for i in exclude if i is not None], dtype=include.dtype)
+    return np.setdiff1d(include, _exclude).astype(np.int_)
 
 
 def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
