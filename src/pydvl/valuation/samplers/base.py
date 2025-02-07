@@ -139,17 +139,18 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             if self._interrupted:
                 break
 
+    @abstractmethod
     def sample_limit(self, indices: IndexSetT) -> int | None:
         """Number of samples that can be generated from the indices.
 
-        Returns None if the number of samples is infinite, which is the case for most
-        stochastic samplers.
+        Args:
+            indices: The indices used in the sampler.
+
+        Returns:
+            `None` if the number of samples is infinite, which is the case for
+            most stochastic samplers.
         """
-        if len(indices) == 0:
-            out = 0
-        else:
-            out = None
-        return out
+        ...
 
     @abstractmethod
     def _generate(self, indices: IndexSetT) -> SampleGenerator:

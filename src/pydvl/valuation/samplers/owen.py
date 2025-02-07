@@ -110,7 +110,7 @@ class FiniteOwenSampler(StochasticSamplerMixin, PowersetSampler):
         m = self._index_iterator_cls.complement_size(n)
         return math.comb(m, subset_len) * int(n)
 
-    def sample_limit(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         return len(indices) * self._n_samples_outer * self._n_samples_inner
 
 
@@ -156,11 +156,12 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
                     subset = random_subset(_complement, q=prob, seed=self._rng)
                     yield Sample(idx, subset)
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        # This is a bit hacky: we cancel the coefficient of DataShaplueValuation
-        # Since it's all integer operations, there won't be any loss in precision
-        return math.comb(n - 1, subset_len) * int(n)
+    def weight(self, n: int, subset_len: int) -> float:
+        """The probability of drawing a subset of a given length from the complement of
+        the current index is 1/(n-1 choose k).
+        """
+        m = self._index_iterator_cls.complement_size(n)
+        return math.comb(m, subset_len) * int(n)
 
 
 class AntitheticOwenSampler(OwenSampler):

@@ -145,7 +145,7 @@ class ClasswiseSampler(IndexSampler):
         # subset but in this case we want all indices.
         # The index for which we compute the value will be removed by
         # the in_class sampler instead.
-        self.out_of_class._index_iteration = NoIndexIteration
+        self.out_of_class._index_iterator_cls = NoIndexIteration
 
         out_of_class_batch_generators = {}
 
@@ -191,7 +191,7 @@ class ClasswiseSampler(IndexSampler):
         # method should never be called.
         raise AttributeError("The weight should come from the in-class sampler")
 
-    def sample_limit(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         # The sample list cannot be computed without accessing the label
         # information and using that to compute the sample limits
         # of the in-class and out-of-class samplers first.

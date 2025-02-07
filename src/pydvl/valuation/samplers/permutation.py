@@ -132,10 +132,8 @@ class DeterministicPermutationSampler(PermutationSampler):
 
     def sample_limit(self, indices: IndexSetT) -> int:
         if len(indices) == 0:
-            out = 0
-        else:
-            out = math.factorial(len(indices))
-        return out
+            return 0
+        return math.factorial(len(indices))
 
 
 class PermutationEvaluationStrategy(

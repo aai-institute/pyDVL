@@ -78,7 +78,7 @@ logger = logging.getLogger(__name__)
 
 
 class IndexIteration(ABC):
-    def __init__(self, indices: NDArray[IndexT]):
+    def __init__(self, indices: IndexSetT):
         self._indices = indices
 
     @abstractmethod
@@ -86,7 +86,30 @@ class IndexIteration(ABC):
 
     @staticmethod
     @abstractmethod
-    def length(indices: IndexSetT) -> int | None: ...
+    def length(indices: IndexSetT) -> int | None:
+        """Returns the length of the iteration over the index set
+
+        Args:
+            indices: The set of indices to iterate over.
+
+        Returns:
+            The length of the iteration. It can be:
+                - 0, if the index set is ignored or there are no indices.
+                - a positive integer, if the iteration is finite
+                - `None` if the iteration never ends.
+        """
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def complement_size(n: int) -> int:
+        """Returns the size of complements of sets of size n, with respect to the
+        indices returned by the iteration.
+
+        If the iteration returns single indices, then this is n-1, if it returns no
+        indices, then it is n. If it returned tuples, then n-2, etc.
+        """
+        ...
 
 
 class SequentialIndexIteration(IndexIteration):
@@ -94,8 +117,12 @@ class SequentialIndexIteration(IndexIteration):
         yield from self._indices
 
     @staticmethod
-    def length(indices: IndexSetT) -> int:
+    def length(indices: IndexSetT) -> int | None:
         return len(indices)
+
+    @staticmethod
+    def complement_size(n: int) -> int:
+        return n - 1
 
 
 class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
@@ -112,10 +139,12 @@ class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
     @staticmethod
     def length(indices: IndexSetT) -> int | None:
         if len(indices) == 0:
-            out = 0
-        else:
-            out = None
-        return out
+            return 0
+        return None
+
+    @staticmethod
+    def complement_size(n: int) -> int:
+        return n - 1
 
 
 class NoIndexIteration(IndexIteration):
@@ -123,19 +152,21 @@ class NoIndexIteration(IndexIteration):
         yield None
 
     @staticmethod
-    def length(indices: IndexSetT) -> int:
+    def length(indices: IndexSetT) -> int | None:
         return 0
+
+    @staticmethod
+    def complement_size(n: int) -> int:
+        return n
 
 
 class PowersetSampler(IndexSampler, ABC):
-    """
-    An abstract class for samplers which iterate over the powerset of the
+    """An abstract class for samplers which iterate over the powerset of the
     complement of an index in the training set.
 
     This is done in two nested loops, where the outer loop iterates over the set
     of indices, and the inner loop iterates over subsets of the complement of
     the current index. The outer iteration can be either sequential or at random.
-
     """
 
     def __init__(
@@ -151,18 +182,18 @@ class PowersetSampler(IndexSampler, ABC):
             index_iteration: the order in which indices are iterated over
         """
         super().__init__(batch_size)
-        self._index_iteration = index_iteration
+        self._index_iterator_cls = index_iteration
+        self._index_iterator: IndexIteration | None = None
 
     def index_iterator(
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
-        if issubclass(self._index_iteration, StochasticSamplerMixin):
-            # To-Do: Need to do something more elegant here
-            # seed = self._rng.integers(0, 2**32, dtype=np.uint32).item()  # type: ignore
-            yield from self._index_iteration(indices, self._rng)  # type: ignore
-        else:
-            yield from self._index_iteration(indices)
+        try:
+            self._index_iterator = self._index_iterator_cls(indices, seed=self._rng)  # type: ignore
+        except (AttributeError, TypeError):
+            self._index_iterator = self._index_iterator_cls(indices)
+        yield from self._index_iterator
 
     def make_strategy(
         self,
@@ -186,8 +217,9 @@ class PowersetSampler(IndexSampler, ABC):
     def weight(self, n: int, subset_len: int) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
-        powerset of a set with n-1 elements has mass 2^{n-1} over each subset."""
-        return 2 ** (n - 1) if n > 0 else 1  # type: ignore
+        powerset of a set with n-1 elements has mass 1/2^{n-1} over each subset."""
+        n = self._index_iterator_cls.complement_size(n)
+        return 2**n if n > 0 else 1  # type: ignore
 
 
 class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler, ValueUpdate]):
@@ -293,21 +325,15 @@ class DeterministicUniformSampler(PowersetSampler):
                 yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        len_outer = self._index_iteration.length(indices)
-        # empty index set
-        if len(indices) == 0:
-            out = 0
-        # infinite index iteration
-        elif len_outer is None:
-            out = None
-        # NoIndexIteration, i.e. sampling from all indices and not just the complement
-        # of the current outer index
-        elif len_outer == 0:
-            out = 2 ** len(indices)
-        # SequentialIndexIteration or other finite index iteration
-        else:
-            out = len_outer * 2 ** (len(indices) - 1)
-        return out
+        len_outer = self._index_iterator_cls.length(indices)
+        if len(indices) == 0:  # Empty index set
+            return 0
+        elif len_outer is None:  # Infinite index iteration
+            return None
+        elif len_outer == 0:  # No iteration over indices
+            return int(2 ** len(indices))
+        else:  # SequentialIndexIteration or other finite index iteration
+            return int(len_outer * 2 ** (len(indices) - 1))
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
