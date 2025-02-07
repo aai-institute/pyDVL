@@ -51,7 +51,31 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class PermutationSampler(StochasticSamplerMixin, IndexSampler):
+class PermutationSamplerBase(IndexSampler):
+    """Base class for permutation samplers."""
+
+    def __init__(
+        self,
+        *args,
+        truncation: TruncationPolicy | None = None,
+        batch_size: int = 1,
+        **kwargs,
+    ):
+        super().__init__(batch_size=batch_size)
+        self.truncation = truncation or NoTruncation()
+
+    def weight(self, n: int, subset_len: int) -> float:
+        return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
+
+    def make_strategy(
+        self,
+        utility: UtilityBase,
+        coefficient: Callable[[int, int, float], float] | None = None,
+    ) -> PermutationEvaluationStrategy:
+        return PermutationEvaluationStrategy(self, utility, coefficient)
+
+
+class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
     """Sample permutations of indices and iterate through each returning
     increasing subsets, as required for the permutation definition of
     semi-values.
@@ -73,8 +97,7 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
     def __init__(
         self, truncation: TruncationPolicy | None = None, seed: Seed | None = None
     ):
-        super().__init__(seed=seed)
-        self.truncation = truncation or NoTruncation()
+        super().__init__(seed=seed, truncation=truncation)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
@@ -89,17 +112,6 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
             return
         while True:
             yield Sample(-1, self._rng.permutation(indices))
-
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
-
-    def make_strategy(
-        self,
-        utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
-    ) -> PermutationEvaluationStrategy:
-        return PermutationEvaluationStrategy(self, utility, coefficient)
 
 
 class AntitheticPermutationSampler(PermutationSampler):
@@ -120,7 +132,7 @@ class AntitheticPermutationSampler(PermutationSampler):
             yield Sample(-1, permutation[::-1])
 
 
-class DeterministicPermutationSampler(PermutationSampler):
+class DeterministicPermutationSampler(PermutationSamplerBase):
     """Samples all n! permutations of the indices deterministically, and
     iterates through them, returning sets as required for the permutation-based
     definition of semi-values.
@@ -137,7 +149,7 @@ class DeterministicPermutationSampler(PermutationSampler):
 
 
 class PermutationEvaluationStrategy(
-    EvaluationStrategy[PermutationSampler, ValueUpdate]
+    EvaluationStrategy[PermutationSamplerBase, ValueUpdate]
 ):
     """Computes marginal values for permutation sampling schemes.
 
@@ -147,7 +159,7 @@ class PermutationEvaluationStrategy(
 
     def __init__(
         self,
-        sampler: PermutationSampler,
+        sampler: PermutationSamplerBase,
         utility: UtilityBase,
         coefficient: Callable[[int, int, float], float] | None = None,
     ):
@@ -164,7 +176,7 @@ class PermutationEvaluationStrategy(
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation):
+            for i, idx in enumerate(permutation):  # type: int, int
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
