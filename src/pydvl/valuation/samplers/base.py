@@ -34,7 +34,10 @@ logger = logging.getLogger(__name__)
 
 
 class ResultUpdater(Protocol[ValueUpdateT]):
-    """Protocol for result updaters."""
+    """Protocol for result updaters.
+
+    A result updater is a strategy to update a valuation result with a value update.
+    """
 
     def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
 
@@ -123,10 +126,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
     def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
 
-        # create an empty generator if the indices are empty. `generate_batches` is
-        # a generator function because it has a yield statement later in its body.
-        # Inside generator function, `return` acts like a `break`, which produces an
-        # empty generator function. See: https://stackoverflow.com/a/13243870
+        # Create an empty generator if the indices are empty: `return` acts like a
+        # `break`, and produces an empty generator.
         if len(indices) == 0:
             return
 
@@ -184,9 +185,16 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         the desired expression.
 
         Args:
-            n: The total number of indices in the training data.
-            subset_len: The size of the subset $S_j$ for which the marginal is being
-                computed
+            n: The size of the index set. Note that the actual size of the set being
+                sampled will often be n-1, as one index might be removed from the set.
+                See [IndexIteration][pydvl.valuation.samplers.IndexIteration] for more.
+            subset_len: The size of the subset being sampled
+
+        Returns:
+            The inverse probability of sampling a set of the given size, when the index
+                set has size `n`, under the
+                [IndexIteration][pydvl.valuation.samplers.IndexIteration] given upon
+                construction.
         """
         ...
 
@@ -253,10 +261,6 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
                         flag.set()
                         break
         ```
-    FIXME the coefficient does not belong here, but in the methods. Either we
-      return more information from process() so that it can be used in the methods
-      or we allow for some manipulation of the strategy after it has been created.
-      The latter is rigid but a quick fix, which I need right now.
 
     Args:
         sampler: Required to setup some strategies. Be careful not to store it in the
@@ -278,7 +282,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         self.n_indices = (
             len(utility.training_data) if utility.training_data is not None else 0
         )
-        self.coefficient: Callable[[int, int], float] = lambda n, k: 1.0
+        self.coefficient: Callable[[int, int], float]
 
         if coefficient is not None:
 

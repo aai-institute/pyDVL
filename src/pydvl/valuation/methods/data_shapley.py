@@ -34,18 +34,19 @@ Computing values always follows the same pattern: construct a
 
 ## Choosing samplers
 
-Different choices of sampler yield different quality of approximation.
+Different choices of sampler yield different qualities of approximation.
 
 The most basic one is
 [DeterministicUniformSampler][pydvl.valuation.samplers.DeterministicUniformSampler],
-which yields all possible subsets of the training set. This is the most accurate, but
-also the most computationally expensive method (with complexity $O(2^n)$), so it is
+which iterates over all possible subsets of the training set. This is the most accurate,
+but also the most computationally expensive method (with complexity $O(2^n)$), so it is
 never used in practice.
 
 The most common one is [PermutationSampler][pydvl.valuation.samplers.PermutationSampler],
 which samples random permutations of the training set. Despite the apparent greater
 complexity of $O(n!)$, the method is much faster to converge in practice, especially
-when using [truncation policies][pydvl.valuation.samplers.truncation].
+when using [truncation policies][pydvl.valuation.samplers.truncation] to early-stop the
+processing of each permutation.
 
 Other samplers introduce altogether different ways of computing Shapley values, like
 the [Owen samplers][pydvl.valuation.samplers.owen] or the
@@ -54,10 +55,19 @@ pattern remains the same.
 
 ## Caveats
 
-As mentioned, the Data-Shapley method is computationally expensive, especially for large
-datasets. Some samplers yield better convergence, but not in all cases. Proper choice of
-a stopping criterion is crucial to obtain useful results, while avoiding unnecessary
-computation.
+1. As mentioned, computing Shapley values can be computationally expensive, especially
+   for large datasets. Some samplers yield better convergence, but not in all cases.
+   Proper choice of a stopping criterion is crucial to obtain useful results, while
+   avoiding unnecessary computation.
+2. While it is possible to mix-and-match different components of the valuation method,
+   it is not always advisable, and it can sometimes be incorrect. For example, using a
+   deterministic sampler with a count-based stopping criterion is likely to yield poor
+   results. More importantly, not all samplers, nor sampler configurations, are
+   compatible with Shapley value computation. For instance using
+   [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration] with a
+   [PowerSetSampler][pydvl.valuation.samplers.PowerSetSampler] will not work since the
+   evaluation strategy expects samples consisting of an index and a subset of its
+   complement in the whole index set.
 """
 
 import math

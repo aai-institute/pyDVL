@@ -179,9 +179,10 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
 
     The MSR evaluation strategy makes one utility evaluation per sample but generates
     `n_indices` many updates from it. The updates will be used to update two running
-    means that will later be combined into a final value. We send the
-    `ValueUpdate.kind` field to `ValueUpdateKind.POSITIVE` or `ValueUpdateKind.NEGATIVE`
-    to decide which of the two running means is going to be updated.
+    means that will later be combined into a final value. We use the field
+    `ValueUpdate.is_positive` field to inform [MSRResultUpdater][pydvl.valuation.samplers.MSRResultUpdater]
+     of which of the two running
+    means must be updated.
     """
 
     def process(

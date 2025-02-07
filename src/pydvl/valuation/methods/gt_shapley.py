@@ -69,7 +69,7 @@ class GroupTestingShapleyValuation(Valuation):
         utility: Utility object with model, data and scoring function.
         n_samples: The number of samples to use. A sample size with theoretical
             guarantees can be computed using
-            `pydvl.valuation.methods.gt_shapleyt.compute_n_samples`.
+            [compute_n_samples()][pydvl.valuation.methods.gt_shapley.compute_n_samples].
         epsilon: The error tolerance.
         solver_options: Optional dictionary containing a CVXPY solver and options to
             configure it. For valid values to the "solver" key see

@@ -37,6 +37,9 @@ class DeltaShapleyValuation(SemivalueValuation):
             lower_bound=lower_bound, upper_bound=upper_bound, seed=seed
         )
         super().__init__(utility, sampler, is_done, progress=progress)
+        raise NotImplementedError(
+            "Delta-Shapley has not been properly implemented nor tested yet."
+        )
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
-        return weight / math.comb(n, k)
+        return weight / math.comb(n - 1, k)
