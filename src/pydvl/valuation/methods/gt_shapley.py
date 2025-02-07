@@ -215,8 +215,7 @@ class GTSampler(StochasticSamplerMixin, IndexSampler):
             subset = random_subset_of_size(indices, size=size, seed=self._rng)
             yield Sample(idx=None, subset=subset)
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         raise NotImplementedError("This is not a semi-value sampler.")
 
     def make_strategy(

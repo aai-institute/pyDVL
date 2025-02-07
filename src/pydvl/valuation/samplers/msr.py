@@ -159,8 +159,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             subset = random_subset(indices, seed=self._rng)
             yield Sample(None, subset)
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         return 2 ** (n - 1) if n > 0 else 1.0  # type: ignore
 
     def make_strategy(

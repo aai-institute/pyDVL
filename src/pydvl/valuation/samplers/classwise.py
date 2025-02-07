@@ -186,8 +186,7 @@ class ClasswiseSampler(IndexSampler):
         # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
         # method should never be called.
         raise AttributeError("The weight should come from the in-class sampler")

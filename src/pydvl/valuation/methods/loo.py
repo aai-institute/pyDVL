@@ -44,8 +44,8 @@ class LOOValuation(SemivalueValuation):
         )
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
-        """
-        This is never actually used to filter out sets, because the LOOSampler returns
-        only complements of {idx}, but it is required by the abstract class.
-        """
-        return weight if k == n - 1 else 0
+        """The LOOSampler returns only complements of {idx}, so the weight is either
+        n (the inverse probability of a set of size n-1) or 0 if k != n-1. We cancel
+        this out here so that the final coefficient is either 1 if k == n-1 or 0
+        otherwise."""
+        return weight / max(1, n)

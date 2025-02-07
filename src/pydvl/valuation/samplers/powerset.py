@@ -183,8 +183,7 @@ class PowersetSampler(IndexSampler, ABC):
             indices:"""
         ...
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset."""
@@ -217,9 +216,10 @@ class LOOSampler(IndexSampler):
         for idx in indices:
             yield Sample(idx, complement(indices, [idx]))
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        return 1.0
+    def weight(self, n: int, subset_len: int) -> float:
+        """This sampler returns only sets of size n-1. There are n such sets, so the
+        probability of drawing one is 1/n, or 0 if subset_len != n-1."""
+        return n if subset_len == n - 1 else 0
 
     def make_strategy(
         self,

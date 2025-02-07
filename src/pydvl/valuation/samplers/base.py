@@ -166,9 +166,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         """
         ...
 
-    @staticmethod
     @abstractmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         r"""Factor by which to multiply Monte Carlo samples, so that the
         mean converges to the desired expression.
 
