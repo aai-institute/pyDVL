@@ -110,7 +110,7 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
         # define counts as minimum of the two counts (see docstring)
         counts = np.minimum(self.positive.counts, self.negative.counts)
 
-        values = self.positive.values + self.negative.values
+        values = self.positive.values - self.negative.values
         values[counts == 0] = np.nan
 
         # define variances that yield correct standard errors (see docstring)
@@ -151,11 +151,9 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
 
     def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
-        self._count = 0
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
-            self._count += 1
             subset = random_subset(indices, seed=self._rng)
             yield Sample(None, subset)
 
@@ -167,6 +165,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
         utility: UtilityBase,
         coefficient: Callable[[int, int, float], float] | None = None,
     ) -> MSREvaluationStrategy:
+        assert coefficient is not None
         return MSREvaluationStrategy(self, utility, coefficient)
 
     def result_updater(self, result: ValuationResult) -> MSRResultUpdater:
@@ -200,12 +199,10 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
         mask[sample.subset] = True
 
         updates = []
-        for i, m in enumerate(mask):
-            k = len(sample.subset) - int(m)
+        for i, is_positive in enumerate(mask):  # type: int, bool
+            k = len(sample.subset) - int(is_positive)
             coeff = self.coefficient(self.n_indices, k)
-            if not m:
-                coeff = -coeff
             updates.append(
-                MSRValueUpdate(idx=i, update=u_value * coeff, is_positive=bool(m))
+                MSRValueUpdate(idx=i, update=u_value * coeff, is_positive=is_positive)
             )
         return updates

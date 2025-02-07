@@ -724,7 +724,9 @@ class GroupedDataset(Dataset):
         return training_set, test_set
 
     @classmethod
-    def from_dataset(cls, data: Dataset, data_groups: Sequence[int]) -> GroupedDataset:
+    def from_dataset(
+        cls, data: Dataset, data_groups: Sequence[int] | NDArray[np.int_]
+    ) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
 

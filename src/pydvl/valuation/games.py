@@ -93,7 +93,7 @@ class DummyGameUtility(UtilityBase):
         return score
 
     def with_dataset(self, dataset: Dataset):
-        copy = type(self)(score=self.score)
+        copy = type(self)(score=self.score, score_range=self.score_range)
         copy.training_data = dataset
         return copy
 
@@ -420,8 +420,8 @@ class ShoesGame(Game):
 
         The solution for left or right shoes is symmetrical
         """
-        left_value = 0
-        right_value = 0
+        left_value = 0.0
+        right_value = 0.0
         m = self.n_players - 1
         for k in range(m + 1):
             left_value += (
@@ -520,15 +520,6 @@ class ShoesGame(Game):
     @staticmethod
     def n_subsets_right(n_left: int, n_right: int, size: int | None = None) -> int:
         return ShoesGame.n_subsets_left(n_right, n_left, size)
-
-    # FIXME: this is broken
-    # @staticmethod
-    # def n_subsets_left_size_k(n_left: int, n_right: int, k: int) -> int:
-    #     acc = math.comb(n_right, k)
-    #     for a in range(1, min(k // 2, n_left + 1)):
-    #         acc += math.comb(n_left, a) * math.comb(n_right, k - a)
-    #     return acc
-    #
 
 
 class AirportGame(Game):
