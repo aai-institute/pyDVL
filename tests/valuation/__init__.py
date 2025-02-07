@@ -1,4 +1,6 @@
-from typing import Sequence
+from __future__ import annotations
+
+from typing import Sequence, Type, TypeVar
 
 import numpy as np
 from scipy.stats import spearmanr
@@ -18,6 +20,7 @@ def check_total_value(
 ):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
+    assert u.training_data is not None
     total_utility = u(Sample(idx=None, subset=u.training_data.indices))
     # We can use relative tolerances if we don't have the range of the scorer.
     np.testing.assert_allclose(
@@ -83,7 +86,7 @@ def check_values(
 def check_rank_correlation(
     values: ValuationResult,
     exact_values: ValuationResult,
-    k: int = None,
+    k: int | None = None,
     threshold: float = 0.9,
 ):
     """Checks that the indices of `values` and `exact_values` follow the same

@@ -40,7 +40,7 @@ def foo_duplicate(indices: NDArray[np.int_], *args, **kwargs) -> float:
 def foo_with_random(indices: NDArray[np.int_], *args, **kwargs) -> float:
     rng = np.random.default_rng()
     scale = kwargs.get("scale", 0.5)
-    return float(np.sum(indices)) + rng.normal(scale=scale)
+    return float(np.sum(indices) + rng.normal(scale=scale))
 
 
 def foo_with_random_and_sleep(indices: NDArray[np.int_], *args, **kwargs) -> float:

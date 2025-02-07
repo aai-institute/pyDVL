@@ -23,14 +23,14 @@ def test_stopping_criterion():
     with pytest.raises(TypeError):
         StoppingCriterion()
 
-    StoppingCriterion.__abstractmethods__ = set()
+    StoppingCriterion.__abstractmethods__ = frozenset()
     done = StoppingCriterion()
     assert str(done) == "StoppingCriterion"
     assert done.modify_result is True
 
 
 def test_stopping_criterion_composition():
-    StoppingCriterion.__abstractmethods__ = set()
+    StoppingCriterion.__abstractmethods__ = frozenset()
 
     c = Status.Converged
     p = Status.Pending
