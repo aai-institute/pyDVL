@@ -63,7 +63,10 @@ def seed(request):
 
 @pytest.fixture()
 def seed_alt(request):
-    return 42
+    try:
+        return request.param
+    except AttributeError:
+        return 42
 
 
 @pytest.fixture()

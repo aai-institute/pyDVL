@@ -112,3 +112,13 @@ def check_rank_correlation(
 
     correlation, pvalue = spearmanr(top_k, top_k_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"
+
+
+T = TypeVar("T")
+
+
+def recursive_make(t: Type[T], kwargs: dict) -> T:
+    for k, v in kwargs.items():
+        if isinstance(v, tuple) and isinstance(v[0], type):
+            kwargs[k] = recursive_make(*v)
+    return t(**kwargs)
