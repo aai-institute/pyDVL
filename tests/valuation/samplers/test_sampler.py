@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from itertools import islice, takewhile
 from typing import Any, Iterator, Type
@@ -36,6 +38,11 @@ from pydvl.valuation.samplers import (
     UniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
 )
+from pydvl.valuation.samplers.powerset import (
+    FiniteNoIndexIteration,
+    FiniteSequentialIndexIteration,
+)
+from pydvl.valuation.types import IndexSetT
 
 from .. import recursive_make
 from . import _check_idxs, _check_subsets
@@ -123,7 +130,7 @@ def test_deterministic_permutation_sampler_batch_size_1():
 
     batches = list(sampler.generate_batches(indices))
 
-    expected_idxs = [[-1]] * 6
+    expected_idxs = [[None]] * 6
     _check_idxs(batches, expected_idxs)
 
     expected_subsets = [
@@ -206,7 +213,7 @@ def test_sample_counter(sampler_cls, sampler_kwargs):
         (DeterministicUniformSampler, {}, lambda n: n * 4),
         (
             DeterministicUniformSampler,
-            {"index_iteration": NoIndexIteration},
+            {"index_iteration": FiniteNoIndexIteration},
             lambda n: 2**n if n > 0 else 0,
         ),
         (

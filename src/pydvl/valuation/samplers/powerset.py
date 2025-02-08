@@ -36,7 +36,7 @@ import math
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Callable, Generator, Type
+from typing import Callable, Generator, Generic, Type, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -74,12 +74,30 @@ __all__ = [
     "VarianceReducedStratifiedSampler",
     "IndexIteration",
     "SequentialIndexIteration",
+    "FiniteSequentialIndexIteration",
     "RandomIndexIteration",
+    "FiniteRandomIndexIteration",
     "NoIndexIteration",
+    "FiniteNoIndexIteration",
 ]
 
 
 logger = logging.getLogger(__name__)
+
+
+# Careful with MRO when using these and subclassing!
+class FiniteIterationMixin:
+    @staticmethod
+    def length(indices: IndexSetT) -> int | None:
+        return len(indices)
+
+
+class InfiniteIterationMixin:
+    @staticmethod
+    def length(indices: IndexSetT) -> int | None:
+        if len(indices) == 0:
+            return 0
+        return None
 
 
 class IndexIteration(ABC):
@@ -116,21 +134,37 @@ class IndexIteration(ABC):
         """
         ...
 
+    @classmethod
+    def is_finite(cls) -> bool:
+        return cls.length(np.array([1])) == 1
 
-class SequentialIndexIteration(IndexIteration):
+
+class SequentialIndexIteration(InfiniteIterationMixin, IndexIteration):
+    """Samples indices sequentially, indefinitely."""
+
     def __iter__(self) -> Generator[IndexT, None, None]:
-        yield from self._indices
-
-    @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        return len(indices)
+        while True:
+            yield from self._indices
 
     @staticmethod
     def complement_size(n: int) -> int:
         return n - 1
 
 
-class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
+class FiniteSequentialIndexIteration(FiniteIterationMixin, SequentialIndexIteration):
+    """Samples indices sequentially, once."""
+
+    def __iter__(self) -> Generator[IndexT, None, None]:
+        if len(self._indices) == 0:
+            return
+        yield from self._indices
+
+
+class RandomIndexIteration(
+    InfiniteIterationMixin, StochasticSamplerMixin, IndexIteration
+):
+    """Samples indices at random, indefinitely"""
+
     def __init__(self, indices: NDArray[IndexT], seed: Seed):
         super().__init__(indices, seed=seed)
 
@@ -141,23 +175,36 @@ class RandomIndexIteration(StochasticSamplerMixin, IndexIteration):
             yield self._rng.choice(self._indices, size=1).item()
 
     @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        if len(indices) == 0:
-            return 0
-        return None
-
-    @staticmethod
     def complement_size(n: int) -> int:
         return n - 1
 
 
-class NoIndexIteration(IndexIteration):
+class FiniteRandomIndexIteration(FiniteIterationMixin, RandomIndexIteration):
+    """Samples indices at random, once"""
+
+    def __iter__(self) -> Generator[IndexT, None, None]:
+        if len(self._indices) == 0:
+            return
+        yield from self._rng.choice(self._indices, size=len(self._indices))
+
+
+class NoIndexIteration(InfiniteIterationMixin, IndexIteration):
+    """An infinite iteration over no indices."""
+
     def __iter__(self) -> Generator[None, None, None]:
-        yield None
+        while True:
+            yield None
 
     @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        return 0
+    def complement_size(n: int) -> int:
+        return n
+
+
+class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
+    """A finite iteration over no indices."""
+
+    def __iter__(self) -> Generator[None, None, None]:
+        yield None
 
     @staticmethod
     def complement_size(n: int) -> int:
@@ -183,7 +230,7 @@ class PowersetSampler(IndexSampler, ABC):
             batch_size: The number of samples to generate per batch. Batches are
                 processed together by
                 [UtilityEvaluator][pydvl.valuation.utility.evaluator.UtilityEvaluator].
-            index_iteration: the order in which indices are iterated over
+            index_iteration: the strategy to use for iterating over indices to update
         """
         super().__init__(batch_size)
         self._index_iterator_cls = index_iteration
@@ -226,7 +273,12 @@ class PowersetSampler(IndexSampler, ABC):
         return 2**n if n > 0 else 1  # type: ignore
 
 
-class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler, ValueUpdate]):
+PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
+
+
+class PowersetEvaluationStrategy(
+    Generic[PowersetSamplerT], EvaluationStrategy[PowersetSamplerT, ValueUpdate]
+):
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
@@ -241,15 +293,37 @@ class PowersetEvaluationStrategy(EvaluationStrategy[PowersetSampler, ValueUpdate
         return updates
 
 
-class LOOSampler(IndexSampler):
+class LOOSampler(PowersetSampler):
     """Leave-One-Out sampler.
-    For every index $i$ in the set $S$, the sample $(i, S_{-i})$ is returned.
+
+    In this special case of a powerset samplet, for every index $i$ in the set $S$, the
+    sample $(i, S_{-i})$ is returned.
+
+    Args:
+        batch_size: The number of samples to generate per batch. Batches are processed
+            together by each subprocess when working in parallel.
+        index_iteration: the strategy to use for iterating over indices to update. By
+            default, a finite sequential index iteration is used, which is what
+            [LOOValuation][pydvl.valuation.methods.loo.LOOValuation] expects.
+        seed: The seed for the random number generator used in case the index iteration
+            is random.
 
     !!! tip "New in version 0.10.0"
     """
 
+    def __init__(
+        self,
+        batch_size: int = 1,
+        index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
+        seed: Seed | None = None,
+    ):
+        super().__init__(batch_size, index_iteration)
+        if issubclass(index_iteration, NoIndexIteration):
+            raise ValueError("LOO samplers require a valid index iteration strategy")
+        self._rng = np.random.default_rng(seed)
+
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in indices:
+        for idx in self.index_iterator(indices):
             yield Sample(idx, complement(indices, [idx]))
 
     def weight(self, n: int, subset_len: int) -> float:
@@ -261,14 +335,14 @@ class LOOSampler(IndexSampler):
         self,
         utility: UtilityBase,
         coefficient: Callable[[int, int, float], float] | None = None,
-    ) -> EvaluationStrategy:
+    ) -> PowersetEvaluationStrategy[LOOSampler]:
         return LOOEvaluationStrategy(self, utility, coefficient)
 
-    def sample_limit(self, indices: IndexSetT) -> int:
-        return len(indices)
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        return self._index_iterator_cls.length(indices)
 
 
-class LOOEvaluationStrategy(EvaluationStrategy[LOOSampler, ValueUpdate]):
+class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
     """Computes marginal values for LOO."""
 
     def __init__(
@@ -302,8 +376,11 @@ class DeterministicUniformSampler(PowersetSampler):
     For every index $i$, each subset of the complement `indices - {i}` is
     returned.
 
-    !!! Note
-        Outer indices are iterated over sequentially
+    Args:
+        batch_size: The number of samples to generate per batch. Batches are processed
+            together by each subprocess when working in parallel.
+        index_iteration: the strategy to use for iterating over indices to update. This
+            iteration can be either finite or infinite.
 
     ??? Example
         The code:
@@ -326,9 +403,7 @@ class DeterministicUniformSampler(PowersetSampler):
     def __init__(
         self,
         batch_size: int = 1,
-        index_iteration: Type[
-            SequentialIndexIteration | NoIndexIteration
-        ] = SequentialIndexIteration,
+        index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
     ):
         super().__init__(batch_size=batch_size, index_iteration=index_iteration)
 
@@ -350,12 +425,18 @@ class DeterministicUniformSampler(PowersetSampler):
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
-    """An iterator to perform uniform random sampling of subsets.
+    """Draws random samples uniformly from the powerset of the index set.
 
     Iterating over every index $i$, either in sequence or at random depending on
     the value of ``index_iteration``, one subset of the complement
-    ``indices - {i}`` is sampled with equal probability $2^{n-1}$. The
-    iterator never ends.
+    ``indices - {i}`` is sampled with equal probability $2^{n-1}$.
+
+    Args:
+        batch_size: The number of samples to generate per batch. Batches are processed
+            together by each subprocess when working in parallel.
+        index_iteration: the strategy to use for iterating over indices to update. This iteration
+            can be either finite or infinite.
+        seed: The seed for the random number generator.
 
     ??? Example
         The code
@@ -381,15 +462,13 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
         )
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        while True:
-            for idx in self.index_iterator(indices):
-                subset = random_subset(complement(indices, [idx]), seed=self._rng)
-                yield Sample(idx, subset)
+        for idx in self.index_iterator(indices):
+            subset = random_subset(complement(indices, [idx]), seed=self._rng)
+            yield Sample(idx, subset)
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
-    """An iterator to perform uniform random sampling of subsets, and their
-    complements.
+    """A sampler that draws samples uniformly and their complements.
 
     Works as [UniformSampler][pydvl.valuation.samplers.UniformSampler], but for every
     tuple $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the
@@ -397,12 +476,11 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     """
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        while True:
-            for idx in self.index_iterator(indices):
-                _complement = complement(indices, [idx])
-                subset = random_subset(_complement, seed=self._rng)
-                yield Sample(idx, subset)
-                yield Sample(idx, complement(_complement, subset))
+        for idx in self.index_iterator(indices):
+            _complement = complement(indices, [idx])
+            subset = random_subset(_complement, seed=self._rng)
+            yield Sample(idx, subset)
+            yield Sample(idx, complement(_complement, subset))
 
 
 class TruncatedUniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
@@ -422,7 +500,7 @@ class TruncatedUniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler)
             to the size of the index set when sampling.
         batch_size: The number of samples to generate per batch. Batches are processed
             together by each subprocess when working in parallel.
-        index_iteration: the order in which indices are iterated over
+        index_iteration: the strategy to use for iterating over indices to update
         seed: The seed for the random number generator.
 
     Raises:
@@ -489,14 +567,13 @@ class TruncatedUniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler)
         ):
             assert self.lower_bound is not None  # for mypy
             assert self.upper_bound is not None
-            while True:
-                for idx in self.index_iterator(indices):
-                    _complement = complement(indices, [idx])
-                    k = self._rng.integers(
-                        low=self.lower_bound, high=self.upper_bound + 1, size=1
-                    ).item()
-                    subset = random_subset_of_size(_complement, size=k, seed=self._rng)
-                    yield Sample(idx, subset)
+            for idx in self.index_iterator(indices):
+                _complement = complement(indices, [idx])
+                k = self._rng.integers(
+                    low=self.lower_bound, high=self.upper_bound + 1, size=1
+                ).item()
+                subset = random_subset_of_size(_complement, size=k, seed=self._rng)
+                yield Sample(idx, subset)
 
     def weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n-1 choose k) times the
@@ -709,14 +786,15 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     where $m$ is the total number of samples
     to generate.
 
-
     Args:
         samples_per_setsize: An object which returns the number of samples to
             take for a given set size. The sampler will generate exactly this many, and
             no more (this is a finite sampler).
         batch_size: The number of samples to generate per batch. Batches are processed
             together by each subprocess when working in parallel.
-        index_iteration: the order in which indices are iterated over
+        index_iteration: the strategy to use for iterating over indices to update.
+            Note that anything other than returning index exactly once will break the
+            weight computation.
         seed: The seed for the random number generator.
 
     !!! tip "New in version 0.10.0"
@@ -726,12 +804,16 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self,
         samples_per_setsize: SamplesPerSetSizeHeuristic,
         batch_size: int = 1,
-        index_iteration: Type[IndexIteration] = SequentialIndexIteration,
+        index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
         seed: Seed | None = None,
     ):
         super().__init__(
             batch_size=batch_size, index_iteration=index_iteration, seed=seed
         )
+        if not index_iteration.is_finite():
+            raise ValueError(
+                "VarianceReducedStratifiedSampler requires a finite index iterator"
+            )
         self.samples_per_setsize = samples_per_setsize
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
@@ -767,7 +849,7 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         divided by the total number of samples for all sizes:
 
         $$\mathbb{P}(S) = \binom{n}{k}^{-1} \times
-                          \frac{\text{samples_per_setsize}(k)}{\text{total_samples}(n)}$$
+                       \frac{\text{samples_per_setsize}(k)}{\text{total_samples}(n)}$$
         """
         n = self._index_iterator_cls.complement_size(n)
 

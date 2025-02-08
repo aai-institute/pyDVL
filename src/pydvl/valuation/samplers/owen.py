@@ -37,10 +37,10 @@ import numpy as np
 from pydvl.utils import Seed, random_subset
 from pydvl.utils.numeric import complement
 from pydvl.valuation.samplers.powerset import (
+    FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
     RandomIndexIteration,
-    SequentialIndexIteration,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
@@ -82,11 +82,12 @@ class FiniteOwenSampler(StochasticSamplerMixin, PowersetSampler):
         n_samples_outer: int,
         n_samples_inner: int = 2,
         batch_size: int = 1,
-        index_iteration: Type[IndexIteration] = SequentialIndexIteration,
         seed: Seed | None = None,
     ):
         super().__init__(
-            batch_size=batch_size, index_iteration=index_iteration, seed=seed
+            batch_size=batch_size,
+            index_iteration=FiniteSequentialIndexIteration,
+            seed=seed,
         )
         self._n_samples_inner = n_samples_inner
         self._n_samples_outer = n_samples_outer
