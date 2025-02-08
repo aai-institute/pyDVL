@@ -295,3 +295,30 @@ def test_rank_correlation():
     done.reset()
     assert done.completion() == 0.0
     assert not done.converged.any()
+
+
+@pytest.mark.parametrize(
+    "criterion",
+    [
+        AbsoluteStandardError(0.1),
+        HistoryDeviation(10, 0.1),
+        MaxChecks(5),
+        MaxTime(0.1),
+        MaxUpdates(10),
+        MinUpdates(10),
+        RankCorrelation(0.1, 1),
+    ],
+)
+def test_count(criterion):
+    """Test that the _count attribute and count property of stoppingcriteria are properly updated"""
+    assert criterion.count == 0
+    criterion(ValuationResult.empty())
+    assert criterion.count == 1
+    criterion(ValuationResult.empty())
+    assert criterion.count == 2
+    criterion.reset()
+    assert criterion.count == 0
+    criterion(ValuationResult.empty())
+    assert criterion.count == 1
+    criterion(ValuationResult.empty())
+    assert criterion.count == 2

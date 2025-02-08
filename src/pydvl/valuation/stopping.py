@@ -511,6 +511,8 @@ class MaxUpdates(StoppingCriterion):
         self.last_max = 0
 
     def _check(self, result: ValuationResult) -> Status:
+        if result.counts.size == 0:
+            return Status.Pending
         if self.n_updates:
             self._converged = result.counts >= self.n_updates
             try:
@@ -575,6 +577,8 @@ class MinUpdates(StoppingCriterion):
         self._actual_completion = 0.0
 
     def _check(self, result: ValuationResult) -> Status:
+        if result.counts.size == 0:
+            return Status.Pending
         if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
             progress = np.clip(result.counts, 0, self.n_updates) / self.n_updates
