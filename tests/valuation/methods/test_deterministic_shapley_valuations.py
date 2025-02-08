@@ -7,7 +7,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.valuation.dataset import GroupedDataset
-from pydvl.valuation.methods import DataShapleyValuation
+from pydvl.valuation.methods import ShapleyValuation
 from pydvl.valuation.samplers import (
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
@@ -36,7 +36,7 @@ SAMPLER_CLASSES = [DeterministicPermutationSampler, DeterministicUniformSampler]
 )
 @pytest.mark.parametrize("sampler_class", SAMPLER_CLASSES)
 def test_games(sampler_class, test_game, rtol, total_atol):
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         utility=test_game.u,
         sampler=sampler_class(),
         progress=False,
@@ -74,7 +74,7 @@ def test_grouped_linear(
         cache_backend=cache_backend,
     )
 
-    valuation_combinatorial = DataShapleyValuation(
+    valuation_combinatorial = ShapleyValuation(
         utility=grouped_utility,
         sampler=DeterministicUniformSampler(),
         progress=False,
@@ -85,7 +85,7 @@ def test_grouped_linear(
 
     check_total_value(grouped_utility, values_combinatorial, atol=total_atol)
 
-    valuation_permutation = DataShapleyValuation(
+    valuation_permutation = ShapleyValuation(
         utility=grouped_utility,
         sampler=DeterministicPermutationSampler(),
         progress=False,
@@ -124,7 +124,7 @@ def test_linear_with_outlier(
         cache_backend=cache_backend,
     )
 
-    valuation_permutation = DataShapleyValuation(
+    valuation_permutation = ShapleyValuation(
         utility=utility,
         sampler=DeterministicPermutationSampler(),
         progress=False,
@@ -163,7 +163,7 @@ def test_polynomial(
         scorer=scorer,
     )
 
-    valuation_combinatorial = DataShapleyValuation(
+    valuation_combinatorial = ShapleyValuation(
         utility=utility,
         sampler=DeterministicUniformSampler(),
         progress=False,
@@ -174,7 +174,7 @@ def test_polynomial(
 
     check_total_value(utility, values_combinatorial, atol=total_atol)
 
-    valuation_permutation = DataShapleyValuation(
+    valuation_permutation = ShapleyValuation(
         utility=utility,
         sampler=DeterministicPermutationSampler(),
         progress=False,
@@ -215,7 +215,7 @@ def test_polynomial_with_outlier(
         cache_backend=cache_backend,
     )
 
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         utility=poly_utility,
         sampler=DeterministicPermutationSampler(),
         progress=False,

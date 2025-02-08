@@ -22,7 +22,7 @@ from pydvl.valuation.games import (
     ShoesGame,
     SymmetricVotingGame,
 )
-from pydvl.valuation.methods.data_shapley import DataShapleyValuation
+from pydvl.valuation.methods.data_shapley import ShapleyValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import DeterministicUniformSampler
 from pydvl.valuation.scorers import SupervisedScorer
@@ -206,7 +206,7 @@ def linear_shapley(
         )
         utility = ModelUtility(LinearRegression(), scorer=scorer).with_dataset(train)
     if exact_result is None:
-        valuation = DataShapleyValuation(
+        valuation = ShapleyValuation(
             utility, DeterministicUniformSampler(), is_done=NoStopping(), progress=False
         )
         with parallel_config(n_jobs=1):

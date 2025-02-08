@@ -51,7 +51,7 @@ def test_loo_valuation(train_data, utility, n_jobs):
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_shapley_valuation(train_data, utility, n_jobs):
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         utility,
         sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
         is_done=MaxUpdates(5),
@@ -149,7 +149,7 @@ def test_group_testing_valuation(train_data, utility, n_jobs):
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_utility_learning(train_data, utility, n_jobs):
     learned_u = DataUtilityLearning(utility, 10, LinearRegression())
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         learned_u,
         sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
         is_done=MaxUpdates(5),

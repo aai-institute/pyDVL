@@ -8,7 +8,7 @@ and were introduced in (Okhrati and Lipani, 2021)[^1]. The core idea is to use d
 probabilities of including indices into samples.
 
 In order to compute values it is enough to use any of the Owen samplers together with a
-[DataShapleyValuation][pydvl.valuation.methods.DataShapleyValuation] object.
+[ShapleyValuation][pydvl.valuation.methods.ShapleyValuation] object.
 
 !!! Example "Finite Owen Sampler"
     [FiniteOwenSampler][pydvl.valuation.samplers.owen.FiniteOwenSampler] is the most
@@ -21,11 +21,11 @@ In order to compute values it is enough to use any of the Owen samplers together
     always be `Status.Pending`.
 
     ```python
-    from pydvl.valuation import FiniteOwenSampler, DataShapleyValuation, NoStopping
+    from pydvl.valuation import FiniteOwenSampler, ShapleyValuation, NoStopping
     ...
 
     sampler = FiniteOwenSampler(n_samples_outer=200, n_samples_inner=4)
-    valuation = DataShapleyValuation(utility, sampler, NoStopping())
+    valuation = ShapleyValuation(utility, sampler, NoStopping())
     valuation.fit(dataset)
     shapley_values = valuation.values()
     ```
@@ -39,11 +39,11 @@ In order to compute values it is enough to use any of the Owen samplers together
     since it is no longer required to estimate a number of outer samples required.
 
     ```python
-    from pydvl.valuation import OwenSampler, DataShapleyValuation, RankCorrelation
+    from pydvl.valuation import OwenSampler, ShapleyValuation, RankCorrelation
     ...
 
     sampler = OwenSampler()
-    valuation = DataShapleyValuation(utility, sampler, RankCorrelation(rtol=1e-3))
+    valuation = ShapleyValuation(utility, sampler, RankCorrelation(rtol=1e-3))
     valuation.fit(dataset)
     ```
 
@@ -55,11 +55,11 @@ In order to compute values it is enough to use any of the Owen samplers together
     probability $1-q$.
 
     ```python
-    from pydvl.valuation import AntitheticOwenSampler, DataShapleyValuation, RankCorrelation
+    from pydvl.valuation import AntitheticOwenSampler, ShapleyValuation, RankCorrelation
     ...
 
     sampler = AntitheticOwenSampler()
-    valuation = DataShapleyValuation(utility, sampler, RankCorrelation(rtol=1e-3))
+    valuation = ShapleyValuation(utility, sampler, RankCorrelation(rtol=1e-3))
     valuation.fit(dataset)
     ```
 

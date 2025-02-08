@@ -74,13 +74,13 @@ import math
 
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
-__all__ = ["DataShapleyValuation"]
+__all__ = ["ShapleyValuation"]
 
 
-class DataShapleyValuation(SemivalueValuation):
+class ShapleyValuation(SemivalueValuation):
     """Computes Shapley values."""
 
-    algorithm_name = "Data-Shapley"
+    algorithm_name = "Shapley"
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
         return weight / math.comb(n - 1, k) / n
