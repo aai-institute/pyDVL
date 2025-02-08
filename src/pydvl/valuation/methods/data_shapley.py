@@ -1,20 +1,40 @@
 r"""
-This module implements the Data-Shapley valuation method.
+This module implements the Shapley valuation method.
 
-The Data-Shapley method computes Shapley values by sampling sets of training points and
-computing the marginal contribution of each element in these to the utility function.
-This utility is the performance of a model trained on the sample, computed over a fixed
-test set, and hence it is typically costly to compute.
+The (Data-)Shapley method, introduced in Ghorbani and Zou (2019)[^1] is a method to
+compute data values by sampling sets of training points and averaging the change in
+performance of a model by adding individual points to these sets. The average is done
+using the Shapley coefficients, which correspond to the sampling probabilities of the
+subsets used:
 
-Computing values always follows the same pattern: construct a
-[ModelUtility][pydvl.valuation.utility.model.ModelUtility], a
+$$
+v(i) = \frac{1}{n} \sum_{S \subset D_{-i}} w(n, |S|) [U(S_{+i}) - U(S)],
+$$
+
+where the coefficient $w(n, k)$ is defined as the inverse probability of sampling a set
+of size $k$ from a set of size $n-1$ in the complement of $\{i\}$
+
+$$
+w(n, k) = \binom{n-1}{k}^{-1}.
+$$
+
+An alternative formulation, which has better variance properties, uses permutations. The
+algorithm **Data-Shapley** described in Ghorbani and Zou (2019)[^1] uses this sampling
+technique, together with a heuristic truncation policy to stop the computation early.
+This is implemented in PyDVL via
+[PermutationSampler][pydvl.valuation.samplers.PermutationSampler]
+
+## Computing Shapley values
+
+Computing values in PyDVL always follows the same pattern: construct a
+[ModelUtility][pydvl.valuation.utility.modelutility.ModelUtility], a
 [sampler][pydvl.valuation.samplers], and a
 [stopping criterion][pydvl.valuation.stopping].
 
-!!! Example "General usage pattern"
+??? Example "General usage pattern"
     ```python
     from pydvl.valuation import (
-        DataShapleyValuation,
+        ShapleyValuation,
         ModelUtility,
         SupervisedScorer,
         PermutationSampler,
@@ -26,7 +46,7 @@ Computing values always follows the same pattern: construct a
     utility = ModelUtility(model, scorer, ...)
     sampler = PermutationSampler()
     stopping = RankCorrelation(rtol=0.01)
-    valuation = DataShapleyValuation(utility, sampler, is_done=stopping)
+    valuation = ShapleyValuation(utility, sampler, is_done=stopping)
     with parallel_config(n_jobs=16):
         valuation.fit(training_data)
     result = valuation.values()
@@ -53,6 +73,17 @@ the [Owen samplers][pydvl.valuation.samplers.owen] or the
 [Maximum-Sample-Reuse sampler][pydvl.valuation.samplers.MSRSampler], but the usage
 pattern remains the same.
 
+??? Example "Truncated Monte Carlo Data-Shapley"
+    To compute Shapley values as described in Ghobani and Zou (2019)[^1], use this
+    configuration:
+
+    ```python
+    truncation = RelativeTruncation(rtol=0.05)
+    sampler = PermutationSampler(truncation=truncation, seed=seed)
+    stopping = HistoryDeviation(n_steps=100, rtol=0.05)
+    valuation = ShapleyValuation(utility, sampler, stopping, skip_converged, progress)
+    ```
+
 ## Caveats
 
 1. As mentioned, computing Shapley values can be computationally expensive, especially
@@ -68,6 +99,14 @@ pattern remains the same.
    [PowerSetSampler][pydvl.valuation.samplers.PowerSetSampler] will not work since the
    evaluation strategy expects samples consisting of an index and a subset of its
    complement in the whole index set.
+
+## References
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., & Zou, J. Y. (2019). [Data Shapley:
+      Equitable Valuation
+      of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
+      In Proceedings of the 36th International Conference on Machine Learning, PMLR pp.
+      2242--2251.
 """
 
 import math
