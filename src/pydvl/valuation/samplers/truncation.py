@@ -174,8 +174,8 @@ class DeviationTruncation(TruncationPolicy):
     """Break a computation if the last computed utility is close to the total utility.
 
     This is essentially the same as
-    [RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], but with the
-    tolerance determined by a multiple of the standard deviation of the utilities.
+    [RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], but with
+    the tolerance determined by a multiple of the standard deviation of the utilities.
 
     !!! Warning
         Initialization and `reset()` of this policy imply the computation of the total
