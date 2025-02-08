@@ -644,6 +644,53 @@ class MaxTime(StoppingCriterion):
         return f"MaxTime(seconds={self.max_seconds})"
 
 
+class RollingMemory:
+    """A simple rolling memory for the last `n_steps` values of each index.
+
+    Updating the memory results in new values are copied to the last column of the
+    matrix and old ones removed from the first.
+
+    Args:
+        n_steps: The number of steps to remember.
+        default: The default value to use when the memory is empty.
+    """
+
+    def __init__(self, n_steps: int, default: float = np.inf):
+        if n_steps < 1:
+            raise ValueError("n_steps must be at least 1")
+        self.n_steps = n_steps
+        self._data = np.full(0, default, dtype=np.float64)
+
+    @property
+    def data(self) -> NDArray[np.float64]:
+        view = self._data.view()
+        view.setflags(write=False)
+        return view
+
+    def reset(self) -> Self:
+        self._data = np.full(0, np.inf)
+        return self
+
+    def update(self, r: ValuationResult) -> Self:
+        """Update the memory with the values of the current result.
+
+        The values are appended to the memory as its last column, and the oldest values
+        (the first column) are removed
+        """
+        if len(self._data) == 0:
+            self._data = np.full((len(r.values), self.n_steps + 1), np.inf)
+        self._data = np.concatenate(
+            [self._data[:, 1:], r.values.reshape(-1, 1)], axis=1
+        )
+        return self
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __len__(self) -> int:
+        return self._data.shape[1] if self._data.size > 0 else 0
+
+
 class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
     computation.
@@ -676,8 +723,6 @@ class HistoryDeviation(StoppingCriterion):
         pin_converged: If `True`, once an index has converged, it is pinned
     """
 
-    _memory: NDArray[np.float64]
-
     def __init__(
         self,
         n_steps: int,
@@ -686,56 +731,43 @@ class HistoryDeviation(StoppingCriterion):
         modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        if n_steps < 1:
-            raise ValueError("n_steps must be at least 1")
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
 
-        self.n_steps = n_steps
+        self.memory = RollingMemory(n_steps, default=np.inf)
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
-        self._memory = np.full(0, np.nan)
-
-    @property
-    def memory(self) -> NDArray[np.float64]:
-        view = self._memory.view()
-        view.setflags(write=False)
-        return view
 
     def _check(self, r: ValuationResult) -> Status:
-        if len(self._memory) == 0:
-            self._memory = np.full((len(r.values), self.n_steps + 1), np.inf)
-            self._converged = np.full(len(r), False)
+        if r.values.size == 0:
             return Status.Pending
-
-        # shift left: last column is the last set of values
-        self._memory = np.concatenate(
-            [self._memory[:, 1:], r.values.reshape(-1, 1)], axis=1
-        )
+        self.memory.update(r)
+        if len(self._converged) == 0:
+            self._converged = np.full(len(r), False)
 
         # Look at indices that have been updated more than n_steps times
-        ii = np.where(r.counts > self.n_steps)
+        ii = np.where(r.counts > self.memory.n_steps)
         if len(ii) > 0:
-            curr = self._memory[:, -1]
-            saved = self._memory[:, 0]
+            curr = self.memory[:, -1]
+            saved = self.memory[:, 0]
             diffs = np.abs(curr[ii] - saved[ii])
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
-                    self._converged, r.counts > self.n_steps
+                    self._converged, r.counts > self.memory.n_steps
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
 
     def reset(self) -> Self:
-        self._memory = np.full(0, np.nan)
+        self.memory.reset()
         return super().reset()
 
     def __str__(self) -> str:
-        return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
+        return f"HistoryDeviation(n_steps={self.memory.n_steps}, rtol={self.rtol})"
 
 
 class RankCorrelation(StoppingCriterion):
@@ -774,24 +806,18 @@ class RankCorrelation(StoppingCriterion):
             raise ValueError("rtol must be in (0, 1)")
         self.rtol = rtol
         self.burn_in = burn_in
-        self._memory = np.full(0, np.nan)
+        self.memory = RollingMemory(n_steps=1, default=np.nan)
         self._corr = 0.0
         self._completion = 0.0
 
-    @property
-    def memory(self) -> NDArray[np.float64]:
-        view = self._memory.view()
-        view.setflags(write=False)
-        return view
-
     def _check(self, r: ValuationResult) -> Status:
-        if len(self._memory) == 0:
-            self._memory = r.values.copy()
+        if len(self.memory) == 0:
+            self.memory.update(r)
             self._converged = np.full(len(r), False)
             return Status.Pending
 
-        corr = spearmanr(self._memory, r.values)[0]
-        self._memory = r.values.copy()
+        corr = spearmanr(self.memory[:, -1], r.values)[0]
+        self.memory.update(r)
         self._update_completion(corr)
         if np.isclose(corr, self._corr, rtol=self.rtol) and self._count > self.burn_in:
             self._converged = np.full(len(r), True)
@@ -817,7 +843,7 @@ class RankCorrelation(StoppingCriterion):
         return self._completion
 
     def reset(self) -> Self:
-        self._memory = np.full(0, np.nan)
+        self.memory.reset()
         self._corr = 0.0
         self._completion = 0.0
         return super().reset()
