@@ -9,11 +9,7 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
-from pydvl.valuation.methods import (
-    DataShapleyValuation,
-    GroupTestingShapleyValuation,
-    OwenShapleyValuation,
-)
+from pydvl.valuation.methods import GroupTestingShapleyValuation, ShapleyValuation
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     DeterministicUniformSampler,

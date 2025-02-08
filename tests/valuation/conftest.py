@@ -22,7 +22,7 @@ from pydvl.valuation.games import (
     ShoesGame,
     SymmetricVotingGame,
 )
-from pydvl.valuation.methods.data_shapley import ShapleyValuation
+from pydvl.valuation.methods.shapley import ShapleyValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import DeterministicUniformSampler
 from pydvl.valuation.scorers import SupervisedScorer

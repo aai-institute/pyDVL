@@ -50,7 +50,7 @@ def test_loo_valuation(train_data, utility, n_jobs):
 
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
-def test_data_shapley_valuation(train_data, utility, n_jobs):
+def test_shapley_valuation(train_data, utility, n_jobs):
     valuation = ShapleyValuation(
         utility,
         sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
