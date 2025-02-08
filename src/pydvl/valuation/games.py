@@ -505,7 +505,7 @@ class ShoesGame(Game):
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"
+        return f"{self.__class__.__name__}(left={self.left}, right={self.right})"
 
     @staticmethod
     @lru_cache
