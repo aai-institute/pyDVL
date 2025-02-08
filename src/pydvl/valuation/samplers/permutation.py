@@ -76,18 +76,14 @@ class PermutationSamplerBase(IndexSampler):
 
 
 class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
-    """Sample permutations of indices and iterate through each returning
-    increasing subsets, as required for the permutation definition of
-    semi-values.
-
-    For a permutation `(3,1,4,2)`, this sampler returns in sequence the following
-    [Samples][pydvl.valuation.samplers.Sample] (tuples of index and subset):
-
-    `(3, {3})`, `(1, {3,1})`, `(4, {3,1,4})` and `(2, {3,1,4,2})`.
+    """Samples permutations of indices.
 
     !!! info "Batching"
-        PermutationSamplers always batch their outputs to include a whole permutation
-        of the index set, i.e. the batch size is always the number of indices.
+        Even though this sampler supports batching, it is not recommended to use it
+        since the
+        [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
+        processes whole permutations in one go, effectively batching the computation of
+        up to n-1 marginal utilities in one process.
 
     Args:
         truncation: A policy to stop the permutation early.
@@ -95,16 +91,15 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
     """
 
     def __init__(
-        self, truncation: TruncationPolicy | None = None, seed: Seed | None = None
+        self,
+        truncation: TruncationPolicy | None = None,
+        seed: Seed | None = None,
+        batch_size: int = 1,
     ):
-        super().__init__(seed=seed, truncation=truncation)
+        super().__init__(seed=seed, truncation=truncation, batch_size=batch_size)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
-
-        Samples are yielded one by one, not as whole permutations. These are batched
-        together by calling iter() on the sampler.
-
         Args:
             indices:
         """
@@ -126,10 +121,10 @@ class AntitheticPermutationSampler(PermutationSampler):
     """
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        while True:
-            permutation = self._rng.permutation(indices)
-            yield Sample(-1, permutation)
-            yield Sample(-1, permutation[::-1])
+        for sample in super()._generate(indices):
+            permutation = sample.subset
+            yield Sample(None, permutation)
+            yield Sample(None, permutation[::-1])
 
 
 class DeterministicPermutationSampler(PermutationSamplerBase):
@@ -140,7 +135,7 @@ class DeterministicPermutationSampler(PermutationSamplerBase):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
-            yield Sample(-1, np.asarray(permutation))
+            yield Sample(None, np.asarray(permutation))
 
     def sample_limit(self, indices: IndexSetT) -> int:
         if len(indices) == 0:
