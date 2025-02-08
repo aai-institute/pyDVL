@@ -243,16 +243,21 @@ class StoppingCriterion(abc.ABC):
         """Check whether the computation should stop."""
         ...
 
+    @property
+    def count(self) -> int:
+        """The number of times that the criterion has been checked."""
+        return self._count
+
     def completion(self) -> float:
         """Returns a value between 0 and 1 indicating the completion of the
-        computation.
-        """
+        computation."""
         if self.converged.size == 0:
             return 0.0
         return float(np.mean(self.converged).item())
 
     def reset(self) -> Self:
         self._converged = np.full(0, False)
+        self._count = 0
         return self
 
     @property
@@ -459,10 +464,8 @@ class MaxChecks(StoppingCriterion):
         if n_checks is not None and n_checks < 1:
             raise ValueError("n_iterations must be at least 1 or None")
         self.n_checks = n_checks or np.inf
-        self._count = 0
 
     def _check(self, result: ValuationResult) -> Status:
-        self._count += 1
         if self._count >= self.n_checks:
             self._converged = np.ones_like(result.values, dtype=bool)
             return Status.Converged
@@ -472,10 +475,6 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
-
-    def reset(self) -> Self:
-        self._count = 0
-        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxChecks(n_checks={self.n_checks})"
@@ -691,10 +690,16 @@ class HistoryDeviation(StoppingCriterion):
         self.n_steps = n_steps
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
-        self._memory = None  # type: ignore
+        self._memory = np.full(0, np.nan)
+
+    @property
+    def memory(self) -> NDArray[np.float64]:
+        view = self._memory.view()
+        view.setflags(write=False)
+        return view
 
     def _check(self, r: ValuationResult) -> Status:
-        if self._memory is None:
+        if len(self._memory) == 0:
             self._memory = np.full((len(r.values), self.n_steps + 1), np.inf)
             self._converged = np.full(len(r), False)
             return Status.Pending
@@ -722,7 +727,7 @@ class HistoryDeviation(StoppingCriterion):
         return Status.Pending
 
     def reset(self) -> Self:
-        self._memory = None  # type: ignore
+        self._memory = np.full(0, np.nan)
         return super().reset()
 
     def __str__(self) -> str:
@@ -768,10 +773,14 @@ class RankCorrelation(StoppingCriterion):
         self._memory = np.full(0, np.nan)
         self._corr = 0.0
         self._completion = 0.0
-        self._iterations = 0
+
+    @property
+    def memory(self) -> NDArray[np.float64]:
+        view = self._memory.view()
+        view.setflags(write=False)
+        return view
 
     def _check(self, r: ValuationResult) -> Status:
-        self._iterations += 1
         if len(self._memory) == 0:
             self._memory = r.values.copy()
             self._converged = np.full(len(r), False)
@@ -780,13 +789,10 @@ class RankCorrelation(StoppingCriterion):
         corr = spearmanr(self._memory, r.values)[0]
         self._memory = r.values.copy()
         self._update_completion(corr)
-        if (
-            np.isclose(corr, self._corr, rtol=self.rtol)
-            and self._iterations > self.burn_in
-        ):
+        if np.isclose(corr, self._corr, rtol=self.rtol) and self._count > self.burn_in:
             self._converged = np.full(len(r), True)
             logger.debug(
-                f"RankCorrelation has converged with {corr=} in iteration {self._iterations}"
+                f"RankCorrelation has converged with {corr=} in iteration {self._count}"
             )
             return Status.Converged
         self._corr = np.nan_to_num(corr, nan=0.0)
@@ -810,7 +816,6 @@ class RankCorrelation(StoppingCriterion):
         self._memory = np.full(0, np.nan)
         self._corr = 0.0
         self._completion = 0.0
-        self._iterations = 0
         return super().reset()
 
     def __str__(self):
