@@ -130,7 +130,7 @@ class IndexIteration(ABC):
 
     @classmethod
     def is_finite(cls) -> bool:
-        return cls.length(np.array([1])) == 1
+        return cls.length(np.array([1])) is not None
 
 
 class SequentialIndexIteration(InfiniteIterationMixin, IndexIteration):
@@ -204,7 +204,11 @@ class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
 
     @staticmethod
     def length(indices: IndexSetT) -> int | None:
-        return 1
+        """Returns 0, as the iteration is finite and yields no indices.
+        This might a bit counterintuitive since exactly one item (None) is generated,
+        but it is the convention required by `sample_limit` in samplers
+        """
+        return 0
 
     @staticmethod
     def complement_size(n: int) -> int:
