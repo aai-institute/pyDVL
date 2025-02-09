@@ -45,37 +45,37 @@ def shapley_samplers(fudge_factor: int):
         [
             (
                 UniformSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor * 2})},
             ),
             (
                 PermutationSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
             ),
             (
                 AntitheticSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
             ),
             (
                 MSRSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor * 12})},
             ),
             (
                 UniformStratifiedSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
             ),
             (
                 TruncatedUniformStratifiedSampler,
-                {},
+                {"seed": lambda seed: seed},
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
             ),
@@ -85,7 +85,8 @@ def shapley_samplers(fudge_factor: int):
                     "samples_per_setsize": (
                         HarmonicSamplesPerSetSize,
                         {"n_samples_per_index": fudge_factor},
-                    )
+                    ),
+                    "seed": lambda seed: seed,
                 },
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
@@ -99,7 +100,8 @@ def shapley_samplers(fudge_factor: int):
                             "exponent": -0.5,
                             "n_samples_per_index": fudge_factor,
                         },
-                    )
+                    ),
+                    "seed": lambda seed: seed,
                 },
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
@@ -109,8 +111,9 @@ def shapley_samplers(fudge_factor: int):
                 {
                     "outer_sampling_strategy": (
                         UniformOwenStrategy,
-                        {"n_samples_outer": 200},
-                    )
+                        {"n_samples_outer": 200, "seed": lambda seed: seed},
+                    ),
+                    "seed": lambda seed: seed,
                 },
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
@@ -120,8 +123,9 @@ def shapley_samplers(fudge_factor: int):
                 {
                     "outer_sampling_strategy": (
                         UniformOwenStrategy,
-                        {"n_samples_outer": 100},
-                    )
+                        {"n_samples_outer": 100, "seed": lambda seed: seed},
+                    ),
+                    "seed": lambda seed: seed,
                 },
                 ShapleyValuation,
                 {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
@@ -130,7 +134,11 @@ def shapley_samplers(fudge_factor: int):
                 None,
                 {},
                 GroupTestingShapleyValuation,
-                {"n_samples": fudge_factor * 100, "epsilon": 0.2},
+                {
+                    "n_samples": fudge_factor * 100,
+                    "epsilon": 0.2,
+                    "seed": lambda seed: seed,
+                },
             ),
         ],
     )
@@ -194,7 +202,7 @@ def test_games(
 # @pytest.mark.slow
 @pytest.mark.parametrize(
     "test_game",
-    [("symmetric-voting", {"n_players": 6})],
+    [("shoes", {"left": 3, "right": 4})],
     indirect=["test_game"],
 )
 @shapley_samplers(2)
@@ -212,16 +220,13 @@ def test_seed(
         pytest.skip("This test is only for stochastic samplers")
 
     for s in [seed, seed, seed_alt]:
-        sampler_kwargs["seed"] = s
         if valuation_cls is ShapleyValuation:
-            sampler = recursive_make(sampler_cls, sampler_kwargs)
+            sampler = recursive_make(sampler_cls, sampler_kwargs, s)
             valuation_kwargs["sampler"] = sampler
-        elif valuation_cls is GroupTestingShapleyValuation:
-            valuation_kwargs["seed"] = s
 
         valuation_kwargs["utility"] = test_game.u
         valuation_kwargs["progress"] = False
-        valuation = recursive_make(valuation_cls, valuation_kwargs)
+        valuation = recursive_make(valuation_cls, valuation_kwargs, s)
 
         valuation.fit(test_game.data)
         values.append(valuation.values())
