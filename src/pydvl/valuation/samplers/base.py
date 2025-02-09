@@ -92,6 +92,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         self._batch_size = batch_size
         self._n_samples = 0
         self._interrupted = False
+        self._skip_indices = np.empty(0, dtype=bool)
 
     @property
     def n_samples(self) -> int:
@@ -110,6 +111,19 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         if value < 1:
             raise ValueError("batch_size must be at least 1")
         self._batch_size = value
+
+    @property
+    def skip_indices(self) -> IndexSetT:
+        return self._skip_indices
+
+    @skip_indices.setter
+    def skip_indices(self, indices: IndexSetT):
+        """Sets the indices to skip in the sampler. Since this requires different
+        implementations and may  affect expected statistical properties of samplers, it
+        is deactivated by default. Samplers must explicitly override the setter to
+        signal that they support skipping indices.
+        """
+        raise NotImplementedError(f"Cannot skip indices in {self.__class__.__name__}.")
 
     def interrupt(self):
         self._interrupted = True
@@ -263,9 +277,9 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         ```
 
     Args:
-        sampler: Required to setup some strategies. Be careful not to store it in the
+        sampler: Required to set up some strategies. Be careful not to store it in the
             object when subclassing!
-        utility: Required to setup some strategies and to process the samples. Since
+        utility: Required to set up some strategies and to process the samples. Since
             this contains the training data, it is expensive to pickle and send to
             workers.
         coefficient: An additional coefficient to multiply marginals with. This

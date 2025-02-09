@@ -106,7 +106,8 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
         if len(indices) == 0:
             return
         while True:
-            yield Sample(-1, self._rng.permutation(indices))
+            _indices = np.setdiff1d(indices, self.skip_indices)
+            yield Sample(None, self._rng.permutation(_indices))
 
 
 class AntitheticPermutationSampler(PermutationSampler):

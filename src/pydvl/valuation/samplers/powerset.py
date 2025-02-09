@@ -195,10 +195,16 @@ class NoIndexIteration(InfiniteIterationMixin, IndexIteration):
 
 
 class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
-    """A finite iteration over no indices."""
+    """A finite iteration over no indices.
+    The iterator will yield None once and then stop.
+    """
 
     def __iter__(self) -> Generator[None, None, None]:
         yield None
+
+    @staticmethod
+    def length(indices: IndexSetT) -> int | None:
+        return 0
 
     @staticmethod
     def complement_size(n: int) -> int:
@@ -230,6 +236,19 @@ class PowersetSampler(IndexSampler, ABC):
         self._index_iterator_cls = index_iteration
         self._index_iterator: IndexIteration | None = None
 
+    @property
+    def skip_indices(self):
+        return self._skip_indices
+
+    @skip_indices.setter
+    def skip_indices(self, indices: IndexSetT):
+        """(Most) Powerset samplers support skipping indices in the outer loop.
+
+        Args:
+            indices: The indices to skip.
+        """
+        self._skip_indices = indices
+
     def index_iterator(
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
@@ -238,7 +257,9 @@ class PowersetSampler(IndexSampler, ABC):
             self._index_iterator = self._index_iterator_cls(indices, seed=self._rng)  # type: ignore
         except (AttributeError, TypeError):
             self._index_iterator = self._index_iterator_cls(indices)
-        yield from self._index_iterator
+        for idx in self._index_iterator:
+            if idx not in self.skip_indices:
+                yield idx
 
     def make_strategy(
         self,
