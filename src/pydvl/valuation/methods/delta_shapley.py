@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
-from pydvl.valuation.samplers import TruncatedUniformStratifiedSampler
+from pydvl.valuation.samplers.stratified import TruncatedUniformStratifiedSampler
 from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["DeltaShapleyValuation"]

@@ -94,6 +94,7 @@ from .msr import *
 from .owen import *
 from .permutation import *
 from .powerset import *
+from .stratified import *
 from .truncation import *
 
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
