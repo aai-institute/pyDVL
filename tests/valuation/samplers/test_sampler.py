@@ -77,7 +77,7 @@ def random_samplers():
             {
                 "outer_sampling_strategy": (
                     GridOwenStrategy,
-                    {"n_samples_outer": 100},
+                    {"n_samples_outer": 200},
                 )
             },
         ),
@@ -86,7 +86,7 @@ def random_samplers():
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": 100, "seed": (lambda seed: seed)},
+                    {"n_samples_outer": 200, "seed": (lambda seed: seed)},
                 )
             },
         ),
