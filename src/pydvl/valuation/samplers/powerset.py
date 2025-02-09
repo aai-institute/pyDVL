@@ -204,7 +204,7 @@ class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
 
     @staticmethod
     def length(indices: IndexSetT) -> int | None:
-        return 0
+        return 1
 
     @staticmethod
     def complement_size(n: int) -> int:
