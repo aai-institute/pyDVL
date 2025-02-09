@@ -285,7 +285,7 @@ def _get_default_n_samples(sampler: PowersetSampler, indices: IndexSetT) -> int:
 
 def _check_sampler(sampler: PowersetSampler):
     """Check that the sampler is compatible with the Least Core valuation."""
-    if sampler._index_iterator_cls != NoIndexIteration:
+    if not issubclass(sampler._index_iterator_cls, NoIndexIteration):
         raise ValueError(
             "Least core valuation only supports samplers with NoIndexIteration."
         )

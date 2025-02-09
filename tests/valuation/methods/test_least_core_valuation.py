@@ -13,12 +13,14 @@ from pydvl.valuation.methods.least_core import (
 from pydvl.valuation.samplers import (
     AntitheticSampler,
     DeterministicUniformSampler,
+    FiniteNoIndexIteration,
+    HarmonicSamplesPerSetSize,
+    NoIndexIteration,
     TruncatedUniformStratifiedSampler,
     UniformSampler,
     UniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
 )
-from pydvl.valuation.samplers.powerset import NoIndexIteration
 from tests.valuation import check_total_value, check_values
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
-    "test_game, max_samples",
+    "test_game, n_samples",
     [
         (("miner", {"n_players": 8}), 128),
         (("shoes", {"left": 10, "right": 5}), 10000),
@@ -36,26 +38,29 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "sampler_factory",
     [
-        lambda s: UniformSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s: AntitheticSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s: UniformStratifiedSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s: TruncatedUniformStratifiedSampler(
-            lower_bound=1, upper_bound=2, index_iteration=NoIndexIteration, seed=s
-        ),
-        lambda s: VarianceReducedStratifiedSampler(
-            samples_per_setsize=lambda _: 2,
+        lambda s, _: UniformSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s, _: AntitheticSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s, _: UniformStratifiedSampler(index_iteration=NoIndexIteration, seed=s),
+        lambda s, _: TruncatedUniformStratifiedSampler(
+            lower_bound=1,
+            upper_bound=2,
             index_iteration=NoIndexIteration,
+            seed=s,
+        ),
+        lambda s, n_samples: VarianceReducedStratifiedSampler(
+            samples_per_setsize=HarmonicSamplesPerSetSize(n_samples),
+            index_iteration=FiniteNoIndexIteration,
         ),
     ],
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_randomized_least_core_methods(
-    test_game, max_samples, sampler_factory, non_negative_subsidy, seed
+    test_game, n_samples, sampler_factory, non_negative_subsidy, seed
 ):
     valuation = LeastCoreValuation(
         utility=test_game.u,
-        sampler=sampler_factory(seed),
-        n_samples=max_samples,
+        sampler=sampler_factory(seed, n_samples),
+        n_samples=n_samples,
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
     )
@@ -118,7 +123,7 @@ def test_exact_least_core_via_general_least_core_valuation(
     test_game, non_negative_subsidy
 ):
     sampler = DeterministicUniformSampler(
-        index_iteration=NoIndexIteration,
+        index_iteration=FiniteNoIndexIteration,
     )
 
     powerset_size = 2 ** len(test_game.data)
@@ -195,7 +200,7 @@ def test_exact_least_core(test_game, non_negative_subsidy):
 @pytest.mark.parametrize("n_cores", [1, 3])
 def test_prepare_problem_for_exact_least_core(test_game, batch_size, n_cores):
     sampler = DeterministicUniformSampler(
-        index_iteration=NoIndexIteration,
+        index_iteration=FiniteNoIndexIteration,
         batch_size=batch_size,
     )
     utility = test_game.u.with_dataset(test_game.data)
