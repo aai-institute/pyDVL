@@ -11,71 +11,108 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset
 from pydvl.utils.types import Seed
-from pydvl.valuation import (
-    HarmonicSamplesPerSetSize,
-    IndexSampler,
-    PowerLawSamplesPerSetSize,
-)
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     AntitheticPermutationSampler,
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
-    FiniteOwenSampler,
+    FiniteNoIndexIteration,
+    FiniteRandomIndexIteration,
+    FiniteSequentialIndexIteration,
+    GridOwenStrategy,
+    HarmonicSamplesPerSetSize,
     IndexIteration,
     LOOSampler,
     MSRSampler,
-    NoIndexIteration,
     OwenSampler,
     PermutationSampler,
+    PowerLawSamplesPerSetSize,
     PowersetSampler,
-    RandomIndexIteration,
-    SequentialIndexIteration,
     StochasticSampler,
     TruncatedUniformStratifiedSampler,
+    UniformOwenStrategy,
     UniformSampler,
     UniformStratifiedSampler,
     VarianceReducedStratifiedSampler,
 )
-from pydvl.valuation.samplers.powerset import (
-    FiniteNoIndexIteration,
-    FiniteSequentialIndexIteration,
-)
+from pydvl.valuation.samplers.permutation import PermutationSamplerBase
 from pydvl.valuation.types import IndexSetT
 
 from .. import recursive_make
 from . import _check_idxs, _check_subsets
 
-DETERMINISTIC_SAMPLERS: list[tuple[Type, dict]] = [
-    (DeterministicUniformSampler, {}),
-    (DeterministicPermutationSampler, {}),
-    (LOOSampler, {}),
-]
+
+def deterministic_samplers():
+    return [
+        (DeterministicUniformSampler, {}),
+        (DeterministicPermutationSampler, {}),
+        (LOOSampler, {}),
+    ]
 
 
-RANDOM_SAMPLERS: list[tuple[Type, dict]] = [
-    (UniformSampler, {}),
-    (AntitheticSampler, {}),
-    (PermutationSampler, {}),
-    (AntitheticPermutationSampler, {}),
-    (UniformStratifiedSampler, {}),
-    (UniformStratifiedSampler, {}),
-    (TruncatedUniformStratifiedSampler, {"lower_bound": 2, "upper_bound": 3}),
-    (
-        VarianceReducedStratifiedSampler,
-        {
-            "samples_per_setsize": (
-                HarmonicSamplesPerSetSize,
-                {"n_samples_per_index": 32},
-            )
-        },
-    ),
-    (FiniteOwenSampler, {"n_samples_outer": 4}),
-    (OwenSampler, {}),
-    (AntitheticOwenSampler, {}),
-    (MSRSampler, {}),
-]
+def random_samplers():
+    return [
+        (UniformSampler, {"seed": (lambda seed: seed)}),
+        (AntitheticSampler, {"seed": (lambda seed: seed)}),
+        (PermutationSampler, {"seed": (lambda seed: seed)}),
+        (AntitheticPermutationSampler, {"seed": (lambda seed: seed)}),
+        (UniformStratifiedSampler, {"seed": (lambda seed: seed)}),
+        (UniformStratifiedSampler, {"seed": (lambda seed: seed)}),
+        (
+            TruncatedUniformStratifiedSampler,
+            {"lower_bound": 2, "upper_bound": 3},
+        ),
+        (
+            VarianceReducedStratifiedSampler,
+            {
+                "samples_per_setsize": (
+                    HarmonicSamplesPerSetSize,
+                    {"n_samples_per_index": 32},
+                )
+            },
+        ),
+        (
+            OwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    GridOwenStrategy,
+                    {"n_samples_outer": 100},
+                )
+            },
+        ),
+        (
+            OwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    UniformOwenStrategy,
+                    {"n_samples_outer": 100, "seed": (lambda seed: seed)},
+                )
+            },
+        ),
+        (
+            AntitheticOwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    GridOwenStrategy,
+                    {"n_samples_outer": 100},
+                ),
+                # required for test_proper_stochastic: with q=0 the 2nd sample is always
+                # the full complement and the randomness test fails.
+                "batch_size": 2,
+            },
+        ),
+        (
+            AntitheticOwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    UniformOwenStrategy,
+                    {"n_samples_outer": 100, "seed": (lambda seed: seed)},
+                )
+            },
+        ),
+        (MSRSampler, {"seed": lambda seed: seed}),
+    ]
 
 
 def test_deterministic_uniform_sampler_batch_size_1():
@@ -167,13 +204,11 @@ def test_loo_sampler_batch_size_1():
     _check_subsets(batches, expected_subsets)
 
 
-@pytest.mark.parametrize(
-    "sampler_cls, sampler_kwargs", DETERMINISTIC_SAMPLERS + RANDOM_SAMPLERS
-)
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
 @pytest.mark.parametrize("indices", [np.array([]), np.arange(5)])
-def test_proper(sampler_cls, sampler_kwargs, indices):
+def test_proper(sampler_cls, sampler_kwargs: dict, indices: NDArray[np.int_], seed):
     """Test that the sampler generates subsets of the correct sets"""
-    sampler = recursive_make(sampler_cls, sampler_kwargs)
+    sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
     max_iterations = 2 ** (len(indices))
     samples = takewhile(
         lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
@@ -186,15 +221,15 @@ def test_proper(sampler_cls, sampler_kwargs, indices):
 
 
 @pytest.mark.parametrize(
-    "sampler_cls, sampler_kwargs", DETERMINISTIC_SAMPLERS + RANDOM_SAMPLERS
+    "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
-def test_sample_counter(sampler_cls, sampler_kwargs):
+def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
     that was not caused by existing tests.
     """
-    sampler = recursive_make(sampler_cls, sampler_kwargs)
+    sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
     indices = np.arange(4)
     max_iterations = 2 ** (len(indices) + 1)
     samples = list(
@@ -210,7 +245,7 @@ def test_sample_counter(sampler_cls, sampler_kwargs):
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs, expected_length",
     [
-        (DeterministicUniformSampler, {}, lambda n: n * 4),
+        (DeterministicUniformSampler, {}, lambda n: n * 2 ** (n - 1)),
         (
             DeterministicUniformSampler,
             {"index_iteration": FiniteNoIndexIteration},
@@ -222,10 +257,28 @@ def test_sample_counter(sampler_cls, sampler_kwargs):
             lambda n: math.factorial(n) if n > 0 else 0,
         ),
         (LOOSampler, {}, lambda n: n),
+        # (
+        #     TruncatedUniformStratifiedSampler,
+        #     {
+        #         "index_iteration": FiniteSequentialIndexIteration,
+        #     },
+        #     lambda n: TODO: compute this...
+        # ),
         (
-            FiniteOwenSampler,
-            {"n_samples_outer": 4, "n_samples_inner": 2},
+            OwenSampler,
+            {
+                "outer_sampling_strategy": (GridOwenStrategy, {"n_samples_outer": 4}),
+                "n_samples_inner": 2,
+            },
             lambda n: 4 * 2 * n,
+        ),
+        (
+            AntitheticOwenSampler,
+            {
+                "outer_sampling_strategy": (GridOwenStrategy, {"n_samples_outer": 4}),
+                "index_iteration": FiniteSequentialIndexIteration,
+            },
+            lambda n: 2 * 4 * 2 * n,
         ),
         (
             VarianceReducedStratifiedSampler,
@@ -257,14 +310,18 @@ def test_length_for_finite_samplers(
     assert len(list(sampler.generate_batches(indices))) == expected_length(len(indices))
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", RANDOM_SAMPLERS)
-def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs):
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
+def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs, seed):
     """All infinite samplers are random, but not all random are infinite..."""
-    if sampler_cls in (FiniteOwenSampler, VarianceReducedStratifiedSampler):
+    if sampler_cls in (
+        OwenSampler,
+        AntitheticOwenSampler,
+        VarianceReducedStratifiedSampler,
+    ):
         pytest.skip(f"{sampler_cls.__name__} is a finite sampler")
     indices = np.arange(4)
     max_iter = 2 ** len(indices) * 10
-    sampler = recursive_make(sampler_cls, sampler_kwargs)
+    sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
     assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
     samples = list(
@@ -275,13 +332,13 @@ def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs):
     assert len(samples) == max_iter
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", RANDOM_SAMPLERS)
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
 @pytest.mark.parametrize(
-    "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
+    "index_iteration", [FiniteSequentialIndexIteration, FiniteRandomIndexIteration]
 )
 @pytest.mark.parametrize("indices", [np.array([]), np.array(list(range(100)))])
 def test_proper_reproducible(
-    sampler_cls, sampler_kwargs, index_iteration, indices, seed
+    sampler_cls, sampler_kwargs: dict, index_iteration, indices: NDArray, seed
 ):
     """Test that the sampler is reproducible."""
     samples_1 = _create_seeded_sample_iter(
@@ -294,10 +351,10 @@ def test_proper_reproducible(
         assert set(batch_1[0].subset) == set(batch_2[0].subset)
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", RANDOM_SAMPLERS)
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
 @pytest.mark.parametrize("indices", [np.array([]), np.arange(10)])
 @pytest.mark.parametrize(
-    "index_iteration", [SequentialIndexIteration, RandomIndexIteration]
+    "index_iteration", [FiniteSequentialIndexIteration, FiniteRandomIndexIteration]
 )
 def test_proper_stochastic(
     sampler_cls, sampler_kwargs, index_iteration, indices, seed, seed_alt
@@ -321,22 +378,23 @@ def test_proper_stochastic(
 
 
 def _create_seeded_sample_iter(
-    sampler_t: Type[StochasticSampler],
+    sampler_cls: Type[StochasticSampler],
     sampler_kwargs: dict[str, Any],
     index_iteration: Type[IndexIteration],
     indices: NDArray[np.int_],
     seed: Seed,
 ) -> Iterator:
-    sampler: IndexSampler
-    # If we set max_iterations to len(indices), then the FiniteOwenSampler will
-    # always generate the full sample as last one, failing test_proper_stochastic()
+    sampler_kwargs["seed"] = seed
+    sampler_kwargs["index_iteration"] = index_iteration
+    try:
+        sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
+    except TypeError:
+        del sampler_kwargs["index_iteration"]
+        sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
+
+    # If we set max_iterations to len(indices), then the OwenSampler will
+    # always generate the full sample as last once, failing test_proper_stochastic()
     max_iterations = len(indices) // 2
-    if issubclass(sampler_t, PowersetSampler):
-        sampler = sampler_t(
-            index_iteration=index_iteration, seed=seed, **sampler_kwargs
-        )
-    else:
-        sampler = sampler_t(seed=seed, **sampler_kwargs)
     sample_stream = takewhile(
         lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
     )
@@ -347,8 +405,10 @@ def _create_seeded_sample_iter(
 def test_finite_owen_sampler():
     n_outer = 5
     n_inner = 100
-    sampler = FiniteOwenSampler(
-        n_samples_outer=n_outer, n_samples_inner=n_inner, batch_size=1
+    sampler = OwenSampler(
+        outer_sampling_strategy=GridOwenStrategy(n_outer),
+        n_samples_inner=n_inner,
+        index_iteration=FiniteSequentialIndexIteration,
     )
     indices = np.arange(5000)
 
@@ -376,7 +436,11 @@ def test_finite_owen_sampler():
 def test_antithetic_owen_sampler():
     n_outer = 3
     n_inner = 100
-    sampler = AntitheticOwenSampler(n_samples_inner=n_inner, batch_size=1)
+    sampler = AntitheticOwenSampler(
+        outer_sampling_strategy=GridOwenStrategy(n_outer),
+        n_samples_inner=n_inner,
+        index_iteration=FiniteSequentialIndexIteration,
+    )
     indices = np.arange(5000)
 
     # extract samples
@@ -397,29 +461,33 @@ def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
 
 
 @pytest.mark.parametrize(
-    "sampler_cls, sampler_kwargs", DETERMINISTIC_SAMPLERS + RANDOM_SAMPLERS
+    "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
 @pytest.mark.parametrize("indices", [np.arange(4)])
-def test_sampler_weights(sampler_cls, sampler_kwargs, indices):
+def test_sampler_weights(
+    sampler_cls, sampler_kwargs: dict, indices: NDArray, seed: int
+):
     """Test whether weight(n, k) corresponds to the probability of sampled subsets of
     size k from n indices."""
 
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler only samples sets of size n-1")
+    if issubclass(sampler_cls, PermutationSamplerBase):
+        pytest.skip("Permutation samplers only sample full sets")
 
     # Sample 2**n subsets and count the number of subsets of each size
     n = len(indices)
     n_batches = 2 ** (2 * n)  # go high to be sure
 
     # These samplers return samples up to the size of the whole index set
-    if issubclass(sampler_cls, (PermutationSampler, MSRSampler)):
+    if issubclass(sampler_cls, MSRSampler):
         subset_frequencies = np.zeros(n + 1)
         n += 1
     else:
         subset_frequencies = np.zeros(n)
         sampler_kwargs["batch_size"] = n
 
-    sampler = recursive_make(sampler_cls, sampler_kwargs)
+    sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
             subset_frequencies[len(sample.subset)] += 1
@@ -454,4 +522,57 @@ def test_truncateduniformstratifiedsampler_raises(
             TruncatedUniformStratifiedSampler(
                 lower_bound=lower_bound, upper_bound=upper_bound
             )._generate(indices)
+        )
+
+
+class TestSampler(PowersetSampler):
+    def __init__(self):
+        super().__init__(batch_size=1, index_iteration=FiniteSequentialIndexIteration)
+
+    def _generate(self, indices: IndexSetT):
+        pass
+
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        pass
+
+
+@pytest.mark.parametrize(
+    "indices, skip, expected",
+    [
+        (np.arange(6), np.array([2, 4]), [0, 1, 3, 5]),
+        (np.arange(6), np.empty(0), np.arange(6)),
+        (np.empty(0), np.arange(6), np.empty(0)),
+    ],
+)
+def test_skip_indices(indices, skip, expected):
+    sampler = TestSampler()
+    sampler.skip_indices = skip
+
+    result = list(sampler.index_iterator(indices))
+
+    assert set(result) == set(expected), f"Expected {expected}, but got {result}"
+
+
+def test_skip_indices_after_first_batch():
+    n_indices = 4
+    indices = np.arange(n_indices)
+    skip_indices = indices[:2]
+
+    # Generate all samples in one batch
+    sampler = DeterministicUniformSampler(batch_size=2**n_indices)
+
+    batches = sampler.generate_batches(indices)
+    first_batch = list(next(batches))
+    assert first_batch, "First batch should not be empty"
+
+    # Skip indices for the next batch of all samples
+    sampler.skip_indices = skip_indices
+
+    next_batch = list(next(batches))
+
+    effective_outer_indices = np.setdiff1d(indices, skip_indices)
+    assert len(next_batch) == len(effective_outer_indices) * 2 ** (n_indices - 1)
+    for sample in next_batch:
+        assert sample.idx not in skip_indices, (
+            f"Sample with skipped index {sample.idx} found"
         )
