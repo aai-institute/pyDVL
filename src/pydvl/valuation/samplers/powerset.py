@@ -1,11 +1,22 @@
 r"""
-Powerset samplers.
+This module provides the base implementation for powerset samplers.
 
-TODO: explain the formulation and the different samplers.
+These samplers operate in two loops:
 
-## Stochastic samplers
+1. Outer iteration over all indices. This is configurable with subclasses of
+   [IndexIteration][]. At each step we fix an index $i \in N$.
+2. Inner iteration over subsets of $N_{-i}$. This step can return one or more subsets,
+   sampled in different ways: uniformly, with varying probabilities, in tuples of
+   complementary sets, etc.
 
-...
+This scheme follows the usual definition of semi-values as:
+
+$$
+v_\text{semi}(i) = \sum_{i=1}^n w(k)
+                     \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)],
+$$
+
+see [semivalues][pydvl.valuation.methods.semivalue] for reference.
 
 
 ## References
@@ -14,15 +25,7 @@ TODO: explain the formulation and the different samplers.
       Frank, and Geoffrey Holmes. [Sampling Permutations for Shapley Value
       Estimation](https://jmlr.org/papers/v23/21-0439.html). Journal of Machine
       Learning Research 23, no. 43 (2022): 1–46.
-[^2]: <a name="watson_accelerated_2023"></a>Watson, Lauren, Zeno Kujawa, Rayna Andreeva,
-      Hao-Tsung Yang, Tariq Elahi, and Rik Sarkar. [Accelerated Shapley Value
-      Approximation for Data Evaluation](https://doi.org/10.48550/arXiv.2311.05346).
-      arXiv, 9 November 2023.
-[^3]: <a name="wu_variance_2023"></a>Wu, Mengmeng, Ruoxi Jia, Changle Lin, Wei Huang,
-      and Xiangyu Chang. [Variance Reduced Shapley Value Estimation for Trustworthy Data
-      Valuation](https://doi.org/10.1016/j.cor.2023.106305). Computers & Operations
-      Research 159 (1 November 2023): 106305.
-[^4]: <a name="maleki_bounding_2014"></a>Maleki, Sasan, Long Tran-Thanh, Greg Hines,
+[^2]: <a name="maleki_bounding_2014"></a>Maleki, Sasan, Long Tran-Thanh, Greg Hines,
       Talal Rahwan, and Alex Rogers. [Bounding the Estimation Error of Sampling-Based
       Shapley Value Approximation](https://arxiv.org/abs/1306.4265). arXiv:1306.4265
       [Cs], 12 February 2014.

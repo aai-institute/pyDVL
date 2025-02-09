@@ -11,20 +11,26 @@ In order to compute values it is enough to use any of the Owen samplers together
 [ShapleyValuation][pydvl.valuation.methods.ShapleyValuation] object.
 
 !!! Example "Finite Owen Sampler"
-    [FiniteOwenSampler][pydvl.valuation.samplers.owen.FiniteOwenSampler] is the most
-    basic Owen sampler. It uses a deterministic grid of probability values between 0
-    and 1 for the inner sampling. The number of samples drawn is therefore constant and
-    equal to `n_samples_outer * n_samples_inner`. It follows the idea of the original
-    paper and should be instantiated with
+    [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] with a
+    [FiniteSequentialIndexIteration][pydvl.valuation.iteration.FiniteSequentialIndexIteration]
+    for the outer loop and a
+    [GridOwenStrategy][pydvl.valuation.samplers.owen.GridOwenStrategy] for the sampling
+    probabilities is the most basic Owen sampler. It uses a deterministic grid of
+    probability values between 0 and 1 for the inner sampling. It follows the idea of
+    the original paper and should be instantiated with
     [NoStopping][pydvl.valuation.stopping.NoStopping] as stopping criterion. Note that
     because the criterion never checks for convergence, the status of the valuation will
     always be `Status.Pending`.
 
     ```python
-    from pydvl.valuation import FiniteOwenSampler, ShapleyValuation, NoStopping
+    from pydvl.valuation import OwenSampler, ShapleyValuation, NoStopping
     ...
 
-    sampler = FiniteOwenSampler(n_samples_outer=200, n_samples_inner=4)
+    sampler = OwenSampler(
+        outer_sampling_strategy=GridOwenStrategy(n_samples_outer=100),
+        n_samples_inner=2,
+        index_iteration=FiniteSequentialIndexIteration,
+    )
     valuation = ShapleyValuation(utility, sampler, NoStopping())
     valuation.fit(dataset)
     shapley_values = valuation.values()
@@ -32,7 +38,7 @@ In order to compute values it is enough to use any of the Owen samplers together
 
 !!! Example "Owen Sampler"
     [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] follows the same principle
-    as [FiniteOwenSampler][pydvl.valuation.samplers.owen.FiniteOwenSampler], but samples
+    as [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler], but samples
     probability values between 0 and 1 at random indefinitely. It requires a stopping
     criterion to be used with the valuation method, and thus follows more closely the
     general pattern of the valuation methods. This makes it more adequate for actual use
