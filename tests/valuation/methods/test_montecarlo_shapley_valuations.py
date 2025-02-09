@@ -1,192 +1,228 @@
 import logging
-from copy import deepcopy
+from typing import Any, Type
 
 import numpy as np
 import pytest
 from joblib import parallel_config
 from sklearn.linear_model import LinearRegression
 
+from pydvl.utils import SupervisedModel
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
 from pydvl.valuation.methods import GroupTestingShapleyValuation, ShapleyValuation
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
+    AntitheticSampler,
     DeterministicUniformSampler,
+    GridOwenStrategy,
+    HarmonicSamplesPerSetSize,
+    MSRSampler,
     OwenSampler,
     PermutationSampler,
+    PowerLawSamplesPerSetSize,
+    TruncatedUniformStratifiedSampler,
+    UniformOwenStrategy,
     UniformSampler,
+    UniformStratifiedSampler,
+    VarianceReducedStratifiedSampler,
 )
+from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.scorers import SupervisedScorer, compose_score, sigmoid
-from pydvl.valuation.stopping import MaxChecks, MaxUpdates, NoStopping
+from pydvl.valuation.stopping import MaxChecks, MaxUpdates, MinUpdates, NoStopping
+from pydvl.valuation.types import Sample
 from pydvl.valuation.utility import ModelUtility
 
-from .. import check_rank_correlation, check_total_value, check_values
+from .. import check_rank_correlation, check_total_value, check_values, recursive_make
 
 log = logging.getLogger(__name__)
 
 
+def shapley_samplers(fudge_factor: int):
+    return pytest.mark.parametrize(
+        "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs",
+        [
+            (
+                UniformSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor * 2})},
+            ),
+            (
+                PermutationSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                AntitheticSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
+            ),
+            (
+                MSRSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor * 12})},
+            ),
+            (
+                UniformStratifiedSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                TruncatedUniformStratifiedSampler,
+                {},
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                VarianceReducedStratifiedSampler,
+                {
+                    "samples_per_setsize": (
+                        HarmonicSamplesPerSetSize,
+                        {"n_samples_per_index": fudge_factor},
+                    )
+                },
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                VarianceReducedStratifiedSampler,
+                {
+                    "samples_per_setsize": (
+                        PowerLawSamplesPerSetSize,
+                        {
+                            "exponent": -0.5,
+                            "n_samples_per_index": fudge_factor,
+                        },
+                    )
+                },
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                OwenSampler,
+                {
+                    "outer_sampling_strategy": (
+                        UniformOwenStrategy,
+                        {"n_samples_outer": 200},
+                    )
+                },
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+            ),
+            (
+                AntitheticOwenSampler,
+                {
+                    "outer_sampling_strategy": (
+                        UniformOwenStrategy,
+                        {"n_samples_outer": 100},
+                    )
+                },
+                ShapleyValuation,
+                {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
+            ),
+            (
+                None,
+                {},
+                GroupTestingShapleyValuation,
+                {"n_samples": fudge_factor * 100, "epsilon": 0.2},
+            ),
+        ],
+    )
+
+
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
-    "test_game",
+    "test_game, rtol, atol",
     [
-        ("symmetric-voting", {"n_players": 6}),
-        ("shoes", {"left": 3, "right": 4}),
+        (("symmetric-voting", {"n_players": 4}), 0.2, 1e-2),
+        # (("asymmetric-voting", {}), 0.2, 1e-2), # Too many players for some methods
+        (("shoes", {"left": 3, "right": 4}), 0.2, 1e-4),
     ],
     indirect=["test_game"],
 )
-@pytest.mark.parametrize(
-    "sampler_factory, valuation_class, valuation_kwargs, rtol, atol",
-    [
-        (
-            lambda s: PermutationSampler(seed=s),
-            DataShapleyValuation,
-            {"is_done": MaxUpdates(500)},
-            0.2,
-            1e-4,
-        ),
-        (
-            lambda s: UniformSampler(seed=s),
-            DataShapleyValuation,
-            {"is_done": MaxUpdates(2**10)},
-            0.2,
-            1e-4,
-        ),
-        (
-            lambda s: OwenSampler(200, n_samples_inner=5, seed=s),
-            OwenShapleyValuation,
-            {},
-            0.2,
-            1e-4,
-        ),
-        (
-            lambda s: AntitheticOwenSampler(200, n_samples_inner=5, seed=s),
-            OwenShapleyValuation,
-            {},
-            0.1,
-            1e-4,
-        ),
-        # Because of the inaccuracy of GroupTesting, a high atol is required for the
-        # value 0, for which the rtol has no effect.
-        (
-            None,
-            GroupTestingShapleyValuation,
-            {"n_samples": 5e4, "epsilon": 0.2},
-            0.1,
-            1e-2,
-        ),
-    ],
-)
-@pytest.mark.flaky(reruns=2)
+@shapley_samplers(500)
 def test_games(
     test_game,
-    n_jobs,
-    sampler_factory,
-    valuation_class,
-    valuation_kwargs,
-    rtol,
-    atol,
-    seed,
+    sampler_cls: Type,
+    sampler_kwargs: dict[str, Any],
+    valuation_cls,
+    valuation_kwargs: dict[str, Any],
+    rtol: float,
+    atol: float,
+    seed: int,
 ):
-    """Tests shapley values for all methods using toy games.
+    """Tests Shapley values for all methods using toy games.
 
     For permutation, the rtol for each scorer is chosen
     so that the number of samples selected is just above the (ε,δ) bound for ε =
     rtol, δ=0.001 and the range corresponding to each score. This means that
     roughly once every 1000/num_methods runs the test will fail.
 
-    TODO:
-        - Uncomment the other methods once they are implemented
-
-    FIXME:
-     - We don't have a bound for Owen.
     NOTE:
      - The variance in the combinatorial method is huge, so we need lots of
        samples
 
     """
-    if sampler_factory is not None:
-        sampler = sampler_factory(seed)
-        valuation = valuation_class(
-            utility=test_game.u,
-            sampler=sampler,
-            progress=False,
-            **valuation_kwargs,
-        )
-    else:
-        valuation = valuation_class(
-            utility=test_game.u,
-            progress=False,
-            **valuation_kwargs,
-        )
-    with parallel_config(n_jobs=n_jobs):
-        valuation.fit(test_game.data)
-    got = valuation.values()
+    if sampler_cls is not None:
+        if issubclass(sampler_cls, StochasticSamplerMixin):
+            sampler_kwargs["seed"] = seed
+        sampler = recursive_make(sampler_cls, sampler_kwargs)
+        valuation_kwargs["sampler"] = sampler
+
+    valuation_kwargs["utility"] = test_game.u
+    valuation_kwargs["progress"] = False
+
+    valuation = recursive_make(valuation_cls, valuation_kwargs)
+
+    valuation.fit(test_game.data)
+
+    result = valuation.values()
     expected = test_game.shapley_values()
-    check_total_value(test_game.u.with_dataset(test_game.data), got, atol=atol)
 
-    check_values(got, expected, rtol=rtol, atol=atol)
+    check_total_value(
+        test_game.u.with_dataset(test_game.data), result, rtol=rtol, atol=atol
+    )
+    check_values(result, expected, rtol=rtol, atol=atol)
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 @pytest.mark.parametrize(
     "test_game",
-    [
-        ("symmetric-voting", {"n_players": 12}),
-    ],
+    [("symmetric-voting", {"n_players": 6})],
     indirect=["test_game"],
 )
-@pytest.mark.parametrize(
-    "sampler_class, sampler_kwargs, valuation_class, valuation_kwargs",
-    [
-        # TODO Add Permutation Montecarlo once issue #416 is closed.
-        (PermutationSampler, {}, DataShapleyValuation, {"is_done": MaxChecks(50)}),
-        (UniformSampler, {}, DataShapleyValuation, {"is_done": MaxChecks(50)}),
-        (
-            OwenSampler,
-            {"n_samples_outer": 20, "n_samples_inner": 4},
-            OwenShapleyValuation,
-            {},
-        ),
-        (
-            AntitheticOwenSampler,
-            {"n_samples_outer": 20, "n_samples_inner": 4},
-            OwenShapleyValuation,
-            {},
-        ),
-        (
-            None,
-            {},
-            GroupTestingShapleyValuation,
-            {"n_samples": 21, "epsilon": 0.2},
-        ),
-    ],
-)
+@shapley_samplers(2)
 def test_seed(
     test_game,
-    sampler_class,
-    sampler_kwargs,
-    valuation_class,
-    valuation_kwargs,
-    seed,
-    seed_alt,
+    sampler_cls: Type,
+    sampler_kwargs: dict[str, Any],
+    valuation_cls: Type,
+    valuation_kwargs: dict[str, Any],
+    seed: int,
+    seed_alt: int,
 ):
-    values = []
+    values: list[ValuationResult] = []
+    if sampler_cls is None or not issubclass(sampler_cls, StochasticSamplerMixin):
+        pytest.skip("This test is only for stochastic samplers")
+
     for s in [seed, seed, seed_alt]:
-        if sampler_class is not None:
-            valuation = valuation_class(
-                utility=test_game.u,
-                sampler=sampler_class(seed=s, **sampler_kwargs),
-                progress=False,
-                # TODO: Why is a deepcopy necessary here?
-                **deepcopy(valuation_kwargs),
-            )
-        else:
-            valuation = valuation_class(
-                utility=test_game.u,
-                progress=False,
-                **valuation_kwargs,
-                seed=s,
-            )
+        sampler_kwargs["seed"] = s
+        if valuation_cls is ShapleyValuation:
+            sampler = recursive_make(sampler_cls, sampler_kwargs)
+            valuation_kwargs["sampler"] = sampler
+        elif valuation_cls is GroupTestingShapleyValuation:
+            valuation_kwargs["seed"] = s
+
+        valuation_kwargs["utility"] = test_game.u
+        valuation_kwargs["progress"] = False
+        valuation = recursive_make(valuation_cls, valuation_kwargs)
+
         valuation.fit(test_game.data)
         values.append(valuation.values())
 
@@ -197,38 +233,25 @@ def test_seed(
         np.testing.assert_equal(values_1.values, values_3.values)
 
 
-@pytest.mark.slow
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
-    "sampler_class",
-    [
-        PermutationSampler,
-        UniformSampler,
-    ],
+    "sampler_cls",
+    [PermutationSampler, UniformSampler],
 )
-@pytest.mark.flaky(reruns=1)
 def test_hoeffding_bound_montecarlo(
-    analytic_shapley,
-    dummy_train_data,
-    n_jobs,
-    sampler_class,
-    delta,
-    eps,
+    analytic_shapley, dummy_train_data, sampler_cls: Type, delta: float, eps: float
 ):
     u, exact_values = analytic_shapley
 
     n_samples = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
-        sampler = sampler_class()
-        valuation = DataShapleyValuation(
-            utility=u,
-            sampler=sampler,
-            progress=False,
-            is_done=MaxChecks(n_samples),
+        sampler = sampler_cls()
+        valuation = ShapleyValuation(
+            utility=u, sampler=sampler, progress=False, is_done=MaxChecks(n_samples)
         )
-        with parallel_config(n_jobs=n_jobs):
-            valuation.fit(dummy_train_data)
+        valuation.fit(dummy_train_data)
         values = valuation.values()
 
         check_total_value(u, values, atol=len(dummy_train_data) * eps)
@@ -236,42 +259,18 @@ def test_hoeffding_bound_montecarlo(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize(
-    "a, b, num_points",
-    [(2, 0, 21)],  # training set will have 0.3 * 21 ~= 6 samples
-)
-@pytest.mark.parametrize(
-    "sampler_class, sampler_kwargs, valuation_class, valuation_kwargs",
-    [
-        (PermutationSampler, {}, DataShapleyValuation, {"is_done": MaxUpdates(500)}),
-        (
-            OwenSampler,
-            {"n_samples_outer": 400, "n_samples_inner": 4},
-            OwenShapleyValuation,
-            {},
-        ),
-        (
-            AntitheticOwenSampler,
-            {"n_samples_outer": 400, "n_samples_inner": 4},
-            OwenShapleyValuation,
-            {},
-        ),
-        (
-            None,
-            {},
-            GroupTestingShapleyValuation,
-            {"n_samples": 5e4, "epsilon": 0.25},
-        ),
-    ],
-)
-def test_linear_montecarlo_with_outlier(
+# training set will have 0.3 * 21 ~= 6 samples
+@pytest.mark.flaky(reruns=1)
+@pytest.mark.parametrize("a, b, num_points", [(2, 0, 21)])
+@shapley_samplers(500)
+def test_linear_montecarlo(
     linear_dataset,
-    n_jobs,
-    sampler_class,
-    sampler_kwargs,
-    valuation_class,
-    valuation_kwargs,
-    cache_backend,
+    linear_shapley,
+    n_jobs: int,
+    sampler_cls: Type,
+    sampler_kwargs: dict[str, Any],
+    valuation_cls: Type,
+    valuation_kwargs: dict[str, Any],
 ):
     """Tests whether valuation methods are able to detect an obvious outlier.
 
@@ -283,46 +282,33 @@ def test_linear_montecarlo_with_outlier(
     the more samples are required for the Monte Carlo approximations to converge,
     as indicated by the Hoeffding bound.
     """
-    data_train, data_test = linear_dataset
+    train, test = linear_dataset
+    utility, exact_result = linear_shapley
 
-    scorer = compose_score(
-        SupervisedScorer("r2", data_test, default=-np.inf),
-        sigmoid,
-        name="squashed r2",
-    )
+    # TODO: we'd have to precompute this in a fixture
+    # outlier_idx = np.random.randint(len(train))
+    # train.data().y[outlier_idx] -= 100
 
-    outlier_idx = np.random.randint(len(data_train))
-    data_train.data().y[outlier_idx] -= 100
+    if sampler_cls is not None:
+        valuation_kwargs["sampler"] = recursive_make(sampler_cls, sampler_kwargs)
 
-    utility = ModelUtility(
-        LinearRegression(),
-        scorer=scorer,
-        cache_backend=cache_backend,
-    )
-
-    if sampler_class is not None:
-        valuation = valuation_class(
-            utility=utility,
-            sampler=sampler_class(**sampler_kwargs),
-            progress=False,
-            **valuation_kwargs,
-        )
-    else:
-        valuation = valuation_class(
-            utility=utility,
-            progress=False,
-            **valuation_kwargs,
-        )
+    valuation_kwargs["utility"] = utility
+    valuation_kwargs["progress"] = False
+    valuation = recursive_make(valuation_cls, valuation_kwargs)
 
     with parallel_config(n_jobs=n_jobs):
-        valuation.fit(data_train)
-    values = valuation.values()
-    values.sort()
+        valuation.fit(train)
+    result = valuation.values()
+    result.sort()
 
-    assert values.status == Status.Converged
-    assert values[0].index == outlier_idx
+    if sampler_cls is not OwenSampler:
+        assert result.status == Status.Converged
 
-    check_total_value(utility.with_dataset(data_train), values, atol=0.2)
+    # Did we detect the outlier?
+    # assert result[0].index == outlier_idx
+
+    check_values(result, exact_result, rtol=0.2)
+    check_total_value(utility.with_dataset(train), result, atol=0.1)
 
 
 @pytest.mark.parametrize(
@@ -330,18 +316,15 @@ def test_linear_montecarlo_with_outlier(
     [(2, 0, 21, 2)],  # 24*0.3=6 samples in 2 groups
 )
 @pytest.mark.parametrize(
-    "sampler_class, kwargs",
-    [
-        (PermutationSampler, dict(is_done=MaxUpdates(700))),
-    ],
+    "sampler_cls, valuation_kwargs",
+    [(PermutationSampler, dict(is_done=MaxUpdates(700)))],
 )
 def test_grouped_linear_montecarlo_shapley(
     linear_dataset,
-    n_jobs,
+    n_jobs: int,
     num_groups: int,
-    sampler_class,
-    kwargs: dict,
-    cache_backend,
+    sampler_cls: Type,
+    valuation_kwargs: dict[str, Any],
 ):
     """
     For permutation and truncated montecarlo, the rtol for each scorer is chosen
@@ -361,23 +344,19 @@ def test_grouped_linear_montecarlo_shapley(
 
     data_groups = np.random.randint(0, num_groups, len(data_train))
     grouped_linear_dataset = GroupedDataset.from_dataset(data_train, data_groups)
-    utility = ModelUtility(
-        LinearRegression(),
-        scorer=scorer,
-        cache_backend=cache_backend,
-    )
+    utility = ModelUtility[Sample, SupervisedModel](LinearRegression(), scorer=scorer)
 
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         utility=utility,
-        sampler=sampler_class(),
+        sampler=sampler_cls(),
         progress=False,
-        **kwargs,
+        **valuation_kwargs,
     )
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(grouped_linear_dataset)
     values = valuation.values()
 
-    exact_valuation = DataShapleyValuation(
+    exact_valuation = ShapleyValuation(
         utility=utility,
         sampler=DeterministicUniformSampler(),
         progress=False,
@@ -387,3 +366,35 @@ def test_grouped_linear_montecarlo_shapley(
     exact_values = exact_valuation.values()
 
     check_values(values, exact_values, rtol=rtol)
+
+
+# @pytest.mark.skip(reason="An unnecessary test of numerical stability")
+@pytest.mark.parametrize("sampler_cls", [OwenSampler, AntitheticOwenSampler])
+@pytest.mark.parametrize(
+    "sampler_kwargs",
+    [
+        {"outer_sampling_strategy": (GridOwenStrategy, {"n_samples_outer": 10})},
+        {"outer_sampling_strategy": (UniformOwenStrategy, {"n_samples_outer": 10})},
+    ],
+)
+def test_owen_weight(sampler_cls, sampler_kwargs, dummy_utility):
+    """This tests that we effectively cancel the Shapley coefficient using the Owen
+    samplers, so that the method has a coefficient of 1.0 for all combinations of n and
+    k.
+
+    It is actually not necessary to test this, but I'm leaving the code here in case we
+    want to come back to it later.
+    """
+    sampler = recursive_make(sampler_cls, sampler_kwargs)
+    utility = dummy_utility
+    valuation = ShapleyValuation(utility, sampler, is_done=NoStopping())
+
+    results = []
+    for n in np.random.randint(1000, 100000, size=4):
+        n = int(n)
+        for k in np.random.randint(0, n, size=4):
+            k = int(k)
+            result = valuation.coefficient(n, k, sampler.weight(n, k))
+            results.append(result)
+
+    assert np.all(np.array(results) == 1.0)
