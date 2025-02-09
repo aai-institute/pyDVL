@@ -290,7 +290,7 @@ class PowersetEvaluationStrategy(
 class LOOSampler(PowersetSampler):
     """Leave-One-Out sampler.
 
-    In this special case of a powerset samplet, for every index $i$ in the set $S$, the
+    In this special case of a powerset sampler, for every index $i$ in the set $S$, the
     sample $(i, S_{-i})$ is returned.
 
     Args:
