@@ -161,8 +161,9 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             indices: The indices used in the sampler.
 
         Returns:
-            `None` if the number of samples is infinite, which is the case for
-            most stochastic samplers.
+            The maximum number of samples that will be generated, or  `None` if the
+                number of samples is infinite. This will depend, among other things,
+                on the type of [IndexIteration][pydvl.valuation.samplers.IndexIteration].
         """
         ...
 
