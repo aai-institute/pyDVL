@@ -211,8 +211,35 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
                     yield Sample(idx, subset)
 
     def weight(self, n: int, subset_len: int) -> float:
-        """The probability of drawing a subset of a given length from the complement of
-        the current index is 1/(n-1 choose k).
+        r"""For each $q_j, j \in \{1, ..., N\}$ in the outer probabilities, the
+        probability of drawing a subset $S_k$ of size $k$ is:
+
+        $$ P (| S_{q_j} | = k) = \binom{n}{k} \  q_j^k  (1 - q_j)^{n - k}.$$
+
+        So, if each $q_j$ is chosen with equal weight (or more generally with
+        probability $p_j$),then by total probability, the overall probability of
+        obtaining a subset of size $k$ is a mixture of the binomials:
+        $$
+        P (| S | = k) = \sum_{j = 1}^N p_j \ \binom{n}{k} \ q_j^k  (1 - q_j)^{n - k}.
+        $$
+
+        In our case $p_j = 1/N$, so that $P(|S|=k) = \frac{1}{N} \sum_{j=1}^N P (|
+        S_{q_j} | = k)$. For large enough $N$ this is
+
+        $$
+        P(|S|=k) \approx \binom{n}{k} \int_0^1 q^k (1 - q)^{n - k} \, dq = \frac{1}{
+        n+1},
+        $$
+
+        where we computed the integral using the beta function and its expression as
+        products of gamma functions.
+
+        Now, given the symmetry wrt. the indices in the sampling procedure, any given
+        set $S$ of size $k$ is equally likely to be drawn. So the probability of a set
+        being of size $k$ must be equally divided by the number of sets of that size,
+        and the weight of a set of size $k$ is:
+
+        $$ P(S) = \frac{1}{n+1} \binom{n}{|S|}^{-1}. $$
         """
         m = self._index_iterator_cls.complement_size(n)
         return math.comb(m, subset_len) * int(m + 1)

@@ -158,6 +158,29 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             yield Sample(None, subset)
 
     def weight(self, n: int, subset_len: int) -> float:
+        r"""Inverse probability of sampling a set of size k.
+
+        In the **MSR scheme**, the sampling is done from the full power set $2^N$ (each
+        set $S \subseteq N$ with probability $1 / 2^n$), and then for each data point
+        $i$ one partitions the sample into:
+
+            * $\mathcal{S}_{\ni i} = \{S \in \mathcal{S}: i \in S\},$ and
+            * $\mathcal{S}_{\nni i} = \{S \in \mathcal{S}: i \nin S\}.$.
+
+        When we condition on the event $i \in S$, the remaining part $S_{- i}$ is
+        uniformly distributed over $2^{N_{- i}}$. In other words, the act of
+        partitioning recovers the uniform distribution on $2^{N_{- i}}$ "for free"
+        because
+        $$P (S_{- i} = T \mid i \in S) = \frac{1}{2^{n - 1}}$$
+        for each $T \subseteq N_{- i}$.
+
+        Args:
+            n: Size of the index set.
+            subset_len: Size of the subset.
+
+        Returns:
+            The inverse probability of having sampled a set of size `subset_len`.
+        """
         return 2 ** (n - 1) if n > 0 else 1.0  # type: ignore
 
     def make_strategy(
