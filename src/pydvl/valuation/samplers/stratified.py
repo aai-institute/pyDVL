@@ -228,7 +228,7 @@ class UniformStratifiedSampler(TruncatedUniformStratifiedSampler):
         )
 
 
-class SamplesPerSetSizeHeuristic(ABC):
+class SamplesPerSetSizeStrategy(ABC):
     r"""A callable which returns the number of samples to take for a given set size.
     Based on Wu et al. (2023)<sup><a href="#wu_variance_2023">1</a></sup>, Theorem 4.2.
 
@@ -240,23 +240,28 @@ class SamplesPerSetSizeHeuristic(ABC):
     $$m(k) = m \frac{f(k)}{\sum_{j=0}^{n} f(j)},$$
 
     for some choice of $f.$ Implementations of this base class must override the
-    method `fun()`.
+    method `fun()`. It is provided both the size $k$ and the total number of indices $n$
+    as arguments.
     """
 
     def __init__(self, n_samples_per_index: int):
         """Construct a heuristic for the given number of samples.
 
         Args:
-            n_samples_per_index: Number of samples for VRDS to generate, *per index*.
-                If the sampler uses
+            n_samples_per_index: Number of samples for the stratified sampler to
+                generate, *per index*. If the sampler uses
                 [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration], then this
                 is the total number of samples.
         """
         self.n_samples_per_index = n_samples_per_index
 
     @abstractmethod
-    def fun(self, subset_len: int) -> float:
-        """The function $f$ to use in the heuristic."""
+    def fun(self, n_indices: int, subset_len: int) -> float:
+        """The function $f$ to use in the heuristic.
+        Args:
+            n_indices: Size of the index set.
+            subset_len: Size of the subset.
+        """
         ...
 
     @lru_cache
@@ -287,8 +292,11 @@ class SamplesPerSetSizeHeuristic(ABC):
         n_indices += 1
 
         # m_k = m * f(k) / sum_j f(j)
-        s = sum(self.fun(k) for k in range(n_indices))
-        values = [self.n_samples_per_index * self.fun(k) / s for k in range(n_indices)]
+        s = sum(self.fun(n_indices, k) for k in range(n_indices))
+        values = [
+            self.n_samples_per_index * self.fun(n_indices, k) / s
+            for k in range(n_indices)
+        ]
 
         # Round down and distribute remainder by adjusting the largest fractional parts
         int_values = [int(m) for m in values]
@@ -319,7 +327,7 @@ class SamplesPerSetSizeHeuristic(ABC):
             )
 
 
-class HarmonicSamplesPerSetSize(SamplesPerSetSizeHeuristic):
+class HarmonicSamplesPerSetSize(SamplesPerSetSizeStrategy):
     r"""Heuristic choice of samples per set size for VRDS.
 
     Sets the number of sets at size $k$ to be
@@ -331,11 +339,11 @@ class HarmonicSamplesPerSetSize(SamplesPerSetSizeHeuristic):
     $$f(k) = \frac{1}{1+k}.$$
     """
 
-    def fun(self, subset_len: int):
+    def fun(self, n_indices: int, subset_len: int):
         return 1 / (1 + subset_len)
 
 
-class PowerLawSamplesPerSetSize(SamplesPerSetSizeHeuristic):
+class PowerLawSamplesPerSetSize(SamplesPerSetSizeStrategy):
     r"""Heuristic choice of samples per set size for VRDS.
 
     Sets the number of sets at size $k$ to be
@@ -359,7 +367,7 @@ class PowerLawSamplesPerSetSize(SamplesPerSetSizeHeuristic):
         super().__init__(n_samples_per_index)
         self.exponent = exponent
 
-    def fun(self, subset_len):
+    def fun(self, n_indices: int, subset_len: int):
         return (1 + subset_len) ** self.exponent
 
 
@@ -402,7 +410,7 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
     def __init__(
         self,
-        samples_per_setsize: SamplesPerSetSizeHeuristic,
+        samples_per_setsize: SamplesPerSetSizeStrategy,
         batch_size: int = 1,
         index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
         seed: Seed | None = None,
