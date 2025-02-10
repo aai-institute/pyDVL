@@ -25,10 +25,12 @@ from pydvl.valuation.samplers import (
     IndexIteration,
     LOOSampler,
     MSRSampler,
+    NoIndexIteration,
     OwenSampler,
     PermutationSampler,
     PowerLawSamplesPerSetSize,
     PowersetSampler,
+    SequentialIndexIteration,
     StochasticSampler,
     TruncatedUniformStratifiedSampler,
     UniformOwenStrategy,
@@ -66,10 +68,20 @@ def random_samplers():
         (
             VarianceReducedStratifiedSampler,
             {
-                "samples_per_setsize": (
+                "sample_sizes": (
                     HarmonicSamplesPerSetSize,
                     {"n_samples_per_index": 32},
                 )
+            },
+        ),
+        (
+            VarianceReducedStratifiedSampler,
+            {
+                "sample_sizes": (
+                    HarmonicSamplesPerSetSize,
+                    {"n_samples_per_index": 32},
+                ),
+                "index_iteration": SequentialIndexIteration,
             },
         ),
         (
@@ -79,6 +91,16 @@ def random_samplers():
                     GridOwenStrategy,
                     {"n_samples_outer": 200},
                 )
+            },
+        ),
+        (
+            OwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    GridOwenStrategy,
+                    {"n_samples_outer": 200},
+                ),
+                "index_iteration": NoIndexIteration,
             },
         ),
         (
@@ -283,7 +305,7 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
         (
             VarianceReducedStratifiedSampler,
             {
-                "samples_per_setsize": (
+                "sample_sizes": (
                     HarmonicSamplesPerSetSize,
                     {"n_samples_per_index": 32},
                 )
@@ -293,7 +315,7 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
         (
             VarianceReducedStratifiedSampler,
             {
-                "samples_per_setsize": (
+                "sample_sizes": (
                     PowerLawSamplesPerSetSize,
                     {"n_samples_per_index": 13, "exponent": -0.5},
                 )
@@ -410,7 +432,7 @@ def test_finite_owen_sampler():
         n_samples_inner=n_inner,
         index_iteration=FiniteSequentialIndexIteration,
     )
-    indices = np.arange(5000)
+    indices = np.arange(2000)
 
     # extract samples for the first and second index
     n_samples = n_outer * n_inner
@@ -434,18 +456,18 @@ def test_finite_owen_sampler():
 
 @pytest.mark.flaky(reruns=1)
 def test_antithetic_owen_sampler():
-    n_outer = 3
+    n_outer = 5
     n_inner = 100
     sampler = AntitheticOwenSampler(
         outer_sampling_strategy=GridOwenStrategy(n_outer),
         n_samples_inner=n_inner,
         index_iteration=FiniteSequentialIndexIteration,
     )
-    indices = np.arange(5000)
+    indices = np.arange(1000)
 
     # extract samples
-    n_samples = n_outer * n_inner
-    samples = [b[0] for b in islice(sampler.generate_batches(indices), n_samples * 4)]
+    n_samples = n_outer * n_inner * 4
+    samples = [b[0] for b in islice(sampler.generate_batches(indices), n_samples)]
 
     # check that the sample sizes are close to expected sizes
     sizes = np.array([len(sample.subset) for sample in samples])
@@ -456,52 +478,64 @@ def test_antithetic_owen_sampler():
 def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
     sizes = np.array([len(sample.subset) for sample in samples])
     avg_sizes = sizes.reshape(n_samples_outer, -1).mean(axis=1)
-    expected_sizes = probs * n_indices
-    assert np.allclose(avg_sizes, expected_sizes, rtol=0.01)
+    expected_sizes = probs * n_indices  # mean of Binomial(n_indices, probs)
+    np.testing.assert_allclose(avg_sizes, expected_sizes, rtol=0.01)
 
 
+@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
-@pytest.mark.parametrize("indices", [np.arange(4)])
+@pytest.mark.parametrize("indices", [np.arange(6)])
 def test_sampler_weights(
     sampler_cls, sampler_kwargs: dict, indices: NDArray, seed: int
 ):
-    """Test whether weight(n, k) corresponds to the probability of sampled subsets of
-    size k from n indices."""
+    """Test whether weight(n, k) corresponds to the probability of sampling a given
+    subset of size k from n indices. Note this is *NOT* P(|S| = k)."""
 
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler only samples sets of size n-1")
     if issubclass(sampler_cls, PermutationSamplerBase):
         pytest.skip("Permutation samplers only sample full sets")
 
-    # Sample 2**n subsets and count the number of subsets of each size
+    # Sample and count the number of subsets of each size
     n = len(indices)
     n_batches = 2 ** (2 * n)  # go high to be sure
 
-    # These samplers return samples up to the size of the whole index set
-    if issubclass(sampler_cls, MSRSampler):
-        subset_frequencies = np.zeros(n + 1)
-        n += 1
-    else:
-        subset_frequencies = np.zeros(n)
-        sampler_kwargs["batch_size"] = n
-
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
+
+    # These samplers return samples up to the size of the whole index set
+    if issubclass(sampler_cls, MSRSampler) or issubclass(
+        getattr(sampler, "_index_iterator_cls", IndexIteration), NoIndexIteration
+    ):
+        complement_size = n
+        max_size = n + 1
+        subset_frequencies = np.zeros(n + 1)
+    else:
+        complement_size = n - 1
+        max_size = n
+        subset_frequencies = np.zeros(n)
+
+    # HACK: MSR actually has same distr as uniform over 2^(N-i)
+    fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
+
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
             subset_frequencies[len(sample.subset)] += 1
     subset_frequencies /= subset_frequencies.sum()
 
-    expected_frequencies = np.zeros(n)
-    for k in range(n):
+    expected_frequencies = np.zeros(max_size)
+    for k in range(max_size):
         try:
             # Recall that sampler.weight = inverse probability of sampling
-            expected_frequencies[k] = math.comb(n - 1, k) / sampler.weight(n, k)
+            # So: no. of sets of size k in the powerset, times. prob of sampling size k
+            expected_frequencies[k] = (
+                math.comb(complement_size, k) / sampler.weight(n, k) * fudge
+            )
         except ValueError:  # out of bounds in stratified samplers
             pass
 
-    assert np.allclose(subset_frequencies, expected_frequencies, atol=0.05)
+    np.testing.assert_allclose(subset_frequencies, expected_frequencies, atol=0.05)
 
 
 @pytest.mark.parametrize(

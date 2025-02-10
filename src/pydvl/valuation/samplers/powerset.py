@@ -82,14 +82,14 @@ logger = logging.getLogger(__name__)
 # Careful with MRO when using these and subclassing!
 class FiniteIterationMixin:
     @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        return len(indices)
+    def length(n_indices: int) -> int | None:
+        return n_indices
 
 
 class InfiniteIterationMixin:
     @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        if len(indices) == 0:
+    def length(n_indices: int) -> int | None:
+        if n_indices == 0:
             return 0
         return None
 
@@ -103,16 +103,15 @@ class IndexIteration(ABC):
 
     @staticmethod
     @abstractmethod
-    def length(indices: IndexSetT) -> int | None:
+    def length(n_indices: int) -> int | None:
         """Returns the length of the iteration over the index set
 
         Args:
-            indices: The set of indices to iterate over.
+            n_indices: The number of indices in the set.
 
         Returns:
             The length of the iteration. It can be:
-                - 0, if the index set is ignored or there are no indices.
-                - a positive integer, if the iteration is finite
+                - a non-negative integer, if the iteration is finite
                 - `None` if the iteration never ends.
         """
         ...
@@ -130,7 +129,11 @@ class IndexIteration(ABC):
 
     @classmethod
     def is_finite(cls) -> bool:
-        return cls.length(np.array([1])) is not None
+        return cls.length(1) is not None
+
+    @classmethod
+    def is_proper(cls) -> bool:
+        return cls.complement_size(1) < 1
 
 
 class SequentialIndexIteration(InfiniteIterationMixin, IndexIteration):
@@ -203,12 +206,9 @@ class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
         yield None
 
     @staticmethod
-    def length(indices: IndexSetT) -> int | None:
-        """Returns 0, as the iteration is finite and yields no indices.
-        This might a bit counterintuitive since exactly one item (None) is generated,
-        but it is the convention required by `sample_limit` in samplers
-        """
-        return 0
+    def length(n_indices: int) -> int | None:
+        """Returns 1, as the iteration yields exactly one item (None)"""
+        return 1
 
     @staticmethod
     def complement_size(n: int) -> int:
@@ -337,8 +337,8 @@ class LOOSampler(PowersetSampler):
         seed: Seed | None = None,
     ):
         super().__init__(batch_size, index_iteration)
-        if issubclass(index_iteration, NoIndexIteration):
-            raise ValueError("LOO samplers require a valid index iteration strategy")
+        if not self._index_iterator_cls.is_proper():
+            raise ValueError("LOO samplers require a proper index iteration strategy")
         self._rng = np.random.default_rng(seed)
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
@@ -358,7 +358,7 @@ class LOOSampler(PowersetSampler):
         return LOOEvaluationStrategy(self, utility, coefficient)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        return self._index_iterator_cls.length(indices)
+        return self._index_iterator_cls.length(len(indices))
 
 
 class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
@@ -432,15 +432,13 @@ class DeterministicUniformSampler(PowersetSampler):
                 yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        len_outer = self._index_iterator_cls.length(indices)
+        len_outer = self._index_iterator_cls.length(len(indices))
         if len(indices) == 0:  # Empty index set
             return 0
-        elif len_outer is None:  # Infinite index iteration
+        if len_outer is None:  # Infinite index iteration
             return None
-        elif len_outer == 0:  # No iteration over indices
-            return int(2 ** len(indices))
-        else:  # SequentialIndexIteration or other finite index iteration
-            return int(len_outer * 2 ** (len(indices) - 1))
+
+        return len_outer * 2 ** (self._index_iterator_cls.complement_size(len(indices)))
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):

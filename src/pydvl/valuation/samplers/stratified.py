@@ -4,11 +4,11 @@ This module implements stratified samplers.
 For each index $i \in N$, stratified samplers first pick a set size $k \in [0, n],$
 where $n$ is the total number of indices in the index set $N,$ then sample $S \subset
 N_{-i}$ of size $k.$ One can either sample without constraints, or fix the amount of
-samples $m_k$ at a given size. Optimal sampling (leading to minimal variance estimators)
-involves a dynamic choice of $m_k$ based on the variance of the integrand being
-approximated with Monte Carlo (i.e. the marginal utility), but there exist methods
-applicable to semi-values which precompute these sizes while still providing reasonable
-performance.
+samples $m_k$ at a given size. With these changes we perform importance sampling to
+reduce the variance of the Monte Carlo estimate of the marginal utility. Optimal
+sampling (leading to minimal variance estimators) involves a dynamic choice of $m_k$
+based on the variance of the integrand, but there exist methods applicable to
+semi-values which precompute these sizes while still providing reasonable performance.
 
 ??? Note "The number of sets of size $k$"
     Recall that uniform sampling from the powerset $2^{N_{-i}}$ produces a binomial
@@ -61,6 +61,9 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Type
+
+import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Seed, complement, random_subset_of_size
 from pydvl.valuation.samplers.powerset import (
@@ -251,7 +254,7 @@ class SamplesPerSetSizeStrategy(ABC):
             n_samples_per_index: Number of samples for the stratified sampler to
                 generate, *per index*. If the sampler uses
                 [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration], then this
-                is the total number of samples.
+                will coincide with the total number of samples.
         """
         self.n_samples_per_index = n_samples_per_index
 
@@ -265,7 +268,7 @@ class SamplesPerSetSizeStrategy(ABC):
         ...
 
     @lru_cache
-    def sample_sizes(self, n_indices: int) -> list[int]:
+    def sample_sizes(self, n_indices: int) -> NDArray[np.int_]:
         """Precomputes the number of samples to take for each set size, from 0 up to
         `n_indices` inclusive.
 
@@ -288,14 +291,12 @@ class SamplesPerSetSizeStrategy(ABC):
         Returns:
             The number of samples to take for each set size.
         """
-        # Sizes up to the whole index set
-        n_indices += 1
 
         # m_k = m * f(k) / sum_j f(j)
-        s = sum(self.fun(n_indices, k) for k in range(n_indices))
+        s = sum(self.fun(n_indices, k) for k in range(n_indices + 1))
         values = [
             self.n_samples_per_index * self.fun(n_indices, k) / s
-            for k in range(n_indices)
+            for k in range(n_indices + 1)
         ]
 
         # Round down and distribute remainder by adjusting the largest fractional parts
@@ -306,7 +307,7 @@ class SamplesPerSetSizeStrategy(ABC):
         for i in range(remainder):
             int_values[fractional_parts[i][1]] += 1
 
-        return int_values
+        return np.array(int_values, dtype=int)
 
     def __call__(self, n_indices: int, subset_len: int) -> int:
         """Returns the number of subsets to sample.
@@ -319,12 +320,23 @@ class SamplesPerSetSizeStrategy(ABC):
             The number of samples to generate at size `subset_len`.
         """
         try:
-            return self.sample_sizes(n_indices)[subset_len]
+            return self.sample_sizes(n_indices)[subset_len].item()
         except IndexError:
             raise ValueError(
                 f"Subset length {subset_len} out of bounds for index set of size "
                 f"{n_indices}"
             )
+
+    def total_samples(self, n_indices: int) -> int:
+        """The total number of samples to generate.
+
+        Args:
+            n_indices: Size of the index set to sample from.
+
+        Returns:
+            The total number of samples to generate.
+        """
+        return sum(self.sample_sizes(n_indices))
 
 
 class HarmonicSamplesPerSetSize(SamplesPerSetSizeStrategy):
@@ -388,14 +400,14 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     Shapley values samples a number $m_k$ of sets of size $k$ based on the variance of
     the marginal utility at that set size. However, this quantity is unknown in
     practice, so the authors propose a simple heuristic. This function
-    (`samples_per_setsize` in the arguments) is deterministic, and in particular does
+    (`sample_sizes` in the arguments) is deterministic, and in particular does
     not depend on run-time variance estimates, as an adaptive method might do. Section 4
     of Wu et al. (2023) shows a good default choice is based on the harmonic function
     of the set size $k$ (see
     [HarmonicSamplesPerSetSize][pydvl.valuation.samplers.stratified.HarmonicSamplesPerSetSize]).
 
     Args:
-        samples_per_setsize: An object which returns the number of samples to
+        sample_sizes: An object which returns the number of samples to
             take for a given set size. The sampler will generate exactly this many, and
             no more (this is a finite sampler).
         batch_size: The number of samples to generate per batch. Batches are processed
@@ -410,7 +422,7 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
     def __init__(
         self,
-        samples_per_setsize: SamplesPerSetSizeStrategy,
+        sample_sizes: SamplesPerSetSizeStrategy,
         batch_size: int = 1,
         index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
         seed: Seed | None = None,
@@ -418,35 +430,27 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         super().__init__(
             batch_size=batch_size, index_iteration=index_iteration, seed=seed
         )
-        if not index_iteration.is_finite():
-            raise ValueError(
-                "VarianceReducedStratifiedSampler requires a finite index iterator"
-            )
-        self.samples_per_setsize = samples_per_setsize
+        self.sample_sizes = sample_sizes
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)
             for k in range(n_indices + 1):
-                for _ in range(self.samples_per_setsize(n_indices, k)):
+                for _ in range(self.sample_sizes(n_indices, k)):
                     subset = random_subset_of_size(from_set, size=k, seed=self._rng)
                     yield Sample(idx, subset)
 
     @lru_cache
     def total_samples(self, n_indices: int) -> int:
-        """The total number of samples depends on the index iteration.
-        If it's a regular index iteration, then
-        """
-        if n_indices == 0:
-            return 0
-        index_iteration_length = self._index_iterator_cls.length(range(n_indices))  # type: ignore
+        index_iteration_length = self._index_iterator_cls.length(n_indices)
+
+        # For infinite iterations, we consider the total of samples after a single whole
+        # loop over all indices. For random iterations this will introduce some variance
         if index_iteration_length is None:
-            return 0
-        index_iteration_length = max(1, index_iteration_length)
-        return index_iteration_length * sum(
-            self.samples_per_setsize(n_indices, k) for k in range(n_indices + 1)
-        )
+            index_iteration_length = 1
+
+        return index_iteration_length * self.sample_sizes.total_samples(n_indices)
 
     def sample_limit(self, indices: IndexSetT) -> int:
         return self.total_samples(len(indices))
@@ -457,20 +461,20 @@ class VarianceReducedStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         divided by the total number of samples for all sizes:
 
         $$\mathbb{P}(S) = \binom{n}{k}^{-1} \times
-                       \frac{\text{samples_per_setsize}(k)}{\text{total_samples}(n)}$$
+                       \frac{\text{sample_sizes}(k)}{\text{total_samples}(n)}$$
         """
         n = self._index_iterator_cls.complement_size(n)
 
         # Depending on whether we sample from complements or not, the total number of
         # samples passed to the heuristic has a different interpretation.
-        index_iteration_length = self._index_iterator_cls.length(range(n))  # type: ignore
+        index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
         if index_iteration_length is None:
-            index_iteration_length = n
+            index_iteration_length = 1
         index_iteration_length = max(1, index_iteration_length)
 
         return (
             math.comb(n, subset_len)
             * self.total_samples(n)
             / index_iteration_length
-            / self.samples_per_setsize(n, subset_len)
+            / self.sample_sizes(n, subset_len)
         )

@@ -82,7 +82,7 @@ def shapley_samplers(fudge_factor: int):
             (
                 VarianceReducedStratifiedSampler,
                 {
-                    "samples_per_setsize": (
+                    "sample_sizes": (
                         HarmonicSamplesPerSetSize,
                         {"n_samples_per_index": fudge_factor},
                     ),
@@ -94,7 +94,7 @@ def shapley_samplers(fudge_factor: int):
             (
                 VarianceReducedStratifiedSampler,
                 {
-                    "samples_per_setsize": (
+                    "sample_sizes": (
                         PowerLawSamplesPerSetSize,
                         {
                             "exponent": -0.5,

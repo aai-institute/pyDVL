@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
             seed=s,
         ),
         lambda s, n_samples: VarianceReducedStratifiedSampler(
-            samples_per_setsize=HarmonicSamplesPerSetSize(n_samples),
+            sample_sizes=HarmonicSamplesPerSetSize(n_samples),
             index_iteration=FiniteNoIndexIteration,
         ),
     ],
