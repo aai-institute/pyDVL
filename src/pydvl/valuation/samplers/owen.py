@@ -215,7 +215,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         the current index is 1/(n-1 choose k).
         """
         m = self._index_iterator_cls.complement_size(n)
-        return math.comb(m, subset_len) * int(n)
+        return math.comb(m, subset_len) * int(m + 1)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         if len(indices) == 0:
