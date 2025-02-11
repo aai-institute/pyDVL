@@ -269,7 +269,7 @@ def test_repeated_training(cache_backend, worker_id: str):
     for _ in range(1_000):
         result = wrapped_foo(indices, worker_id)
 
-    assert np.isclose(result, np.sum(indices), atol=1)
+    np.testing.assert_allclose(result, np.sum(indices), atol=1)
     assert wrapped_foo.stats.sets < wrapped_foo.stats.hits
 
 
@@ -302,8 +302,8 @@ def test_faster_with_repeated_training(cache_backend, worker_id: str):
     end = time()
     slow_time = end - start
 
-    assert np.isclose(np.mean(results_slow), np.sum(indices), atol=0.1)
-    assert np.isclose(result_fast, np.mean(results_slow), atol=1)
+    np.testing.assert_allclose(np.mean(results_slow), np.sum(indices), atol=0.1)
+    np.testing.assert_allclose(result_fast, np.mean(results_slow), atol=1)
     assert fast_time < slow_time
 
 
@@ -345,5 +345,5 @@ def test_parallel_repeated_training(
 
     exact_value = np.sum(np.arange(n)).item()
 
-    assert np.isclose(results[-1], results[-2], atol=atol)
-    assert np.isclose(results[-1], exact_value, atol=atol)
+    np.testing.assert_allclose(results[-1], results[-2], atol=atol)
+    np.testing.assert_allclose(results[-1], exact_value, atol=atol)

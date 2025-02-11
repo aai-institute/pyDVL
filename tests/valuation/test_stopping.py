@@ -176,7 +176,7 @@ def test_max_time():
     assert done.completion() == 1.0
     assert done.converged.all()
     done.reset()
-    assert np.isclose(done.completion(), 0, atol=0.01)
+    np.testing.assert_allclose(done.completion(), 0, atol=0.01)
     assert not done.converged.any()
 
 

@@ -46,7 +46,7 @@ def test_powerset():
         size_counts[len(subset)] += 1
         for x in subset:
             item_counts[x] += 1
-    assert np.allclose(item_counts / 2**n, 0.5)
+    np.testing.assert_allclose(item_counts / 2**n, 0.5)
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
@@ -87,7 +87,7 @@ def test_random_powerset(n, max_subsets, q):
         return math.comb(n, j) * q**j * (1 - q) ** (n - j)
 
     true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
-    assert np.allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
+    np.testing.assert_allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
 
 
 @pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
@@ -204,7 +204,7 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             random_matrix_with_condition_number(n, cond)
     else:
         mat = random_matrix_with_condition_number(n, cond)
-        assert np.isclose(np.linalg.cond(mat), cond), "Condition number does not match"
+        np.testing.assert_allclose(np.linalg.cond(mat), cond), "Condition number does not match"
         assert np.array_equal(mat, mat.T), "Matrix is not symmetric"
         try:
             np.linalg.cholesky(mat)
@@ -267,8 +267,8 @@ def test_running_moments():
 
         true_means = [np.mean(vv) for vv in values]
         true_variances = [np.var(vv) for vv in values]
-        assert np.allclose(means, true_means)
-        assert np.allclose(variances, true_variances)
+        np.testing.assert_allclose(means, true_means)
+        np.testing.assert_allclose(variances, true_variances)
 
 
 def test_running_moment_initialization():
@@ -288,8 +288,8 @@ def test_running_moment_initialization():
         previous_avg=got_mean, previous_variance=got_var, count=1, new_value=2.0
     )
 
-    assert np.isclose(got_mean, 1.5)
-    assert np.isclose(got_var, np.var([1.0, 2.0]))
+    np.testing.assert_allclose(got_mean, 1.5)
+    np.testing.assert_allclose(got_var, np.var([1.0, 2.0]))
 
 
 @pytest.mark.parametrize(

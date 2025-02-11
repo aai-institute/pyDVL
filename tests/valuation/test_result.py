@@ -147,7 +147,7 @@ def test_updating():
 
     v.update(1, 3.0)
     assert v.values[1] == 3.0
-    assert np.isclose(v.variances[1], 2 / 3)
+    np.testing.assert_allclose(v.variances[1], 2 / 3)
 
     # Test after sorting
     v = ValuationResult(values=np.array([3.0, 1.0]))
@@ -265,7 +265,7 @@ def test_from_random_creation(size: int, total: float | None):
     assert result.status == Status.Converged
     assert result.algorithm == "random"
     if total is not None:
-        assert np.isclose(np.sum(result.values), total)
+        np.testing.assert_allclose(np.sum(result.values), total)
 
 
 def test_from_random_creation_errors():
@@ -300,8 +300,8 @@ def test_adding_random():
     true_means = values.mean(axis=1)
     true_variances = values.var(axis=1)
 
-    assert np.allclose(true_means[result.indices], result.values)
-    assert np.allclose(true_variances[result.indices], result.variances)
+    np.testing.assert_allclose(true_means[result.indices], result.values)
+    np.testing.assert_allclose(true_variances[result.indices], result.variances)
 
 
 @pytest.mark.parametrize(
@@ -377,8 +377,8 @@ def test_adding_different_indices(
     )
     v3 = v1 + v2
 
-    assert np.allclose(v3.indices, np.array(expected_indices))
-    assert np.allclose(v3.values, np.array(expected_values))
+    np.testing.assert_allclose(v3.indices, np.array(expected_indices))
+    np.testing.assert_allclose(v3.values, np.array(expected_values))
     assert np.all(v3.names == expected_names)
 
 

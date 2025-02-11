@@ -51,7 +51,7 @@ def test_coefficients(n, valuation_cls, kwargs):
         valuation.coefficient(n, j - 1, math.comb(n - 1, j - 1))
         for j in range(1, n + 1)
     ]
-    assert np.isclose(1, np.sum(s))
+    np.testing.assert_allclose(1, np.sum(s))
 
 
 @pytest.mark.flaky(reruns=1)

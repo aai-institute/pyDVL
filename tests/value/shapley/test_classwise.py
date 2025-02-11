@@ -209,15 +209,15 @@ def test_classwise_scorer_utility(dataset_left_right_margins):
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
 
     value = scorer(model, x, y)
-    assert np.isclose(value, in_cls_acc_0 * np.exp(out_of_cls_acc_0))
+    np.testing.assert_allclose(value, in_cls_acc_0 * np.exp(out_of_cls_acc_0))
 
     scorer.label = 1
     value = scorer(model, x, y)
-    assert np.isclose(value, out_of_cls_acc_0 * np.exp(in_cls_acc_0))
+    np.testing.assert_allclose(value, out_of_cls_acc_0 * np.exp(in_cls_acc_0))
 
 
 @pytest.mark.parametrize("n_element, left_margin, right_margin", [(101, 0.3, 0.4)])
@@ -329,8 +329,8 @@ def test_classwise_scorer_accuracies_left_right_margins(dataset_left_right_margi
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
 
 
 def test_closed_form_linear_classifier(

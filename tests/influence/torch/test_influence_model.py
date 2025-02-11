@@ -535,7 +535,7 @@ def test_influences_lissa(
 
     assert not np.any(np.isnan(approx_influences))
 
-    assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
+    np.testing.assert_allclose(approx_influences, direct_influences, rtol=1e-1)
 
     if test_case.mode == InfluenceMode.Up:
         assert approx_influences.shape == (
@@ -553,7 +553,7 @@ def test_influences_lissa(
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))
 
-    assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
+    np.testing.assert_allclose(approx_influences, direct_influences, rtol=1e-1)
 
 
 @pytest.mark.parametrize(
@@ -622,7 +622,7 @@ def test_influences_low_rank(
         x_train, y_train, mode=test_case.mode
     )
 
-    assert np.allclose(
+    np.testing.assert_allclose(
         direct_factors,
         influence_func_model.influence_factors(x_train, y_train),
         atol=atol,
@@ -633,7 +633,7 @@ def test_influences_low_rank(
         low_rank_influence_transpose = influence_func_model.influences(
             x_train, y_train, x_test, y_test, mode=test_case.mode
         )
-        assert np.allclose(
+        np.testing.assert_allclose(
             low_rank_influence_transpose,
             low_rank_influence.swapaxes(0, 1),
             atol=atol,
@@ -644,11 +644,11 @@ def test_influences_low_rank(
     low_rank_values_from_factors = influence_func_model.influences_from_factors(
         low_rank_factors, x_train, y_train, mode=test_case.mode
     )
-    assert np.allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
-    assert np.allclose(
+    np.testing.assert_allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
+    np.testing.assert_allclose(
         direct_sym_influences, sym_low_rank_influence, atol=atol, rtol=rtol
     )
-    assert np.allclose(
+    np.testing.assert_allclose(
         low_rank_influence, low_rank_values_from_factors, atol=atol, rtol=rtol
     )
 
@@ -729,8 +729,8 @@ def test_influences_ekfac(
             .numpy()
         )
 
-        assert np.allclose(ekfac_influence_values, influence_from_factors)
-        assert np.allclose(ekfac_influence_values, accumulated_inf_by_layer)
+        np.testing.assert_allclose(ekfac_influence_values, influence_from_factors)
+        np.testing.assert_allclose(ekfac_influence_values, accumulated_inf_by_layer)
         check_influence_correlations(
             direct_influences.numpy(), ekfac_influence_values, threshold=0.94
         )
@@ -795,7 +795,7 @@ def test_influences_cg(
 
     assert not np.any(np.isnan(approx_influences))
 
-    assert np.allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+    np.testing.assert_allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
 
     if test_case.mode == InfluenceMode.Up:
         assert approx_influences.shape == (
@@ -813,7 +813,7 @@ def test_influences_cg(
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))
 
-    assert np.allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+    np.testing.assert_allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
 
     # check that block variant returns the correct vector, if only one right hand side
     # is provided
@@ -825,7 +825,7 @@ def test_influences_cg(
             .cpu()
             .numpy()
         )
-        assert np.allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
+        np.testing.assert_allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
 
 
 composable_influence_factories = [

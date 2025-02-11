@@ -420,8 +420,7 @@ def test_owen_weight(sampler_cls, sampler_kwargs, dummy_utility):
     results = []
     for n in np.random.randint(1000, 100000, size=4):
         n = int(n)
-        for k in np.random.randint(0, n, size=4):
-            k = int(k)
+        for k in np.random.randint(0, n, size=4):  # type: int
             result = valuation.coefficient(n, k, sampler.weight(n, k))
             results.append(result)
 
