@@ -87,7 +87,9 @@ def test_random_powerset(n, max_subsets, q):
         return math.comb(n, j) * q**j * (1 - q) ** (n - j)
 
     true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
-    np.testing.assert_allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
+    np.testing.assert_allclose(
+        true_size_counts, size_counts / max_subsets, atol=1 / (1 + n)
+    )
 
 
 @pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
@@ -204,7 +206,10 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             random_matrix_with_condition_number(n, cond)
     else:
         mat = random_matrix_with_condition_number(n, cond)
-        np.testing.assert_allclose(np.linalg.cond(mat), cond), "Condition number does not match"
+        (
+            np.testing.assert_allclose(np.linalg.cond(mat), cond),
+            "Condition number does not match",
+        )
         assert np.array_equal(mat, mat.T), "Matrix is not symmetric"
         try:
             np.linalg.cholesky(mat)

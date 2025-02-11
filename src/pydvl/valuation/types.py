@@ -140,6 +140,15 @@ class ClasswiseSample(Sample):
         sha256_hash = hashlib.sha256(array_bytes).hexdigest()
         return int(sha256_hash, base=16)
 
+    def __eq__(self, other: ClasswiseSample) -> bool:
+        return (
+            isinstance(other, ClasswiseSample)
+            and self.idx == other.idx
+            and np.array_equal(self.subset, other.subset)
+            and self.label == other.label
+            and np.array_equal(self.ooc_subset, other.ooc_subset)
+        )
+
 
 SampleT = TypeVar("SampleT", bound=Sample)
 

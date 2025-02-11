@@ -145,7 +145,8 @@ class ClasswiseSampler(IndexSampler):
         # subset but in this case we want all indices.
         # The index for which we compute the value will be removed by
         # the in_class sampler instead.
-        self.out_of_class._index_iterator_cls = NoIndexIteration
+        if not issubclass(self.out_of_class._index_iterator_cls, NoIndexIteration):
+            self.out_of_class._index_iterator_cls = NoIndexIteration
 
         out_of_class_batch_generators = {}
 

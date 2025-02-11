@@ -644,7 +644,9 @@ def test_influences_low_rank(
     low_rank_values_from_factors = influence_func_model.influences_from_factors(
         low_rank_factors, x_train, y_train, mode=test_case.mode
     )
-    np.testing.assert_allclose(direct_influences, low_rank_influence, atol=atol, rtol=rtol)
+    np.testing.assert_allclose(
+        direct_influences, low_rank_influence, atol=atol, rtol=rtol
+    )
     np.testing.assert_allclose(
         direct_sym_influences, sym_low_rank_influence, atol=atol, rtol=rtol
     )
@@ -795,7 +797,9 @@ def test_influences_cg(
 
     assert not np.any(np.isnan(approx_influences))
 
-    np.testing.assert_allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+    np.testing.assert_allclose(
+        approx_influences, direct_influences, atol=1e-6, rtol=1e-4
+    )
 
     if test_case.mode == InfluenceMode.Up:
         assert approx_influences.shape == (
@@ -813,7 +817,9 @@ def test_influences_cg(
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))
 
-    np.testing.assert_allclose(approx_influences, direct_influences, atol=1e-6, rtol=1e-4)
+    np.testing.assert_allclose(
+        approx_influences, direct_influences, atol=1e-6, rtol=1e-4
+    )
 
     # check that block variant returns the correct vector, if only one right hand side
     # is provided
@@ -825,7 +831,9 @@ def test_influences_cg(
             .cpu()
             .numpy()
         )
-        np.testing.assert_allclose(single_influence, direct_factors[0], atol=1e-6, rtol=1e-4)
+        np.testing.assert_allclose(
+            single_influence, direct_factors[0], atol=1e-6, rtol=1e-4
+        )
 
 
 composable_influence_factories = [

@@ -218,7 +218,9 @@ def test_dask_influence_nn(
         da_x_train, da_y_train, mode=test_case.mode
     ).compute(scheduler="synchronous")
     torch_sym_values = inf_model.influences(x_train, y_train, mode=test_case.mode)
-    np.testing.assert_allclose(da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3)
+    np.testing.assert_allclose(
+        da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3
+    )
 
     with pytest.raises(UnsupportedInfluenceModeException):
         dask_influence.influences(
