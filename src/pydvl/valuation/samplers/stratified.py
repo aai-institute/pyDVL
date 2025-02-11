@@ -315,7 +315,7 @@ class ConstantSampleSize(SampleSizeStrategy):
         self.upper_bound = upper_bound
 
     def fun(self, n_indices: int, subset_len: int) -> float:
-        if (self.lower_bound <= subset_len) and (
+        if (self.lower_bound is None or self.lower_bound <= subset_len) and (
             self.upper_bound is None or subset_len <= self.upper_bound
         ):
             return 1.0

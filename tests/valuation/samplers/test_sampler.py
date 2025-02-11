@@ -790,3 +790,24 @@ def test_deterministic_mode(sample_sizes, expected_output):
     output = list(iter(deterministic_mode))
 
     assert output == expected_output
+
+
+@pytest.mark.parametrize(
+    "lower_bound, upper_bound, n_indices, subset_len, expected",
+    [
+        (0, None, 5, 0, 1.0),
+        (0, None, 5, 5, 1.0),
+        (1, 4, 5, 0, 0.0),
+        (1, 4, 5, 1, 1.0),
+        (1, 4, 5, 4, 1.0),
+        (1, 4, 5, 5, 0.0),
+        (None, 3, 5, 0, 1.0),
+        (None, 3, 5, 3, 1.0),
+        (None, 3, 5, 4, 0.0),
+    ],
+)
+def test_constant_sample_size_fun(
+    lower_bound, upper_bound, n_indices, subset_len, expected
+):
+    strategy = ConstantSampleSize(1, lower_bound, upper_bound)
+    assert strategy.fun(n_indices, subset_len) == expected
