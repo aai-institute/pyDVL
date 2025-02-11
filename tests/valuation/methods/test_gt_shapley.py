@@ -11,7 +11,7 @@ from pydvl.valuation.methods.gt_shapley import (
 from pydvl.valuation.samplers import (
     GroupTestingSampleSize,
     NoIndexIteration,
-    StochasticIteration,
+    RandomSizeIteration,
     StratifiedSampler,
 )
 
@@ -39,7 +39,7 @@ def test_gt_sampler(seed):
     sampler = StratifiedSampler(
         index_iteration=NoIndexIteration,
         sample_sizes=GroupTestingSampleSize(n_samples=10),
-        sample_sizes_iteration=StochasticIteration,
+        sample_sizes_iteration=RandomSizeIteration,
         batch_size=1,
         seed=seed,
     )

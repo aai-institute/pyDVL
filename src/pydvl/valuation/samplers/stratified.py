@@ -27,7 +27,7 @@ et al. (2014)[^3].
     n_samples_per_index = 1000  # Total number of samples is: n_indices times this
     sampler = StratifiedSampler(
         sample_sizes=HarmonicSampleSize(n_samples=1000),
-        sample_sizes_iteration=DeterministicIteration,
+        sample_sizes_iteration=DeterministicSizeIteration,
         index_iteration=FiniteSequentialIndexIteration,
         )
     ```
@@ -45,7 +45,7 @@ configurations appear in the literature as follows:
       ```python
       sampler = StratifiedSampler(
           sample_sizes=ConstantSampleSize(n_samples=10, lower_bound=1, upper_bound=2),
-          sample_sizes_iteration=DeterministicIteration,
+          sample_sizes_iteration=DeterministicSizeIteration,
           index_iteration=SequentialIndexIteration,
           )
       ```
@@ -58,7 +58,7 @@ configurations appear in the literature as follows:
       ```python
       sampler = StratifiedSampler(
             sample_sizes=PowerLawSampleSize(n_samples=1000, exponent=-0.5),
-            sample_sizes_iteration=StochasticIteration,
+            sample_sizes_iteration=RandomSizeIteration,
             index_iteration=RandomIndexIteration,
             )
 
@@ -93,10 +93,10 @@ must iterate over sample sizes $k \in [0, n]$, and this can be done in multiple 
 configured via subclasses of
 [SampleSizeIteration][pydvl.valuation.samplers.stratified.SampleSizeIteration].
 
-* [DeterministicIteration][pydvl.valuation.samplers.stratified.DeterministicIteration]
+* [DeterministicSizeIteration][pydvl.valuation.samplers.stratified.DeterministicSizeIteration]
   will generate exactly $m_k$ samples for each $k$ before moving to the next $k.$ This
   implies that `n_samples` must be large enough for the computed $m_k$ to be valid.
-* [StochasticIteration][pydvl.valuation.samplers.stratified.StochasticIteration] will
+* [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration] will
   sample a set size $k$ according to the distribution of sizes given by the strategy.
   When using this in conjunction with an infinite index iteration for the sampler,
   `n_samples` can be safely set to 1 since $m_k$ will be interpreted as a probability.
@@ -168,8 +168,8 @@ __all__ = [
     "GroupTestingSampleSize",
     "ConstantSampleSize",
     "SampleSizeStrategy",
-    "DeterministicIteration",
-    "StochasticIteration",
+    "DeterministicSizeIteration",
+    "RandomSizeIteration",
     "RoundRobinIteration",
     "SampleSizeIteration",
 ]
@@ -235,7 +235,7 @@ class SampleSizeStrategy(ABC):
                 typically `len(dataset) - 1` with the usual index iterations.
             quantize: Whether to perform the remainder distribution. If `False`, the raw
                 floating point values are returned. Useful e.g. for
-                [StochasticIteration][pydvl.valuation.samplers.stratified.StochasticIteration]
+                [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration]
                 where one needs frequencies. In this case `n_samples` can
                 be 1.
         Returns:
@@ -405,7 +405,7 @@ class SampleSizeIteration(ABC):
     def __iter__(self) -> Generator[tuple[int, int], None, None]: ...
 
 
-class DeterministicIteration(SampleSizeIteration):
+class DeterministicSizeIteration(SampleSizeIteration):
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
         counts = self.strategy.sample_sizes(self.n_indices)
         for k, m_k in enumerate(counts):  # type: int, int
@@ -413,7 +413,7 @@ class DeterministicIteration(SampleSizeIteration):
                 yield k, m_k
 
 
-class StochasticIteration(SampleSizeIteration):
+class RandomSizeIteration(SampleSizeIteration):
     """Draws a set size $k$ following the distribution of sizes given by the
     strategy.
     """
@@ -498,7 +498,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     def __init__(
         self,
         sample_sizes: SampleSizeStrategy,
-        sample_sizes_iteration: Type[SampleSizeIteration] = DeterministicIteration,
+        sample_sizes_iteration: Type[SampleSizeIteration] = DeterministicSizeIteration,
         batch_size: int = 1,
         index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
         seed: Seed | None = None,

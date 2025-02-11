@@ -16,8 +16,8 @@ from pydvl.valuation.samplers import (
     AntitheticPermutationSampler,
     AntitheticSampler,
     ConstantSampleSize,
-    DeterministicIteration,
     DeterministicPermutationSampler,
+    DeterministicSizeIteration,
     DeterministicUniformSampler,
     FiniteNoIndexIteration,
     FiniteRandomIndexIteration,
@@ -33,10 +33,10 @@ from pydvl.valuation.samplers import (
     PowerLawSampleSize,
     PowersetSampler,
     RandomIndexIteration,
+    RandomSizeIteration,
     RoundRobinIteration,
     SampleSizeStrategy,
     SequentialIndexIteration,
-    StochasticIteration,
     StochasticSampler,
     StratifiedSampler,
     UniformOwenStrategy,
@@ -184,7 +184,7 @@ def random_samplers(proper: bool = False):
                         "upper_bound": lambda u=3: u,
                     },
                 ),
-                "sample_sizes_iteration": StochasticIteration,
+                "sample_sizes_iteration": RandomSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
         ),
@@ -192,7 +192,7 @@ def random_samplers(proper: bool = False):
             StratifiedSampler,
             {
                 "sample_sizes": (ConstantSampleSize, {"n_samples": lambda n=32: n}),
-                "sample_sizes_iteration": StochasticIteration,
+                "sample_sizes_iteration": RandomSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
         ),
@@ -200,7 +200,7 @@ def random_samplers(proper: bool = False):
             StratifiedSampler,
             {
                 "sample_sizes": (HarmonicSampleSize, {"n_samples": lambda n=32: n}),
-                "sample_sizes_iteration": DeterministicIteration,
+                "sample_sizes_iteration": DeterministicSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
         ),
@@ -208,7 +208,7 @@ def random_samplers(proper: bool = False):
             StratifiedSampler,
             {
                 "sample_sizes": (HarmonicSampleSize, {"n_samples": lambda n=32: n}),
-                "sample_sizes_iteration": StochasticIteration,
+                "sample_sizes_iteration": RandomSizeIteration,
                 "index_iteration": SequentialIndexIteration,
             },
         ),
@@ -786,7 +786,7 @@ def test_round_robin_mode(sample_sizes, expected_output):
 def test_deterministic_mode(sample_sizes, expected_output):
     n_indices = len(sample_sizes)
     strategy = MockSampleSizeStrategy(sample_sizes)
-    deterministic_mode = DeterministicIteration(strategy, n_indices)
+    deterministic_mode = DeterministicSizeIteration(strategy, n_indices)
     output = list(iter(deterministic_mode))
 
     assert output == expected_output

@@ -29,7 +29,7 @@ from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers import (
     ConstantSampleSize,
     RandomIndexIteration,
-    StochasticIteration,
+    RandomSizeIteration,
     StratifiedSampler,
 )
 from pydvl.valuation.stopping import StoppingCriterion
@@ -71,7 +71,7 @@ class DeltaShapleyValuation(SemivalueValuation):
             sample_sizes=ConstantSampleSize(
                 1, lower_bound=lower_bound, upper_bound=upper_bound
             ),
-            sample_sizes_iteration=StochasticIteration,
+            sample_sizes_iteration=RandomSizeIteration,
             index_iteration=RandomIndexIteration,
             seed=seed,
         )

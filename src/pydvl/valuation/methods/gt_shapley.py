@@ -47,7 +47,7 @@ from pydvl.valuation.samplers import (
     GroupTestingSampleSize,
     IndexSampler,
     NoIndexIteration,
-    StochasticIteration,
+    RandomSizeIteration,
     StratifiedSampler,
 )
 from pydvl.valuation.types import NameT, Sample
@@ -108,7 +108,7 @@ class GroupTestingShapleyValuation(Valuation):
         self._sampler = StratifiedSampler(
             index_iteration=NoIndexIteration,
             sample_sizes=GroupTestingSampleSize(n_samples=1),
-            sample_sizes_iteration=StochasticIteration,
+            sample_sizes_iteration=RandomSizeIteration,
             batch_size=batch_size,
             seed=seed,
         )
