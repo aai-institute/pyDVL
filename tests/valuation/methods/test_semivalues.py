@@ -65,7 +65,8 @@ def test_coefficients(n, valuation_cls, kwargs):
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
+    "sampler_cls, sampler_kwargs",
+    deterministic_samplers() + random_samplers(proper=True),
 )
 @pytest.mark.parametrize(
     "valuation_cls, valuation_kwargs, exact_values_attr",
@@ -88,13 +89,13 @@ def test_games(
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler does not apply to Shapley and Banzhaf")
 
+    # history = HistoryDeviation(n_steps=1000 * len(test_game.data) ** 2, rtol=1e-3)
+
     # The games have too few players for the bounds in random_samplers(), so we reset
     # them to the limits
-    if sampler_cls == TruncatedUniformStratifiedSampler:
-        sampler_kwargs = {"lower_bound": None, "upper_bound": None}
-
-    # history = HistoryDeviation(n_steps=1000 * len(test_game.data) ** 2, rtol=1e-3)
-    sampler = recursive_make(sampler_cls, sampler_kwargs, seed)
+    sampler = recursive_make(
+        sampler_cls, sampler_kwargs, seed=seed, lower_bound=None, upper_bound=None
+    )
     valuation = valuation_cls(
         utility=test_game.u,
         sampler=sampler,

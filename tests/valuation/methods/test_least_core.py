@@ -14,12 +14,12 @@ from pydvl.valuation.samplers import (
     AntitheticSampler,
     DeterministicUniformSampler,
     FiniteNoIndexIteration,
-    HarmonicSamplesPerSetSize,
+    HarmonicSampleSize,
     NoIndexIteration,
+    StratifiedSampler,
     TruncatedUniformStratifiedSampler,
     UniformSampler,
     UniformStratifiedSampler,
-    VarianceReducedStratifiedSampler,
 )
 from tests.valuation import check_total_value, check_values
 
@@ -47,8 +47,8 @@ logger = logging.getLogger(__name__)
             index_iteration=NoIndexIteration,
             seed=s,
         ),
-        lambda s, n_samples: VarianceReducedStratifiedSampler(
-            sample_sizes=HarmonicSamplesPerSetSize(n_samples),
+        lambda s, n_samples: StratifiedSampler(
+            sample_sizes=HarmonicSampleSize(n_samples),
             index_iteration=FiniteNoIndexIteration,
         ),
     ],

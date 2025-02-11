@@ -9,6 +9,7 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils import SupervisedModel
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
+from pydvl.valuation import SequentialIndexIteration
 from pydvl.valuation.dataset import GroupedDataset
 from pydvl.valuation.methods import GroupTestingShapleyValuation, ShapleyValuation
 from pydvl.valuation.result import ValuationResult
@@ -17,16 +18,16 @@ from pydvl.valuation.samplers import (
     AntitheticSampler,
     DeterministicUniformSampler,
     GridOwenStrategy,
-    HarmonicSamplesPerSetSize,
+    HarmonicSampleSize,
     MSRSampler,
     OwenSampler,
     PermutationSampler,
-    PowerLawSamplesPerSetSize,
+    PowerLawSampleSize,
+    StratifiedSampler,
     TruncatedUniformStratifiedSampler,
     UniformOwenStrategy,
     UniformSampler,
     UniformStratifiedSampler,
-    VarianceReducedStratifiedSampler,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.scorers import SupervisedScorer, compose_score, sigmoid
@@ -39,109 +40,108 @@ from .. import check_rank_correlation, check_total_value, check_values, recursiv
 log = logging.getLogger(__name__)
 
 
-def shapley_samplers(fudge_factor: int):
-    return pytest.mark.parametrize(
-        "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs",
-        [
-            (
-                UniformSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor * 2})},
-            ),
-            (
-                PermutationSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                AntitheticSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
-            ),
-            (
-                MSRSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor * 12})},
-            ),
-            (
-                UniformStratifiedSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                TruncatedUniformStratifiedSampler,
-                {"seed": lambda seed: seed},
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                VarianceReducedStratifiedSampler,
-                {
-                    "sample_sizes": (
-                        HarmonicSamplesPerSetSize,
-                        {"n_samples_per_index": fudge_factor},
-                    ),
-                    "seed": lambda seed: seed,
-                },
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                VarianceReducedStratifiedSampler,
-                {
-                    "sample_sizes": (
-                        PowerLawSamplesPerSetSize,
-                        {
-                            "exponent": -0.5,
-                            "n_samples_per_index": fudge_factor,
-                        },
-                    ),
-                    "seed": lambda seed: seed,
-                },
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                OwenSampler,
-                {
-                    "outer_sampling_strategy": (
-                        UniformOwenStrategy,
-                        {"n_samples_outer": 200, "seed": lambda seed: seed},
-                    ),
-                    "seed": lambda seed: seed,
-                },
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
-            ),
-            (
-                AntitheticOwenSampler,
-                {
-                    "outer_sampling_strategy": (
-                        UniformOwenStrategy,
-                        {"n_samples_outer": 100, "seed": lambda seed: seed},
-                    ),
-                    "seed": lambda seed: seed,
-                },
-                ShapleyValuation,
-                {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
-            ),
-            (
-                None,
-                {},
-                GroupTestingShapleyValuation,
-                {
-                    "n_samples": fudge_factor * 100,
-                    "epsilon": 0.2,
-                    "seed": lambda seed: seed,
-                },
-            ),
-        ],
-    )
+def shapley_methods(fudge_factor: int):
+    return [
+        (
+            UniformSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor * 2})},
+        ),
+        (
+            PermutationSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            AntitheticSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
+        ),
+        (
+            MSRSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor * 12})},
+        ),
+        (
+            UniformStratifiedSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            TruncatedUniformStratifiedSampler,
+            {"seed": lambda seed: seed},
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    HarmonicSampleSize,
+                    {"n_samples": fudge_factor},
+                ),
+                "index_iteration": SequentialIndexIteration,
+                "seed": lambda seed: seed,
+            },
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    PowerLawSampleSize,
+                    {
+                        "exponent": lambda e=-0.5: e,
+                        "n_samples": fudge_factor,
+                    },
+                ),
+                "index_iteration": SequentialIndexIteration,
+                "seed": lambda seed: seed,
+            },
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            OwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    UniformOwenStrategy,
+                    {"n_samples_outer": 200, "seed": lambda seed: seed},
+                ),
+                "seed": lambda seed: seed,
+            },
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
+        ),
+        (
+            AntitheticOwenSampler,
+            {
+                "outer_sampling_strategy": (
+                    UniformOwenStrategy,
+                    {"n_samples_outer": 100, "seed": lambda seed: seed},
+                ),
+                "seed": lambda seed: seed,
+            },
+            ShapleyValuation,
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
+        ),
+        (
+            None,
+            {},
+            GroupTestingShapleyValuation,
+            {
+                "n_samples": fudge_factor * 100,
+                "epsilon": 0.2,
+                "seed": lambda seed: seed,
+            },
+        ),
+    ]
 
 
 @pytest.mark.flaky(reruns=1)
@@ -154,7 +154,9 @@ def shapley_samplers(fudge_factor: int):
     ],
     indirect=["test_game"],
 )
-@shapley_samplers(500)
+@pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(500)
+)
 def test_games(
     test_game,
     sampler_cls: Type,
@@ -178,15 +180,14 @@ def test_games(
 
     """
     if sampler_cls is not None:
-        if issubclass(sampler_cls, StochasticSamplerMixin):
-            sampler_kwargs["seed"] = seed
-        sampler = recursive_make(sampler_cls, sampler_kwargs)
-        valuation_kwargs["sampler"] = sampler
+        valuation_kwargs["sampler"] = recursive_make(
+            sampler_cls, sampler_kwargs, seed=seed
+        )
 
     valuation_kwargs["utility"] = test_game.u
     valuation_kwargs["progress"] = False
 
-    valuation = recursive_make(valuation_cls, valuation_kwargs)
+    valuation = recursive_make(valuation_cls, valuation_kwargs, seed=seed)
 
     valuation.fit(test_game.data)
 
@@ -205,7 +206,9 @@ def test_games(
     [("shoes", {"left": 3, "right": 4})],
     indirect=["test_game"],
 )
-@shapley_samplers(2)
+@pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(2)
+)
 def test_seed(
     test_game,
     sampler_cls: Type,
@@ -221,12 +224,12 @@ def test_seed(
 
     for s in [seed, seed, seed_alt]:
         if valuation_cls is ShapleyValuation:
-            sampler = recursive_make(sampler_cls, sampler_kwargs, s)
+            sampler = recursive_make(sampler_cls, sampler_kwargs, seed=s)
             valuation_kwargs["sampler"] = sampler
 
         valuation_kwargs["utility"] = test_game.u
         valuation_kwargs["progress"] = False
-        valuation = recursive_make(valuation_cls, valuation_kwargs, s)
+        valuation = recursive_make(valuation_cls, valuation_kwargs, seed=s)
 
         valuation.fit(test_game.data)
         values.append(valuation.values())
@@ -267,7 +270,9 @@ def test_hoeffding_bound_montecarlo(
 # training set will have 0.3 * 21 ~= 6 samples
 @pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize("a, b, num_points", [(2, 0, 21)])
-@shapley_samplers(500)
+@pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(500)
+)
 def test_linear_montecarlo(
     linear_dataset,
     linear_shapley,

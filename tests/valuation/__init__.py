@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, Type, TypeVar
+from typing import Any, Iterable, Sequence, Type, TypeVar
 
 import numpy as np
 from scipy.stats import spearmanr
@@ -121,16 +121,21 @@ def is_lambda(obj) -> bool:
 T = TypeVar("T")
 
 
-def recursive_make(t: Type[T], t_kwargs: dict, *lambda_args) -> T:
+def recursive_make(t: Type[T], t_kwargs: dict, **lambda_args) -> T:
     """Recursively instantiate classes with arguments.
 
     If a value in `t_kwargs` is a tuple, it is assumed to be a class and its
-    arguments. If a value is a callable, it is called with `lambda_args`.
+    arguments. If a value is a callable, it is called with the argument in
+    `lambda_args` of the same name as the key. lambdas may only accept one argument.
+    Arguments are not "exhausted" in any way and may be reused.
     """
     t_kwargs = t_kwargs.copy()  # careful with mutable inputs...
     for k, v in t_kwargs.items():
         if is_lambda(v):
-            t_kwargs[k] = v(*lambda_args)
+            if k in lambda_args:
+                t_kwargs[k] = v(lambda_args[k])
+            else:
+                t_kwargs[k] = v()
         elif isinstance(v, tuple) and isinstance(v[0], type):
-            t_kwargs[k] = recursive_make(*v, *lambda_args)
+            t_kwargs[k] = recursive_make(*v, **lambda_args)
     return t(**t_kwargs)
