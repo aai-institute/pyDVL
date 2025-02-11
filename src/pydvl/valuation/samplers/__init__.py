@@ -103,8 +103,6 @@ StochasticSampler = Union[
     UniformSampler,
     PermutationSampler,
     AntitheticSampler,
-    UniformStratifiedSampler,
-    TruncatedUniformStratifiedSampler,
     StratifiedSampler,
     OwenSampler,
     AntitheticOwenSampler,

@@ -9,13 +9,13 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils import SupervisedModel
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
-from pydvl.valuation import SequentialIndexIteration
 from pydvl.valuation.dataset import GroupedDataset
 from pydvl.valuation.methods import GroupTestingShapleyValuation, ShapleyValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     AntitheticSampler,
+    ConstantSampleSize,
     DeterministicUniformSampler,
     GridOwenStrategy,
     HarmonicSampleSize,
@@ -23,11 +23,12 @@ from pydvl.valuation.samplers import (
     OwenSampler,
     PermutationSampler,
     PowerLawSampleSize,
+    RandomIndexIteration,
+    SequentialIndexIteration,
+    StochasticIteration,
     StratifiedSampler,
-    TruncatedUniformStratifiedSampler,
     UniformOwenStrategy,
     UniformSampler,
-    UniformStratifiedSampler,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.scorers import SupervisedScorer, compose_score, sigmoid
@@ -67,14 +68,31 @@ def shapley_methods(fudge_factor: int):
             {"is_done": (MinUpdates, {"n_updates": fudge_factor * 12})},
         ),
         (
-            UniformStratifiedSampler,
-            {"seed": lambda seed: seed},
+            StratifiedSampler,
+            {
+                "sample_sizes": (ConstantSampleSize, {"n_samples": lambda n=32: n}),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": RandomIndexIteration,
+                "seed": lambda seed: seed,
+            },
             ShapleyValuation,
             {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
         ),
         (
-            TruncatedUniformStratifiedSampler,
-            {"seed": lambda seed: seed},
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    ConstantSampleSize,
+                    {
+                        "n_samples": lambda n=32: n,
+                        "lower_bound": lambda l=1: l,
+                        "upper_bound": lambda u=None: u,
+                    },
+                ),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": RandomIndexIteration,
+                "seed": lambda seed: seed,
+            },
             ShapleyValuation,
             {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
         ),

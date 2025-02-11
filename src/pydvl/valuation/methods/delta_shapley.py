@@ -26,7 +26,12 @@ from __future__ import annotations
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
-from pydvl.valuation.samplers.stratified import TruncatedUniformStratifiedSampler
+from pydvl.valuation.samplers import (
+    ConstantSampleSize,
+    RandomIndexIteration,
+    StochasticIteration,
+    StratifiedSampler,
+)
 from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["DeltaShapleyValuation"]
@@ -38,7 +43,7 @@ class DeltaShapleyValuation(SemivalueValuation):
     r"""Computes $\delta$-Shapley values.
 
     $\delta$-Shapley does not accept custom samplers. Instead, it uses a
-    [TruncatedUniformStratifiedSampler][pydvl.valuation.samplers.TruncatedUniformStratifiedSampler]
+    [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler]
     with a lower and upper bound on the size of the sets to sample from.
 
     Args:
@@ -51,7 +56,7 @@ class DeltaShapleyValuation(SemivalueValuation):
     """
 
     algorithm_name = "Delta-Shapley"
-    sampler: TruncatedUniformStratifiedSampler
+    sampler: StratifiedSampler
 
     def __init__(
         self,
@@ -62,16 +67,18 @@ class DeltaShapleyValuation(SemivalueValuation):
         seed: Seed | None = None,
         progress: bool = False,
     ):
-        sampler = TruncatedUniformStratifiedSampler(
-            lower_bound=lower_bound, upper_bound=upper_bound, seed=seed
+        sampler = StratifiedSampler(
+            sample_sizes=ConstantSampleSize(
+                1, lower_bound=lower_bound, upper_bound=upper_bound
+            ),
+            sample_sizes_iteration=StochasticIteration,
+            index_iteration=RandomIndexIteration,
+            seed=seed,
         )
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         super().__init__(utility, sampler, is_done, progress=progress)
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
-        assert self.sampler.lower_bound is not None
-        assert self.sampler.upper_bound is not None
-
-        assert self.sampler.lower_bound <= k <= self.sampler.upper_bound, (
-            "Invalid subset size"
-        )
-        return weight / (self.sampler.upper_bound - self.sampler.lower_bound + 1)
+        assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"
+        return weight / (self.upper_bound - self.lower_bound + 1)

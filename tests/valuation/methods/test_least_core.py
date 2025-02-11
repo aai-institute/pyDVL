@@ -12,16 +12,16 @@ from pydvl.valuation.methods.least_core import (
 )
 from pydvl.valuation.samplers import (
     AntitheticSampler,
+    ConstantSampleSize,
     DeterministicUniformSampler,
     FiniteNoIndexIteration,
     HarmonicSampleSize,
     NoIndexIteration,
+    StochasticIteration,
     StratifiedSampler,
-    TruncatedUniformStratifiedSampler,
     UniformSampler,
-    UniformStratifiedSampler,
 )
-from tests.valuation import check_total_value, check_values
+from tests.valuation import check_total_value, check_values, recursive_make
 
 logger = logging.getLogger(__name__)
 
@@ -36,30 +36,56 @@ logger = logging.getLogger(__name__)
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler_factory",
+    "sampler_cls, sampler_kwargs",
     [
-        lambda s, _: UniformSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s, _: AntitheticSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s, _: UniformStratifiedSampler(index_iteration=NoIndexIteration, seed=s),
-        lambda s, _: TruncatedUniformStratifiedSampler(
-            lower_bound=1,
-            upper_bound=2,
-            index_iteration=NoIndexIteration,
-            seed=s,
+        (UniformSampler, {"index_iteration": NoIndexIteration}),
+        (AntitheticSampler, {"index_iteration": NoIndexIteration}),
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    ConstantSampleSize,
+                    {
+                        "n_samples": lambda n=32: n,
+                    },
+                ),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": NoIndexIteration,
+            },
         ),
-        lambda s, n_samples: StratifiedSampler(
-            sample_sizes=HarmonicSampleSize(n_samples),
-            index_iteration=FiniteNoIndexIteration,
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    ConstantSampleSize,
+                    {
+                        "n_samples": lambda n=32: n,
+                        "lower_bound": lambda l=1: l,
+                        "upper_bound": lambda u=2: u,
+                    },
+                ),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": NoIndexIteration,
+            },
+        ),
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (HarmonicSampleSize, {"n_samples": lambda n: n}),
+                "index_iteration": FiniteNoIndexIteration,
+            },
         ),
     ],
 )
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_randomized_least_core_methods(
-    test_game, n_samples, sampler_factory, non_negative_subsidy, seed
+    test_game, n_samples, sampler_cls, sampler_kwargs, non_negative_subsidy, seed
 ):
     valuation = LeastCoreValuation(
         utility=test_game.u,
-        sampler=sampler_factory(seed, n_samples),
+        sampler=recursive_make(
+            sampler_cls, sampler_kwargs, seed=seed, n_samples=n_samples
+        ),
         n_samples=n_samples,
         non_negative_subsidy=non_negative_subsidy,
         progress=False,

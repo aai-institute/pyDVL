@@ -146,7 +146,6 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from functools import lru_cache
 from typing import Generator, Type
 
@@ -158,14 +157,11 @@ from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
-    SequentialIndexIteration,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 
 __all__ = [
-    "TruncatedUniformStratifiedSampler",
-    "UniformStratifiedSampler",
     "StratifiedSampler",
     "HarmonicSampleSize",
     "PowerLawSampleSize",
@@ -298,6 +294,14 @@ class SampleSizeStrategy(ABC):
 class ConstantSampleSize(SampleSizeStrategy):
     r"""Use a constant number of samples for each set size between two (optional)
     bounds. The total number of samples (per index) is respected.
+
+    Args:
+        n_samples: Total number of samples to generate **per index**.
+        lower_bound: Lower bound for the set size. If the set size is smaller than this,
+            the probability of sampling is 0.
+        upper_bound: Upper bound for the set size. If the set size is larger than this,
+            the probability of sampling is 0. If `None`, the upper bound is set to the
+            number of indices.
     """
 
     def __init__(
@@ -570,150 +574,3 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         sizes = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
         sizes /= sum(sizes)
         return math.comb(n, subset_len) / index_iteration_length / sizes[subset_len]
-
-
-class TruncatedUniformStratifiedSampler(StochasticSamplerMixin, PowersetSampler):
-    r"""A sampler which first samples set sizes between two bounds, then subsets of that
-    size.
-
-    For every index $i,$ this sampler first draws a set size $m_k$ between two bounds.
-    Then a set of that size is sampled uniformly from the complement of the current index.
-
-    This sampler was suggested in (Watson et al. 2023)<sup><a
-    href="#watson_accelerated_2023">1</a></sup> for $\delta$-Shapley
-
-    Args:
-        lower_bound: The lower bound for the set size. If None, the lower bound is 0.
-        upper_bound: The upper bound for the set size. If None, the upper bound is set
-            to the size of the index set when sampling.
-        batch_size: The number of samples to generate per batch. Batches are processed
-            together by each subprocess when working in parallel.
-        index_iteration: the strategy to use for iterating over indices to update
-        seed: The seed for the random number generator.
-
-    Raises:
-        ValueError when generating samples If the lower bound is less than 1 or the
-            upper bound is less than the lower bound.
-
-    !!! tip "New in version 0.10.0"
-    """
-
-    def __init__(
-        self,
-        *,
-        lower_bound: int | None = None,
-        upper_bound: int | None = None,
-        batch_size: int = 1,
-        index_iteration: Type[IndexIteration] = SequentialIndexIteration,
-        seed: Seed | None = None,
-    ):
-        super().__init__(
-            batch_size=batch_size, index_iteration=index_iteration, seed=seed
-        )
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-
-    @contextmanager
-    def ensure_correct_bounds(self, n: int):
-        """A context manager to ensure that the bounds are correct.
-
-        This locally changes the bounds to the correct values and restores them after.
-
-        Args:
-            n: Size of the index set
-        """
-        save_lower = self.lower_bound
-        save_upper = self.upper_bound
-        try:
-            if self.lower_bound is not None:
-                if self.lower_bound < 0 or self.lower_bound > n:
-                    raise ValueError(
-                        f"Lower bound ({self.lower_bound}) must be between 0 and {n=}, "
-                        f"inclusive"
-                    )
-            else:
-                self.lower_bound = 0
-            if self.upper_bound is not None:
-                if self.upper_bound < self.lower_bound or self.upper_bound > n:
-                    raise ValueError(
-                        f"Upper bound ({self.upper_bound}) must be between lower bound "
-                        f"({self.lower_bound=}) and {n=}, inclusive"
-                    )
-            else:
-                self.upper_bound = n
-            yield
-        finally:
-            self.lower_bound = save_lower
-            self.upper_bound = save_upper
-
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        # For NoIndexIteration, we sample from the full set of indices, but
-        # for other index iterations len(complement) < len(indices), so we need
-        # to adjust the bounds
-        with self.ensure_correct_bounds(
-            self._index_iterator_cls.complement_size(len(indices))
-        ):
-            assert self.lower_bound is not None  # for mypy
-            assert self.upper_bound is not None
-            for idx in self.index_iterator(indices):
-                _complement = complement(indices, [idx])
-                k = self._rng.integers(
-                    low=self.lower_bound, high=self.upper_bound + 1, size=1
-                ).item()
-                subset = random_subset_of_size(_complement, size=k, seed=self._rng)
-                yield Sample(idx, subset)
-
-    def weight(self, n: int, subset_len: int) -> float:
-        r"""The probability of sampling a set of size k is 1/(n-1 choose k) times the
-        probability of choosing size k:
-
-        $$\mathbb{P}(S) = \binom{n-1}{k}^{-1} \times
-                          \frac{1}{\text{upper_bound} - \text{lower_bound} + 1}$$
-        """
-        n = self._index_iterator_cls.complement_size(n)
-        with self.ensure_correct_bounds(n):
-            assert self.lower_bound is not None  # for mypy
-            assert self.upper_bound is not None
-            if not (self.lower_bound <= subset_len <= self.upper_bound):
-                raise ValueError("Subset length out of bounds. This should not happen")
-
-            inv_prob_size = int(self.upper_bound - self.lower_bound + 1)
-            return math.comb(n, subset_len) * inv_prob_size
-
-
-class UniformStratifiedSampler(TruncatedUniformStratifiedSampler):
-    """A sampler that samples set sizes uniformly, then subsets of that size.
-
-    For every index, this sampler first draws a set size between 0 and n-1 uniformly,
-    where n is the total number of indices. Then a set of that size is sampled uniformly
-    from the complement of the current index.
-
-    ??? Info
-        Stratified sampling partitions a population by a characteristic and samples
-        randomly within each stratum. In model-based data valuation, utility functions
-        typically depend on training sample size, so that it makes sense to stratify
-        by coalition size.
-
-    !!! Danger
-        This sampling scheme yields many more samples of low and high set sizes than a
-        [UniformSampler][pydvl.valuation.samplers.UniformSampler] and is therefore
-        inadequate for most methods due to the high variance in the estimates that it
-        induces. It is included for completeness and for experimentation purposes.
-
-    !!! tip "Renamed in version 0.10.0"
-        This used to be called `RandomHierarchicalSampler`.
-    """
-
-    def __init__(
-        self,
-        batch_size: int = 1,
-        index_iteration: Type[IndexIteration] = SequentialIndexIteration,
-        seed: Seed | None = None,
-    ):
-        super().__init__(
-            lower_bound=0,
-            upper_bound=None,
-            batch_size=batch_size,
-            index_iteration=index_iteration,
-            seed=seed,
-        )

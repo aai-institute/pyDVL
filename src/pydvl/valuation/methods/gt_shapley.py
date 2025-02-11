@@ -28,14 +28,13 @@ You can read more [in the documentation][data-valuation].
 from __future__ import annotations
 
 import logging
-from typing import Callable, NamedTuple, cast
+from typing import NamedTuple, cast
 
 import cvxpy as cp
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
-from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
@@ -44,9 +43,14 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
     compute_utility_values_and_sample_masks,
 )
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
-from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, NameT, Sample, SampleGenerator
+from pydvl.valuation.samplers import (
+    GroupTestingSampleSize,
+    IndexSampler,
+    NoIndexIteration,
+    StochasticIteration,
+    StratifiedSampler,
+)
+from pydvl.valuation.types import NameT, Sample
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -101,7 +105,13 @@ class GroupTestingShapleyValuation(Valuation):
         self._n_samples = n_samples
         self._solver_options = solver_options
         self._progress = progress
-        self._sampler = GTSampler(batch_size=batch_size, seed=seed)
+        self._sampler = StratifiedSampler(
+            index_iteration=NoIndexIteration,
+            sample_sizes=GroupTestingSampleSize(n_samples=1),
+            sample_sizes_iteration=StochasticIteration,
+            batch_size=batch_size,
+            seed=seed,
+        )
         self._epsilon = epsilon
 
     def fit(self, data: Dataset) -> Self:
@@ -188,42 +198,6 @@ class GroupTestingProblem(NamedTuple):
     utility_differences: NDArray[np.float64]
     total_utility: float
     epsilon: float
-
-
-class GTSampler(StochasticSamplerMixin, IndexSampler):
-    """Sampler for the group-testing algorithm.
-
-    Methods that are specific to semi-values like weight and make_strategy are not
-    implemented.
-
-    Args:
-        batch_size: The number of samples to draw from each batch.
-        seed: Seed for the random number generator.
-
-    """
-
-    def __init__(self, batch_size: int = 1, seed: Seed | None = None):
-        super().__init__(batch_size=batch_size, seed=seed)
-
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        n_obs = len(indices)
-        sample_sizes = _create_sample_sizes(n_obs)
-        probabilities = _create_sampling_probabilities(sample_sizes)
-
-        while True:
-            size = self._rng.choice(sample_sizes, p=probabilities)
-            subset = random_subset_of_size(indices, size=size, seed=self._rng)
-            yield Sample(idx=None, subset=subset)
-
-    def weight(self, n: int, subset_len: int) -> float:
-        raise NotImplementedError("This is not a semi-value sampler.")
-
-    def make_strategy(
-        self,
-        utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
-    ) -> EvaluationStrategy:
-        raise NotImplementedError("This is not a semi-value sampler.")
 
 
 def create_group_testing_problem(

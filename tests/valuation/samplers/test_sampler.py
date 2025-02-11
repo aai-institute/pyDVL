@@ -15,6 +15,7 @@ from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     AntitheticPermutationSampler,
     AntitheticSampler,
+    ConstantSampleSize,
     DeterministicIteration,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
@@ -38,10 +39,8 @@ from pydvl.valuation.samplers import (
     StochasticIteration,
     StochasticSampler,
     StratifiedSampler,
-    TruncatedUniformStratifiedSampler,
     UniformOwenStrategy,
     UniformSampler,
-    UniformStratifiedSampler,
 )
 from pydvl.valuation.samplers.permutation import PermutationSamplerBase
 from pydvl.valuation.types import IndexSetT
@@ -174,10 +173,28 @@ def random_samplers(proper: bool = False):
     ]
 
     stratified_samplers = [
-        (UniformStratifiedSampler, {"seed": lambda seed: seed}),
         (
-            TruncatedUniformStratifiedSampler,
-            {"lower_bound": lambda l=2: l, "upper_bound": lambda u=3: u},
+            StratifiedSampler,
+            {
+                "sample_sizes": (
+                    ConstantSampleSize,
+                    {
+                        "n_samples": lambda n=32: n,
+                        "lower_bound": lambda l=2: l,
+                        "upper_bound": lambda u=3: u,
+                    },
+                ),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": RandomIndexIteration,
+            },
+        ),
+        (
+            StratifiedSampler,
+            {
+                "sample_sizes": (ConstantSampleSize, {"n_samples": lambda n=32: n}),
+                "sample_sizes_iteration": StochasticIteration,
+                "index_iteration": RandomIndexIteration,
+            },
         ),
         (
             StratifiedSampler,
@@ -416,9 +433,10 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
         ),
         (LOOSampler, {}, lambda n: n),
         # (
-        #     TruncatedUniformStratifiedSampler,
+        #     StratifiedSampler,
         #     {
         #         "index_iteration": FiniteSequentialIndexIteration,
+        #         "sample_sizes": (HarmonicSampleSizes, {"n_samples": 32}),
         #     },
         #     lambda n: TODO: compute this...
         # ),
@@ -672,27 +690,6 @@ def test_sampler_weights(
             pass
 
     np.testing.assert_allclose(subset_frequencies, expected_frequencies, atol=0.05)
-
-
-@pytest.mark.parametrize(
-    "lower_bound, upper_bound, expected_message",
-    [
-        (-1, None, r"Lower bound"),
-        (11, None, r"Lower bound"),
-        (5, 4, r"Upper bound"),
-        (None, 11, r"Upper bound"),
-    ],
-)
-def test_truncateduniformstratifiedsampler_raises(
-    lower_bound, upper_bound, expected_message
-):
-    indices = np.arange(10)
-    with pytest.raises(ValueError, match=expected_message):
-        next(
-            TruncatedUniformStratifiedSampler(
-                lower_bound=lower_bound, upper_bound=upper_bound
-            )._generate(indices)
-        )
 
 
 class TestSampler(PowersetSampler):

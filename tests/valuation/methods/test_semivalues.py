@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 from joblib import parallel_config
 
-from pydvl.valuation import TruncatedUniformStratifiedSampler
 from pydvl.valuation.games import Game
 from pydvl.valuation.methods import (
     BetaShapleyValuation,
