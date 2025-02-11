@@ -112,10 +112,11 @@ class UniformOwenStrategy(OwenStrategy):
     to sample probability values uniformly between 0 and $q_\text{stop}$.
 
     Args:
-        n_samples_outer: The number of probability values $q$ used for the outer loop. A
-            high number will delay updating new indices and has no effect on the final
-            accuracy if using an infinite index iteration. In general, it only makes
-            sense to change this number if using a finite index iteration.
+        n_samples_outer: The number of probability values $q$ used for the outer loop.
+            Since samples are taken anew for each index, a high number will delay
+            updating new indices and has no effect on the final accuracy if using an
+            infinite index iteration. In general, it only makes sense to change this
+            number if using a finite index iteration.
         seed: The seed for the random number generator.
     """
 

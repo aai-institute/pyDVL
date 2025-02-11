@@ -257,7 +257,7 @@ def create_group_testing_problem(
         extra_samples=[Sample(idx=None, subset=utility.training_data.indices)],
     )
 
-    total_utility = u_values[-1]
+    total_utility = u_values[-1].item()
     u_values = u_values[:-1]
     masks = masks[:-1]
 

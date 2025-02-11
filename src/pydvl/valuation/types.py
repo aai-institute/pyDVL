@@ -112,6 +112,13 @@ class Sample:
 
         return replace(self, subset=subset)
 
+    def __eq__(self, other: Sample) -> bool:
+        return (
+            isinstance(other, Sample)
+            and self.idx == other.idx
+            and np.array_equal(self.subset, other.subset)
+        )
+
 
 @dataclass(frozen=True)
 class ClasswiseSample(Sample):
