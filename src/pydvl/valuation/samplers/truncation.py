@@ -146,15 +146,20 @@ class RelativeTruncation(TruncationPolicy):
             last computed utility is within this tolerance of the total utility
     """
 
-    def __init__(self, rtol: float):
+    def __init__(self, rtol: float, burn_in_fraction: float = 0.0):
         super().__init__()
+        assert 0 <= burn_in_fraction <= 1
+        self.burn_in_fraction = burn_in_fraction
         self.rtol = rtol
         self.total_utility = 0.0
+        self.count = 0  # within-permutation count
         self._is_setup = False
 
     def _check(self, idx: int, score: float, batch_size: int) -> bool:
-        # Explicit cast for the benefit of mypy 🤷
-        return bool(np.allclose(score, self.total_utility, rtol=self.rtol))
+        self.count += 1
+        if self.count < self.burn_in_fraction * batch_size:
+            return False
+        return np.allclose(score, self.total_utility, rtol=self.rtol)
 
     def __call__(self, idx: int, score: float, batch_size: int) -> bool:
         if not self._is_setup:
@@ -162,6 +167,7 @@ class RelativeTruncation(TruncationPolicy):
         return super().__call__(idx, score, batch_size)
 
     def reset(self, utility: UtilityBase):
+        self.count = 0
         if self._is_setup:
             return
         logger.info("Computing total utility for RelativeTruncation.")
