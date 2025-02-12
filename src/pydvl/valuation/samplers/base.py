@@ -301,12 +301,12 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
 
         if coefficient is not None:
 
-            def coefficient_fun(n: int, subset_len: int) -> float:
+            def correction_fun(n: int, subset_len: int) -> float:
                 return coefficient(n, subset_len, sampler.weight(n, subset_len))
 
-            self.coefficient = coefficient_fun
+            self.correction = correction_fun
         else:
-            self.coefficient = sampler.weight
+            self.correction = sampler.weight
 
     @abstractmethod
     def process(

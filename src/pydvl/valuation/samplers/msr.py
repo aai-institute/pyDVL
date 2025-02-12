@@ -224,7 +224,7 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
         updates = []
         for i, is_positive in enumerate(mask):  # type: int, bool
             k = len(sample.subset) - int(is_positive)
-            coeff = self.coefficient(self.n_indices, k)
+            coeff = self.correction(self.n_indices, k)
             updates.append(
                 MSRValueUpdate(idx=i, update=u_value * coeff, is_positive=is_positive)
             )

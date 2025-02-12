@@ -305,7 +305,7 @@ class PowersetEvaluationStrategy(
         for sample in batch:
             u_i = self.utility(sample.with_idx_in_subset())
             u = self.utility(sample)
-            marginal = (u_i - u) * self.coefficient(self.n_indices, len(sample.subset))
+            marginal = (u_i - u) * self.correction(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, marginal))
             if is_interrupted():
                 break
@@ -382,7 +382,7 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
             assert sample.idx is not None
             u = self.utility(sample)
             marginal = self.total_utility - u
-            marginal *= self.coefficient(self.n_indices, len(sample.subset))
+            marginal *= self.correction(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, marginal))
             if is_interrupted():
                 break
