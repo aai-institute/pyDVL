@@ -108,7 +108,7 @@ def test_games(
 
     # import matplotlib.pyplot as plt
     # from pydvl.valuation.games import ShoesGame, SymmetricVotingGame
-    # data = history.memory[:, -history.count :]  # Grab the last `count` values
+    # data = history.memory[-history.count :]  # Grab the last `count` values
     # for vv in data:  # each row is one value series
     #     fraction = len(vv) // 2
     #     plt.plot(range(fraction), vv[-fraction:], alpha=0.7)

@@ -665,7 +665,7 @@ class RollingMemory:
     def data(self) -> NDArray[np.float64]:
         view = self._data.view()
         view.setflags(write=False)
-        return view
+        return view.T
 
     def reset(self) -> Self:
         self._data = np.full(0, np.inf)
@@ -748,8 +748,8 @@ class HistoryDeviation(StoppingCriterion):
         # Look at indices that have been updated more than n_steps times
         ii = np.where(r.counts > self.memory.n_steps)
         if len(ii) > 0:
-            curr = self.memory[:, -1]
-            saved = self.memory[:, 0]
+            curr = self.memory[-1]
+            saved = self.memory[0]
             diffs = np.abs(curr[ii] - saved[ii])
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
@@ -816,7 +816,7 @@ class RankCorrelation(StoppingCriterion):
             self._converged = np.full(len(r), False)
             return Status.Pending
 
-        corr = spearmanr(self.memory[:, -1], r.values)[0]
+        corr = spearmanr(self.memory[-1], r.values)[0]
         self.memory.update(r)
         self._update_completion(corr)
         if np.isclose(corr, self._corr, rtol=self.rtol) and self._count > self.burn_in:

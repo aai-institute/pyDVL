@@ -338,9 +338,10 @@ def test_memory(criterion):
 
     assert np.all(criterion.memory.data == [])
     criterion(r1)
-    assert np.all(criterion.memory.data[:, -1] == r1.values.T)
+    np.testing.assert_equal(criterion.memory.data[-1], r1.values)
+    np.testing.assert_equal(criterion.memory[-1], r1.values)
+
     criterion(r2)
-    assert np.all(
-        criterion.memory.data[:, -2:]
-        == np.hstack((r1.values.reshape(-1, 1), r2.values.reshape(-1, 1)))
-    )
+    tmp = np.vstack((r1.values, r2.values))
+    np.testing.assert_equal(criterion.memory.data[-2:], tmp)
+    np.testing.assert_equal(criterion.memory[-2:], tmp)
