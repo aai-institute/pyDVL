@@ -166,9 +166,9 @@ class PermutationEvaluationStrategy(
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
-        self.truncation.reset(self.utility)  # Reset before every batch (must be cached)
         r = []
         for sample in batch:
+            self.truncation.reset(self.utility)
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
