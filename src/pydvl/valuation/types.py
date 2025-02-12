@@ -112,7 +112,7 @@ class Sample:
 
         return replace(self, subset=subset)
 
-    def __eq__(self, other: Sample) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, Sample)
             and self.idx == other.idx
@@ -140,7 +140,7 @@ class ClasswiseSample(Sample):
         sha256_hash = hashlib.sha256(array_bytes).hexdigest()
         return int(sha256_hash, base=16)
 
-    def __eq__(self, other: ClasswiseSample) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, ClasswiseSample)
             and self.idx == other.idx

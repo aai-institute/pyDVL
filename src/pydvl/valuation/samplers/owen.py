@@ -73,7 +73,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -261,7 +261,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
             return None
 
         return (
-            self._index_iterator_cls.length(len(indices))
+            cast(int, self._index_iterator_cls.length(len(indices)))
             * self.sampling_probabilities.n_samples_outer
             * self.n_samples_inner
         )

@@ -514,8 +514,10 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)
             try:
-                sample_sizes = self.sample_sizes_iteration(
-                    self.sample_sizes_strategy, n_indices, seed=self._rng
+                sample_sizes = self.sample_sizes_iteration(  # type: ignore
+                    self.sample_sizes_strategy,
+                    n_indices,
+                    seed=self._rng,
                 )
             except TypeError:
                 sample_sizes = self.sample_sizes_iteration(
@@ -573,4 +575,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
         sizes = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
         sizes /= sum(sizes)
-        return math.comb(n, subset_len) / index_iteration_length / sizes[subset_len]
+        return float(
+            math.comb(n, subset_len) / index_iteration_length / sizes[subset_len]
+        )

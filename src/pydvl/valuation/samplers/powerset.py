@@ -438,7 +438,9 @@ class DeterministicUniformSampler(PowersetSampler):
         if len_outer is None:  # Infinite index iteration
             return None
 
-        return len_outer * 2 ** (self._index_iterator_cls.complement_size(len(indices)))
+        return int(
+            len_outer * 2 ** (self._index_iterator_cls.complement_size(len(indices)))
+        )
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
