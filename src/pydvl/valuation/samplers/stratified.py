@@ -261,24 +261,6 @@ class SampleSizeStrategy(ABC):
 
         return np.array(int_values, dtype=int)
 
-    def n_samples(self, n_indices: int, subset_len: int) -> int:
-        """Returns the number of subsets to sample.
-
-        Args:
-            n_indices: Size of the index set to sample from.
-            subset_len: Set size to use, from 0 to `n_indices` inclusive
-
-        Returns:
-            The number of samples to generate at size `subset_len`.
-        """
-        try:
-            return self.sample_sizes(n_indices)[subset_len].item()
-        except IndexError:
-            raise ValueError(
-                f"Subset length {subset_len} out of bounds for index set of size "
-                f"{n_indices}"
-            )
-
     def total_samples(self, n_indices: int) -> int:
         """The total number of samples to generate.
 
