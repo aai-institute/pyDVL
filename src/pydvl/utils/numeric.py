@@ -303,41 +303,54 @@ def running_moments(
     previous_variance: NDArray[np.float64],
     count: int,
     new_value: NDArray[np.float64],
-) -> Tuple[NDArray[np.float64], NDArray[np.float64]]: ...
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
 
 
 def running_moments(
-    previous_avg: float | NDArray[np.float64],
-    previous_variance: float | NDArray[np.float64],
+    previous_avg: float,
+    previous_variance: float,
     count: int,
-    new_value: float | NDArray[np.float64],
-) -> Tuple[float | NDArray[np.float64], float | NDArray[np.float64]]:
-    """Uses Welford's algorithm to calculate the running average and variance of
-     a set of numbers.
+    new_value: float,
+    unbiased: bool = True,
+) -> tuple[float, float]:
+    """Calculates running average and variance of a series of numbers.
 
-    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
+    See [Welford's algorithm in
+    wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
 
     !!! Warning
         This is not really using Welford's correction for numerical stability
         for the variance. (FIXME)
 
     !!! Todo
-        This could be generalised to arbitrary moments. See [this paper](https://www.osti.gov/biblio/1028931)
+        This could be generalised to arbitrary moments. See [this
+        paper](https://www.osti.gov/biblio/1028931)
 
     Args:
-        previous_avg: average value at previous step
-        previous_variance: variance at previous step
-        count: number of points seen so far
-        new_value: new value in the series of numbers
-
+        previous_avg: average value at previous step.
+        previous_variance: variance at previous step.
+        count: number of points seen so far,
+        new_value: new value in the series of numbers.
+        unbiased: whether to use the unbiased variance estimator (same as `np.var` with
+            `ddof=1`).
     Returns:
         new_average, new_variance, calculated with the new count
     """
-    # broadcasted operations seem not to be supported by mypy, so we ignore the type
-    new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
-    new_variance = previous_variance + (
-        (new_value - previous_avg) * (new_value - new_average) - previous_variance
-    ) / (count + 1)
+    delta = new_value - previous_avg
+    new_average = previous_avg + delta / (count + 1)
+
+    if unbiased:
+        if count > 0:
+            new_variance = (
+                previous_variance + delta**2 / (count + 1) - previous_variance / count
+            )
+        else:
+            new_variance = 0.0
+    else:
+        new_variance = previous_variance + (
+            delta * (new_value - new_average) - previous_variance
+        ) / (count + 1)
+
     return new_average, new_variance
 
 

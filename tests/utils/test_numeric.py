@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import math
+from typing import Callable, Literal
 
 import numpy as np
 import pytest
@@ -245,52 +248,78 @@ def test_random_matrix_with_condition_number_stochastic(n, cond, seed, seed_alt)
     assert np.any(mat_1 != mat_2)
 
 
-def test_running_moments():
+@pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
+def test_running_moments(unbiased: bool):
     """Test that running moments are correct."""
+
+    ddof = 1 if unbiased else 0
     n_samples, n_values = 15, 1000
     max_init_values = 100
+
     # Generate sequences of varying lengths and compute their moments
     values = [
         np.random.randn(np.random.randint(0, max_init_values)) for _ in range(n_samples)
     ]
     means = np.array([np.mean(v) for v in values])
-    variances = np.array([np.var(v) for v in values])
+    # With ddof=1 and an empty sequence, var() returns NaN -> replace by 0
+    variances = np.nan_to_num(np.array([np.var(v, ddof=ddof) for v in values]), nan=0.0)
     # Each of the n_samples values has been computed from a sequence of length counts[i]
     counts = np.array([len(v) for v in values], dtype=np.int_)
 
     # successively add values to the running moments
-    data = np.random.randn(n_samples, n_values)
-    for i in range(n_values):
-        new_values = data[:, i]
-        new_means, new_variances = running_moments(means, variances, counts, new_values)
+    data = np.random.randn(n_samples, n_values).T
+    for new_values in data:
+        new_means = np.zeros_like(means)
+        new_variances = np.zeros_like(variances)
+        for i in range(n_samples):
+            new_means[i], new_variances[i] = running_moments(
+                means[i], variances[i], counts[i], new_values[i], unbiased
+            )
         means, variances = new_means, new_variances
         counts += 1
+
+        # If running_moments were an ufunc:
+        # new_means, new_variances = running_moments(
+        #     means, variances, counts, new_values, unbiased
+        # )
+        # means, variances = new_means, new_variances
+        # counts += 1
 
         values = [
             np.concatenate([values[j], [new_values[j]]]) for j in range(n_samples)
         ]
 
         true_means = [np.mean(vv) for vv in values]
-        true_variances = [np.var(vv) for vv in values]
+        true_variances = [np.var(vv, ddof=ddof) for vv in values]
         np.testing.assert_allclose(means, true_means)
         np.testing.assert_allclose(variances, true_variances)
 
 
-def test_running_moment_initialization():
+@pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
+def test_running_moment_initialization(unbiased: bool):
     """We often use running moments for updates in ValuationResult where the means
     and variances are initialized to zero. This test makes sure that case is handled
     correctly.
 
     """
+    ddof = 1 if unbiased else 0
     got_mean, got_var = running_moments(
-        previous_avg=0.0, previous_variance=0.0, count=0, new_value=1.0
+        previous_avg=0.0,
+        previous_variance=0.0,
+        count=0,
+        new_value=1.0,
+        unbiased=unbiased,
     )
 
     assert got_mean == 1.0
-    assert got_var == 0.0  # TODO: shouldn't this be undefined?
+    assert got_var == 0.0
 
     got_mean, got_var = running_moments(
-        previous_avg=got_mean, previous_variance=got_var, count=1, new_value=2.0
+        previous_avg=got_mean,
+        previous_variance=got_var,
+        count=1,
+        new_value=2.0,
+        unbiased=unbiased,
     )
 
     np.testing.assert_allclose(got_mean, 1.5)
