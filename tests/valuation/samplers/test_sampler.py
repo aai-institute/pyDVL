@@ -9,7 +9,7 @@ import pytest
 from more_itertools import flatten
 from numpy.typing import NDArray
 
-from pydvl.utils.numeric import powerset
+from pydvl.utils.numeric import logcomb, powerset
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
@@ -645,7 +645,10 @@ def test_sampler_weights(
     sampler_cls, sampler_kwargs: dict, indices: NDArray, seed: int
 ):
     """Test whether weight(n, k) corresponds to the probability of sampling a given
-    subset of size k from n indices. Note this is *NOT* P(|S| = k)."""
+    subset of size k from n indices. Note this is *NOT* P(|S| = k), but instead
+    the probability P(S), which depends only on n and k due to the symmetry in the
+    sampling process.
+    """
 
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler only samples sets of size n-1")
@@ -664,32 +667,40 @@ def test_sampler_weights(
     ):
         complement_size = n
         max_size = n + 1
-        subset_frequencies = np.zeros(n + 1)
+        subset_len_probs = np.zeros(n + 1)
     else:
         complement_size = n - 1
         max_size = n
-        subset_frequencies = np.zeros(n)
+        subset_len_probs = np.zeros(n)
 
     # HACK: MSR actually has same distribution as uniform over 2^(N-i)
     fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
 
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
-            subset_frequencies[len(sample.subset)] += 1
-    subset_frequencies /= subset_frequencies.sum()
+            subset_len_probs[len(sample.subset)] += 1
+    subset_len_probs /= subset_len_probs.sum()
 
-    expected_frequencies = np.zeros(max_size)
+    expected_subset_len_probs = np.zeros(max_size)
+    expected_log_subset_len_probs = np.full(max_size, -np.inf)
     for k in range(max_size):
         try:
             # Recall that sampler.weight = inverse probability of sampling
             # So: no. of sets of size k in the powerset, times. prob of sampling size k
-            expected_frequencies[k] = (
+            expected_subset_len_probs[k] = (
                 math.comb(complement_size, k) / sampler.weight(n, k) * fudge
+            )
+            # log_weight = log probability of sampling (NOT inverse)
+            expected_log_subset_len_probs[k] = (
+                logcomb(complement_size, k) + sampler.log_weight(n, k) + math.log(fudge)
             )
         except ValueError:  # out of bounds in stratified samplers
             pass
 
-    np.testing.assert_allclose(subset_frequencies, expected_frequencies, atol=0.05)
+    np.testing.assert_allclose(subset_len_probs, expected_subset_len_probs, atol=0.05)
+    np.testing.assert_allclose(
+        subset_len_probs, np.exp(expected_log_subset_len_probs), atol=0.05
+    )
 
 
 class TestSampler(PowersetSampler):

@@ -152,7 +152,7 @@ from typing import Generator, Type
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Seed, complement, random_subset_of_size
+from pydvl.utils import Seed, complement, logcomb, random_subset_of_size
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
@@ -261,6 +261,7 @@ class SampleSizeStrategy(ABC):
 
         return np.array(int_values, dtype=int)
 
+    @lru_cache
     def total_samples(self, n_indices: int) -> int:
         """The total number of samples to generate.
 
@@ -509,9 +510,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
                 for _ in range(m_k):
                     subset = random_subset_of_size(from_set, size=k, seed=self._rng)
                     yield Sample(idx, subset)
-            # # for k, m_k in self.sample_sizes(n_indices):
-            # for k in range(n_indices + 1):
-            #     for _ in range(self.sample_sizes(n_indices, k)):
 
     @lru_cache
     def total_samples(self, n_indices: int) -> int:
@@ -555,8 +553,28 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # the strategy, or equivalently, call `sample_sizes(n, quantize=False)`.
         # This is useful for the stochastic iteration, where we have frequencies
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
-        sizes = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        sizes /= sum(sizes)
+        funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
+        funs /= self.sample_sizes_strategy.total_samples(n)
+
         return float(
-            math.comb(n, subset_len) / index_iteration_length / sizes[subset_len]
+            math.comb(n, subset_len) / index_iteration_length / funs[subset_len]
+        )
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        n = self._index_iterator_cls.complement_size(n)
+        # Depending on whether we sample from complements or not, the total number of
+        # samples passed to the heuristic has a different interpretation.
+        index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
+        if index_iteration_length is None:
+            index_iteration_length = 1
+        index_iteration_length = max(1, index_iteration_length)
+
+        funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
+        total = self.sample_sizes_strategy.total_samples(n)
+
+        return (
+            -logcomb(n, subset_len)
+            + math.log(index_iteration_length)
+            + math.log(funs[subset_len])
+            - math.log(total)
         )

@@ -35,6 +35,7 @@ see [semivalues][pydvl.valuation.methods.semivalue] for reference.
 from __future__ import annotations
 
 import logging
+import math
 from abc import ABC, abstractmethod
 from typing import Callable, Generator, Generic, Type, TypeVar
 
@@ -145,7 +146,7 @@ class SequentialIndexIteration(InfiniteIterationMixin, IndexIteration):
 
     @staticmethod
     def complement_size(n: int) -> int:
-        return n - 1
+        return n - 1 if n > 0 else 0
 
 
 class FiniteSequentialIndexIteration(FiniteIterationMixin, SequentialIndexIteration):
@@ -173,7 +174,7 @@ class RandomIndexIteration(
 
     @staticmethod
     def complement_size(n: int) -> int:
-        return n - 1
+        return n - 1 if n > 0 else 0
 
 
 class FiniteRandomIndexIteration(FiniteIterationMixin, RandomIndexIteration):
@@ -289,7 +290,11 @@ class PowersetSampler(IndexSampler, ABC):
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 1/2^{n-1} over each subset."""
         n = self._index_iterator_cls.complement_size(n)
-        return 2**n if n > 0 else 1  # type: ignore
+        return 2**n  # type: ignore
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        m = self._index_iterator_cls.complement_size(n)
+        return -m * math.log(2)
 
 
 PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
@@ -349,6 +354,9 @@ class LOOSampler(PowersetSampler):
         """This sampler returns only sets of size n-1. There are n such sets, so the
         probability of drawing one is 1/n, or 0 if subset_len != n-1."""
         return n if subset_len == n - 1 else 0
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        return -math.log(n) if subset_len == n - 1 else float("-inf")
 
     def make_strategy(
         self,

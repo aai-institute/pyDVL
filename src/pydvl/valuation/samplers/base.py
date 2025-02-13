@@ -214,6 +214,26 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         ...
 
     @abstractmethod
+    def log_weight(self, n: int, subset_len: int) -> float:
+        """The logarithm of the weight.
+
+        This is log p(S), where p(S) is the probability of sampling a set S.
+
+        Used for log-space computation of the marginal updates.
+
+        Args:
+            n: The size of the index set. Note that the actual size of the set being
+                sampled will often be n-1, as one index might be removed from the set.
+                See [IndexIteration][pydvl.valuation.samplers.IndexIteration] for more.
+            subset_len: The size of the subset being sampled
+
+        Returns:
+            The logarithm of the probability of sampling a given set S of size
+                `subset_len`.
+        """
+        ...
+
+    @abstractmethod
     def make_strategy(
         self,
         utility: UtilityBase,

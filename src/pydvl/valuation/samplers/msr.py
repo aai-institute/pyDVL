@@ -23,6 +23,7 @@ respectively.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Callable, List
 
@@ -182,6 +183,9 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             The inverse probability of having sampled a set of size `subset_len`.
         """
         return 2 ** (n - 1) if n > 0 else 1.0  # type: ignore
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        return -(n - 1) * math.log(2) if n > 0 else 0.0
 
     def make_strategy(
         self,

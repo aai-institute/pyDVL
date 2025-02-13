@@ -26,6 +26,7 @@ from typing import Callable
 
 import numpy as np
 
+from pydvl.utils.numeric import logcomb
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
@@ -66,6 +67,11 @@ class PermutationSamplerBase(IndexSampler):
 
     def weight(self, n: int, subset_len: int) -> float:
         return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        if n > 0:
+            return -math.log(n) - logcomb(n - 1, subset_len)
+        return 0.0
 
     def make_strategy(
         self,
