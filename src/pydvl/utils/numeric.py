@@ -1,31 +1,33 @@
 """
-This module contains routines for numerical computations used across the
-library.
+This module contains routines for numerical computations used across the library.
 """
 
 from __future__ import annotations
 
+import math
 from itertools import chain, combinations
 from typing import (
     Collection,
     Generator,
     Iterator,
-    List,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     overload,
 )
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.special import gammaln
 
 from pydvl.utils.types import Seed
 
 __all__ = [
     "complement",
-    "running_moments",
+    "logcomb",
+    "logexp",
+    "log_running_moments",
+    "logsumexp_two",
     "num_samples_permutation_hoeffding",
     "powerset",
     "random_matrix_with_condition_number",
@@ -33,6 +35,7 @@ __all__ = [
     "random_powerset",
     "random_powerset_label_min",
     "random_subset_of_size",
+    "running_moments",
     "top_k_value_accuracy",
 ]
 
@@ -202,7 +205,7 @@ def random_powerset_label_min(
     unique_labels = np.unique(labels)
 
     while True:
-        subsets: List[NDArray[T]] = []
+        subsets: list[NDArray[T]] = []
         for label in unique_labels:
             label_indices = np.asarray(np.where(labels == label)[0])
             subset_size = int(
@@ -294,7 +297,7 @@ def random_matrix_with_condition_number(
 @overload
 def running_moments(
     previous_avg: float, previous_variance: float, count: int, new_value: float
-) -> Tuple[float, float]: ...
+) -> tuple[float, float]: ...
 
 
 @overload
@@ -372,3 +375,124 @@ def top_k_value_accuracy(
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
+
+
+def logcomb(n: int, k: int) -> float:
+    r"""Computes the log of the binomial coefficient (n choose k).
+
+    $$
+    \begin{array}{rcl}
+        \log\binom{n}{k} & = & \log(n!) - \log(k!) - \log((n-k)!) \\
+                         & = & \log\Gamma(n+1) - \log\Gamma(k+1) - \log\Gamma(n-k+1).
+    \end{array}
+    $$
+
+    Args:
+        n: Total number of elements
+        k: Number of elements to choose
+    Returns:
+        The log of the binomial coefficient
+        """
+    return gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+
+
+def logexp(x: float, a: float) -> float:
+    """Computes log(x^a).
+
+    Args:
+        x: Base
+        a: Exponent
+    Returns
+        a * log(x)
+    """
+    return a * math.log(x)
+
+
+def logsumexp_two(log_a: float, log_b: float) -> float:
+    r"""Numerically stable computation of log(exp(log_a) + exp(log_b)).
+
+    Uses standard log sum exp trick:
+
+    $$
+    \log(\exp(\log a) + \exp(\log b)) = m + \log(\exp(\log a - m) + \exp(\log b - m)),
+    $$
+
+    where $m = \max(\log a, \log b)$.
+
+    Args:
+        log_a: Log of the first value
+        log_b: Log of the second value
+    Returns:
+        The log of the sum of the exponentials
+    """
+    if log_a == -np.inf:
+        return log_b
+    if log_b == -np.inf:
+        return log_a
+    m = max(log_a, log_b)
+    return m + math.log(math.exp(log_a - m) + math.exp(log_b - m))
+
+
+def log_running_moments(
+    previous_log_sum: float,
+    previous_log_sum2: float,
+    count: int,
+    new_log_value: float,
+    unbiased: bool = True,
+) -> tuple[float, float, float, float]:
+    """
+    Update running moments when the new value is provided in log space.
+
+    We assume the actual value is x = exp(new_log_value). Rather than updating
+    the arithmetic sum S = sum(x) and S2 = sum(x^2) directly, we maintain:
+
+       L_S  = log(S)   and   L_S2 = log(S2).
+
+    The running mean and variance are then computed as follows:
+
+      - Population estimator:
+            mean     = exp(L_S - log(count))
+            variance = exp(L_S2 - log(count)) - mean**2
+
+      - Unbiased (sample) estimator. Equivalent to np.var with ddof=1, but with
+        the different convention that variance is 0 for count == 1 (numpy
+        returns NaN)
+            mean     = exp(L_S - log(count))
+            variance = (count/(count-1)) * (exp(L_S2 - log(count)) - mean**2)
+
+    Args:
+        previous_log_sum: log(sum of x_i) so far (or -inf if none).
+        previous_log_sum2: log(sum of x_i^2) so far (or -inf if none).
+        count: number of points processed so far.
+        new_log_value: log(x_new), the new value in log space.
+        unbiased: if `True`, compute the unbiased estimator of the variance
+            (ddof=1).
+
+    Returns:
+        new_mean: running mean in the linear domain.
+        new_variance: running variance in the linear domain (unbiased if requested).
+        new_log_sum: updated log(sum of x_i).
+        new_log_sum2: updated log(sum of x_i^2).
+    """
+    if count == 0:
+        new_log_sum = new_log_value
+        new_log_sum2 = 2 * new_log_value
+    else:
+        new_log_sum = logsumexp_two(previous_log_sum, new_log_value)
+        new_log_sum2 = logsumexp_two(previous_log_sum2, 2 * new_log_value)
+    new_count = count + 1
+
+    # Compute running mean and the second moment in the linear domain.
+    new_mean = math.exp(new_log_sum - math.log(new_count))
+    second_moment = math.exp(new_log_sum2 - math.log(new_count))
+
+    # Compute variance using either the population or unbiased estimator.
+    if unbiased:
+        if new_count > 1:
+            new_variance = new_count / (new_count - 1) * (second_moment - new_mean**2)
+        else:
+            new_variance = 0.0
+    else:
+        new_variance = second_moment - new_mean**2
+
+    return new_mean, new_variance, new_log_sum, new_log_sum2

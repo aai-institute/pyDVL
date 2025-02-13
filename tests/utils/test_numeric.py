@@ -8,6 +8,9 @@ import pytest
 
 from pydvl.utils.numeric import (
     complement,
+    log_running_moments,
+    logcomb,
+    logexp,
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
@@ -323,7 +326,129 @@ def test_running_moment_initialization(unbiased: bool):
     )
 
     np.testing.assert_allclose(got_mean, 1.5)
-    np.testing.assert_allclose(got_var, np.var([1.0, 2.0]))
+    np.testing.assert_allclose(got_var, np.var([1.0, 2.0], ddof=ddof))
+
+
+@pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
+def test_running_moments_log_initialization(unbiased):
+    """
+    Mimics the running moments test case for running_moments_log.
+
+    For the first update with a single value (1.0), since we are using the
+    unbiased (ddof=1) estimator, the variance is undefined (nan). On the second
+    update, with values 1.0 and 2.0, the unbiased variance should equal 0.5.
+    """
+
+    # First update: use x = 1.0 (so log(x) = log(1) = 0.0).
+    # When count==0, the previous log accumulators are not used.
+    mean, var, log_sum, log_sum2 = log_running_moments(
+        previous_log_sum=-np.inf,
+        previous_log_sum2=-np.inf,
+        count=0,
+        new_log_value=0.0,  # log(1.0)
+        unbiased=unbiased,
+    )
+
+    np.testing.assert_allclose(mean, 1.0)
+    assert var == 0.0
+
+    # Second update: use x = 2.0 (so log(x) = log(2)).
+    mean, var, log_sum, log_sum2 = log_running_moments(
+        previous_log_sum=log_sum,
+        previous_log_sum2=log_sum2,
+        count=1,
+        new_log_value=np.log(2.0),
+        unbiased=unbiased,
+    )
+    # For samples [1.0, 2.0], the mean is (1+2)/2 = 1.5.
+    np.testing.assert_allclose(mean, 1.5)
+    # The population variance would be 0.25, but the unbiased estimator (ddof=1)
+    # scales this by n/(n-1) = 2/1, so the expected variance is 0.5.
+    if unbiased:
+        np.testing.assert_allclose(var, 0.5)
+    else:
+        np.testing.assert_allclose(var, 0.25)
+
+
+@pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
+@pytest.mark.parametrize(
+    "weight, coeff, logweight, logcoeff, expected_mean_and_variance",
+    [
+        (
+            lambda n, k: 2 ** int(-(n - 1)),
+            lambda n, k: n * math.comb(n - 1, k),
+            lambda n, k: logexp(2, -(n - 1)),
+            lambda n, k: math.log(n) + logcomb(n - 1, k),
+            "compute",
+        ),
+        (
+            lambda n, k: 1 / (n * math.comb(n - 1, k)),
+            lambda n, k: n * math.comb(n - 1, k),
+            lambda n, k: -math.log(n) - logcomb(n - 1, k),
+            lambda n, k: math.log(n) + logcomb(n - 1, k),
+            (1.0, 0.0),
+        ),
+    ],
+    ids=["Large quotients", "Cancellations"],
+)
+@pytest.mark.parametrize(
+    "max_n, num_n_values, num_k_values",
+    [(20, 10, 10), (1000, 100, 10), (10000, 100, 20)],
+    ids=["Small n", "Medium n", "Large n"],
+)
+def test_log_running_moments(
+    weight: Callable[[int, int], float],
+    coeff: Callable[[int, int], float],
+    logweight: Callable[[int, int], float],
+    logcoeff: Callable[[int, int], float],
+    expected_mean_and_variance: Literal["compute"] | tuple[float, float],
+    max_n: int,
+    num_n_values: int,
+    num_k_values: int,
+    unbiased: bool,
+):
+    ddof = 1 if unbiased else 0
+    n_values = np.random.randint(1, max_n, size=num_n_values)
+
+    for n in n_values:
+        log_sum = -np.inf  # log(0)
+        log_sum2 = -np.inf
+        means = []
+        variances = []
+        for count, k in enumerate(
+            k_values := np.random.randint(0, n, size=num_k_values)
+        ):  # type: int, int
+            new_log_val = logweight(n, k) + logcoeff(n, k)
+            mean, var, log_sum, log_sum2 = log_running_moments(
+                log_sum, log_sum2, count, new_log_val, unbiased=unbiased
+            )
+            means.append(mean)
+            variances.append(var)
+
+        # Compare with moments using direct summation
+        def safe_coeff(n, k):
+            with np.errstate(over="raise"):
+                try:
+                    return coeff(n, k)
+                except FloatingPointError:
+                    raise OverflowError(f"Overflow in coeff({n=}, {k=})")
+
+        if expected_mean_and_variance == "compute":
+            try:
+                xs = np.array(
+                    [weight(n, k) * safe_coeff(n, k) for k in k_values],
+                    dtype=np.float64,
+                )
+                true_mean = np.mean(xs)
+                true_variance = np.var(xs, ddof=ddof)
+            except OverflowError as e:
+                pytest.skip(f"Overflow in direct computation: {str(e)} for {n=}")
+                continue
+        else:
+            true_mean, true_variance = expected_mean_and_variance
+
+        np.testing.assert_allclose(means[-1], true_mean, rtol=1e-10, atol=1e-10)
+        np.testing.assert_allclose(variances[-1], true_variance, rtol=1e-10, atol=1e-10)
 
 
 @pytest.mark.parametrize(
