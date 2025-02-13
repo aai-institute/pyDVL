@@ -13,7 +13,6 @@ from typing import (
     Optional,
     Sequence,
     TypeVar,
-    overload,
 )
 
 import numpy as np
@@ -294,21 +293,6 @@ def random_matrix_with_condition_number(
     return P
 
 
-@overload
-def running_moments(
-    previous_avg: float, previous_variance: float, count: int, new_value: float
-) -> tuple[float, float]: ...
-
-
-@overload
-def running_moments(
-    previous_avg: NDArray[np.float64],
-    previous_variance: NDArray[np.float64],
-    count: int,
-    new_value: NDArray[np.float64],
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
-
-
 def running_moments(
     previous_avg: float,
     previous_variance: float,
@@ -393,7 +377,7 @@ def logcomb(n: int, k: int) -> float:
     Returns:
         The log of the binomial coefficient
         """
-    return gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+    return float(gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1))
 
 
 def logexp(x: float, a: float) -> float:
