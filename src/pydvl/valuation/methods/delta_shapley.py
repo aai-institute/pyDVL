@@ -24,6 +24,8 @@ $$
 
 from __future__ import annotations
 
+import math
+
 from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers import (
@@ -80,5 +82,13 @@ class DeltaShapleyValuation(SemivalueValuation):
         super().__init__(utility, sampler, is_done, progress=progress)
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
-        assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"
+        # assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"
+        if not self.lower_bound <= k <= self.upper_bound:
+            return 0
         return weight / (self.upper_bound - self.lower_bound + 1)
+
+    def log_coefficient(self, n: int, k: int) -> float:
+        # assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"
+        if not self.lower_bound <= k <= self.upper_bound:
+            return -math.inf
+        return -math.log(self.upper_bound - self.lower_bound + 1)

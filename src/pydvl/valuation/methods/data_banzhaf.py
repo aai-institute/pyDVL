@@ -25,6 +25,8 @@ best point removal, but can show some
       6388–6421. PMLR, 2023.
 """
 
+import math
+
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
 __all__ = ["DataBanzhafValuation"]
@@ -37,3 +39,6 @@ class DataBanzhafValuation(SemivalueValuation):
 
     def coefficient(self, n: int, k: int, weight: float) -> float:
         return float(weight / 2 ** (n - 1))
+
+    def log_coefficient(self, n: int, k: int) -> float:
+        return -(n - 1) * math.log(2)

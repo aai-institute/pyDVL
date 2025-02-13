@@ -27,6 +27,8 @@ constructor.
 
 from __future__ import annotations
 
+import math
+
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import FiniteSequentialIndexIteration, LOOSampler
@@ -59,3 +61,6 @@ class LOOValuation(SemivalueValuation):
         this out here so that the final coefficient is either 1 if k == n-1 or 0
         otherwise."""
         return weight / max(1, n)
+
+    def log_coefficient(self, n: int, k: int) -> float:
+        return -math.log(max(1, n))

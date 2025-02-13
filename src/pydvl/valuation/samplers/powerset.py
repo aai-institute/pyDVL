@@ -356,7 +356,7 @@ class LOOSampler(PowersetSampler):
         return n if subset_len == n - 1 else 0
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        return -math.log(n) if subset_len == n - 1 else float("-inf")
+        return -math.log(n) if subset_len == n - 1 else -math.inf
 
     def make_strategy(
         self,

@@ -108,6 +108,11 @@ class SemivalueValuation(Valuation):
         """
         ...
 
+    @abstractmethod
+    def log_coefficient(self, n: int, k: int) -> float:
+        """Computes the coefficient in log space."""
+        ...
+
     def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)

@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from joblib import parallel_config
 
+from pydvl.utils import logcomb
 from pydvl.valuation.games import Game
 from pydvl.valuation.methods import (
     BetaShapleyValuation,
@@ -13,7 +14,7 @@ from pydvl.valuation.methods import (
     ShapleyValuation,
 )
 from pydvl.valuation.samplers import IndexSampler, LOOSampler, UniformSampler
-from pydvl.valuation.stopping import HistoryDeviation, MaxUpdates, MinUpdates
+from pydvl.valuation.stopping import MaxUpdates, MinUpdates
 
 from .. import check_values, recursive_make
 from ..samplers.test_sampler import deterministic_samplers, random_samplers
@@ -39,12 +40,8 @@ def test_coefficients(n, valuation_cls, kwargs):
     Note that we depart from the usual definitions by including the factor $1/n$
     in the shapley and beta coefficients.
     """
-    valuation = valuation_cls(
-        utility=None,
-        sampler=UniformSampler(),
-        is_done=MaxUpdates(50),
-        progress=False,
-        **kwargs,
+    valuation = valuation_cls(  # type: ignore
+        utility=None, sampler=None, is_done=None, progress=False, **kwargs
     )
 
     s = [
@@ -52,6 +49,36 @@ def test_coefficients(n, valuation_cls, kwargs):
         for j in range(1, n + 1)
     ]
     np.testing.assert_allclose(1, np.sum(s))
+
+
+@pytest.mark.parametrize("n", [10, 100])
+@pytest.mark.parametrize(
+    "valuation_cls, kwargs",
+    [
+        (BetaShapleyValuation, {"alpha": 1, "beta": 1}),
+        (BetaShapleyValuation, {"alpha": 1, "beta": 16}),
+        (BetaShapleyValuation, {"alpha": 4, "beta": 1}),
+        (DataBanzhafValuation, {}),
+        (ShapleyValuation, {}),
+    ],
+)
+def test_log_coefficients(n, valuation_cls, kwargs):
+    r"""Coefficients for semi-values must fulfill:
+
+    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
+
+    Note that we depart from the usual definitions by including the factor $1/n$
+    in the shapley and beta coefficients.
+    """
+    valuation = valuation_cls(  # type: ignore
+        utility=None, sampler=None, is_done=None, progress=False, **kwargs
+    )
+
+    log_terms = [
+        valuation.log_coefficient(n, j - 1) + logcomb(n - 1, j - 1)
+        for j in range(1, n + 1)
+    ]
+    np.testing.assert_allclose(1, np.exp(log_terms).sum(), atol=1e-10)
 
 
 @pytest.mark.flaky(reruns=1)
