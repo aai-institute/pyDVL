@@ -211,6 +211,6 @@ class ClasswiseShapleyValuation(Valuation):
 
             sigma = np.sum(self.result.values[indices_label_set])
             if sigma != 0:
-                self.result.scale(in_class_acc / sigma, indices=indices_label_set)
+                self.result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 
         return self.result
