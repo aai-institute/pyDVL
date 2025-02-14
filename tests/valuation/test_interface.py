@@ -53,7 +53,9 @@ def test_loo_valuation(train_data, utility, n_jobs):
 def test_shapley_valuation(train_data, utility, n_jobs):
     valuation = ShapleyValuation(
         utility,
-        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        sampler=PermutationSampler(
+            DeviationTruncation(burn_in_fraction=0.1, sigmas=1.0)
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )
