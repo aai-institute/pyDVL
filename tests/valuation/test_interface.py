@@ -53,7 +53,9 @@ def test_loo_valuation(train_data, utility, n_jobs):
 def test_shapley_valuation(train_data, utility, n_jobs):
     valuation = ShapleyValuation(
         utility,
-        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        sampler=PermutationSampler(
+            DeviationTruncation(sigmas=1.0, burn_in_fraction=0.1)
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )
@@ -151,7 +153,9 @@ def test_data_utility_learning(train_data, utility, n_jobs):
     learned_u = DataUtilityLearning(utility, 10, LinearRegression())
     valuation = ShapleyValuation(
         learned_u,
-        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        sampler=PermutationSampler(
+            DeviationTruncation(burn_in_fraction=0.1, sigmas=1.0)
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )
