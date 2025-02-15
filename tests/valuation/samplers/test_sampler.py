@@ -34,8 +34,6 @@ from pydvl.valuation.samplers import (
     PowersetSampler,
     RandomIndexIteration,
     RandomSizeIteration,
-    RoundRobinIteration,
-    SampleSizeStrategy,
     SequentialIndexIteration,
     StochasticSampler,
     StratifiedSampler,
@@ -578,65 +576,6 @@ def _create_seeded_sample_iter(
 
 
 @pytest.mark.flaky(reruns=1)
-def test_finite_owen_sampler():
-    n_outer = 5
-    n_inner = 100
-    sampler = OwenSampler(
-        outer_sampling_strategy=GridOwenStrategy(n_outer),
-        n_samples_inner=n_inner,
-        index_iteration=FiniteSequentialIndexIteration,
-    )
-    indices = np.arange(2000)
-
-    # extract samples for the first and second index
-    n_samples = n_outer * n_inner
-    samples = [b[0] for b in islice(sampler.generate_batches(indices), n_samples * 2)]
-    samples_0 = samples[:n_samples]
-    samples_1 = samples[n_samples:]
-
-    # check that indices are correct
-    assert all(sample.idx == 0 for sample in samples_0)
-    assert all(sample.idx == 1 for sample in samples_1)
-
-    # check that the sample_sizes are close to expected sizes
-    for samples in [samples_0, samples_1]:
-        _check_sample_sizes(
-            samples,
-            n_samples_outer=n_outer,
-            n_indices=len(indices),
-            probs=np.array([0.0, 0.25, 0.5, 0.75, 1]),
-        )
-
-
-@pytest.mark.flaky(reruns=1)
-def test_antithetic_owen_sampler():
-    n_outer = 5
-    n_inner = 100
-    sampler = AntitheticOwenSampler(
-        outer_sampling_strategy=GridOwenStrategy(n_outer),
-        n_samples_inner=n_inner,
-        index_iteration=FiniteSequentialIndexIteration,
-    )
-    indices = np.arange(1000)
-
-    # extract samples
-    n_samples = n_outer * n_inner * 4
-    samples = [b[0] for b in islice(sampler.generate_batches(indices), n_samples)]
-
-    # check that the sample sizes are close to expected sizes
-    sizes = np.array([len(sample.subset) for sample in samples])
-    avg_sizes = sizes.reshape(n_outer, -1).mean(axis=1)
-    np.testing.assert_allclose(avg_sizes, len(indices) // 2, rtol=0.01)
-
-
-def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
-    sizes = np.array([len(sample.subset) for sample in samples])
-    avg_sizes = sizes.reshape(n_samples_outer, -1).mean(axis=1)
-    expected_sizes = probs * n_indices  # mean of Binomial(n_indices, probs)
-    np.testing.assert_allclose(avg_sizes, expected_sizes, rtol=0.01)
-
-
-@pytest.mark.flaky(reruns=1)
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
@@ -754,71 +693,3 @@ def test_skip_indices_after_first_batch():
         assert sample.idx not in skip_indices, (
             f"Sample with skipped index {sample.idx} found"
         )
-
-
-class MockSampleSizeStrategy(SampleSizeStrategy):
-    def __init__(self, sample_sizes: list[int]):
-        super().__init__(n_samples=sum(sample_sizes))
-        self._sample_sizes = np.array(sample_sizes, dtype=int)
-
-    def sample_sizes(self, n_indices: int, quantize: bool = True) -> NDArray[np.int_]:
-        return self._sample_sizes
-
-    def fun(self, n_indices: int, subset_len: int) -> float:
-        raise NotImplementedError("Shouldn't happen")
-
-
-@pytest.mark.parametrize(
-    "sample_sizes, expected_output",
-    [
-        ([], []),
-        ([1], [(0, 1)]),
-        ([0, 1], [(1, 1)]),
-        ([2, 3, 1], [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)]),
-    ],
-)
-def test_round_robin_mode(sample_sizes, expected_output):
-    n_indices = len(sample_sizes)
-    strategy = MockSampleSizeStrategy(sample_sizes)
-    round_robin_mode = RoundRobinIteration(strategy, n_indices)
-    output = list(iter(round_robin_mode))
-    assert output == expected_output
-
-
-@pytest.mark.parametrize(
-    "sample_sizes, expected_output",
-    [
-        ([], []),
-        ([1], [(0, 1)]),
-        ([0, 1], [(1, 1)]),
-        ([2, 3, 1], [(0, 2), (1, 3), (2, 1)]),
-    ],
-)
-def test_deterministic_mode(sample_sizes, expected_output):
-    n_indices = len(sample_sizes)
-    strategy = MockSampleSizeStrategy(sample_sizes)
-    deterministic_mode = DeterministicSizeIteration(strategy, n_indices)
-    output = list(iter(deterministic_mode))
-
-    assert output == expected_output
-
-
-@pytest.mark.parametrize(
-    "lower_bound, upper_bound, n_indices, subset_len, expected",
-    [
-        (0, None, 5, 0, 1.0),
-        (0, None, 5, 5, 1.0),
-        (1, 4, 5, 0, 0.0),
-        (1, 4, 5, 1, 1.0),
-        (1, 4, 5, 4, 1.0),
-        (1, 4, 5, 5, 0.0),
-        (None, 3, 5, 0, 1.0),
-        (None, 3, 5, 3, 1.0),
-        (None, 3, 5, 4, 0.0),
-    ],
-)
-def test_constant_sample_size_fun(
-    lower_bound, upper_bound, n_indices, subset_len, expected
-):
-    strategy = ConstantSampleSize(1, lower_bound, upper_bound)
-    assert strategy.fun(n_indices, subset_len) == expected

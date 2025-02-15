@@ -264,18 +264,6 @@ class SampleSizeStrategy(ABC):
         int_values[fractional_parts_indices] += 1
         return int_values
 
-    @lru_cache
-    def total_samples(self, n_indices: int) -> int:
-        """The total number of samples to generate.
-
-        Args:
-            n_indices: Size of the index set to sample from.
-
-        Returns:
-            The total number of samples to generate.
-        """
-        return np.sum(self.sample_sizes(n_indices))
-
 
 class ConstantSampleSize(SampleSizeStrategy):
     r"""Use a constant number of samples for each set size between two (optional)
@@ -525,9 +513,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         if index_iteration_length is None:
             index_iteration_length = 1
 
-        return index_iteration_length * self.sample_sizes_strategy.total_samples(
-            n_indices
-        )
+        return index_iteration_length * self.sample_sizes_strategy.n_samples
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self.total_samples(len(indices))
@@ -559,7 +545,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # This is useful for the stochastic iteration, where we have frequencies
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
         funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        funs /= self.sample_sizes_strategy.total_samples(n)
+        funs /= np.sum(funs)
 
         return float(
             math.comb(n, subset_len) / index_iteration_length / funs[subset_len]
@@ -575,7 +561,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         index_iteration_length = max(1, index_iteration_length)
 
         funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        total = self.sample_sizes_strategy.total_samples(n)
+        total = np.sum(funs)
 
         return (
             -logcomb(n, subset_len)
