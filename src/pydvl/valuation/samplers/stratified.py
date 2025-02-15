@@ -244,22 +244,25 @@ class SampleSizeStrategy(ABC):
         """
 
         # m_k = m * f(k) / sum_j f(j)
-        s = sum(self.fun(n_indices, k) for k in range(n_indices + 1))
-        values = [
-            self.n_samples * self.fun(n_indices, k) / s for k in range(n_indices + 1)
-        ]
+        values = np.empty(n_indices + 1, dtype=float)
+        s = 0.0
+
+        for k in range(n_indices + 1):
+            val = self.fun(n_indices, k)
+            values[k] = val
+            s += val
+
+        values *= self.n_samples / s
         if not quantize:
-            return np.array(values, dtype=float)
+            return values
 
         # Round down and distribute remainder by adjusting the largest fractional parts
-        int_values = [int(m) for m in values]
-        remainder = self.n_samples - sum(int_values)
-        fractional_parts = [(v - int(v), i) for i, v in enumerate(values)]
-        fractional_parts.sort(reverse=True, key=lambda x: x[0])
-        for i in range(remainder):
-            int_values[fractional_parts[i][1]] += 1
-
-        return np.array(int_values, dtype=int)
+        int_values = np.floor(values).astype(int)
+        remainder = self.n_samples - np.sum(int_values)
+        fractional_parts = values - int_values
+        fractional_parts_indices = np.argsort(-fractional_parts)[:remainder]
+        int_values[fractional_parts_indices] += 1
+        return int_values
 
     @lru_cache
     def total_samples(self, n_indices: int) -> int:
@@ -271,7 +274,7 @@ class SampleSizeStrategy(ABC):
         Returns:
             The total number of samples to generate.
         """
-        return sum(self.sample_sizes(n_indices))
+        return np.sum(self.sample_sizes(n_indices))
 
 
 class ConstantSampleSize(SampleSizeStrategy):
