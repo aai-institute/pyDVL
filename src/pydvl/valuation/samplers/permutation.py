@@ -178,7 +178,7 @@ class PermutationEvaluationStrategy(
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation):  # type: int, int
+            for i, idx in enumerate(permutation):  # type: int, np.int_
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)

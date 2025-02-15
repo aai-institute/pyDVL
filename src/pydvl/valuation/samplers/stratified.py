@@ -461,8 +461,10 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
     Args:
         sample_sizes: An object which returns the number of samples to
-            take for a given set size. The sampler will generate exactly this many, and
-            no more (this is a finite sampler).
+            take for a given set size. If `index_iteration` below is finite, then the
+            sampler will generate exactly as many samples of each size as returned by
+            this object. If the iteration is infinite, then the `sample_sizes` will be
+            used as probabilities of sampling.
         sample_sizes_iteration: How to loop over sample sizes. The main modes are:
             * deterministically. For every k generate m_k samples before moving to k+1.
             * stochastically. Sample sizes k according to the distribution given by

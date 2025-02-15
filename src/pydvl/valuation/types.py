@@ -32,7 +32,11 @@ NullaryPredicate: TypeAlias = Callable[[], bool]
 
 @dataclass(frozen=True)
 class ValueUpdate:
-    idx: int | IndexT | None
+    """ValueUpdates are emitted by evaluation strategies.
+    Typically, a value update is the product of a marginal utility, the sampler weight
+    and the valuation's coefficient."""
+
+    idx: IndexT | None
     update: float
 
 
@@ -41,7 +45,7 @@ ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)
 
 @dataclass(frozen=True)
 class Sample:
-    idx: int | IndexT | None
+    idx: IndexT | None
     """Index of current sample"""
 
     subset: NDArray[IndexT]
@@ -80,7 +84,7 @@ class Sample:
         new_subset = np.array(self.subset.tolist() + [self.idx])
         return replace(self, subset=new_subset)
 
-    def with_idx(self, idx: int) -> Self:
+    def with_idx(self, idx: IndexT) -> Self:
         """Return a copy of sample with idx changed.
 
         Returns the original sample if idx is the same.

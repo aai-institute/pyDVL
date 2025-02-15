@@ -310,11 +310,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             self._sort_positions = self._sort_positions[::-1]
         self._sort_order = not reverse
 
-    def positions(self, data_indices: IndexSetT) -> IndexSetT:
+    def positions(self, data_indices: IndexSetT | list[IndexT]) -> IndexSetT:
         """Return the location (indices) within the `ValuationResult` for the given
         data indices.
 
-        This operation is the inverse of indexing the
+        Sorting is taken into account. This operation is the inverse of indexing the
         [indices][pydvl.valuation.result.ValuationResult.indices] property:
 
         ```python
@@ -423,7 +423,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 key += len(self)
             if key < 0 or int(key) >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            idx = self._sort_positions[key]
+            idx = self._sort_positions[key].item()
             return ValueItem(
                 self._indices[idx],
                 self._names[idx],
@@ -639,6 +639,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def update(self, data_idx: int | IndexT, new_value: float) -> ValuationResult:
         """Updates the result in place with a new value, using running mean
         and variance.
+
+        The variance computation uses Bessel's correction for sample estimates of the
+        variance.
 
         Args:
             data_idx: Data index of the value to update.

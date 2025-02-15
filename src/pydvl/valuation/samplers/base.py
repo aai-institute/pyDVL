@@ -298,8 +298,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         ```
 
     Args:
-        sampler: Required to set up some strategies. Be careful not to store it in the
-            object when subclassing!
+        sampler: Required to set up some strategies.
         utility: Required to set up some strategies and to process the samples. Since
             this contains the training data, it is expensive to pickle and send to
             workers.
