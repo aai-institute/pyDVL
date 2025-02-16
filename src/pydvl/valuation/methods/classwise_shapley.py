@@ -149,9 +149,11 @@ class ClasswiseShapleyValuation(Valuation):
         self.is_done.reset()
         self.utility.training_data = data
 
-        sample_generator = self.sampler.from_data(data)
         strategy = self.sampler.make_strategy(self.utility)
+        updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
+
+        sample_generator = self.sampler.from_data(data)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
@@ -162,7 +164,7 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
+                        self.result = updater(evaluation)
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()

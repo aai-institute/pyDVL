@@ -390,7 +390,7 @@ def logexp(x: float, a: float) -> float:
     Returns
         a * log(x)
     """
-    return a * np.log(x)
+    return float(a * np.log(x))
 
 
 def logsumexp_two(log_a: float, log_b: float) -> float:
@@ -415,7 +415,7 @@ def logsumexp_two(log_a: float, log_b: float) -> float:
     if log_b == -np.inf:
         return log_a
     m = max(log_a, log_b)
-    return m + np.log(np.exp(log_a - m) + np.exp(log_b - m))
+    return float(m + np.log(np.exp(log_a - m) + np.exp(log_b - m)))
 
 
 def log_running_moments(

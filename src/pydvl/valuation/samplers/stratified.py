@@ -144,7 +144,6 @@ instance of
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Generator, Type
@@ -257,7 +256,7 @@ class SampleSizeStrategy(ABC):
             return values
 
         # Round down and distribute remainder by adjusting the largest fractional parts
-        int_values = np.floor(values).astype(int)
+        int_values: NDArray[np.int_] = np.floor(values).astype(np.int_)
         remainder = self.n_samples - np.sum(int_values)
         fractional_parts = values - int_values
         fractional_parts_indices = np.argsort(-fractional_parts)[:remainder]
@@ -490,6 +489,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)
             try:
+                # TODO: move this out of the loop since n_indices is constant
                 sample_sizes = self.sample_sizes_iteration(  # type: ignore
                     self.sample_sizes_strategy,
                     n_indices,
@@ -518,7 +518,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self.total_samples(len(indices))
 
-    def weight(self, n: int, subset_len: int) -> float:
+    def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
         probability of choosing size k, which is the number of samples for that size
         divided by the total number of samples for all sizes:
@@ -527,9 +527,15 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
         where $m_k$ is the number of samples of size $k$ and $m$ is the total number
         of samples.
-        """
-        n = self._index_iterator_cls.complement_size(n)
 
+        Args:
+            n: Size of the index set.
+            subset_len: Size of the subset.
+        Returns:
+            The logarithm of the probability of having sampled a set of size `subset_len`.
+        """
+
+        n = self._index_iterator_cls.complement_size(n)
         # Depending on whether we sample from complements or not, the total number of
         # samples passed to the heuristic has a different interpretation.
         index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
@@ -545,27 +551,11 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # This is useful for the stochastic iteration, where we have frequencies
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
         funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        funs /= np.sum(funs)
-
-        return float(
-            math.comb(n, subset_len) / index_iteration_length / funs[subset_len]
-        )
-
-    def log_weight(self, n: int, subset_len: int) -> float:
-        n = self._index_iterator_cls.complement_size(n)
-        # Depending on whether we sample from complements or not, the total number of
-        # samples passed to the heuristic has a different interpretation.
-        index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
-        if index_iteration_length is None:
-            index_iteration_length = 1
-        index_iteration_length = max(1, index_iteration_length)
-
-        funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
         total = np.sum(funs)
 
-        return (
+        return float(
             -logcomb(n, subset_len)
-            + math.log(index_iteration_length)
-            + math.log(funs[subset_len])
-            - math.log(total)
+            + np.log(index_iteration_length)
+            + np.log(funs[subset_len])
+            - np.log(total)
         )

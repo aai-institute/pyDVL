@@ -620,23 +620,17 @@ def test_sampler_weights(
             subset_len_probs[len(sample.subset)] += 1
     subset_len_probs /= subset_len_probs.sum()
 
-    expected_subset_len_probs = np.zeros(max_size)
     expected_log_subset_len_probs = np.full(max_size, -np.inf)
     for k in range(max_size):
         try:
-            # Recall that sampler.weight = inverse probability of sampling
+            # log_weight = log probability of sampling
             # So: no. of sets of size k in the powerset, times. prob of sampling size k
-            expected_subset_len_probs[k] = (
-                math.comb(complement_size, k) / sampler.weight(n, k) * fudge
-            )
-            # log_weight = log probability of sampling (NOT inverse)
             expected_log_subset_len_probs[k] = (
                 logcomb(complement_size, k) + sampler.log_weight(n, k) + math.log(fudge)
             )
         except ValueError:  # out of bounds in stratified samplers
             pass
 
-    np.testing.assert_allclose(subset_len_probs, expected_subset_len_probs, atol=0.05)
     np.testing.assert_allclose(
         subset_len_probs, np.exp(expected_log_subset_len_probs), atol=0.05
     )

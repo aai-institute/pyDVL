@@ -32,43 +32,15 @@ from ..utils import timed
         (ShapleyValuation, {}),
     ],
 )
-def test_coefficients(n, valuation_cls, kwargs):
-    r"""Coefficients for semi-values must fulfill:
-
-    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
-
-    Note that we depart from the usual definitions by including the factor $1/n$
-    in the shapley and beta coefficients.
-    """
-    valuation = valuation_cls(  # type: ignore
-        utility=None, sampler=None, is_done=None, progress=False, **kwargs
-    )
-
-    s = [
-        valuation.coefficient(n, j - 1, math.comb(n - 1, j - 1))
-        for j in range(1, n + 1)
-    ]
-    np.testing.assert_allclose(1, np.sum(s))
-
-
-@pytest.mark.parametrize("n", [10, 100])
-@pytest.mark.parametrize(
-    "valuation_cls, kwargs",
-    [
-        (BetaShapleyValuation, {"alpha": 1, "beta": 1}),
-        (BetaShapleyValuation, {"alpha": 1, "beta": 16}),
-        (BetaShapleyValuation, {"alpha": 4, "beta": 1}),
-        (DataBanzhafValuation, {}),
-        (ShapleyValuation, {}),
-    ],
-)
 def test_log_coefficients(n, valuation_cls, kwargs):
     r"""Coefficients for semi-values must fulfill:
 
-    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
+    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1. $$
 
     Note that we depart from the usual definitions by including the factor $1/n$
-    in the shapley and beta coefficients.
+    in the shapley and beta coefficients. We also operate with the natural
+    logarithms of coefficients and sampler weights to enable larger values and
+    avoid numerical instabilities.
     """
     valuation = valuation_cls(  # type: ignore
         utility=None, sampler=None, is_done=None, progress=False, **kwargs

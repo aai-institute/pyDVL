@@ -35,7 +35,6 @@ see [semivalues][pydvl.valuation.methods.semivalue] for reference.
 from __future__ import annotations
 
 import logging
-import math
 from abc import ABC, abstractmethod
 from typing import Callable, Generator, Generic, Type, TypeVar
 
@@ -48,7 +47,10 @@ from pydvl.utils.numeric import (
     random_subset,
 )
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
+from pydvl.valuation.samplers.base import (
+    EvaluationStrategy,
+    IndexSampler,
+)
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -269,9 +271,9 @@ class PowersetSampler(IndexSampler, ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        log_coefficient: Callable[[int, int], float] | None = None,
     ) -> PowersetEvaluationStrategy:
-        return PowersetEvaluationStrategy(self, utility, coefficient)
+        return PowersetEvaluationStrategy(self, utility, log_coefficient)
 
     @abstractmethod
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
@@ -285,16 +287,12 @@ class PowersetSampler(IndexSampler, ABC):
             indices:"""
         ...
 
-    def weight(self, n: int, subset_len: int) -> float:
+    def log_weight(self, n: int, subset_len: int) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 1/2^{n-1} over each subset."""
-        n = self._index_iterator_cls.complement_size(n)
-        return 2**n  # type: ignore
-
-    def log_weight(self, n: int, subset_len: int) -> float:
         m = self._index_iterator_cls.complement_size(n)
-        return -m * math.log(2)
+        return float(-m * np.log(2))
 
 
 PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
@@ -310,8 +308,12 @@ class PowersetEvaluationStrategy(
         for sample in batch:
             u_i = self.utility(sample.with_idx_in_subset())
             u = self.utility(sample)
-            marginal = (u_i - u) * self.correction(self.n_indices, len(sample.subset))
-            updates.append(ValueUpdate(sample.idx, marginal))
+            marginal = u_i - u
+            sign = np.sign(marginal)
+            log_marginal = np.log(marginal * sign) + self.log_correction(
+                self.n_indices, len(sample.subset)
+            )
+            updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
         return updates
@@ -350,20 +352,17 @@ class LOOSampler(PowersetSampler):
         for idx in self.index_iterator(indices):
             yield Sample(idx, complement(indices, [idx]))
 
-    def weight(self, n: int, subset_len: int) -> float:
+    def log_weight(self, n: int, subset_len: int) -> float:
         """This sampler returns only sets of size n-1. There are n such sets, so the
         probability of drawing one is 1/n, or 0 if subset_len != n-1."""
-        return n if subset_len == n - 1 else 0
-
-    def log_weight(self, n: int, subset_len: int) -> float:
-        return -math.log(n) if subset_len == n - 1 else -math.inf
+        return float(-np.log(n if subset_len == n - 1 else 0))
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        log_coefficient: Callable[[int, int], float] | None = None,
     ) -> PowersetEvaluationStrategy[LOOSampler]:
-        return LOOEvaluationStrategy(self, utility, coefficient)
+        return LOOEvaluationStrategy(self, utility, log_coefficient)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self._index_iterator_cls.length(len(indices))
@@ -376,7 +375,7 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
         self,
         sampler: LOOSampler,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        coefficient: Callable[[int, int], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         assert utility.training_data is not None
@@ -388,10 +387,12 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
         updates = []
         for sample in batch:
             assert sample.idx is not None
-            u = self.utility(sample)
-            marginal = self.total_utility - u
-            marginal *= self.correction(self.n_indices, len(sample.subset))
-            updates.append(ValueUpdate(sample.idx, marginal))
+            marginal = self.total_utility - self.utility(sample)
+            sign = np.sign(marginal)
+            log_marginal = np.log(marginal * sign) + self.log_correction(
+                self.n_indices, len(sample.subset)
+            )
+            updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
         return updates

@@ -77,7 +77,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
 )
 def test_iter(names, ranks_asc, dummy_values):
     for rank, it in enumerate(dummy_values):
-        assert it.index == ranks_asc[rank]
+        assert it.idx == ranks_asc[rank]
 
     for rank, it in enumerate(dummy_values):
         assert it.name == names[ranks_asc[rank]]
@@ -113,14 +113,14 @@ def test_indexing(ranks_asc, dummy_values):
             dummy_values[1]  # noqa
         dummy_values[:2]  # noqa
     else:
-        assert ranks_asc[:] == [it.index for it in dummy_values[:]]
-        assert ranks_asc[0] == dummy_values[0].index
-        assert [ranks_asc[0]] == [it.index for it in dummy_values[[0]]]
-        assert ranks_asc[:2] == [it.index for it in dummy_values[:2]]
-        assert ranks_asc[:2] == [it.index for it in dummy_values[[0, 1]]]
-        assert ranks_asc[:-2] == [it.index for it in dummy_values[:-2]]
-        assert ranks_asc[-2:] == [it.index for it in dummy_values[-2:]]
-        assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
+        assert ranks_asc[:] == [it.idx for it in dummy_values[:]]
+        assert ranks_asc[0] == dummy_values[0].idx
+        assert [ranks_asc[0]] == [it.idx for it in dummy_values[[0]]]
+        assert ranks_asc[:2] == [it.idx for it in dummy_values[:2]]
+        assert ranks_asc[:2] == [it.idx for it in dummy_values[[0, 1]]]
+        assert ranks_asc[:-2] == [it.idx for it in dummy_values[:-2]]
+        assert ranks_asc[-2:] == [it.idx for it in dummy_values[-2:]]
+        assert ranks_asc[-2:] == [it.idx for it in dummy_values[[-2, -1]]]
 
 
 def test_get_idx():

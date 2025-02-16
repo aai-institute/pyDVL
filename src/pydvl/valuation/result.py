@@ -87,19 +87,18 @@ class ValueItem:
     order. Comparisons take only the `value` into account.
 
     !!! todo
-        Maybe have a mode of comparing similar to `np.isclose`, or taking the
-        `variance` into account.
+        Maybe have a mode of comparison taking the `variance` into account.
 
     Attributes:
-        index: Index of the sample with this value in the original
+        idx: Index of the sample with this value in the original
             [Dataset][pydvl.utils.dataset.Dataset]
-        name: Name of the sample if it was provided. Otherwise, `str(index)`
+        name: Name of the sample if it was provided. Otherwise, `str(idx)`
         value: The value
         variance: Variance of the marginals from which the value was computed.
         count: Number of updates for this value
     """
 
-    index: IndexT
+    idx: IndexT
     name: NameT
     value: float
     variance: float | None
@@ -113,10 +112,10 @@ class ValueItem:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ValueItem):
             raise TypeError(f"Cannot compare ValueItem with {type(other)}")
-        return self.value == other.value
+        return self.idx == other.idx and bool(np.isclose(self.value, other.value))
 
     def __index__(self) -> IndexT:
-        return self.index
+        return self.idx
 
     @property
     def stderr(self) -> float | None:
@@ -458,7 +457,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             if key < 0 or int(key) >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
             pos = self._sort_positions[key]
-            self._indices[pos] = value.index
+            self._indices[pos] = value.idx
             self._names[pos] = value.name
             self._values[pos] = value.value
             self._variances[pos] = value.variance

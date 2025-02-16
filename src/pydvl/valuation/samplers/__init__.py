@@ -46,7 +46,7 @@ usage pattern inside a valuation method is the following (see below for info on 
 
         ...
 
-        strategy = self.sampler.make_strategy(self.utility, self.coefficient)
+        strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
         processor = delayed(strategy.process)
         updater = self.sampler.result_updater(self.result)
 

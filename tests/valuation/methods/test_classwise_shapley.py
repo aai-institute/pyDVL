@@ -21,7 +21,7 @@ from pydvl.valuation.utility import ClasswiseModelUtility
 
 from .. import check_values
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="function")
@@ -131,7 +131,7 @@ def test_dataset_manual_derivation(train_dataset_manual_derivation) -> Dataset:
     return Dataset(x_test, y_test)
 
 
-@pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
+@pytest.mark.parametrize("n_samples", [500], ids=lambda x: f"n_samples={x}")
 @pytest.mark.parametrize(
     "exact_solution",
     [

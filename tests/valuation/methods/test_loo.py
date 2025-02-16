@@ -39,22 +39,11 @@ def test_loo(dummy_utility, dummy_train_data, analytic_loo, n_jobs):
 
 
 @pytest.mark.parametrize("n", [1, 100])
-def test_loo_coefficients_cancel(n):
-    """Check that the coefficients sum to 1"""
-    valuation = LOOValuation(utility=None, progress=False)  # type: ignore
-    sampler = valuation.sampler
-    corrections = [
-        valuation.coefficient(n, k, sampler.weight(n, k)) for k in range(n + 1)
-    ]
-    np.testing.assert_allclose(sum(corrections), 1.0, atol=1e-10)
-
-
-@pytest.mark.parametrize("n", [1, 100])
 def test_loo_log_coefficients_cancel(n):
     """Check that the coefficients sum to 1"""
     valuation = LOOValuation(utility=None, progress=False)  # type: ignore
     sampler = valuation.sampler
     corrections = [
-        valuation.log_coefficient(n, k) + sampler.log_weight(n, k) for k in range(n + 1)
+        valuation.log_coefficient(n, k) - sampler.log_weight(n, k) for k in range(n + 1)
     ]
     np.testing.assert_allclose(np.exp(corrections).sum(), 1.0, atol=1e-10)

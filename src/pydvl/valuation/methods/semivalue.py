@@ -90,27 +90,21 @@ class SemivalueValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
 
     @abstractmethod
-    def coefficient(self, n: int, k: int, weight: float) -> float:
-        """Returns the function computing the final coefficient to be used in the
-        semi-value valuation.
+    def log_coefficient(self, n: int, k: int) -> float:
+        """The semi-value coefficient in log-space/
 
         The semi-value coefficient is a function of the number of elements in the set,
         and the size of the subset for which the coefficient is being computed.
-        Coefficients can be very large or very small, so that simply multiplying them
-        with the rest of the factors in a semi-value computation can lead to overflow or
-        underflow. To avoid this, we pass the other factors to this method, and delegate
-        the choice of whether to multiply or divide to the implementation.
+        Because both coefficients and sampler weights can be very large or very small,
+        we perform all computations in log-space to avoid numerical issues.
 
         Args:
             n: Total number of elements in the set.
             k: Size of the subset for which the coefficient is being computed
-            weight: The weight coming from the samplers
-        """
-        ...
 
-    @abstractmethod
-    def log_coefficient(self, n: int, k: int) -> float:
-        """Computes the coefficient in log space."""
+        Returns:
+            The natural logarithm of the semi-value coefficient.
+        """
         ...
 
     def fit(self, data: Dataset) -> Self:
@@ -125,9 +119,9 @@ class SemivalueValuation(Valuation):
         self.is_done.reset()
         self.utility.training_data = data
 
-        strategy = self.sampler.make_strategy(self.utility, self.coefficient)
-        processor = delayed(strategy.process)
+        strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
         updater = self.sampler.result_updater(self.result)
+        processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
