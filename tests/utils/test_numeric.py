@@ -332,7 +332,7 @@ def test_running_moment_initialization(unbiased: bool):
 @pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
 def test_running_moments_log_initialization(unbiased):
     """
-    Mimics the running moments test case for running_moments_log.
+    Mimics the running moments test case for log_running_moments.
 
     For the first update with a single value (1.0), since we are using the
     unbiased (ddof=1) estimator, the variance is undefined (nan). On the second
@@ -341,11 +341,13 @@ def test_running_moments_log_initialization(unbiased):
 
     # First update: use x = 1.0 (so log(x) = log(1) = 0.0).
     # When count==0, the previous log accumulators are not used.
-    mean, var, log_sum, log_sum2 = log_running_moments(
-        previous_log_sum=-np.inf,
+    mean, var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
+        previous_log_sum_pos=-np.inf,
+        previous_log_sum_neg=-np.inf,
         previous_log_sum2=-np.inf,
         count=0,
         new_log_value=0.0,  # log(1.0)
+        new_sign=0,
         unbiased=unbiased,
     )
 
@@ -353,11 +355,13 @@ def test_running_moments_log_initialization(unbiased):
     assert var == 0.0
 
     # Second update: use x = 2.0 (so log(x) = log(2)).
-    mean, var, log_sum, log_sum2 = log_running_moments(
-        previous_log_sum=log_sum,
+    mean, var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
+        previous_log_sum_pos=log_sum_pos,
+        previous_log_sum_neg=log_sum_neg,
         previous_log_sum2=log_sum2,
         count=1,
         new_log_value=np.log(2.0),
+        new_sign=1,
         unbiased=unbiased,
     )
     # For samples [1.0, 2.0], the mean is (1+2)/2 = 1.5.
@@ -368,6 +372,82 @@ def test_running_moments_log_initialization(unbiased):
         np.testing.assert_allclose(var, 0.5)
     else:
         np.testing.assert_allclose(var, 0.25)
+
+
+@pytest.mark.parametrize(
+    "prev_log_sum_pos, prev_log_sum_neg, prev_log_sum2, count, new_log_value, new_sign, unbiased, expected_mean, expected_variance",
+    [
+        (-np.inf, -np.inf, -np.inf, 0, np.log(2.0), 1, True, 2.0, 0.0),
+        (-np.inf, -np.inf, -np.inf, 0, np.log(3.0), -1, True, -3.0, 0.0),
+        (-np.inf, -np.inf, -np.inf, 0, np.log(0.0), 0, True, 0.0, 0.0),
+        (np.log(2.0), -np.inf, np.log(4.0), 1, np.log(3.0), 1, True, 2.5, 0.5),
+        (np.log(2.0), -np.inf, np.log(4.0), 1, np.log(1.0), -1, True, 0.5, 4.5),
+        (
+            np.log(2.0),
+            np.log(1.0),
+            np.log(5.0),
+            2,
+            np.log(3.0),
+            1,
+            True,
+            4 / 3,
+            39 / 9,
+        ),
+        (
+            np.log(2.0),
+            np.log(1.0),
+            np.log(5.0),
+            2,
+            np.log(3.0),
+            1,
+            False,
+            4 / 3,
+            26 / 9,
+        ),
+    ],
+    ids=[
+        "First update with a positive value",
+        "First update with a negative value",
+        "First update with a zero",
+        "Second update, adding a positive number",
+        "Second update, adding a negative number",
+        "Unbiased variance correction (with at least two elements)",
+        "Without unbiased correction (population variance)",
+    ],
+)
+def test_log_running_moments(
+    prev_log_sum_pos,
+    prev_log_sum_neg,
+    prev_log_sum2,
+    count,
+    new_log_value,
+    new_sign,
+    unbiased,
+    expected_mean,
+    expected_variance,
+):
+    mean, variance, _, _, _ = log_running_moments(
+        prev_log_sum_pos,
+        prev_log_sum_neg,
+        prev_log_sum2,
+        count,
+        new_log_value,
+        new_sign,
+        unbiased,
+    )
+
+    np.testing.assert_allclose(
+        mean,
+        expected_mean,
+        atol=1e-8,
+        err_msg=f"Expected mean {expected_mean}, got {mean}",
+    )
+    np.testing.assert_allclose(
+        variance,
+        expected_variance,
+        atol=1e-8,
+        err_msg=f"Expected variance {expected_variance}, got {variance}",
+    )
 
 
 @pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
@@ -396,7 +476,7 @@ def test_running_moments_log_initialization(unbiased):
     [(20, 10, 10), (1000, 100, 10), (10000, 100, 20)],
     ids=["Small n", "Medium n", "Large n"],
 )
-def test_log_running_moments(
+def test_log_running_moments_comb(
     weight: Callable[[int, int], float],
     coeff: Callable[[int, int], float],
     logweight: Callable[[int, int], float],
@@ -411,7 +491,8 @@ def test_log_running_moments(
     n_values = np.random.randint(1, max_n, size=num_n_values)
 
     for n in n_values:
-        log_sum = -np.inf  # log(0)
+        log_sum_pos = -np.inf  # log(0)
+        log_sum_neg = -np.inf  # log(0)
         log_sum2 = -np.inf
         means = []
         variances = []
@@ -419,8 +500,14 @@ def test_log_running_moments(
             k_values := np.random.randint(0, n, size=num_k_values)
         ):  # type: int, int
             new_log_val = logweight(n, k) + logcoeff(n, k)
-            mean, var, log_sum, log_sum2 = log_running_moments(
-                log_sum, log_sum2, count, new_log_val, unbiased=unbiased
+            mean, var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
+                log_sum_pos,
+                log_sum_neg,
+                log_sum2,
+                count,
+                new_log_val,
+                new_sign=1,
+                unbiased=unbiased,
             )
             means.append(mean)
             variances.append(var)

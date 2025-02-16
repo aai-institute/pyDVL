@@ -418,57 +418,83 @@ def logsumexp_two(log_a: float, log_b: float) -> float:
 
 
 def log_running_moments(
-    previous_log_sum: float,
+    previous_log_sum_pos: float,
+    previous_log_sum_neg: float,
     previous_log_sum2: float,
     count: int,
     new_log_value: float,
+    new_sign: int,
     unbiased: bool = True,
-) -> tuple[float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """
-    Update running moments when the new value is provided in log space.
+    Update running moments when the new value is provided in log space,
+    allowing for negative values via an explicit sign.
 
-    We assume the actual value is x = exp(new_log_value). Rather than updating
-    the arithmetic sum S = sum(x) and S2 = sum(x^2) directly, we maintain:
+    Here the actual value is x = new_sign * exp(new_log_value). Rather than
+    updating the arithmetic sum S = sum(x) and S2 = sum(x^2) directly, we maintain:
 
-       L_S  = log(S)   and   L_S2 = log(S2).
+       L_S+ = log(sum_{i: x_i >= 0} x_i)
+       L_S- = log(sum_{i: x_i < 0} |x_i|)
+       L_S2 = log(sum_i x_i^2)
 
-    The running mean and variance are then computed as follows:
+    The running mean is then computed as:
 
-      - Population estimator:
-            mean     = exp(L_S - log(count))
-            variance = exp(L_S2 - log(count)) - mean**2
+         mean = exp(L_S+) - exp(L_S-)
 
-      - Unbiased (sample) estimator. Equivalent to np.var with ddof=1, but with
-        the different convention that variance is 0 for count == 1 (numpy
-        returns NaN)
-            mean     = exp(L_S - log(count))
-            variance = (count/(count-1)) * (exp(L_S2 - log(count)) - mean**2)
+    and the second moment is:
+
+         second_moment = exp(L_S2 - log(count))
+
+    so that the variance is:
+
+         variance = second_moment - mean^2
+
+    For the unbiased (sample) estimator, we scale the variance by count/(count-1)
+    when count > 1 (and define variance = 0 when count == 1).
 
     Args:
-        previous_log_sum: log(sum of x_i) so far (or -inf if none).
-        previous_log_sum2: log(sum of x_i^2) so far (or -inf if none).
+        previous_log_sum_pos: running log(sum of positive contributions), or -inf if none.
+        previous_log_sum_neg: running log(sum of negative contributions in absolute
+            value), or -inf if none.
+        previous_log_sum2: running log(sum of squares) so far (or -inf if none).
         count: number of points processed so far.
-        new_log_value: log(x_new), the new value in log space.
-        unbiased: if `True`, compute the unbiased estimator of the variance
-            (ddof=1).
+        new_log_value: log(|x_new|), where x_new is the new value.
+        new_sign: sign of the new value (should be +1, 0, or -1).
+        unbiased: if True, compute the unbiased estimator of the variance.
 
     Returns:
         new_mean: running mean in the linear domain.
-        new_variance: running variance in the linear domain (unbiased if requested).
-        new_log_sum: updated log(sum of x_i).
-        new_log_sum2: updated log(sum of x_i^2).
+        new_variance: running variance in the linear domain.
+        new_log_sum_pos: updated running log(sum of positive contributions).
+        new_log_sum_neg: updated running log(sum of negative contributions).
+        new_log_sum2: updated running log(sum of squares).
+        new_count: updated count.
     """
+
     if count == 0:
-        new_log_sum = new_log_value
+        if new_sign >= 0:
+            new_log_sum_pos = new_log_value
+            new_log_sum_neg = -np.inf  # No negative contribution yet.
+        else:
+            new_log_sum_pos = -np.inf
+            new_log_sum_neg = new_log_value
         new_log_sum2 = 2 * new_log_value
     else:
-        new_log_sum = logsumexp_two(previous_log_sum, new_log_value)
+        if new_sign >= 0:
+            new_log_sum_pos = logsumexp_two(previous_log_sum_pos, new_log_value)
+            new_log_sum_neg = previous_log_sum_neg
+        else:
+            new_log_sum_neg = logsumexp_two(previous_log_sum_neg, new_log_value)
+            new_log_sum_pos = previous_log_sum_pos
         new_log_sum2 = logsumexp_two(previous_log_sum2, 2 * new_log_value)
     new_count = count + 1
 
-    # Compute running mean and the second moment in the linear domain.
-    new_mean = math.exp(new_log_sum - math.log(new_count))
-    second_moment = math.exp(new_log_sum2 - math.log(new_count))
+    # Compute 1st and 2nd moments in the linear domain.
+    pos_sum = np.exp(new_log_sum_pos) if new_log_sum_pos != -np.inf else 0.0
+    neg_sum = np.exp(new_log_sum_neg) if new_log_sum_neg != -np.inf else 0.0
+    new_mean = (pos_sum - neg_sum) / new_count
+
+    second_moment = np.exp(new_log_sum2 - np.log(new_count))
 
     # Compute variance using either the population or unbiased estimator.
     if unbiased:
@@ -479,4 +505,4 @@ def log_running_moments(
     else:
         new_variance = second_moment - new_mean**2
 
-    return new_mean, new_variance, new_log_sum, new_log_sum2
+    return new_mean, new_variance, new_log_sum_pos, new_log_sum_neg, new_log_sum2
