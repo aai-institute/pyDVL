@@ -5,6 +5,7 @@ from typing import Callable, Literal
 
 import numpy as np
 import pytest
+from scipy.special import gammaln
 
 from pydvl.utils.numeric import (
     complement,
@@ -249,6 +250,44 @@ def test_random_matrix_with_condition_number_stochastic(n, cond, seed, seed_alt)
     mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
     mat_2 = random_matrix_with_condition_number(n, cond, seed=seed_alt)
     assert np.any(mat_1 != mat_2)
+
+
+@pytest.mark.parametrize(
+    "n, k, expected",
+    [
+        (5, 2, np.log(10)),
+        (10, 5, np.log(252)),
+        (20, 10, np.log(184756)),
+        (0, 0, 0.0),
+        (1, 0, 0.0),
+        (1, 1, 0.0),
+        (100, 50, gammaln(101) - gammaln(51) - gammaln(51)),
+    ],
+    ids=[
+        "C(5,2) = 10",
+        "C(10,5) = 252",
+        "C(20,10) = 184756",
+        "C(0,0) = 1",
+        "C(1,0) = 1",
+        "C(1,1) = 1",
+        "Large values",
+    ],
+)
+def test_logcomb(n, k, expected):
+    result = logcomb(n, k)
+    np.testing.assert_allclose(
+        result, expected, atol=1e-6, err_msg=f"Failed for n={n}, k={k}"
+    )
+
+
+@pytest.mark.parametrize(
+    "n, k",
+    [(5, -1), (-5, 2), (4, 5)],
+    ids=["Negative k", "Negative n", "k > n"],
+)
+def test_logcomb_invalid(n, k):
+    with pytest.raises(ValueError):
+        logcomb(n, k)
 
 
 @pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])

@@ -4,7 +4,6 @@ This module contains routines for numerical computations used across the library
 
 from __future__ import annotations
 
-import math
 from itertools import chain, combinations
 from typing import (
     Collection,
@@ -377,6 +376,8 @@ def logcomb(n: int, k: int) -> float:
     Returns:
         The log of the binomial coefficient
         """
+    if k < 0 or k > n or n < 0:
+        raise ValueError(f"Invalid arguments: n={n}, k={k}")
     return float(gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1))
 
 
@@ -389,7 +390,7 @@ def logexp(x: float, a: float) -> float:
     Returns
         a * log(x)
     """
-    return a * math.log(x)
+    return a * np.log(x)
 
 
 def logsumexp_two(log_a: float, log_b: float) -> float:
@@ -414,7 +415,7 @@ def logsumexp_two(log_a: float, log_b: float) -> float:
     if log_b == -np.inf:
         return log_a
     m = max(log_a, log_b)
-    return m + math.log(math.exp(log_a - m) + math.exp(log_b - m))
+    return m + np.log(np.exp(log_a - m) + np.exp(log_b - m))
 
 
 def log_running_moments(
