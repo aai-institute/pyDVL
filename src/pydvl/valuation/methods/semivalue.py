@@ -46,14 +46,13 @@ __all__ = ["SemivalueValuation"]
 class SemivalueValuation(Valuation):
     r"""Abstract class to define semi-values.
 
-    Implementations must only provide the `coefficient()` method, corresponding
+    Implementations must only provide the `log_coefficient()` method, corresponding
     to the semi-value coefficient.
 
     !!! Note
         For implementation consistency, we slightly depart from the common definition
         of semi-values, which includes a factor $1/n$ in the sum over subsets.
         Instead, we subsume this factor into the coefficient $w(k)$.
-        TODO: see ...
 
     Args:
         utility: Object to compute utilities.
@@ -91,7 +90,7 @@ class SemivalueValuation(Valuation):
 
     @abstractmethod
     def log_coefficient(self, n: int, k: int) -> float:
-        """The semi-value coefficient in log-space/
+        """The semi-value coefficient in log-space.
 
         The semi-value coefficient is a function of the number of elements in the set,
         and the size of the subset for which the coefficient is being computed.
