@@ -307,16 +307,24 @@ class ConstantSampleSize(SampleSizeStrategy):
 class GroupTestingSampleSize(SampleSizeStrategy):
     r"""Heuristic choice of samples per set size used for Group Testing.
 
-    Sets the number of sets at size $k$ to be
+    [GroupTestingShapleyValuation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation]
+    uses this strategy for the stratified sampling of samples with which to construct
+    the linear problem it requires.
+
+    This heuristic sets the number of sets at size $k$ to be
 
     $$m_k = m \frac{f(k)}{\sum_{j=0}^{n-1} f(j)},$$
 
     for a total number of samples $m$ and:
 
-    $$
-    f(k) = \frac{1}{k} + \frac{1}{n-k}, \text{for} k \in \{1, n-1\}.
-    $$
+    $$ f(k) = \frac{1}{k} + \frac{1}{n-k}, \text{for} k \in \{1, n-1\}. $$
+
+    For GT Shapley, $m=1$ and $m_k$ is interpreted as a probability of sampling size
+    $k.$
     """
+
+    def __init__(self, n_samples: int = 1):
+        super().__init__(n_samples)
 
     def fun(self, n_indices: int, subset_len: int) -> float:
         if subset_len < 0 or subset_len > n_indices:

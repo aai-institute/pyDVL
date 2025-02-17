@@ -64,10 +64,10 @@ class GroupTestingShapleyValuation(Valuation):
     See [Data valuation][data-valuation] for an overview.
 
     !!! Warning
-    This method is very inefficient. Potential improvements to the
-    implementation notwithstanding, convergence seems to be very slow (in terms
-    of evaluations of the utility required). We recommend other Monte Carlo
-    methods instead.
+        This method is very inefficient. Potential improvements to the
+        implementation notwithstanding, convergence seems to be very slow (in
+        terms of evaluations of the utility required). We recommend other Monte
+        Carlo methods instead.
 
     Args:
         utility: Utility object with model, data and scoring function.
@@ -76,15 +76,15 @@ class GroupTestingShapleyValuation(Valuation):
             [compute_n_samples()][pydvl.valuation.methods.gt_shapley.compute_n_samples].
         epsilon: The error tolerance.
         solver_options: Optional dictionary containing a CVXPY solver and options to
-            configure it. For valid values to the "solver" key see
-            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
-            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+            configure it. For valid values to the "solver" key see [this
+            tutorial](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options [cvxpy's
+            documentation](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         progress: Whether to show a progress bar during the construction of the
             group-testing problem.
         seed: Seed for the random number generator.
         batch_size: The number of samples to draw in each batch. Can be used to reduce
             parallelization overhead for fast utilities. Defaults to 1.
-
     """
 
     algorithm_name = "Group-Testing-Shapley"
@@ -107,7 +107,7 @@ class GroupTestingShapleyValuation(Valuation):
         self._progress = progress
         self._sampler = StratifiedSampler(
             index_iteration=NoIndexIteration,
-            sample_sizes=GroupTestingSampleSize(n_samples=1),
+            sample_sizes=GroupTestingSampleSize(),
             sample_sizes_iteration=RandomSizeIteration,
             batch_size=batch_size,
             seed=seed,
