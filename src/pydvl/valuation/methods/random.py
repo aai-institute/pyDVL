@@ -28,7 +28,7 @@ class RandomValuation(Valuation):
         self.random_state = np.random.default_rng(random_state)
 
     def fit(self, train: Dataset) -> Self:
-        """ Dummy fitting that generates a set of random values.
+        """Dummy fitting that generates a set of random values.
 
         Successive calls will generate different values.
 
