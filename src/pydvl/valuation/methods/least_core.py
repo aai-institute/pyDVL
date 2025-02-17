@@ -15,6 +15,7 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
 )
 from pydvl.valuation.samplers.powerset import (
     DeterministicUniformSampler,
+    FiniteNoIndexIteration,
     NoIndexIteration,
     PowersetSampler,
     UniformSampler,
@@ -128,7 +129,9 @@ class LeastCoreValuation(Valuation):
 class ExactLeastCoreValuation(LeastCoreValuation):
     """Class to calculate exact least-core values.
 
-    Equivalent to calling `LeastCoreValuation` with a `DeterministicUniformSampler`
+    Equivalent to constructing a
+    [LeastCoreValuation][pydvl.valuation.methods.least_core.LeastCoreValuation] with a
+    [DeterministicUniformSampler][pydvl.valuation.samplers.powerset.DeterministicUniformSampler]
     and `n_samples=None`.
 
     The definition of the exact least-core valuation is:
@@ -167,7 +170,7 @@ class ExactLeastCoreValuation(LeastCoreValuation):
         super().__init__(
             utility=utility,
             sampler=DeterministicUniformSampler(
-                index_iteration=NoIndexIteration, batch_size=batch_size
+                index_iteration=FiniteNoIndexIteration, batch_size=batch_size
             ),
             n_samples=None,
             non_negative_subsidy=non_negative_subsidy,
