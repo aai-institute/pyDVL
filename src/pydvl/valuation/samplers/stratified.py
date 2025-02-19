@@ -144,7 +144,6 @@ instance of
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Generator, Type
@@ -152,7 +151,7 @@ from typing import Generator, Type
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Seed, complement, random_subset_of_size
+from pydvl.utils import Seed, complement, logcomb, random_subset_of_size
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
@@ -244,33 +243,25 @@ class SampleSizeStrategy(ABC):
         """
 
         # m_k = m * f(k) / sum_j f(j)
-        s = sum(self.fun(n_indices, k) for k in range(n_indices + 1))
-        values = [
-            self.n_samples * self.fun(n_indices, k) / s for k in range(n_indices + 1)
-        ]
+        values = np.empty(n_indices + 1, dtype=float)
+        s = 0.0
+
+        for k in range(n_indices + 1):
+            val = self.fun(n_indices, k)
+            values[k] = val
+            s += val
+
+        values *= self.n_samples / s
         if not quantize:
-            return np.array(values, dtype=float)
+            return values
 
         # Round down and distribute remainder by adjusting the largest fractional parts
-        int_values = [int(m) for m in values]
-        remainder = self.n_samples - sum(int_values)
-        fractional_parts = [(v - int(v), i) for i, v in enumerate(values)]
-        fractional_parts.sort(reverse=True, key=lambda x: x[0])
-        for i in range(remainder):
-            int_values[fractional_parts[i][1]] += 1
-
-        return np.array(int_values, dtype=int)
-
-    def total_samples(self, n_indices: int) -> int:
-        """The total number of samples to generate.
-
-        Args:
-            n_indices: Size of the index set to sample from.
-
-        Returns:
-            The total number of samples to generate.
-        """
-        return sum(self.sample_sizes(n_indices))
+        int_values: NDArray[np.int_] = np.floor(values).astype(np.int_)
+        remainder = self.n_samples - np.sum(int_values)
+        fractional_parts = values - int_values
+        fractional_parts_indices = np.argsort(-fractional_parts)[:remainder]
+        int_values[fractional_parts_indices] += 1
+        return int_values
 
 
 class ConstantSampleSize(SampleSizeStrategy):
@@ -465,8 +456,10 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
     Args:
         sample_sizes: An object which returns the number of samples to
-            take for a given set size. The sampler will generate exactly this many, and
-            no more (this is a finite sampler).
+            take for a given set size. If `index_iteration` below is finite, then the
+            sampler will generate exactly as many samples of each size as returned by
+            this object. If the iteration is infinite, then the `sample_sizes` will be
+            used as probabilities of sampling.
         sample_sizes_iteration: How to loop over sample sizes. The main modes are:
             * deterministically. For every k generate m_k samples before moving to k+1.
             * stochastically. Sample sizes k according to the distribution given by
@@ -504,6 +497,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)
             try:
+                # TODO: move this out of the loop since n_indices is constant
                 sample_sizes = self.sample_sizes_iteration(  # type: ignore
                     self.sample_sizes_strategy,
                     n_indices,
@@ -517,9 +511,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
                 for _ in range(m_k):
                     subset = random_subset_of_size(from_set, size=k, seed=self._rng)
                     yield Sample(idx, subset)
-            # # for k, m_k in self.sample_sizes(n_indices):
-            # for k in range(n_indices + 1):
-            #     for _ in range(self.sample_sizes(n_indices, k)):
 
     @lru_cache
     def total_samples(self, n_indices: int) -> int:
@@ -530,14 +521,12 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         if index_iteration_length is None:
             index_iteration_length = 1
 
-        return index_iteration_length * self.sample_sizes_strategy.total_samples(
-            n_indices
-        )
+        return index_iteration_length * self.sample_sizes_strategy.n_samples
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self.total_samples(len(indices))
 
-    def weight(self, n: int, subset_len: int) -> float:
+    def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
         probability of choosing size k, which is the number of samples for that size
         divided by the total number of samples for all sizes:
@@ -546,9 +535,15 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
         where $m_k$ is the number of samples of size $k$ and $m$ is the total number
         of samples.
-        """
-        n = self._index_iterator_cls.complement_size(n)
 
+        Args:
+            n: Size of the index set.
+            subset_len: Size of the subset.
+        Returns:
+            The logarithm of the probability of having sampled a set of size `subset_len`.
+        """
+
+        n = self._index_iterator_cls.complement_size(n)
         # Depending on whether we sample from complements or not, the total number of
         # samples passed to the heuristic has a different interpretation.
         index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
@@ -563,8 +558,12 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # the strategy, or equivalently, call `sample_sizes(n, quantize=False)`.
         # This is useful for the stochastic iteration, where we have frequencies
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
-        sizes = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        sizes /= sum(sizes)
+        funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
+        total = np.sum(funs)
+
         return float(
-            math.comb(n, subset_len) / index_iteration_length / sizes[subset_len]
+            -logcomb(n, subset_len)
+            + np.log(index_iteration_length)
+            + np.log(funs[subset_len])
+            - np.log(total)
         )

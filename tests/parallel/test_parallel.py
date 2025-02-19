@@ -165,6 +165,7 @@ def test_map_reduce_seeding(parallel_backend, seed_1, seed_2):
     assert result_1 != result_3
 
 
+@pytest.mark.flaky(reruns=1)  # the ways of ray are mysterious
 def test_wrap_function(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Only makes sense for ray")

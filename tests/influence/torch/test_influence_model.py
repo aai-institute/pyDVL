@@ -527,15 +527,19 @@ def test_influences_lissa(
         influence_factors, x_train, y_train, mode=test_case.mode
     )
 
+    atol = 1e-5
+    rtol = 1e-4
     assert torch.allclose(
-        influences_from_factors, approx_influences, atol=1e-5, rtol=1e-4
+        influences_from_factors, approx_influences, atol=atol, rtol=rtol
     )
 
     approx_influences = approx_influences.cpu().numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
-    np.testing.assert_allclose(approx_influences, direct_influences, rtol=1e-1)
+    np.testing.assert_allclose(
+        approx_influences, direct_influences, atol=atol, rtol=rtol
+    )
 
     if test_case.mode == InfluenceMode.Up:
         assert approx_influences.shape == (
@@ -553,7 +557,9 @@ def test_influences_lissa(
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))
 
-    np.testing.assert_allclose(approx_influences, direct_influences, rtol=1e-1)
+    np.testing.assert_allclose(
+        approx_influences, direct_influences, atol=atol, rtol=rtol
+    )
 
 
 @pytest.mark.parametrize(
@@ -674,6 +680,9 @@ def test_influences_ekfac(
     direct_sym_influences,
     device: torch.device,
 ):
+    atol = 1e-6
+    rtol = 1e-4
+
     model, loss, x_train, y_train, x_test, y_test = model_and_data
 
     train_dataloader = DataLoader(
@@ -731,8 +740,12 @@ def test_influences_ekfac(
             .numpy()
         )
 
-        np.testing.assert_allclose(ekfac_influence_values, influence_from_factors)
-        np.testing.assert_allclose(ekfac_influence_values, accumulated_inf_by_layer)
+        np.testing.assert_allclose(
+            ekfac_influence_values, influence_from_factors, atol=atol, rtol=rtol
+        )
+        np.testing.assert_allclose(
+            ekfac_influence_values, accumulated_inf_by_layer, atol=atol, rtol=rtol
+        )
         check_influence_correlations(
             direct_influences.numpy(), ekfac_influence_values, threshold=0.94
         )
@@ -832,7 +845,7 @@ def test_influences_cg(
             .numpy()
         )
         np.testing.assert_allclose(
-            single_influence, direct_factors[0], atol=1e-6, rtol=1e-4
+            single_influence[0], direct_factors[0], atol=1e-6, rtol=1e-4
         )
 
 

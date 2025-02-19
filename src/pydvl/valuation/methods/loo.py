@@ -27,6 +27,8 @@ constructor.
 
 from __future__ import annotations
 
+import numpy as np
+
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import FiniteSequentialIndexIteration, LOOSampler
@@ -53,9 +55,9 @@ class LOOValuation(SemivalueValuation):
             progress=progress,
         )
 
-    def coefficient(self, n: int, k: int, weight: float) -> float:
+    def log_coefficient(self, n: int, k: int) -> float:
         """The LOOSampler returns only complements of {idx}, so the weight is either
-        n (the inverse probability of a set of size n-1) or 0 if k != n-1. We cancel
+        1/n (the probability of a set of size n-1) or 0 if k != n-1. We cancel
         this out here so that the final coefficient is either 1 if k == n-1 or 0
         otherwise."""
-        return weight / max(1, n)
+        return float(-np.log(max(1, n))) if k == n - 1 else -np.inf
