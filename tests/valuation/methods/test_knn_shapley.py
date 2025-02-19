@@ -24,7 +24,6 @@ def data():
 def test_against_exact_shapley(data, n_jobs):
     model = KNeighborsClassifier(n_neighbors=5)
     train, test = data
-    model.fit(*train.data())
 
     utility = KNNClassifierUtility(model=model, test_data=test)
     sampler = DeterministicUniformSampler()

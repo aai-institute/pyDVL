@@ -38,6 +38,7 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import Self
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig
 from pydvl.valuation.dataset import Dataset
@@ -87,7 +88,7 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
         cached_func_options: Optional configuration object for cached utility
             evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
-            `fit()`.
+            `fit()` in utility evaluations.
 
     """
 
@@ -100,6 +101,7 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
         show_warnings: bool = False,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,
+        clone_before_fit: bool = True,
     ):
         self.test_data = test_data
         self.sorted_neighbors: NDArray[np.int_] | None = None
@@ -112,7 +114,7 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
             show_warnings=show_warnings,
             cache_backend=cache_backend,
             cached_func_options=cached_func_options,
-            clone_before_fit=False,  # ensure we don't clone the fitted model
+            clone_before_fit=clone_before_fit,
         )
 
     def _utility(self, sample: SampleT) -> float:
@@ -151,3 +153,10 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
 
     def _compute_score(self, model: ModelT) -> float:
         raise NotImplementedError("This method should not be called")
+
+    def with_dataset(self, data: Dataset) -> Self:
+        """Return a new instance of the utility with the given dataset and the model
+        fitted on it."""
+        new_utility: Self = super().with_dataset(data)
+        new_utility.model.fit(*data.data())
+        return new_utility
