@@ -111,7 +111,7 @@ def random_samplers(proper: bool = False):
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=2: n},
+                    {"n_samples_outer": lambda n=200: n},
                 ),
                 "index_iteration": NoIndexIteration,
             },
@@ -121,7 +121,7 @@ def random_samplers(proper: bool = False):
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=2: n},
+                    {"n_samples_outer": lambda n=200: n},
                 ),
                 "index_iteration": NoIndexIteration,
             },
@@ -250,7 +250,7 @@ def random_samplers(proper: bool = False):
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=32: n, "seed": lambda seed: seed},
+                    {"n_samples_outer": lambda n=200: n, "seed": lambda seed: seed},
                 ),
                 "index_iteration": FiniteSequentialIndexIteration,
             },
