@@ -117,9 +117,9 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         cached_func_options: CachedFuncConfig | None = None,
         clone_before_fit: bool = True,
     ):
-        self.model = self._clone_model(model)
-        self.scorer = scorer
         self.clone_before_fit = clone_before_fit
+        self.model = self._maybe_clone_model(model)
+        self.scorer = scorer
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.cache = cache_backend
@@ -177,12 +177,6 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
 
-        If an instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
-        is passed during construction, results are
-        memoized to avoid duplicate computation. This is useful in particular
-        when computing utilities of permutations of indices or when randomly
-        sampling from the powerset of indices.
-
         Args:
             sample: contains a subset of valid indices for the
                 `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
@@ -201,10 +195,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             if not self.show_warnings:
                 warnings.simplefilter("ignore")
             try:
-                if self.clone_before_fit:
-                    model = self._clone_model(self.model)
-                else:
-                    model = self.model
+                model = self._maybe_clone_model(self.model)
                 model.fit(x_train, y_train)
                 score = self._compute_score(model)
                 return score
@@ -214,15 +205,16 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                     return self.scorer.default
                 raise
 
-    @staticmethod
-    def _clone_model(model: ModelT) -> ModelT:
-        """Clones the passed model to avoid the possibility
-        of reusing a fitted estimator
+    def _maybe_clone_model(self, model: ModelT) -> ModelT:
+        """Clones the passed model to avoid the possibility of reusing a fitted
+        estimator.
 
         Args:
             model: Any supervised model. Typical choices can be found
                 on [this page](https://scikit-learn.org/stable/supervised_learning.html)
         """
+        if not self.clone_before_fit:
+            return model
         try:
             model = clone(model)
         except TypeError:
