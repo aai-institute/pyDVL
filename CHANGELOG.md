@@ -2,8 +2,16 @@
 
 ## Unreleased
 
+
 ### Added
 
+- Introduced the concept of `ResultUpdater` in order to allow samplers to
+  declare the proper strategy to use by valuations 
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Added Banzhaf precomputed values to some games.
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Introduced new `IndexIterations`, for consistent usage across all
+  `PowersetSamplers` [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Added `run_removal_experiment` for easy removal experiments
   [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Refactor Classwise Shapley valuation with the interfaces and sampler
@@ -12,22 +20,24 @@
   [PR #610](https://github.com/aai-institute/pyDVL/pull/610)
 - Refactor MSR Banzhaf semivalues with the new sampler architecture.
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Refactor group-testing shapley values with new sampler architecture
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
 - Refactor least-core data valuation methods with more supported sampling
   methods and consistent interface.
   [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
-- Refactor Owen-Shapley valuation with new sampler architecture
+- Refactor Owen-Shapley valuation with new sampler architecture. Enable use of
+  `OwenSamplers` with all semi-values
   [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - New method `InverseHarmonicMeanInfluence`, implementation for the paper
   `DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
     Diffusion Models`
   [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
-- Add new backend implementations for influence computation
-  to account for block-diagonal approximations
+- Add new backend implementations for influence computation to account for
+  block-diagonal approximations
   [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
-- Extend `DirectInfluence` with block-diagonal and Gauss-Newton
-  approximation
+- Extend `DirectInfluence` with block-diagonal and Gauss-Newton approximation
   [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
 - Extend `LissaInfluence` with block-diagonal and Gauss-Newton approximation
   [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
@@ -37,12 +47,19 @@
 - Extend `ArnoldiInfluence` with block-diagonal and Gauss-Newton
   approximation
   [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
-- Extend `CgInfluence` with block-diagonal and Gauss-Newton
-  approximation
+- Extend `CgInfluence` with block-diagonal and Gauss-Newton approximation
   [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
 
 ### Fixed
 
+- Fixed several bugs in diverse stopping criteria, including: iteration counts,
+  computing completion and resetting
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Fixed all weights of all samplers to ensure that mix-and-matching samplers and
+  semi-value methods always works, for all possible combinations
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Fixed a bug whereby progress bars would not report the last step and remain
+  incomplete [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Fixed the analysis of the adult dataset in the Data-OOB notebook
   [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
@@ -59,6 +76,14 @@
 
 ### Changed
 
+- Updated and rewrote some of the MSR banzhaf notebook
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Updated Least-Core notebook
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Restructured and generalized `StratifiedSampler` to allow using heuristics,
+  thus subsuming Variance-Reduced stratified sampling into a unified framework.
+  Implemented the heuristics proposed in that paper
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Changed the way semi-value coefficients are composed with sampler weights in
   order to avoid `OverflowError` for very small or large values
   [PR #639](https://github.com/aai-institute/pyDVL/pull/639)
