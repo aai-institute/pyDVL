@@ -2,8 +2,7 @@ from typing import Callable
 
 from scipy.special import expit
 
-from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.scorers.supervised import SupervisedScorer
+from pydvl.valuation.scorers.supervised import SupervisedModelT, SupervisedScorer
 
 __all__ = ["compose_score", "sigmoid"]
 
@@ -37,8 +36,8 @@ def compose_score(
         The composite [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer].
     """
 
-    class CompositeSupervisedScorer(SupervisedScorer):
-        def __call__(self, model: SupervisedModel) -> float:
+    class CompositeSupervisedScorer(SupervisedScorer[SupervisedModelT]):
+        def __call__(self, model: SupervisedModelT) -> float:
             raw = super().__call__(model)
             return transformation(raw)
 
@@ -46,7 +45,10 @@ def compose_score(
         scoring=scorer._scorer,
         test_data=scorer.test_data,
         default=transformation(scorer.default),
-        range=(transformation(scorer.range[0]), transformation(scorer.range[1])),
+        range=(
+            transformation(scorer.range[0].item()),
+            transformation(scorer.range[1].item()),
+        ),
         name=name,
     )
     return new_scorer
