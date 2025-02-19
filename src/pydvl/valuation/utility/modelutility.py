@@ -67,9 +67,9 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
         cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
-            used to wrap the _utility method of the Utility instance.
-            By default, this is set to None and that means that the utility evaluations
-            will not be cached.
+            used to memoize results to avoid duplicate computation. Note however, that
+            for most stochastic methods, cache hits are rare, making the memory expense
+            of caching not worth it (YMMV).
         cached_func_options: Optional configuration object for cached utility evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
