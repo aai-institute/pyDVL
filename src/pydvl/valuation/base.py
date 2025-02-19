@@ -25,7 +25,7 @@ class Valuation(ABC):
         The valuation must have been run with `fit()` before calling this method.
 
         Args:
-            sort: Whether to sort the valuation result before returning it.
+            sort: Whether to sort the valuation result by value before returning it.
         Returns:
             The result of the valuation.
         """
