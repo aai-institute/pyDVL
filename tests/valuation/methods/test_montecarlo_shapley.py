@@ -58,7 +58,7 @@ def shapley_methods(fudge_factor: int):
             AntitheticSampler,
             {"seed": lambda seed: seed},
             ShapleyValuation,
-            {"is_done": (MinUpdates, {"n_updates": fudge_factor // 2})},
+            {"is_done": (MinUpdates, {"n_updates": fudge_factor})},
         ),
         (
             MSRSampler,
@@ -290,7 +290,7 @@ def test_hoeffding_bound_montecarlo(
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(500)
 )
-def test_linear_montecarlo(
+def test_linear_montecarlo_with_outlier(
     linear_dataset,
     linear_shapley,
     n_jobs: int,
@@ -298,6 +298,7 @@ def test_linear_montecarlo(
     sampler_kwargs: dict[str, Any],
     valuation_cls: Type,
     valuation_kwargs: dict[str, Any],
+    seed: int,
 ):
     """Tests whether valuation methods are able to detect an obvious outlier.
 
@@ -317,11 +318,13 @@ def test_linear_montecarlo(
     # train.data().y[outlier_idx] -= 100
 
     if sampler_cls is not None:
-        valuation_kwargs["sampler"] = recursive_make(sampler_cls, sampler_kwargs)
+        valuation_kwargs["sampler"] = recursive_make(
+            sampler_cls, sampler_kwargs, seed=seed, lower_bound=0, upper_bound=None
+        )
 
     valuation_kwargs["utility"] = utility
     valuation_kwargs["progress"] = False
-    valuation = recursive_make(valuation_cls, valuation_kwargs)
+    valuation = recursive_make(valuation_cls, valuation_kwargs, seed=seed)
 
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(train)

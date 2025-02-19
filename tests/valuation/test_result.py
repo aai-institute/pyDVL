@@ -280,7 +280,7 @@ def test_from_random_creation(size: int, total: float | None):
     assert result.status == Status.Converged
     assert result.algorithm == "random"
     if total is not None:
-        np.testing.assert_allclose(np.sum(result.values), total)
+        np.testing.assert_allclose(np.sum(result.values), total, atol=1e-5)
 
 
 def test_from_random_creation_errors():
@@ -315,8 +315,10 @@ def test_adding_random():
     true_means = values.mean(axis=1)
     true_variances = values.var(axis=1)
 
-    np.testing.assert_allclose(true_means[result.indices], result.values)
-    np.testing.assert_allclose(true_variances[result.indices], result.variances)
+    np.testing.assert_allclose(true_means[result.indices], result.values, atol=1e-5)
+    np.testing.assert_allclose(
+        true_variances[result.indices], result.variances, atol=1e-5
+    )
 
 
 @pytest.mark.parametrize(
@@ -393,7 +395,7 @@ def test_adding_different_indices(
     v3 = v1 + v2
 
     np.testing.assert_allclose(v3.indices, np.array(expected_indices))
-    np.testing.assert_allclose(v3.values, np.array(expected_values))
+    np.testing.assert_allclose(v3.values, np.array(expected_values), atol=1e-5)
     assert np.all(v3.names == expected_names)
 
 

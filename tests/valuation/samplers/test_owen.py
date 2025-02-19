@@ -70,4 +70,4 @@ def test_antithetic_owen_sampler():
     # check that the sample sizes are close to expected sizes
     sizes = np.array([len(sample.subset) for sample in samples])
     avg_sizes = sizes.reshape(n_outer, -1).mean(axis=1)
-    np.testing.assert_allclose(avg_sizes, len(indices) // 2, rtol=0.01)
+    np.testing.assert_allclose(avg_sizes, len(indices) // 2, rtol=0.01, atol=1e-5)

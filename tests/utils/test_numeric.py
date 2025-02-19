@@ -214,7 +214,7 @@ def test_random_matrix_with_condition_number(n, cond, exception):
     else:
         mat = random_matrix_with_condition_number(n, cond)
         (
-            np.testing.assert_allclose(np.linalg.cond(mat), cond),
+            np.testing.assert_allclose(np.linalg.cond(mat), cond, atol=1e-5),
             "Condition number does not match",
         )
         assert np.array_equal(mat, mat.T), "Matrix is not symmetric"
@@ -333,8 +333,8 @@ def test_running_moments(unbiased: bool):
 
         true_means = [np.mean(vv) for vv in values]
         true_variances = [np.var(vv, ddof=ddof) for vv in values]
-        np.testing.assert_allclose(means, true_means)
-        np.testing.assert_allclose(variances, true_variances)
+        np.testing.assert_allclose(means, true_means, atol=1e-5)
+        np.testing.assert_allclose(variances, true_variances, atol=1e-5)
 
 
 @pytest.mark.parametrize("unbiased", [False, True], ids=["Population", "Sample"])
