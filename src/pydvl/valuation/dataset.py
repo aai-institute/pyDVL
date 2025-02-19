@@ -9,8 +9,10 @@ and [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. Objects of both ty
 be used to construct [scorers][pydvl.valuation.scorers] and to fit (most) valuation
 methods.
 
-The underlying data arrays can always be accessed via
+The underlying data arrays can always be accessed (read-only) via
 [Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+
+## Slicing
 
 Slicing the object, e.g. `dataset[0]`, will return a new `Dataset` with the data
 corresponding to that slice. Note however that the contents of the new object, i.e.
@@ -19,6 +21,7 @@ point in the original data array. This is in particular true for
 [GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
 correspond to multiple data points.
 
+Slicing with `None`, i.e. `dataset[None]`, will return a copy of the whole dataset.
 
 ## Grouped datasets and logical indices
 
@@ -45,6 +48,7 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
+from copy import copy
 from dataclasses import dataclass
 from typing import Sequence, overload
 
@@ -61,12 +65,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class RawData:
+    """A view on a dataset's raw data. This is not a copy."""
+
     x: NDArray
     y: NDArray
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
+
+    def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
+        return RawData(self.x[item], self.y[item])
 
 
 class Dataset:
@@ -82,6 +91,24 @@ class Dataset:
     point corresponding to index 0 in `dataset`. For this base class, this is the same
     as `dataset.data([0])`, which is the first point in the data array, but derived
     classes can behave differently.
+
+    Args:
+        x: training data
+        y: labels for training data
+        feature_names: names of the features of x data
+        target_names: names of the features of y data
+        data_names: names assigned to data points.
+            For example, if the dataset is a time series, each entry can be a
+            timestamp which can be referenced directly instead of using a row
+            number.
+        description: A textual description of the dataset.
+        multi_output: set to `False` if labels are scalars, or to
+            `True` if they are vectors of dimension > 1.
+
+    !!! tip "Changed in version 0.10.0"
+        No longer holds split data, but only x, y.
+    !!! tip "Changed in version 0.10.0"
+        Slicing now return a new `Dataset` object, not raw data.
     """
 
     _indices: NDArray[np.int_]
@@ -99,26 +126,6 @@ class Dataset:
         description: str | None = None,
         multi_output: bool = False,
     ):
-        """Constructs a Dataset from data and labels.
-
-        Args:
-            x: training data
-            y: labels for training data
-            feature_names: names of the features of x data
-            target_names: names of the features of y data
-            data_names: names assigned to data points.
-                For example, if the dataset is a time series, each entry can be a
-                timestamp which can be referenced directly instead of using a row
-                number.
-            description: A textual description of the dataset.
-            multi_output: set to `False` if labels are scalars, or to
-                `True` if they are vectors of dimension > 1.
-
-        !!! tip "Changed in version 0.10.0"
-            No longer holds split data, but only x, y.
-        !!! tip "Changed in version 0.10.0"
-            Slicing now return a new `Dataset` object, not raw data.
-        """
         self._x, self._y = check_X_y(
             x, y, multi_output=multi_output, estimator="Dataset"
         )
@@ -152,6 +159,8 @@ class Dataset:
     def __getitem__(
         self, idx: int | slice | Sequence[int] | NDArray[np.int_]
     ) -> Dataset:
+        if idx is None:
+            return self.copy()
         if isinstance(idx, int):
             idx = [idx]
         return Dataset(
@@ -163,7 +172,23 @@ class Dataset:
             description="(SLICED): " + self.description,
         )
 
+    def copy(self) -> Dataset:
+        """Returns a copy of the dataset.
+
+        This is a shallow copy, i.e. the data arrays are not copied. It can also be
+        achieved with `dataset[None]`.
+        """
+        return Dataset(
+            x=self._x.copy(),
+            y=self._y.copy(),
+            feature_names=copy(self.feature_names),
+            target_names=copy(self.target_names),
+            data_names=self._data_names.copy(),
+            description=self.description,
+        )
+
     def feature(self, name: str) -> tuple[slice, int]:
+        """Returns a slice for the feature with the given name."""
         try:
             return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
         except ValueError:
@@ -173,7 +198,7 @@ class Dataset:
         self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> RawData:
         """Given a set of indices, returns the training data that refer to those
-        indices.
+        indices, as a read-only tuple-like structure.
 
         This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
         retrieve subsets of the data from indices.
