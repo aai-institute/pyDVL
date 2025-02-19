@@ -104,7 +104,7 @@ def test_coefficients(n: int, coefficient: SVCoefficient):
     in the shapley and beta coefficients.
     """
     s = [math.comb(n - 1, j - 1) * coefficient(n, j - 1) for j in range(1, n + 1)]
-    assert np.isclose(1, np.sum(s))
+    np.testing.assert_allclose(1, np.sum(s))
 
 
 @pytest.mark.parametrize(

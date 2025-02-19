@@ -10,7 +10,7 @@ from pydvl.valuation.scorers import ClasswiseSupervisedScorer
 
 
 class ThresholdClassifier:
-    def fit(self, x: NDArray, y: NDArray):
+    def fit(self, x: NDArray, y: NDArray | None) -> ThresholdClassifier:
         return self
 
     def predict(self, x: NDArray) -> NDArray:
@@ -18,7 +18,8 @@ class ThresholdClassifier:
         return y[:, 0].astype(int)
 
     def score(self, x: NDArray, y: NDArray | None) -> float:
-        return np.equal(self.predict(x), y).mean()
+        assert y is not None
+        return float(np.equal(self.predict(x), y).mean())
 
 
 @pytest.fixture

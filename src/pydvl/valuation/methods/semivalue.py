@@ -24,7 +24,9 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any
 
+import numpy as np
 from joblib import Parallel, delayed
+from typing_extensions import Self
 
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
@@ -57,6 +59,8 @@ class SemivalueValuation(Valuation):
         utility: Object to compute utilities.
         sampler: Sampling scheme to use.
         is_done: Stopping criterion to use.
+        skip_converged: Whether to skip converged indices. Convergence is determined
+            by the stopping criterion's `converged` array.
         progress: Whether to show a progress bar.
     """
 
@@ -67,12 +71,14 @@ class SemivalueValuation(Valuation):
         utility: UtilityBase,
         sampler: IndexSampler,
         is_done: StoppingCriterion,
+        skip_converged: bool = False,
         progress: dict[str, Any] | bool = False,
     ):
         super().__init__()
         self.utility = utility
         self.sampler = sampler
         self.is_done = is_done
+        self.skip_converged = skip_converged
         self.tqdm_args: dict[str, Any] = {
             "desc": f"{self.__class__.__name__}: {str(is_done)}"
         }
@@ -84,7 +90,7 @@ class SemivalueValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
 
     @abstractmethod
-    def coefficient(self, n: int, k: int, other: float) -> float:
+    def coefficient(self, n: int, k: int, weight: float) -> float:
         """Returns the function computing the final coefficient to be used in the
         semi-value valuation.
 
@@ -98,11 +104,11 @@ class SemivalueValuation(Valuation):
         Args:
             n: Total number of elements in the set.
             k: Size of the subset for which the coefficient is being computed
-            other: The other factors in the computation.
+            weight: The weight coming from the samplers
         """
         ...
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
@@ -111,10 +117,12 @@ class SemivalueValuation(Valuation):
         )
         ensure_backend_has_generator_return()
 
+        self.is_done.reset()
         self.utility.training_data = data
 
         strategy = self.sampler.make_strategy(self.utility, self.coefficient)
         processor = delayed(strategy.process)
+        updater = self.sampler.result_updater(self.result)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
@@ -123,14 +131,14 @@ class SemivalueValuation(Valuation):
                     for batch in self.sampler.generate_batches(data.indices)
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
-                    for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
+                    for update in batch:
+                        self.result = updater(update)
+                        if self.skip_converged:
+                            self.sampler.skip_indices = np.where(
+                                self.is_done.converged
+                            )[0]
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()
-                            break
-
-                    if self.is_done(self.result):
-                        break
-
+                            return self
         return self

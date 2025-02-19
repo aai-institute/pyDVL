@@ -118,7 +118,7 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     dask_fac = dask_inf.influence_factors(da_x_train, da_y_train)
     dask_fac = dask_fac.compute(scheduler="synchronous")
     torch_fac = influence_model.influence_factors(x_train, y_train).numpy()
-    assert np.allclose(dask_fac, torch_fac, atol=1e-5, rtol=1e-3)
+    np.testing.assert_allclose(dask_fac, torch_fac, atol=1e-5, rtol=1e-3)
 
     dask_val = dask_inf.influences(
         da_x_test,
@@ -131,7 +131,7 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     torch_val = influence_model.influences(
         x_test, y_test, x_train, y_train, mode=test_case.mode
     ).numpy()
-    assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
+    np.testing.assert_allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
 
 
 @pytest.fixture(scope="session")
@@ -180,7 +180,7 @@ def test_dask_influence_nn(
 
     da_factors = dask_influence.influence_factors(da_x_test, da_y_test)
     torch_factors = inf_model.influence_factors(x_test, y_test)
-    assert np.allclose(
+    np.testing.assert_allclose(
         da_factors.compute(scheduler="synchronous"),
         torch_factors.numpy(),
         atol=1e-6,
@@ -195,7 +195,7 @@ def test_dask_influence_nn(
         da_factors, da_x_train, da_y_train, mode=test_case.mode
     )
 
-    assert np.allclose(
+    np.testing.assert_allclose(
         da_values_from_factors.compute(scheduler="synchronous"),
         torch_values_from_factors.numpy(),
         atol=1e-6,
@@ -212,13 +212,15 @@ def test_dask_influence_nn(
     torch_values = inf_model.influences(
         x_test, y_test, x_train, y_train, mode=test_case.mode
     )
-    assert np.allclose(da_values, torch_values.numpy(), atol=1e-6, rtol=1e-3)
+    np.testing.assert_allclose(da_values, torch_values.numpy(), atol=1e-6, rtol=1e-3)
 
     da_sym_values = dask_influence.influences(
         da_x_train, da_y_train, mode=test_case.mode
     ).compute(scheduler="synchronous")
     torch_sym_values = inf_model.influences(x_train, y_train, mode=test_case.mode)
-    assert np.allclose(da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3)
+    np.testing.assert_allclose(
+        da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3
+    )
 
     with pytest.raises(UnsupportedInfluenceModeException):
         dask_influence.influences(
@@ -310,7 +312,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
     )
 
     assert torch.allclose(seq_factors, torch_factors, atol=1e-6)
-    assert np.allclose(seq_factors_from_zarr, torch_factors, atol=1e-6)
+    np.testing.assert_allclose(seq_factors_from_zarr, torch_factors, atol=1e-6)
     del zarr_factors_store
 
     torch_values_from_factors = inf_model.influences_from_factors(
@@ -335,7 +337,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
     )
 
     assert torch.allclose(seq_values_from_factors, torch_values_from_factors, atol=1e-6)
-    assert np.allclose(
+    np.testing.assert_allclose(
         seq_values_from_factors_from_zarr, torch_values_from_factors.numpy(), atol=1e-6
     )
     del zarr_values_from_factors_store
@@ -354,7 +356,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
         x_test, y_test, x_train, y_train, mode=test_case.mode
     )
     assert torch.allclose(seq_values, torch_values, atol=1e-6)
-    assert np.allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)
+    np.testing.assert_allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)
     del zarr_values_store
 
 
@@ -402,4 +404,4 @@ def test_dask_ekfac_influence(model_and_data, test_case):
         torch_val = ekfac_influence.influences(
             x_test, y_test, x_train, y_train, mode=test_case.mode
         ).numpy()
-        assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
+        np.testing.assert_allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)

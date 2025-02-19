@@ -1,7 +1,10 @@
+import math
+
 import numpy as np
 import pytest
 
 from pydvl.utils.numeric import (
+    complement,
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
@@ -11,6 +14,21 @@ from pydvl.utils.numeric import (
     running_moments,
 )
 from pydvl.utils.types import Seed
+
+
+@pytest.mark.parametrize(
+    "include, exclude, expected",
+    [
+        (np.array([1, 2, 3, 4, 5]), [2, 3], np.array([1, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [None], np.array([1, 2, 3, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [], np.array([1, 2, 3, 4, 5])),
+        (np.array([1, 2, 3, 4, 5]), [1, 2, 3, 4, 5], np.array([])),
+        (np.array([]), [1, 2], np.array([])),
+    ],
+)
+def test_complement(include, exclude, expected):
+    result = complement(include, exclude)
+    assert np.array_equal(result, expected)
 
 
 def test_powerset():
@@ -28,7 +46,7 @@ def test_powerset():
         size_counts[len(subset)] += 1
         for x in subset:
             item_counts[x] += 1
-    assert np.allclose(item_counts / 2**n, 0.5)
+    np.testing.assert_allclose(item_counts / 2**n, 0.5)
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
@@ -66,10 +84,12 @@ def test_random_powerset(n, max_subsets, q):
     # True distribution of set sizes follows a binomial distribution
     # with parameters n and q
     def binomial_pmf(j: int):
-        return np.math.comb(n, j) * q**j * (1 - q) ** (n - j)
+        return math.comb(n, j) * q**j * (1 - q) ** (n - j)
 
     true_size_counts = np.array([binomial_pmf(j) for j in range(n + 1)])
-    assert np.allclose(true_size_counts, size_counts / max_subsets, atol=1 / (1 + n))
+    np.testing.assert_allclose(
+        true_size_counts, size_counts / max_subsets, atol=1 / (1 + n)
+    )
 
 
 @pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
@@ -186,7 +206,10 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             random_matrix_with_condition_number(n, cond)
     else:
         mat = random_matrix_with_condition_number(n, cond)
-        assert np.isclose(np.linalg.cond(mat), cond), "Condition number does not match"
+        (
+            np.testing.assert_allclose(np.linalg.cond(mat), cond, atol=1e-5),
+            "Condition number does not match",
+        )
         assert np.array_equal(mat, mat.T), "Matrix is not symmetric"
         try:
             np.linalg.cholesky(mat)
@@ -249,8 +272,8 @@ def test_running_moments():
 
         true_means = [np.mean(vv) for vv in values]
         true_variances = [np.var(vv) for vv in values]
-        assert np.allclose(means, true_means)
-        assert np.allclose(variances, true_variances)
+        np.testing.assert_allclose(means, true_means, atol=1e-5)
+        np.testing.assert_allclose(variances, true_variances, atol=1e-5)
 
 
 def test_running_moment_initialization():
@@ -270,8 +293,8 @@ def test_running_moment_initialization():
         previous_avg=got_mean, previous_variance=got_var, count=1, new_value=2.0
     )
 
-    assert np.isclose(got_mean, 1.5)
-    assert np.isclose(got_var, np.var([1.0, 2.0]))
+    np.testing.assert_allclose(got_mean, 1.5)
+    np.testing.assert_allclose(got_var, np.var([1.0, 2.0]))
 
 
 @pytest.mark.parametrize(

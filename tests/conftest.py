@@ -63,7 +63,10 @@ def seed(request):
 
 @pytest.fixture()
 def seed_alt(request):
-    return 42
+    try:
+        return request.param
+    except AttributeError:
+        return 42
 
 
 @pytest.fixture()
@@ -166,7 +169,7 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-def num_workers():
+def num_workers() -> int:
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
         return 2
@@ -175,7 +178,7 @@ def num_workers():
 
 
 @pytest.fixture(scope="session")
-def n_jobs():
+def n_jobs() -> int:
     return num_workers()
 
 

@@ -81,7 +81,8 @@ class ClosedFormLinearClassifier:
     def __init__(self):
         self._beta = None
 
-    def fit(self, x: NDArray, y: NDArray) -> Self:
+    def fit(self, x: NDArray, y: NDArray | None) -> Self:
+        assert y is not None
         x = x[:, 0]
         self._beta = np.dot(x, y) / np.dot(x, x)
         return self
@@ -93,9 +94,10 @@ class ClosedFormLinearClassifier:
         probs = self._beta * x
         return np.clip(np.round(probs + 1e-10), 0, 1).astype(int)
 
-    def score(self, x: NDArray, y: NDArray) -> float:
+    def score(self, x: NDArray, y: NDArray | None) -> float:
+        assert y is not None
         pred_y = self.predict(x)
-        return np.sum(pred_y == y) / 4
+        return float(np.sum(pred_y == y) / 4)
 
 
 @pytest.fixture(scope="function")

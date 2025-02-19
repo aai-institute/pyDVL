@@ -51,47 +51,20 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class PermutationSampler(StochasticSamplerMixin, IndexSampler):
-    """Sample permutations of indices and iterate through each returning
-    increasing subsets, as required for the permutation definition of
-    semi-values.
-
-    For a permutation `(3,1,4,2)`, this sampler returns in sequence the following
-    [Samples][pydvl.valuation.samplers.Sample] (tuples of index and subset):
-
-    `(3, {3})`, `(1, {3,1})`, `(4, {3,1,4})` and `(2, {3,1,4,2})`.
-
-    !!! info "Batching"
-        PermutationSamplers always batch their outputs to include a whole permutation
-        of the index set, i.e. the batch size is always the number of indices.
-
-    Args:
-        truncation: A policy to stop the permutation early.
-        seed: Seed for the random number generator.
-    """
+class PermutationSamplerBase(IndexSampler):
+    """Base class for permutation samplers."""
 
     def __init__(
-        self, truncation: TruncationPolicy | None = None, seed: Seed | None = None
+        self,
+        *args,
+        truncation: TruncationPolicy | None = None,
+        batch_size: int = 1,
+        **kwargs,
     ):
-        super().__init__(seed=seed)
+        super().__init__(batch_size=batch_size)
         self.truncation = truncation or NoTruncation()
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        """Generates the permutation samples.
-
-        Samples are yielded one by one, not as whole permutations. These are batched
-        together by calling iter() on the sampler.
-
-        Args:
-            indices:
-        """
-        if len(indices) == 0:
-            return
-        while True:
-            yield Sample(-1, self._rng.permutation(indices))
-
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
+    def weight(self, n: int, subset_len: int) -> float:
         return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
 
     def make_strategy(
@@ -100,6 +73,41 @@ class PermutationSampler(StochasticSamplerMixin, IndexSampler):
         coefficient: Callable[[int, int, float], float] | None = None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
+
+
+class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
+    """Samples permutations of indices.
+
+    !!! info "Batching"
+        Even though this sampler supports batching, it is not recommended to use it
+        since the
+        [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
+        processes whole permutations in one go, effectively batching the computation of
+        up to n-1 marginal utilities in one process.
+
+    Args:
+        truncation: A policy to stop the permutation early.
+        seed: Seed for the random number generator.
+    """
+
+    def __init__(
+        self,
+        truncation: TruncationPolicy | None = None,
+        seed: Seed | None = None,
+        batch_size: int = 1,
+    ):
+        super().__init__(seed=seed, truncation=truncation, batch_size=batch_size)
+
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        """Generates the permutation samples.
+        Args:
+            indices:
+        """
+        if len(indices) == 0:
+            return
+        while True:
+            _indices = np.setdiff1d(indices, self.skip_indices)
+            yield Sample(None, self._rng.permutation(_indices))
 
 
 class AntitheticPermutationSampler(PermutationSampler):
@@ -114,13 +122,13 @@ class AntitheticPermutationSampler(PermutationSampler):
     """
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        while True:
-            permutation = self._rng.permutation(indices)
-            yield Sample(-1, permutation)
-            yield Sample(-1, permutation[::-1])
+        for sample in super()._generate(indices):
+            permutation = sample.subset
+            yield Sample(None, permutation)
+            yield Sample(None, permutation[::-1])
 
 
-class DeterministicPermutationSampler(PermutationSampler):
+class DeterministicPermutationSampler(PermutationSamplerBase):
     """Samples all n! permutations of the indices deterministically, and
     iterates through them, returning sets as required for the permutation-based
     definition of semi-values.
@@ -128,18 +136,16 @@ class DeterministicPermutationSampler(PermutationSampler):
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
-            yield Sample(-1, np.asarray(permutation))
+            yield Sample(None, np.asarray(permutation))
 
     def sample_limit(self, indices: IndexSetT) -> int:
         if len(indices) == 0:
-            out = 0
-        else:
-            out = math.factorial(len(indices))
-        return out
+            return 0
+        return math.factorial(len(indices))
 
 
 class PermutationEvaluationStrategy(
-    EvaluationStrategy[PermutationSampler, ValueUpdate]
+    EvaluationStrategy[PermutationSamplerBase, ValueUpdate]
 ):
     """Computes marginal values for permutation sampling schemes.
 
@@ -149,7 +155,7 @@ class PermutationEvaluationStrategy(
 
     def __init__(
         self,
-        sampler: PermutationSampler,
+        sampler: PermutationSamplerBase,
         utility: UtilityBase,
         coefficient: Callable[[int, int, float], float] | None = None,
     ):
@@ -160,18 +166,18 @@ class PermutationEvaluationStrategy(
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
-        self.truncation.reset(self.utility)  # Reset before every batch (must be cached)
         r = []
         for sample in batch:
+            self.truncation.reset(self.utility)
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation):
+            for i, idx in enumerate(permutation):  # type: int, int
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
                 marginal = curr - prev
-                marginal *= self.coefficient(self.n_indices, i)
+                marginal *= self.correction(self.n_indices, i)
                 r.append(ValueUpdate(idx, marginal))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):

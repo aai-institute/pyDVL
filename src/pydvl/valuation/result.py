@@ -230,11 +230,20 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         **extra_values,
     ):
         if variances is not None and len(variances) != len(values):
-            raise ValueError("Lengths of values and variances do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and variances ({len(variances)}) do not match"
+            )
         if data_names is not None and len(data_names) != len(values):
-            raise ValueError("Lengths of values and data_names do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and data_names ({len(data_names)}) do not match"
+            )
         if indices is not None and len(indices) != len(values):
-            raise ValueError("Lengths of values and indices do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and indices ({len(indices)}) do not match"
+            )
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
@@ -588,7 +597,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> ValuationResult:
+    def update(self, idx: int | IndexT, new_value: float) -> ValuationResult:
         """Updates the result in place with a new value, using running mean
         and variance.
 

@@ -42,4 +42,4 @@ class TwoDShapley(Valuation):
         # similar pattern to the other methods.
         # Note that it should be trivial to generalize to other coefficients, sampling
         # strategies, etc.
-        pass
+        raise NotImplementedError

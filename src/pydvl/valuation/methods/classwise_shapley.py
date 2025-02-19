@@ -48,7 +48,7 @@ $y_i$ and $-y_i$, respectively.
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
 
-# References
+## References
 
 [^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
     Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
@@ -146,6 +146,7 @@ class ClasswiseShapleyValuation(Valuation):
         )
         ensure_backend_has_generator_return()
 
+        self.is_done.reset()
         self.utility.training_data = data
 
         sample_generator = self.sampler.from_data(data)

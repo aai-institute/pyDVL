@@ -10,7 +10,7 @@ from pydvl.utils.types import Seed
 
 logger = getLogger(__name__)
 
-ReturnT = TypeVar("ReturnT")
+ReturnT = TypeVar("ReturnT", covariant=True)
 
 
 def call_with_seeds(fun: Callable, *args, seeds: Tuple[Seed, ...], **kwargs) -> Tuple:
@@ -30,7 +30,7 @@ def call_with_seeds(fun: Callable, *args, seeds: Tuple[Seed, ...], **kwargs) -> 
     return tuple(fun(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
 
 
-class TimedCallable(Protocol):
+class TimedCallable(Protocol[ReturnT]):
     """A callable that has an attribute to keep track of execution time."""
 
     execution_time: float
@@ -52,8 +52,6 @@ def timed(fun: Callable[..., ReturnT]) -> TimedCallable:
             function's result and its execution time in seconds. The decorated function
             will have the same input arguments and return type as the original function.
     """
-
-    wrapper: TimedCallable
 
     @wraps(fun)
     def wrapper(*args, **kwargs) -> ReturnT:

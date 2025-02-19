@@ -680,6 +680,9 @@ class ValuationResult(
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
         df[column + "_updates"] = self.counts[self._sort_positions]
+        # HACK for compatibility with updated support code in the notebooks
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod

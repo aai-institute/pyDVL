@@ -23,28 +23,25 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 # Need a generic because subclasses might use subtypes of Sample
 class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
-    """Convenience wrapper with configurable memoization of the scoring
-    function.
+    """Convenience wrapper with configurable memoization of the utility.
 
-    An instance of `Utility` holds the triple of model, dataset and scoring
-    function which determines the value of data points. This is used for the
-    computation of [all game-theoretic values][game-theoretical-methods] like
-    [Shapley values][pydvl.valuation.shapley] and [the Least
-    Core][pydvl.valuation.least_core].
+    An instance of `ModelUtility` holds the tuple of model, and scoring function which
+    determines the value of data points. This is used for the computation of [all
+    game-theoretic values][game-theoretical-methods] like [Shapley
+    values][pydvl.valuation.shapley] and [the Least Core][pydvl.valuation.least_core].
 
-    The Utility expects the model to fulfill at least the
-    [BaseModel][pydvl.utils.types.BaseModel] interface i.e. to have a `fit()` method.
+    `ModelUtility` expects the model to fulfill at least the
+    [BaseModel][pydvl.utils.types.BaseModel] interface, i.e. to have a `fit()` method
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
-    if it is a Sci-Kit Learn model, otherwise a copy is created using
-    [copy.deepcopy][]
+    if it is a Scikit-Learn model, otherwise a copy is created using [copy.deepcopy][]
 
-    Since evaluating the scoring function requires retraining the model and that
-    can be time-consuming, this class wraps it and caches the results of each
-    execution. Caching is available both locally and across nodes, but must
-    always be enabled for your project first, see [the
-    documentation][getting-started-cache] and the [module
+    Since evaluating the scoring function requires retraining the model and that can be
+    time-consuming, this class wraps it and caches the results of each execution.
+    Caching is available both locally and across nodes, but must always be enabled for
+    your project first, because **most stochastic methods do not** benefit much from it.
+    See [the documentation][getting-started-cache] and the [module
     documentation][pydvl.utils.caching].
 
     Attributes:
@@ -154,14 +151,11 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
         return cast(float, self._utility_wrapper(sample))
 
-    def _compute_score(self, model: ModelT, sample: SampleT) -> float:
+    def _compute_score(self, model: ModelT) -> float:
         """Computes the score of a fitted model.
 
         Args:
             model: fitted model
-            sample: contains a subset of valid indices for the
-                `x` attribute of [Dataset][pydvl.valuation.dataset.Dataset].
-
         Returns:
             Computed score or the scorer's default value in case of an error
             or a NaN value.
@@ -212,7 +206,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                 else:
                     model = self.model
                 model.fit(x_train, y_train)
-                score = self._compute_score(model, sample)
+                score = self._compute_score(model)
                 return score
             except Exception as e:
                 if self.catch_errors:

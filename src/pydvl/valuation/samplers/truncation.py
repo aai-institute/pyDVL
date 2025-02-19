@@ -2,23 +2,31 @@
 Truncation policies for the interruption of batched computations.
 
 When estimating marginal contribution-based values with permutation sampling, the
-computation can be interrupted early if the utility of the current batch of samples is
-close enough to the total utility of the dataset. This idea is implemented in
-[RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], and in
-[DeviationTruncation][pydvl.valuation.shapley.truncated.DeviationTruncation], but it can be
-generalized to other policies.
+computation can be interrupted early. A naive approach is to stop after a fixed number
+of updates, using
+[FixedTruncation][pydvl.valuation.shapley.truncated.FixedTruncation].
 
-In particular, one can stop after a fixed number of updates, as in
-[FixedTruncation][pydvl.valuation.shapley.truncated.FixedTruncation], or after a flag has
-been set. The latter allows communication with parallel or remote workers to stop
-computation when the main process determines that values have converged.
+However, a more successful one is to stop if the utility of the current batch of samples
+is close enough to the total utility of the dataset. This idea is implemented in
+[RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], and was
+introduced as **Truncated Montecarlo Shapley** (TMCS) in Ghobani and Zou (2019)[^1]. A
+slight variation is to use the standard deviation of the utilities to set the tolerance,
+which can be done with
+[DeviationTruncation][pydvl.valuation.shapley.truncated.DeviationTruncation].
+
+!!! Danger "Stopping too early"
+    Truncation policies can lead to underestimation of values if the utility function
+    has high variance. To avoid this, one can set a burn-in period before checking the
+    utility, or use a policy that is less sensitive to variance.
 
 
 ## References
 
-[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
-    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019. [Data Shapley:
+    Equitable Valuation of Data for Machine
+    Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp.
+    2242–2251.
 
 """
 
@@ -35,8 +43,8 @@ __all__ = [
     "TruncationPolicy",
     "NoTruncation",
     "FixedTruncation",
-    "DeviationTruncation",
     "RelativeTruncation",
+    "DeviationTruncation",
 ]
 
 
@@ -46,7 +54,7 @@ logger = logging.getLogger(__name__)
 class TruncationPolicy(ABC):
     """A policy for deciding whether to stop computation of a batch of samples
 
-    Statistics are kept on the number of calls and truncations as `n_calls` and
+    Statistics are kept on the total number of calls and truncations as `n_calls` and
     `n_truncations` respectively.
 
     Attributes:
@@ -70,7 +78,7 @@ class TruncationPolicy(ABC):
 
     @abstractmethod
     def reset(self, utility: UtilityBase):
-        """(Re)set the policy to a state ready for a new batch."""
+        """(Re)set the policy to a state ready for a new permutation."""
         ...
 
     def __call__(self, idx: int, score: float, batch_size: int) -> bool:
@@ -121,7 +129,7 @@ class FixedTruncation(TruncationPolicy):
         if fraction <= 0 or fraction > 1:
             raise ValueError("fraction must be in (0, 1]")
         self.fraction = fraction
-        self.count = 0
+        self.count = 0  # within-permutation count
 
     def _check(self, idx: int, score: float, batch_size: int) -> bool:
         self.count += 1
@@ -143,18 +151,25 @@ class RelativeTruncation(TruncationPolicy):
 
     Args:
         rtol: Relative tolerance. The permutation is broken if the
-            last computed utility is within this tolerance of the total utility
+            last computed utility is within this tolerance of the total utility.
+        burn_in_fraction: Fraction of samples within a permutation to wait until
+            actually checking.
     """
 
-    def __init__(self, rtol: float):
+    def __init__(self, rtol: float, burn_in_fraction: float = 0.0):
         super().__init__()
+        assert 0 <= burn_in_fraction <= 1
+        self.burn_in_fraction = burn_in_fraction
         self.rtol = rtol
         self.total_utility = 0.0
+        self.count = 0  # within-permutation count
         self._is_setup = False
 
     def _check(self, idx: int, score: float, batch_size: int) -> bool:
-        # Explicit cast for the benefit of mypy 🤷
-        return bool(np.allclose(score, self.total_utility, rtol=self.rtol))
+        self.count += 1
+        if self.count < self.burn_in_fraction * batch_size:
+            return False
+        return np.allclose(score, self.total_utility, rtol=self.rtol)
 
     def __call__(self, idx: int, score: float, batch_size: int) -> bool:
         if not self._is_setup:
@@ -162,11 +177,12 @@ class RelativeTruncation(TruncationPolicy):
         return super().__call__(idx, score, batch_size)
 
     def reset(self, utility: UtilityBase):
+        self.count = 0
         if self._is_setup:
             return
         logger.info("Computing total utility for RelativeTruncation.")
         assert utility.training_data is not None
-        self.total_utility = utility(Sample(-1, utility.training_data.indices))
+        self.total_utility = utility(Sample(None, utility.training_data.indices))
         self._is_setup = True
 
 
@@ -174,26 +190,30 @@ class DeviationTruncation(TruncationPolicy):
     """Break a computation if the last computed utility is close to the total utility.
 
     This is essentially the same as
-    [RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], but with the
-    tolerance determined by a multiple of the standard deviation of the utilities.
+    [RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], but with
+    the tolerance determined by a multiple of the standard deviation of the utilities.
+
+    !!! Danger
+        This policy can break early if the utility function has high variance. This can
+        lead to gross underestimation of values. Use with caution.
 
     !!! Warning
         Initialization and `reset()` of this policy imply the computation of the total
         utility for the dataset, which can be expensive!
 
     Args:
-        burn_in_fraction: Fraction of samples within a batch (e.g. permutation) to wait
-            until actually checking.
+        burn_in_fraction: Fraction of samples within a permutation to wait until
+            actually checking.
         sigmas: Number of standard deviations to use as a threshold.
     """
 
-    def __init__(self, burn_in_fraction: float, sigmas: float = 1.0):
+    def __init__(self, sigmas: float, burn_in_fraction: float = 0.0):
         super().__init__()
         assert 0 <= burn_in_fraction <= 1
 
         self.burn_in_fraction = burn_in_fraction
         self.total_utility = 0.0
-        self.count = 0
+        self.count = 0  # within-permutation count
         self.variance = 0.0
         self.mean = 0.0
         self.sigmas = sigmas
@@ -225,5 +245,5 @@ class DeviationTruncation(TruncationPolicy):
             return
         logger.info("Computing total utility for DeviationTruncation.")
         assert utility.training_data is not None
-        self.total_utility = utility(Sample(-1, utility.training_data.indices))
+        self.total_utility = utility(Sample(None, utility.training_data.indices))
         self._is_setup = True

@@ -1,3 +1,27 @@
+"""
+Class-wise sampler for the [class-wise Shapley][intro-to-cw-shapley] valuation method.
+
+The class-wise Shapley method, introduced by Schoch et al., 2022[^1], uses a so-called
+*set-conditional marginal Shapley value* that requires selectively sampling subsets of
+data points with the same or a different class from that of the data point of interest.
+
+This sampling scheme is divided into an outer and an inner sampler. The outer one is any
+subclass of [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] that
+generates subsets of the complement set of the data point of interest. The inner sampler
+is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], typically
+(and in the paper) a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
+
+## References
+
+[^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
+    Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
+    Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
+    the Thirty-Sixth Conference on Neural Information Processing Systems
+    (NeurIPS). New Orleans, Louisiana, USA, 2022.
+
+"""
+
 from __future__ import annotations
 
 from itertools import cycle, islice
@@ -82,7 +106,8 @@ def get_unique_labels(array: NDArray) -> NDArray:
 class ClasswiseSampler(IndexSampler):
     """A sampler that samples elements from a dataset in two steps, based on the labels.
 
-    Used by the classwise Shapley valuation method.
+    Used by the [class-wise Shapley valuation
+    method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 
     Args:
         in_class: Sampling scheme for elements of a given label.
@@ -98,8 +123,9 @@ class ClasswiseSampler(IndexSampler):
         out_of_class: PowersetSampler,
         *,
         min_elements_per_label: int = 1,
+        batch_size: int = 1,
     ):
-        super().__init__()
+        super().__init__(batch_size=batch_size)
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label
@@ -119,7 +145,8 @@ class ClasswiseSampler(IndexSampler):
         # subset but in this case we want all indices.
         # The index for which we compute the value will be removed by
         # the in_class sampler instead.
-        self.out_of_class._index_iteration = NoIndexIteration
+        if not issubclass(self.out_of_class._index_iterator_cls, NoIndexIteration):
+            self.out_of_class._index_iterator_cls = NoIndexIteration
 
         out_of_class_batch_generators = {}
 
@@ -160,15 +187,12 @@ class ClasswiseSampler(IndexSampler):
         # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        # The weight method is not needed but has to be implemented
-        # because this class inherits from IndexSampler
-        # This is not needed because this class does not use its own evaluation strategy
-        # It instead uses the in-class sampler's evaluation strategy.
-        raise AttributeError("The weight should come from the in_class sampler")
+    def weight(self, n: int, subset_len: int) -> float:
+        # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
+        # method should never be called.
+        raise AttributeError("The weight should come from the in-class sampler")
 
-    def sample_limit(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         # The sample list cannot be computed without accessing the label
         # information and using that to compute the sample limits
         # of the in-class and out-of-class samplers first.

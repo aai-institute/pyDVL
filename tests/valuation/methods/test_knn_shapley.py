@@ -5,7 +5,7 @@ from sklearn import datasets
 from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.valuation.dataset import Dataset, GroupedDataset
-from pydvl.valuation.methods import DataShapleyValuation, KNNShapleyValuation
+from pydvl.valuation.methods import KNNShapleyValuation, ShapleyValuation
 from pydvl.valuation.samplers import PermutationSampler
 from pydvl.valuation.stopping import MinUpdates
 from pydvl.valuation.utility import KNNClassifierUtility
@@ -27,7 +27,7 @@ def montecarlo_results(data):
     data_train, data_test = data
     utility = KNNClassifierUtility(model=model, test_data=data_test)
     sampler = PermutationSampler(seed=42)
-    montecarlo_valuation = DataShapleyValuation(
+    montecarlo_valuation = ShapleyValuation(
         utility,
         sampler=sampler,
         is_done=MinUpdates(1000),
