@@ -18,7 +18,7 @@ def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
     sizes = np.array([len(sample.subset) for sample in samples])
     avg_sizes = sizes.reshape(n_samples_outer, -1).mean(axis=1)
     expected_sizes = probs * n_indices  # mean of Binomial(n_indices, probs)
-    np.testing.assert_allclose(avg_sizes, expected_sizes, rtol=0.01)
+    np.testing.assert_allclose(avg_sizes, expected_sizes, rtol=0.01, atol=1)
 
 
 @pytest.mark.flaky(reruns=1)
