@@ -22,13 +22,14 @@ def _check_sample_sizes(samples, n_samples_outer, n_indices, probs):
 
 
 @pytest.mark.flaky(reruns=1)
-def test_finite_owen_sampler():
+def test_finite_owen_sampler(seed):
     n_outer = 5
     n_inner = 100
     sampler = OwenSampler(
         outer_sampling_strategy=GridOwenStrategy(n_outer),
         n_samples_inner=n_inner,
         index_iteration=FiniteSequentialIndexIteration,
+        seed=seed,
     )
     indices = np.arange(2000)
 
