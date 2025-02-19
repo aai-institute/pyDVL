@@ -21,7 +21,6 @@ __all__ = [
     "SampleGenerator",
     "SampleT",
     "UtilityEvaluation",
-    "ValueUpdate",
 ]
 
 IndexT: TypeAlias = np.int_
@@ -32,8 +31,30 @@ NullaryPredicate: TypeAlias = Callable[[], bool]
 
 @dataclass(frozen=True)
 class ValueUpdate:
-    idx: int | IndexT | None
-    update: float
+    """ValueUpdates are emitted by evaluation strategies.
+
+    Typically, a value update is the product of a marginal utility, the sampler weight
+    and the valuation's coefficient. Instead of multiplying weights, coefficients and
+    utilities directly, the strategy works in log-space for numerical stability using
+    the samplers' log-weights and the valuation methods' log-coefficients.
+
+    The updates from all workers are converted back to linear space by
+    [LogResultUpdater][pydvl.valuation.samplers.base.LogResultUpdater].
+
+    !!! Note
+        The `update` field is kept consistent with `log_update` as `exp(log_update) *
+        sign`, but it's not intended to be used.
+    """
+
+    idx: IndexT | None
+    log_update: float
+    sign: int
+
+    def __init__(self, idx: IndexT | None, log_update: float, sign: int):
+        object.__setattr__(self, "idx", idx)
+        object.__setattr__(self, "log_update", log_update)
+        object.__setattr__(self, "sign", sign)
+        object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
 ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)
@@ -41,7 +62,7 @@ ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)
 
 @dataclass(frozen=True)
 class Sample:
-    idx: int | IndexT | None
+    idx: IndexT | None
     """Index of current sample"""
 
     subset: NDArray[IndexT]
@@ -80,7 +101,7 @@ class Sample:
         new_subset = np.array(self.subset.tolist() + [self.idx])
         return replace(self, subset=new_subset)
 
-    def with_idx(self, idx: int) -> Self:
+    def with_idx(self, idx: IndexT) -> Self:
         """Return a copy of sample with idx changed.
 
         Returns the original sample if idx is the same.

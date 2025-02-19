@@ -36,7 +36,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from pydvl.utils.numeric import running_moments
-from pydvl.valuation.types import Sample
+from pydvl.valuation.types import IndexT, Sample
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -72,7 +72,7 @@ class TruncationPolicy(ABC):
         self.n_truncations: int = 0
 
     @abstractmethod
-    def _check(self, idx: int, score: float, batch_size: int) -> bool:
+    def _check(self, idx: IndexT, score: float, batch_size: int) -> bool:
         """Implement the policy."""
         ...
 
@@ -81,7 +81,7 @@ class TruncationPolicy(ABC):
         """(Re)set the policy to a state ready for a new permutation."""
         ...
 
-    def __call__(self, idx: int, score: float, batch_size: int) -> bool:
+    def __call__(self, idx: IndexT, score: float, batch_size: int) -> bool:
         """Check whether the computation should be interrupted.
 
         Args:
@@ -102,7 +102,7 @@ class TruncationPolicy(ABC):
 class NoTruncation(TruncationPolicy):
     """A policy which never interrupts the computation."""
 
-    def _check(self, idx: int, score: float, batch_size: int) -> bool:
+    def _check(self, idx: IndexT, score: float, batch_size: int) -> bool:
         return False
 
     def reset(self, _: UtilityBase):
@@ -131,7 +131,7 @@ class FixedTruncation(TruncationPolicy):
         self.fraction = fraction
         self.count = 0  # within-permutation count
 
-    def _check(self, idx: int, score: float, batch_size: int) -> bool:
+    def _check(self, idx: IndexT, score: float, batch_size: int) -> bool:
         self.count += 1
         return self.count >= self.fraction * batch_size
 
@@ -165,13 +165,13 @@ class RelativeTruncation(TruncationPolicy):
         self.count = 0  # within-permutation count
         self._is_setup = False
 
-    def _check(self, idx: int, score: float, batch_size: int) -> bool:
+    def _check(self, idx: IndexT, score: float, batch_size: int) -> bool:
         self.count += 1
         if self.count < self.burn_in_fraction * batch_size:
             return False
         return np.allclose(score, self.total_utility, rtol=self.rtol)
 
-    def __call__(self, idx: int, score: float, batch_size: int) -> bool:
+    def __call__(self, idx: IndexT, score: float, batch_size: int) -> bool:
         if not self._is_setup:
             raise ValueError("RelativeTruncation not set up. Call reset() first.")
         return super().__call__(idx, score, batch_size)
@@ -219,7 +219,7 @@ class DeviationTruncation(TruncationPolicy):
         self.sigmas = sigmas
         self._is_setup = False
 
-    def _check(self, idx: int, score: float, batch_size: int) -> bool:
+    def _check(self, idx: IndexT, score: float, batch_size: int) -> bool:
         self.mean, self.variance = running_moments(
             self.mean, self.variance, self.count, score
         )
@@ -233,7 +233,7 @@ class DeviationTruncation(TruncationPolicy):
             self.sigmas * np.sqrt(self.variance)
         )
 
-    def __call__(self, idx: int, score: float, batch_size: int) -> bool:
+    def __call__(self, idx: IndexT, score: float, batch_size: int) -> bool:
         if not self._is_setup:
             raise ValueError("DeviationPolicy not set up. Call reset() first.")
         return super().__call__(idx, score, batch_size)

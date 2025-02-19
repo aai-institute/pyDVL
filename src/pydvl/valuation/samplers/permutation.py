@@ -26,8 +26,12 @@ from typing import Callable
 
 import numpy as np
 
+from pydvl.utils.numeric import logcomb
 from pydvl.utils.types import Seed
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
+from pydvl.valuation.samplers.base import (
+    EvaluationStrategy,
+    IndexSampler,
+)
 from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
@@ -64,13 +68,15 @@ class PermutationSamplerBase(IndexSampler):
         super().__init__(batch_size=batch_size)
         self.truncation = truncation or NoTruncation()
 
-    def weight(self, n: int, subset_len: int) -> float:
-        return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
+    def log_weight(self, n: int, subset_len: int) -> float:
+        if n > 0:
+            return float(-np.log(n) - logcomb(n - 1, subset_len))
+        return 0.0
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        coefficient: Callable[[int, int], float] | None = None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -147,7 +153,7 @@ class DeterministicPermutationSampler(PermutationSamplerBase):
 class PermutationEvaluationStrategy(
     EvaluationStrategy[PermutationSamplerBase, ValueUpdate]
 ):
-    """Computes marginal values for permutation sampling schemes.
+    """Computes marginal values for permutation sampling schemes in log-space.
 
     This strategy iterates over permutations from left to right, computing the marginal
     utility wrt. the previous one at each step to save computation.
@@ -157,7 +163,7 @@ class PermutationEvaluationStrategy(
         self,
         sampler: PermutationSamplerBase,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        coefficient: Callable[[int, int], float] | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         self.truncation = copy(sampler.truncation)
@@ -172,13 +178,16 @@ class PermutationEvaluationStrategy(
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation):  # type: int, int
+            for i, idx in enumerate(permutation):  # type: int, np.int_
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
                 marginal = curr - prev
-                marginal *= self.correction(self.n_indices, i)
-                r.append(ValueUpdate(idx, marginal))
+                sign = np.sign(marginal)
+                update = self.log_correction(self.n_indices, i) + np.log(
+                    marginal * sign
+                )
+                r.append(ValueUpdate(idx, update, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):
                     truncated = True

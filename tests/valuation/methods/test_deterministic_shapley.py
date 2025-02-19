@@ -226,4 +226,4 @@ def test_polynomial_with_outlier(
 
     check_total_value(poly_utility, values, atol=total_atol)
 
-    assert values[0].index == outlier_idx
+    assert values[0].idx == outlier_idx

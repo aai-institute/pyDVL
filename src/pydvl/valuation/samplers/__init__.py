@@ -5,63 +5,97 @@ The classes in this module are used to iterate over indices, and subsets of thei
 complement in the whole set, as required for the computation of marginal utilities
 for semi-values and other marginal-utility based methods.
 
-Subclasses of [IndexSampler][pydvl.valuation.samplers.IndexSampler] are iterators
-over **batches** of [Samples][pydvl.valuation.samplers.Sample] of the form $(i, S)$, where
-$i$ is an index of interest, and $S \subset I \setminus \{i\}$ is a subset of the
-complement of $i$.
-
-The samplers are used by all game-theoretic valuation methods, as well as for LOO and
+These samplers are used by all game-theoretic valuation methods, as well as for LOO and
 any other marginal-contribution-based method which iterates over subsets of the training
-data.
+data, and because of intertwining of these algorithms with the sampling, there are
+several strategies to choose when constructing them.
+
+## Index iteration
+
+Subclasses of [IndexSampler][pydvl.valuation.samplers.IndexSampler] are iterators
+over **batches** of [Samples][pydvl.valuation.samplers.Sample]. These are typically of
+the form $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
+is a subset of the complement of $i.$
+
+This type of iteration over indices $i$ and their complements is configured upon
+construction of the sampler with the classes
+[SequentialIndexIteration][pydvl.valuation.iteration.SequentialIndexIteration],
+[RandomIndexIteration][pydvl.valuation.iteration.RandomIndexIteration], or their finite
+counterparts, when each index must be visited just once (albeit possibly generating many
+samples per index).
+
+However, some valuation schemes require iteration over subsets of the whole set (as
+opposed to iterating over complements of individual indices). For this purpose, one can
+use [NoIndexIteration][pydvl.valuation.iteration.NoIndexIteration] or its finite
+counterpart.
 
 ## Sampler evaluation
 
-Because different samplers require different strategies for evaluating the utility
-of the subsets, the samplers are used in conjunction with an
-[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]. The
-basic usage pattern inside a valuation method is the following:
+Different samplers imply different strategies for processing samples, i.e. for
+evaluating the utility of the subsets. For instance permutation samplers generate
+increasing subsets of permutations, allowing semi-value calculations to benefit an
+incremental evaluation of the utility that reuses the previous computation.
+
+This behaviour is communicated to the valuation method through the
+[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] class. The basic
+usage pattern inside a valuation method is the following (see below for info on the
+`updater`):
 
 ```python
     def fit(self, data: Dataset):
-        self.utility.training_data = data
-        strategy = self.sampler.strategy(self.utility, self.coefficient)
+
+        ...
+
+        strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
+        processor = delayed(strategy.process)
+        updater = self.sampler.result_updater(self.result)
+
         delayed_batches = Parallel()(
-            delayed(strategy.process)(batch=list(batch), is_interrupted=flag)
-            for batch in self.sampler
+            processor(batch=list(batch), is_interrupted=flag) for batch in self.sampler
         )
         for batch in delayed_batches:
             for evaluation in batch:
-                self.result.update(evaluation.idx, evaluation.update)
-            if self.is_done(self.result):
-                flag.set()
-                break
+                self.result = updater(evaluation)
+            ...
 ```
 
-See more on the [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]
-class.
+## Updating the result
+
+Yet another behaviour that depends on the sampling scheme is the way that results are
+updated. For instance, the [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler]
+requires tracking updates to two sequences of samples which are then merged in a
+specific way. This strategy is declared by the sampler through the factory method
+[result_updater()][pydvl.valuation.samplers.base.IndexSampler.result_updater],
+which returns a callable that updates the result with a single evaluation.
+
 
 ## Creating custom samplers
 
 To create a custom sampler, subclass either
 [PowersetSampler][pydvl.valuation.samplers.PowersetSampler]
-or [PermutationSampler][pydvl.valuation.samplers.PermutationSampler], or
+or [PermutationSamplerBase][pydvl.valuation.samplers.PermutationSamplerBase], or
 implement the [IndexSampler][pydvl.valuation.samplers.IndexSampler] interface directly.
 
-There are two main methods to implement (and others that can be overridden):
+There are three main methods to implement (and others that can be overridden):
 
-* [generate()][pydvl.valuation.samplers.IndexSampler.generate], which yields samples of the
-  form $(i, S)$. These will be batched together by `__iter__`. For `PermutationSampler`,
-  the batch size is always the number of indices since permutations must always be
-  processed in full.
-* [weight()][pydvl.valuation.samplers.IndexSampler.weight] to provide a factor by which to
-  multiply Monte Carlo samples in stochastic methods, so that the mean converges to the
-  desired expression.
-
-Additionally, if the sampler requires a dedicated evaluation strategy different from
-the marginal evaluations for `PowersetSampler` or the successive evaluations for
-`PermutationSampler`, you need to subclass
-[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] and set the
-`strategy_cls` attribute of the sampler to this class.
+* [generate()][pydvl.valuation.samplers.IndexSampler.generate], which yields samples of
+  the form $(i, S)$. These will be batched together by `__iter__` for parallel
+  processing. Note that, if the index set has size $N$, for
+  [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], a
+  batch size of $B$ implies $O(B*N)$ evaluations of the utility in one process, since
+  single permutations are always processed in one go.
+* [weight()][pydvl.valuation.samplers.IndexSampler.weight] to provide a factor by which
+  to multiply Monte Carlo samples in stochastic methods, so that the mean converges to
+  the desired expression.
+* [make_strategy()][pydvl.valuation.samplers.IndexSampler.make_strategy] to create an
+  evaluation strategy that processes the samples. This is typically a subclass of
+  [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] that computes
+  utilities and weights them with coefficients and sampler weights.
+  One can also use any of the predefined strategies, like the successive marginal
+  evaluations of
+  [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy]
+  or the successive evaluations of
+  [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
 
 Finally, if the sampler requires a dedicated result updater, you must override
 [result_updater()][pydvl.valuation.samplers.base.IndexSampler.result_updater] to return

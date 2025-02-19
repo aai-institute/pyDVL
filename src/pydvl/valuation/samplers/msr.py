@@ -12,6 +12,9 @@ returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strateg
 [result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
 respectively.
 
+For more on the general architecture of samplers see
+[pydvl.valuation.samplers][pydvl.valuation.samplers].
+
 ## References
 
 [^1]: <a name="wang_data_2023"></a>Wang, J.T. and Jia, R., 2023.
@@ -34,12 +37,13 @@ from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import (
     EvaluationStrategy,
     IndexSampler,
+    LogResultUpdater,
     ResultUpdater,
-    SamplerT,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
+    IndexT,
     NullaryPredicate,
     Sample,
     SampleBatch,
@@ -53,17 +57,25 @@ __all__ = ["MSRSampler"]
 
 @dataclass(frozen=True)
 class MSRValueUpdate(ValueUpdate):
-    is_positive: bool
+    in_sample: bool
+
+    def __init__(self, idx: IndexT, log_update: float, sign: int, in_sample: bool):
+        object.__setattr__(self, "idx", idx)
+        object.__setattr__(self, "log_update", log_update)
+        object.__setattr__(self, "sign", sign)
+        object.__setattr__(self, "in_sample", in_sample)
+        object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
-class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
-    """Update running means for MSR valuation.
+class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
+    """Update running means for MSR valuation (in log-space).
 
     This class is used to update two running means for positive and negative updates
     separately. The two running means are later combined into a final result.
 
-    Since MSR-Banzhaf values are not a mean over marginals, both the variances of the
-    marginals and the update counts are ill-defined. We use the following conventions:
+    Since values computed with MSR are not a mean over marginals, both the variances of
+    the marginals and the update counts are ill-defined. We use the following
+    conventions:
 
     1. The counts are defined as the minimum of the two counts. This definition enables
     us to ensure a minimal number of updates for both running means via stopping
@@ -83,19 +95,22 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
 
     def __init__(self, result: ValuationResult):
         self.result = result
-        self.positive = ValuationResult.zeros(
+        self.in_sample = ValuationResult.zeros(
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
-        self.negative = ValuationResult.zeros(
+        self.out_of_sample = ValuationResult.zeros(
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
 
+        self.update_in_sample = LogResultUpdater[MSRValueUpdate](self.in_sample)
+        self.update_out_of_sample = LogResultUpdater[MSRValueUpdate](self.out_of_sample)
+
     def __call__(self, update: MSRValueUpdate) -> ValuationResult:
         assert update.idx is not None
-        if update.is_positive:
-            self.positive.update(update.idx, update.update)
+        if update.in_sample:
+            self.update_in_sample(update)
         else:
-            self.negative.update(update.idx, update.update)
+            self.update_out_of_sample(update)
         return self.combine_results()
 
     def combine_results(self) -> ValuationResult:
@@ -105,17 +120,18 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
 
         TODO: Verify that the two running means are statistically independent (which is
             assumed in the aggregation of variances).
-
         """
         # define counts as minimum of the two counts (see docstring)
-        counts = np.minimum(self.positive.counts, self.negative.counts)
+        counts = np.minimum(self.in_sample.counts, self.out_of_sample.counts)
 
-        values = self.positive.values - self.negative.values
+        values = self.in_sample.values - self.out_of_sample.values
         values[counts == 0] = np.nan
 
         # define variances that yield correct standard errors (see docstring)
-        pos_var = self.positive.variances / np.clip(self.positive.counts, 1, np.inf)
-        neg_var = self.negative.variances / np.clip(self.negative.counts, 1, np.inf)
+        pos_var = self.in_sample.variances / np.clip(self.in_sample.counts, 1, np.inf)
+        neg_var = self.out_of_sample.variances / np.clip(
+            self.out_of_sample.counts, 1, np.inf
+        )
         variances = np.where(counts != 0, (pos_var + neg_var) * counts, np.inf)
 
         self.result = ValuationResult(
@@ -157,8 +173,8 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             subset = random_subset(indices, seed=self._rng)
             yield Sample(None, subset)
 
-    def weight(self, n: int, subset_len: int) -> float:
-        r"""Inverse probability of sampling a set of size k.
+    def log_weight(self, n: int, subset_len: int) -> float:
+        r"""Probability of sampling a set of size k.
 
         In the **MSR scheme**, the sampling is done from the full power set $2^N$ (each
         set $S \subseteq N$ with probability $1 / 2^n$), and then for each data point
@@ -171,7 +187,9 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
         uniformly distributed over $2^{N_{- i}}$. In other words, the act of
         partitioning recovers the uniform distribution on $2^{N_{- i}}$ "for free"
         because
-        $$P (S_{- i} = T \mid i \in S) = \frac{1}{2^{n - 1}}$$
+
+        $$P (S_{- i} = T \mid i \in S) = \frac{1}{2^{n - 1}},$$
+
         for each $T \subseteq N_{- i}$.
 
         Args:
@@ -179,31 +197,32 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             subset_len: Size of the subset.
 
         Returns:
-            The inverse probability of having sampled a set of size `subset_len`.
+            The logarithm of the probability of having sampled a set of size
+                `subset_len`.
         """
-        return 2 ** (n - 1) if n > 0 else 1.0  # type: ignore
+        return float(-(n - 1) * np.log(2)) if n > 0 else 0.0
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        coefficient: Callable[[int, int], float] | None = None,
     ) -> MSREvaluationStrategy:
         assert coefficient is not None
         return MSREvaluationStrategy(self, utility, coefficient)
 
-    def result_updater(self, result: ValuationResult) -> MSRResultUpdater:
-        return MSRResultUpdater(result)
+    def result_updater(self, result: ValuationResult) -> ResultUpdater:
+        return MSRLogResultUpdater(result)
 
 
-class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
-    """Evaluation strategy for Maximum Sample Re-use (MSR) valuation.
+class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
+    """Evaluation strategy for Maximum Sample Re-use (MSR) valuation in log space.
 
     The MSR evaluation strategy makes one utility evaluation per sample but generates
     `n_indices` many updates from it. The updates will be used to update two running
     means that will later be combined into a final value. We use the field
-    `ValueUpdate.is_positive` field to inform [MSRResultUpdater][pydvl.valuation.samplers.MSRResultUpdater]
-     of which of the two running
-    means must be updated.
+    `ValueUpdate.in_sample` field to inform
+    [MSRResultUpdater][pydvl.valuation.samplers.MSRResultUpdater] of which of the two
+    running means must be updated.
     """
 
     def process(
@@ -217,15 +236,14 @@ class MSREvaluationStrategy(EvaluationStrategy[SamplerT, MSRValueUpdate]):
         return updates
 
     def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
-        u_value = self.utility(sample)
+        u = self.utility(sample)
+        sign = np.sign(u)
         mask = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True
 
         updates = []
-        for i, is_positive in enumerate(mask):  # type: int, bool
-            k = len(sample.subset) - int(is_positive)
-            coeff = self.correction(self.n_indices, k)
-            updates.append(
-                MSRValueUpdate(idx=i, update=u_value * coeff, is_positive=is_positive)
-            )
+        for i, in_sample in enumerate(mask):  # type: int, bool
+            k = len(sample.subset) - int(in_sample)
+            update = self.log_correction(self.n_indices, k) + np.log(u * sign)
+            updates.append(MSRValueUpdate(np.int_(i), update, sign, in_sample))
         return updates

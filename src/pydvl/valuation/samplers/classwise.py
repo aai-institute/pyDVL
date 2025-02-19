@@ -187,7 +187,7 @@ class ClasswiseSampler(IndexSampler):
         # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")
 
-    def weight(self, n: int, subset_len: int) -> float:
+    def log_weight(self, n: int, subset_len: int) -> float:
         # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
         # method should never be called.
         raise AttributeError("The weight should come from the in-class sampler")
@@ -203,6 +203,6 @@ class ClasswiseSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int, float], float] | None = None,
+        log_coefficient: Callable[[int, int], float] | None = None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
-        return self.in_class.make_strategy(utility, coefficient)
+        return self.in_class.make_strategy(utility, log_coefficient)
