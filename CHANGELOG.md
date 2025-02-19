@@ -76,6 +76,9 @@
 
 ### Changed
 
+- Switched all semi-value coefficients and sampler weights to log-space in
+  order to avoid overflows
+  [PR #643](https://github.com/aai-institute/pyDVL/pull/643)
 - Updated and rewrote some of the MSR banzhaf notebook
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Updated Least-Core notebook
@@ -84,9 +87,6 @@
   thus subsuming Variance-Reduced stratified sampling into a unified framework.
   Implemented the heuristics proposed in that paper
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
-- Changed the way semi-value coefficients are composed with sampler weights in
-  order to avoid `OverflowError` for very small or large values
-  [PR #639](https://github.com/aai-institute/pyDVL/pull/639)
 - Uniformly distribute test points across processes for KNNShapley. Fail for
   `GroupedDataset` [PR #632](https://github.com/aai-institute/pyDVL/pull/632)
 - Introduced the concept of logical vs data indices for `Dataset`, and
