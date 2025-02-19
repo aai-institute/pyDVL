@@ -1,3 +1,37 @@
+r"""
+This module implements the utility function used in KNN-Shapley, as introduced by
+Jia et al. (2019)[^1].
+
+$$
+U (S) \assign \frac{1}{n_{\text{test}}}  \sum_{j = 1}^{n_{\text{test}}}
+   \frac{1}{K}  \sum_{k = 1}^{| \alpha^{(j)} | \}}
+   \mathbb{1} \{ y_{\alpha^{(j)}_k (S)} = y^{\text{test}}_j \},
+$$
+
+where $\alpha^{(j)} (S)$ is the intersection of the $K$-nearest neighbors of the test
+point $x^{\text{test}}_j$ across the whole training set, and the sample $S$. In
+particular, $\alpha^{(j)}_k (S)$ is the index of the training point in $S$ which is
+ranked $k$-th closest to test point $x^{\text{test}}_j.$
+
+
+!!! Warning "Uses of this utility"
+    Although this class can be used in conjunction with any semi-value method and
+    sampler, when computing **Shapley** values, it is recommended to use the dedicated
+    valuation class
+    [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation],
+    because it implements a more efficient algorithm for computing Shapley values
+    which runs in O(n log n) time for each test point.
+
+
+## References
+
+[^1]: <a name="jia_efficient_2019a"></a>Jia, R. et al., 2019. [Efficient
+    Task-Specific Data Valuation for Nearest Neighbor
+    Algorithms](https://doi.org/10.14778/3342263.3342637). In: Proceedings of
+    the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
+
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -12,7 +46,7 @@ from pydvl.valuation.utility import ModelUtility
 
 __all__ = ["KNNClassifierUtility"]
 
-from pydvl.valuation import Scorer
+from pydvl.valuation.scorers.base import Scorer
 from pydvl.valuation.utility.modelutility import ModelT
 
 
@@ -28,8 +62,13 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
 
     The utility function is the model's predicted probability for the true class.
 
-    This works both as a Utility object for general game theoretic valuation methods and
-    for specialized valuation methods for KNN classifiers.
+    !!! Warning "Uses of this utility"
+        Although this class can be used in conjunction with any semi-value method and
+        sampler, when computing Shapley values, it is recommended to use the dedicated
+        class
+        [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation],
+        because it implements a more efficient algorithm for computing Shapley values
+        which runs in O(n log n) time for each test point.
 
     Args:
         model: A KNN classifier model.
