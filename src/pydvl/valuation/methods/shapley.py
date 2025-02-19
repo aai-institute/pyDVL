@@ -109,8 +109,9 @@ pattern remains the same.
       2242--2251.
 """
 
-import math
+import numpy as np
 
+from pydvl.utils import logcomb
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
 __all__ = ["ShapleyValuation"]
@@ -121,5 +122,5 @@ class ShapleyValuation(SemivalueValuation):
 
     algorithm_name = "Shapley"
 
-    def coefficient(self, n: int, k: int, weight: float) -> float:
-        return weight / math.comb(n - 1, k) / n
+    def log_coefficient(self, n: int, k: int) -> float:
+        return float(-np.log(n) - logcomb(n - 1, k))

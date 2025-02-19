@@ -17,7 +17,6 @@ from pydvl.valuation.samplers import (
     AntitheticSampler,
     ConstantSampleSize,
     DeterministicUniformSampler,
-    GridOwenStrategy,
     HarmonicSampleSize,
     MSRSampler,
     OwenSampler,
@@ -397,34 +396,3 @@ def test_grouped_linear_montecarlo_shapley(
     exact_values = exact_valuation.values()
 
     check_values(values, exact_values, rtol=rtol)
-
-
-# @pytest.mark.skip(reason="An unnecessary test of numerical stability")
-@pytest.mark.parametrize("sampler_cls", [OwenSampler, AntitheticOwenSampler])
-@pytest.mark.parametrize(
-    "sampler_kwargs",
-    [
-        {"outer_sampling_strategy": (GridOwenStrategy, {"n_samples_outer": 10})},
-        {"outer_sampling_strategy": (UniformOwenStrategy, {"n_samples_outer": 10})},
-    ],
-)
-def test_owen_weight(sampler_cls, sampler_kwargs, dummy_utility):
-    """This tests that we effectively cancel the Shapley coefficient using the Owen
-    samplers, so that the method has a coefficient of 1.0 for all combinations of n and
-    k.
-
-    It is actually not necessary to test this, but I'm leaving the code here in case we
-    want to come back to it later.
-    """
-    sampler = recursive_make(sampler_cls, sampler_kwargs)
-    utility = dummy_utility
-    valuation = ShapleyValuation(utility, sampler, is_done=NoStopping())
-
-    results = []
-    for n in np.random.randint(1000, 100000, size=4):
-        n = int(n)
-        for k in np.random.randint(0, n, size=4):  # type: int
-            result = valuation.coefficient(n, k, sampler.weight(n, k))
-            results.append(result)
-
-    assert np.all(np.array(results) == 1.0)

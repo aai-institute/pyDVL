@@ -1,6 +1,5 @@
 r"""
-!!! Fixme "Move this to the docs"
-
+FIXME: Move this to the docs
 
 Owen sampling schemes are a family of sampling schemes that are used to estimate
 Shapley values. They are based on a multilinear extension technique from game theory,
@@ -10,18 +9,19 @@ probabilities of including indices into samples.
 In order to compute values it is enough to use any of the Owen samplers together with a
 [ShapleyValuation][pydvl.valuation.methods.ShapleyValuation] object.
 
-!!! Example "Finite Owen Sampler"
-    [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] with a
-    [FiniteSequentialIndexIteration][pydvl.valuation.iteration.FiniteSequentialIndexIteration]
-    for the outer loop and a
-    [GridOwenStrategy][pydvl.valuation.samplers.owen.GridOwenStrategy] for the sampling
-    probabilities is the most basic Owen sampler. It uses a deterministic grid of
-    probability values between 0 and 1 for the inner sampling. It follows the idea of
-    the original paper and should be instantiated with
-    [NoStopping][pydvl.valuation.stopping.NoStopping] as stopping criterion. Note that
-    because the criterion never checks for convergence, the status of the valuation will
-    always be `Status.Pending`.
+## Finite Owen Sampler
+[OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] with a
+[FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration]
+for the outer loop and a
+[GridOwenStrategy][pydvl.valuation.samplers.owen.GridOwenStrategy] for the sampling
+probabilities is the most basic Owen sampler. It uses a deterministic grid of
+probability values between 0 and 1 for the inner sampling. It follows the idea of
+the original paper and should be instantiated with
+[NoStopping][pydvl.valuation.stopping.NoStopping] as stopping criterion. Note that
+because the criterion never checks for convergence, the status of the valuation will
+always be `Status.Pending`.
 
+??? Example
     ```python
     from pydvl.valuation import OwenSampler, ShapleyValuation, NoStopping
     ...
@@ -36,14 +36,15 @@ In order to compute values it is enough to use any of the Owen samplers together
     shapley_values = valuation.values()
     ```
 
-!!! Example "Owen Sampler"
-    [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] follows the same principle
-    as [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler], but samples
-    probability values between 0 and 1 at random indefinitely. It requires a stopping
-    criterion to be used with the valuation method, and thus follows more closely the
-    general pattern of the valuation methods. This makes it more adequate for actual use
-    since it is no longer required to estimate a number of outer samples required.
+## Owen Sampler
+[OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] follows the same principle
+as [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler], but samples
+probability values between 0 and 1 at random indefinitely. It requires a stopping
+criterion to be used with the valuation method, and thus follows more closely the
+general pattern of the valuation methods. This makes it more adequate for actual use
+since it is no longer required to estimate a number of outer samples required.
 
+!!! Example
     ```python
     from pydvl.valuation import OwenSampler, ShapleyValuation, RankCorrelation
     ...
@@ -53,13 +54,14 @@ In order to compute values it is enough to use any of the Owen samplers together
     valuation.fit(dataset)
     ```
 
-!!! Example "Antithetic Owen Sampler"
-    [AntitheticOwenSampler][pydvl.valuation.samplers.owen.AntitheticOwenSampler] is a
-    variant of the [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] that draws
-    probability values $q$ between 0 and 0.5 at random and then generates two samples
-    for each index, one using the probability $q$ for index draws, and another with
-    probability $1-q$.
+## Antithetic Owen Sampler
+[AntitheticOwenSampler][pydvl.valuation.samplers.owen.AntitheticOwenSampler] is a
+variant of the [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler] that draws
+probability values $q$ between 0 and 0.5 at random and then generates two samples
+for each index, one using the probability $q$ for index draws, and another with
+probability $1-q$.
 
+!!! Example
     ```python
     from pydvl.valuation import AntitheticOwenSampler, ShapleyValuation, RankCorrelation
     ...

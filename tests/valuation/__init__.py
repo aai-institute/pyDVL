@@ -107,8 +107,8 @@ def check_rank_correlation(
     values.sort()
     exact_values.sort()
 
-    top_k = np.array([it.index for it in values[-k:]])
-    top_k_exact = np.array([it.index for it in exact_values[-k:]])
+    top_k = np.array([it.idx for it in values[-k:]])
+    top_k_exact = np.array([it.idx for it in exact_values[-k:]])
 
     correlation, pvalue = spearmanr(top_k, top_k_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"

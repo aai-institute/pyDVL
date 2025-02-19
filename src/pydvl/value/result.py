@@ -610,7 +610,11 @@ class ValuationResult(
         except KeyError:
             raise IndexError(f"Index {idx} not found in ValuationResult")
         val, var = running_moments(
-            self._values[pos], self._variances[pos], self._counts[pos], new_value
+            self._values[pos],
+            self._variances[pos],
+            self._counts[pos],
+            new_value,
+            unbiased=False,
         )
         self[pos] = ValueItem(
             index=cast(IndexT, idx),  # FIXME
