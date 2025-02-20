@@ -5,7 +5,6 @@
     "notebooks/influence_synthetic.ipynb::": 7.191153166999996,
     "notebooks/influence_wine.ipynb::": 11.610076332999995,
     "notebooks/least_core_basic.ipynb::": 14.069404709000011,
-    "notebooks/least_core_basic_new.ipynb::": 24.492538208000013,
     "notebooks/msr_banzhaf_digits.ipynb::": 86.62082037599998,
     "notebooks/shapley_basic_spotify.ipynb::": 15.088616748999982,
     "notebooks/shapley_knn_flowers.ipynb::": 6.810235208000023,
