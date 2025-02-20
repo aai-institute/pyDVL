@@ -26,15 +26,15 @@ from typing import Callable
 
 import numpy as np
 
-from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import (
+    SupervisedModelT,
     SupervisedScorer,
     SupervisedScorerCallable,
 )
 
 
-class ClasswiseSupervisedScorer(SupervisedScorer):
+class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
     """A Scorer designed for evaluation in classification problems.
 
     The final score is the combination of the in-class and out-of-class scores, which
@@ -68,7 +68,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             to discount the out-of-class score.
         rescale_scores: If set to True, the scores will be denormalized. This is
             particularly useful when the inner score function $a_S$ is calculated by
-            an estimator of the form $\frac{1}{N} \sum_i x_i$.
+            an estimator of the form $\frac{1}{N} \\sum_i x_i$.
         name: Name of the scorer. If not provided, the name of the inner scoring
             function will be prefixed by `classwise `.
 
@@ -77,7 +77,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable | SupervisedModel,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
         test_data: Dataset,
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),
@@ -99,13 +99,13 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label: int | None = None
-        self.num_classes = len(np.unique(self.test_data.y))
+        self.num_classes = len(np.unique(self.test_data.data().y))
         self.rescale_scores = rescale_scores
 
     def __str__(self) -> str:
         return self.name
 
-    def __call__(self, model: SupervisedModel) -> float:
+    def __call__(self, model: SupervisedModelT) -> float:
         (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
             model,
             rescale_scores=self.rescale_scores,
@@ -115,7 +115,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         return disc_score_in_class * disc_score_out_of_class
 
     def compute_in_and_out_of_class_scores(
-        self, model: SupervisedModel, rescale_scores: bool = True
+        self, model: SupervisedModelT, rescale_scores: bool = True
     ) -> tuple[float, float]:
         r"""
         Computes in-class and out-of-class scores using the provided inner
@@ -150,27 +150,22 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
             )
 
         scorer = self._scorer
-        label_set_match = self.test_data.y == self.label
+        label_set_match = self.test_data.data().y == self.label
         label_set = np.where(label_set_match)[0]
 
         if len(label_set) == 0:
             return 0, 1 / max(1, self.num_classes - 1)
 
         complement_label_set = np.where(~label_set_match)[0]
-        in_class_score = scorer(
-            model, self.test_data.x[label_set], self.test_data.y[label_set]
-        )
-        out_of_class_score = scorer(
-            model,
-            self.test_data.x[complement_label_set],
-            self.test_data.y[complement_label_set],
-        )
+        in_class_score = scorer(model, *self.test_data.data(label_set))
+        out_of_class_score = scorer(model, *self.test_data.data(complement_label_set))
 
         if rescale_scores:
             # TODO: This can lead to NaN values
             #       We should clearly indicate this to users
-            n_in_class = np.count_nonzero(self.test_data.y == self.label)
-            n_out_of_class = len(self.test_data.y) - n_in_class
+            _, y_test = self.test_data.data()
+            n_in_class = np.count_nonzero(y_test == self.label)
+            n_out_of_class = len(y_test) - n_in_class
             in_class_score *= n_in_class / (n_in_class + n_out_of_class)
             out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)
 

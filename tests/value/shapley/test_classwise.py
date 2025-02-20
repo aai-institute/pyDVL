@@ -12,9 +12,8 @@ from sklearn import datasets
 from sklearn.linear_model import LogisticRegression
 
 from pydvl.utils import Dataset as OldDataset
-from pydvl.utils import Utility
+from pydvl.utils import Utility, powerset
 from pydvl.utils import Utility as OldUtility
-from pydvl.utils import powerset
 from pydvl.valuation import (
     ClasswiseModelUtility,
     ClasswiseSampler,
@@ -115,9 +114,9 @@ def classwise_shapley_exact_solution_no_default() -> Tuple[Dict, ValuationResult
 
 
 @pytest.fixture(scope="function")
-def classwise_shapley_exact_solution_no_default_allow_empty_set() -> (
-    Tuple[Dict, ValuationResult, Dict]
-):
+def classwise_shapley_exact_solution_no_default_allow_empty_set() -> Tuple[
+    Dict, ValuationResult, Dict
+]:
     r"""
     Note that this special case doesn't set the utility to 0 if the permutation is
     empty and additionally allows $S^{(k)} = \emptyset$. See
@@ -210,15 +209,19 @@ def test_classwise_scorer_utility(dataset_left_right_margins):
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0, atol=1e-5)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0, atol=1e-5)
 
     value = scorer(model, x, y)
-    assert np.isclose(value, in_cls_acc_0 * np.exp(out_of_cls_acc_0))
+    np.testing.assert_allclose(
+        value, in_cls_acc_0 * np.exp(out_of_cls_acc_0), atol=1e-5
+    )
 
     scorer.label = 1
     value = scorer(model, x, y)
-    assert np.isclose(value, out_of_cls_acc_0 * np.exp(in_cls_acc_0))
+    np.testing.assert_allclose(
+        value, out_of_cls_acc_0 * np.exp(in_cls_acc_0), atol=1e-5
+    )
 
 
 @pytest.mark.parametrize("n_element, left_margin, right_margin", [(101, 0.3, 0.4)])
@@ -330,8 +333,8 @@ def test_classwise_scorer_accuracies_left_right_margins(dataset_left_right_margi
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0, atol=1e-5)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0, atol=1e-5)
 
 
 def test_closed_form_linear_classifier(

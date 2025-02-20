@@ -56,7 +56,7 @@ def test_squashed_r2():
     """Tests the squashed_r2 scorer."""
     assert str(squashed_r2) == "squashed r2"
     assert repr(squashed_r2) == "SquashedR2 (scorer=r2)"
-    assert np.allclose(squashed_r2.range, (0, 1))
+    np.testing.assert_allclose(squashed_r2.range, (0, 1))
 
     coef = np.array([1, 2])
     X = np.array([[1, 2], [3, 4]])
@@ -71,7 +71,7 @@ def test_squashed_variance():
         repr(squashed_variance)
         == "SquashedExplainedVariance (scorer=explained_variance)"
     )
-    assert np.allclose(squashed_variance.range, (0, 1))
+    np.testing.assert_allclose(squashed_variance.range, (0, 1))
 
     coef = np.array([1, 2])
     X = np.array([[1, 2], [3, 4]])

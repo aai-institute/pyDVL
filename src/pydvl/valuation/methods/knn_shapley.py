@@ -13,20 +13,24 @@ This module contains Shapley computations for K-Nearest Neighbours.
     the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
 
 """
+
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
-from joblib import Parallel, delayed
+from joblib.parallel import Parallel, delayed, get_active_backend
+from more_itertools import chunked
 from numpy.typing import NDArray
-from sklearn.neighbors import NearestNeighbors
+from sklearn.base import clone
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from tqdm.auto import tqdm
 from typing_extensions import Self
 
 from pydvl.utils.status import Status
 from pydvl.valuation.base import Valuation
-from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.utility import KNNClassifierUtility
 
 
 class KNNShapleyValuation(Valuation):
@@ -46,16 +50,20 @@ class KNNShapleyValuation(Valuation):
 
     """
 
-    def __init__(self, utility: KNNClassifierUtility, progress: bool = True):
+    def __init__(
+        self,
+        model: KNeighborsClassifier,
+        test_data: Dataset,
+        progress: bool = True,
+        clone_before_fit: bool = True,
+    ):
         super().__init__()
-        self.utility = utility
+        if not isinstance(model, KNeighborsClassifier):
+            raise TypeError("KNN Shapley requires a K-Nearest Neighbours model")
+        self.model = model
+        self.test_data = test_data
         self.progress = progress
-
-        config = self.utility.model.get_params()
-        self.n_neighbors = config["n_neighbors"]
-
-        del config["weights"]
-        self.helper_model = NearestNeighbors(**config)
+        self.clone_before_fit = clone_before_fit
 
     def fit(self, data: Dataset) -> Self:
         """Calculate exact shapley values for a KNN model on a dataset.
@@ -64,7 +72,7 @@ class KNNShapleyValuation(Valuation):
         calculates the Shapley values directly.
 
         In contrast to other data valuation models, the runtime increases linearly
-        with the size of the test dataset.
+        with the size of the dataset.
 
         Calculating the KNN valuation is a computationally expensive task that
         can be parallelized. To do so, call the `fit()` method inside a
@@ -76,81 +84,91 @@ class KNNShapleyValuation(Valuation):
         with parallel_config(n_jobs=4):
             valuation.fit(data)
         ```
-
         """
-        self.helper_model = self.helper_model.fit(data.x)
-        n_obs = len(data.x)
-        n_test = len(self.utility.test_data)
 
-        generator = zip(self.utility.test_data.x, self.utility.test_data.y)
+        if isinstance(data, GroupedDataset):
+            raise TypeError("GroupedDataset is not supported by KNNShapleyValuation")
 
-        generator_with_progress = tqdm(
-            generator,
-            total=n_test,
-            disable=not self.progress,
-            position=0,
-        )
+        x_train, y_train = data.data()
+        if self.clone_before_fit:
+            self.model = cast(KNeighborsClassifier, clone(self.model))
+        self.model.fit(x_train, y_train)
 
-        with Parallel(return_as="generator") as parallel:
+        n_test = len(self.test_data)
+
+        _, n_jobs = get_active_backend()
+        n_jobs = n_jobs or 1  # Handle None if outside a joblib context
+        batch_size = (n_test // n_jobs) + (1 if n_test % n_jobs else 0)
+        x_test, y_test = self.test_data.data()
+        batches = zip(chunked(x_test, batch_size), chunked(y_test, batch_size))
+
+        process = delayed(self._compute_values_for_test_points)
+        with Parallel(return_as="generator_unordered") as parallel:
             results = parallel(
-                delayed(self._compute_values_for_one_test_point)(
-                    self.helper_model, x, y, data.y
-                )
-                for x, y in generator_with_progress
+                process(self.model, x_test, y_test, y_train)
+                for x_test, y_test in batches
             )
-            values = np.zeros(n_obs)
-            for res in results:
+            values = np.zeros(len(data))
+            # FIXME: this progress bar won't add much since we have n_jobs batches and
+            #  they will all take about the same time
+            for res in tqdm(results, total=n_jobs, disable=not self.progress):
                 values += res
             values /= n_test
 
-        res = ValuationResult(
+        self.result = ValuationResult(
             algorithm="knn_shapley",
             status=Status.Converged,
             values=values,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
-        self.result = res
         return self
 
     @staticmethod
-    def _compute_values_for_one_test_point(
-        helper_model: NearestNeighbors, x: NDArray, y: int, y_train: NDArray
-    ) -> np.ndarray:
-        """Compute the Shapley value for a single test data point.
+    def _compute_values_for_test_points(
+        model: NearestNeighbors,
+        x_test: NDArray,
+        y_test: NDArray,
+        y_train: NDArray,
+    ) -> NDArray[np.float64]:
+        """Compute the Shapley value using a set of test points.
 
-        The shapley values of the whole test set are the average of the shapley values
-        of the single test data points.
+        The Shapley value for a training point is computed over the whole test set by
+        averaging the Shapley values of the single test data points.
 
         Args:
-            helper_model: A fitted NearestNeighbors model.
-            x: A single test data point.
-            y: The correct label of the test data point.
-            y_train: The training labels.
+            model: A fitted NearestNeighbors model.
+            x_test: The test data points.
+            y_test: The test labels.
+            y_train: The labels for the training points to be valued.
 
         Returns:
-            The Shapley values for the test data point.
+            The Shapley values for the training data points.
 
         """
         n_obs = len(y_train)
-        n_neighbors = helper_model.get_params()["n_neighbors"]
+        n_neighbors = model.get_params()["n_neighbors"]
 
-        # sorts data indices from close to far
-        sorted_indices = helper_model.kneighbors(
-            x.reshape(1, -1), n_neighbors=n_obs, return_distance=False
-        )[0]
+        # sort data indices from close to far
+        sorted_indices = model.kneighbors(
+            x_test, n_neighbors=n_obs, return_distance=False
+        )
 
-        values = np.zeros(n_obs)
+        values = np.zeros(shape=(len(x_test), n_obs))
 
-        idx = sorted_indices[-1]
-        values[idx] = float(y_train[idx] == y) / n_obs
-        # reverse range because we want to go from far to close
-        for i in range(n_obs - 1, 0, -1):
-            prev_idx = sorted_indices[i]
-            idx = sorted_indices[i - 1]
-            values[idx] = values[prev_idx]
-            values[idx] += (int(y_train[idx] == y) - int(y_train[prev_idx] == y)) / max(
-                n_neighbors, i
-            )
+        for query, neighbors in enumerate(sorted_indices):
+            label = y_test[query]
+            # Initialize the farthest neighbor's value
+            idx = neighbors[-1]
+            values[query][idx] = float(y_train[idx] == label) / n_obs
+            # reverse range because we want to go from far to close
+            for i in range(n_obs - 1, 0, -1):
+                prev_idx = neighbors[i]
+                idx = neighbors[i - 1]
+                values[query][idx] = values[query][prev_idx]
+                values[query][idx] += (
+                    int(y_train[idx] == label) - int(y_train[prev_idx] == label)
+                ) / max(n_neighbors, i)
+                # 1/max(K, i) = 1/K * min{K, i}/i as in the paper
 
-        return values
+        return cast(NDArray[np.float64], values.sum(axis=0))

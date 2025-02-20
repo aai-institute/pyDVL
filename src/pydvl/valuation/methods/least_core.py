@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from typing_extensions import Self
 
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
@@ -14,6 +15,7 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
 )
 from pydvl.valuation.samplers.powerset import (
     DeterministicUniformSampler,
+    FiniteNoIndexIteration,
     NoIndexIteration,
     PowersetSampler,
     UniformSampler,
@@ -80,7 +82,7 @@ class LeastCoreValuation(Valuation):
         self._n_samples = n_samples
         self._progress = progress
 
-    def fit(self, data: Dataset) -> Valuation:
+    def fit(self, data: Dataset) -> Self:
         """Calculate the least core valuation on a dataset.
 
         This method has to be called before calling `values()`.
@@ -127,20 +129,22 @@ class LeastCoreValuation(Valuation):
 class ExactLeastCoreValuation(LeastCoreValuation):
     """Class to calculate exact least-core values.
 
-    Equivalent to calling `LeastCoreValuation` with a `DeterministicUniformSampler`
+    Equivalent to constructing a
+    [LeastCoreValuation][pydvl.valuation.methods.least_core.LeastCoreValuation] with a
+    [DeterministicUniformSampler][pydvl.valuation.samplers.powerset.DeterministicUniformSampler]
     and `n_samples=None`.
 
     The definition of the exact least-core valuation is:
 
     $$
     \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
-    \end{array}
+    \text{minimize} & \\displaystyle{e} & \\
+    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
+    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) &, \forall S \\subseteq N \\
+    \\end{array}
     $$
 
-    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
+    Where $N = \\{1, 2, \\dots, n\\}$ are the training set's indices.
 
     Args:
         utility: Utility object with model, data and scoring function.
@@ -166,7 +170,7 @@ class ExactLeastCoreValuation(LeastCoreValuation):
         super().__init__(
             utility=utility,
             sampler=DeterministicUniformSampler(
-                index_iteration=NoIndexIteration, batch_size=batch_size
+                index_iteration=FiniteNoIndexIteration, batch_size=batch_size
             ),
             n_samples=None,
             non_negative_subsidy=non_negative_subsidy,
@@ -184,11 +188,11 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
 
     $$
     \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
-    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
-    \end{array}
+    \text{minimize} & \\displaystyle{e} & \\
+    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
+    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) & ,
+    \forall S \\in \\{S_1, S_2, \\dots, S_m \\overset{\\mathrm{iid}}{\\sim} U(2^N) \\}
+    \\end{array}
     $$
 
     Where:
@@ -284,7 +288,7 @@ def _get_default_n_samples(sampler: PowersetSampler, indices: IndexSetT) -> int:
 
 def _check_sampler(sampler: PowersetSampler):
     """Check that the sampler is compatible with the Least Core valuation."""
-    if sampler._index_iteration != NoIndexIteration:
+    if not issubclass(sampler._index_iterator_cls, NoIndexIteration):
         raise ValueError(
             "Least core valuation only supports samplers with NoIndexIteration."
         )

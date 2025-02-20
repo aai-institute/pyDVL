@@ -1,4 +1,4 @@
-""" This module contains types, protocols, decorators and generic function
+"""This module contains types, protocols, decorators and generic function
 transformations. Some of it probably belongs elsewhere.
 """
 
@@ -11,9 +11,10 @@ from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
+    "BaggingModel",
     "BaseModel",
     "IndexT",
-    "LossFunction",
+    "PointwiseScore",
     "MapFunction",
     "NameT",
     "ReduceFunction",
@@ -29,18 +30,15 @@ Seed = Union[int, Generator]
 
 
 class MapFunction(Protocol[R]):
-    def __call__(self, *args: Any, **kwargs: Any) -> R:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> R: ...
 
 
 class ReduceFunction(Protocol[R]):
-    def __call__(self, *args: Any, **kwargs: Any) -> R:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> R: ...
 
 
-class LossFunction(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
-        ...
+class PointwiseScore(Protocol):
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
 
 
 @runtime_checkable
@@ -96,8 +94,37 @@ class SupervisedModel(Protocol):
         pass
 
 
+@runtime_checkable
+class BaggingModel(Protocol):
+    """Any model with the attributes `n_estimators` and `max_samples` is considered a
+    bagging model."""
+
+    n_estimators: int
+    max_samples: float
+
+    def fit(self, x: NDArray, y: NDArray | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+    def predict(self, x: NDArray) -> NDArray:
+        """Compute predictions for the input
+
+        Args:
+            x: Independent variables for which to compute predictions
+
+        Returns:
+            Predictions for the input
+        """
+        pass
+
+
 def ensure_seed_sequence(
-    seed: Optional[Union[Seed, SeedSequence]] = None
+    seed: Optional[Union[Seed, SeedSequence]] = None,
 ) -> SeedSequence:
     """
     If the passed seed is a SeedSequence object then it is returned as is. If it is

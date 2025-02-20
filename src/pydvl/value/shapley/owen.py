@@ -9,7 +9,7 @@
 import operator
 from enum import Enum
 from functools import reduce
-from typing import Optional, Sequence, cast
+from typing import Optional, Sequence
 
 import numpy as np
 from deprecate import deprecated
@@ -24,7 +24,7 @@ from pydvl.parallel import (
 from pydvl.utils import Utility, random_powerset
 from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import MinUpdates
 
 __all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
@@ -51,7 +51,7 @@ def _owen_sampling_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""This is the algorithm as detailed in the paper: to compute the outer
     integral over q ∈ [0,1], use uniformly distributed points for evaluation
@@ -83,7 +83,7 @@ def _owen_sampling_shapley(
     result = ValuationResult.zeros(
         algorithm="owen_sampling_shapley_" + str(method),
         indices=np.array(indices, dtype=np.int_),
-        data_names=[u.data.data_names[i] for i in indices],
+        data_names=u.data.data_names[indices],
     )
 
     rng = np.random.default_rng(seed)
@@ -132,7 +132,7 @@ def owen_sampling_shapley(
     parallel_backend: Optional[ParallelBackend] = None,
     config: Optional[ParallelConfig] = None,
     progress: bool = False,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
     (Okhrati and Lipani, 2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.

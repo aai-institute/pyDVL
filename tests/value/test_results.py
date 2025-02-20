@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.status import Status
-from pydvl.valuation import ValuationResult
+from pydvl.value.result import ValuationResult
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
     try:
-        import pandas
+        import pandas  # noqa: F401
 
         df = dummy_values.to_dataframe(use_names=False)
         assert all(df.index.values == ranks_asc)
@@ -143,7 +143,7 @@ def test_updating():
 
     v.update(1, 3.0)
     assert v.values[1] == 3.0
-    assert np.isclose(v.variances[1], 2 / 3)
+    np.testing.assert_allclose(v.variances[1], 2 / 3)
 
     # Test after sorting
     v = ValuationResult(values=np.array([3.0, 1.0]))
@@ -261,7 +261,7 @@ def test_from_random_creation(size: int, total: float | None):
     assert result.status == Status.Converged
     assert result.algorithm == "random"
     if total is not None:
-        assert np.isclose(np.sum(result.values), total)
+        np.testing.assert_allclose(np.sum(result.values), total)
 
 
 def test_from_random_creation_errors():
@@ -296,8 +296,10 @@ def test_adding_random():
     true_means = values.mean(axis=1)
     true_variances = values.var(axis=1)
 
-    assert np.allclose(true_means[result.indices], result.values)
-    assert np.allclose(true_variances[result.indices], result.variances)
+    np.testing.assert_allclose(true_means[result.indices], result.values, atol=1e-5)
+    np.testing.assert_allclose(
+        true_variances[result.indices], result.variances, atol=1e-5
+    )
 
 
 @pytest.mark.parametrize(
@@ -373,8 +375,8 @@ def test_adding_different_indices(
     )
     v3 = v1 + v2
 
-    assert np.allclose(v3.indices, np.array(expected_indices))
-    assert np.allclose(v3.values, np.array(expected_values))
+    np.testing.assert_allclose(v3.indices, np.array(expected_indices))
+    np.testing.assert_allclose(v3.values, np.array(expected_values), atol=1e-5)
     assert np.all(v3.names == expected_names)
 
 

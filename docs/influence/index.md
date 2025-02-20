@@ -210,9 +210,9 @@ on test point $z_{\text{test}}[i]$.
 !!! Warning
     Compared to the mathematical definitions above, we switch the ordering
     of $z$ and $z_{\text{test}}$, in order to make the input ordering consistent
-    with the dimensions of the resulting tensor. More concrete if the first
-    dimension of $z_{\text{test}}$ is $N$ and that of $z$, the resulting tensor
-    is of shape $N \times M$
+    with the dimensions of the resulting tensor. More precisely, if the first
+    dimension of $z_{\text{test}}$ is $N$ and that of $z$ is $M$, then the
+    resulting tensor is of shape $N \times M$
 
 A large positive influence indicates that training point $j$
 tends to improve the performance of the model on test point $i$, and vice versa,

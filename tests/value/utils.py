@@ -4,7 +4,7 @@ import time
 from copy import deepcopy
 from functools import wraps
 from logging import getLogger
-from typing import Callable, Optional, Protocol, Tuple, TypeVar
+from typing import Callable, Protocol, Tuple, TypeVar
 
 from pydvl.utils.types import Seed
 
@@ -30,13 +30,12 @@ def call_with_seeds(fun: Callable, *args, seeds: Tuple[Seed, ...], **kwargs) -> 
     return tuple(fun(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
 
 
-class TimedCallable(Protocol):
+class TimedCallable(Protocol[ReturnT]):
     """A callable that has an attribute to keep track of execution time."""
 
     execution_time: float
 
-    def __call__(self, *args, **kwargs) -> ReturnT:
-        ...
+    def __call__(self, *args, **kwargs) -> ReturnT: ...
 
 
 def timed(fun: Callable[..., ReturnT]) -> TimedCallable:

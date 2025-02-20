@@ -18,7 +18,7 @@ We currently implement the following methods:
   [@ghorbani_data_2019].
 
 - [**Data Banzhaf**][pydvl.value.semivalues.compute_banzhaf_semivalues]
-  [@wang_data_2022].
+  [@wang_data_2023].
 
 - [**Beta Shapley**][pydvl.value.semivalues.compute_beta_shapley_semivalues]
   [@kwon_beta_2022].

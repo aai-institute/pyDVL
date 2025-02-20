@@ -20,7 +20,7 @@ parallelized itself, so preparing the problems should be done in sequence in thi
 case. The solution of the linear systems can then be done in parallel.
 
 """
-import warnings
+
 from enum import Enum
 from typing import Optional
 

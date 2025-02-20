@@ -1,4 +1,2 @@
-pylint == 3.1.0
-anybadge
-pylint-json2html==0.5.0
+ruff >= 0.9.1
 pre-commit==3.1.1

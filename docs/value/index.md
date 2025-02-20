@@ -55,7 +55,7 @@ we focus on game-theoretic concepts and refer to the main documentation on the
 The main contenders in game-theoretic approaches are [Shapley
 values](shapley.md]) [@ghorbani_data_2019], [@kwon_efficient_2021],
 [@schoch_csshapley_2022], their generalization to so-called
-[semi-values](semi-values.md) by [@kwon_beta_2022] and [@wang_data_2022],
+[semi-values](semi-values.md) by [@kwon_beta_2022] and [@wang_data_2023],
 and [the Core](the-core.md) [@yan_if_2021]. All of these are implemented
 in pyDVL. For a full list see [[methods]]
 
@@ -286,7 +286,7 @@ nature of every (non-trivial) ML problem can have an effect:
   literature. But in ML we use an evaluation of the model on a validation set as a
   proxy for the true risk. Even if the utility is bounded, its variance will
   affect final values, and even more so any Monte Carlo estimates.
-  Several works have tried to cope with variance. [@wang_data_2022] prove that by
+  Several works have tried to cope with variance. [@wang_data_2023] prove that by
   relaxing one of the Shapley axioms and considering the general class of
   semi-values, of which Shapley is an instance, one can prove that a choice of
   constant weights is the best one can do in a utility-agnostic setting. This

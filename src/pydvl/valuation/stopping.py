@@ -1,8 +1,8 @@
-r"""
+"""
 Stopping criteria for value computations.
 
 This module provides a basic set of stopping criteria, like
-[MaxUpdates][pydvl.valuation.stopping.MaxUpdates],
+[MinUpdates][pydvl.valuation.stopping.MinUpdates],
 [MaxTime][pydvl.valuation.stopping.MaxTime], or
 [HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] among others. These
 can behave in different ways depending on the context. For example,
@@ -15,6 +15,17 @@ Stopping criteria are callables that are evaluated on a
 [ValuationResult][pydvl.valuation.result.ValuationResult] and return a
 [Status][pydvl.utils.status.Status] object. They can be combined using boolean
 operators.
+
+
+## Combining stopping criteria
+
+Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
+be combined with the binary operators `&` (*and*), and `|` (*or*), following the
+truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
+(*not*) is also supported. See
+[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] for details on how
+these operations affect the behavior of the stopping criteria.
+
 
 ## How convergence is determined
 
@@ -30,15 +41,16 @@ This has some practical implications, because some values do tend to converge
 sooner than others. For example, assume we use the criterion
 `AbsoluteStandardError(0.02) | MaxUpdates(1000)`. Then values close to 0 might
 be marked as "converged" rather quickly because they fulfill the first
-criterion, say after 20 iterations, despite being poor estimates. Because other
-indices take much longer to have low standard error and the criterion is a
+criterion, say after 20 iterations, despite being poor estimates (see the section on
+pitfalls below for commentary on stopping criteria based on standard errors).
+Because other indices take longer to reach a low standard error and the criterion is a
 global check, the "converged" ones keep being updated and end up being good
 estimates. In this case, this has been beneficial, but one might not wish for
 converged values to be updated, if one is sure that the criterion is adequate
 for individual values.
 
-[Semi-value methods][pydvl.valuation.methods.semivalue] include a parameter
-`skip_converged` that allows to skip the computation of values that have
+[Semi-value methods][pydvl.valuation.methods.semivalue.SemivalueValuation] include a
+parameter `skip_converged` that allows to skip the computation of values that have
 converged. The way to avoid doing this too early is to use a more stringent
 check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
 `skip_converged=True` this check can still take less time than the first one,
@@ -51,7 +63,7 @@ The choice of a stopping criterion greatly depends on the algorithm and the
 context. A safe bet is to combine a [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
 or a [MaxTime][pydvl.valuation.stopping.MaxTime] with a
 [HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] or an
-[AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError]. The former
+[RankCorrelation][pydvl.valuation.stopping.RankCorrelation]. The former
 will ensure that the computation does not run for too long, while the latter
 will try to achieve results that are stable enough. Note however that if the
 threshold is too strict, one will always end up running until a maximum number
@@ -62,30 +74,53 @@ as described above for semi-values.
 
 ??? Example
     ```python
-    from pydvl.valuation import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
+    from pydvl.valuation import DataBanzhafValuation, MinUpdates, MSRSampler, RankCorrelation
 
-    utility = ...  # some utility object
-    criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
-    values = compute_banzhaf_semivalues(
-        utility,
-        criterion,
-        skip_converged=True,  # skip values that have converged (CAREFUL!)
-    )
+    model = ... # Some sklearn-compatible model
+    scorer = SupervisedScorer("accuracy", test_data, default=0.0)
+    utility = ModelUtility(model, scorer)
+    sampler = MSRSampler(seed=seed)
+    stopping = RankCorrelation(rtol=1e-2, burn_in=32) | MinUpdates(1000)
+    valuation = DataBanzhafValuation(utility=utility, sampler=sampler, is_done=stopping)
+    with parallel_config(n_jobs=4):
+        valuation.fit(trainig_data)
+    result = valuation.values()
+
     ```
-    This will compute the Banzhaf semivalues for `utility` until either the
-    absolute standard error is below `1e-3` or `1000` updates have been
-    performed. The `burn_in` parameter is used to discard the first `32` updates
-    from the computation of the standard error. The `skip_converged` parameter
-    is used to avoid computing more marginals for indices that have converged,
-    which is useful if
-    [AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError] is met
-    before [MaxUpdates][pydvl.valuation.stopping.MaxUpdates] for some indices.
+    This will compute the Banzhaf semivalues for `utility` until either the change in
+    Spearman rank correlation between updates is below `1e-2` or `1000` updates have
+    been performed. The `burn_in` parameter is used to discard the first `32` updates
+    from the computation of the standard error.
 
 !!! Warning
-    Be careful not to reuse the same stopping criterion for different
-    computations. The object has state and will not be reset between calls to
-    value computation methods. If you need to reuse the same criterion, you
-    should create a new instance.
+    Be careful not to reuse the same stopping criterion for different computations. The
+    object has state, which is reset by `fit()` for some valuation methods, but this is
+    **not guaranteed** for all methods. If you need to reuse the same criterion, it's
+    safer to create a new instance.
+
+## Interactions with sampling schemes and other pitfalls of stopping criteria
+
+Different samplers define different "update strategies" for values. For example,
+[MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] updates the `counts` field
+of a [ValuationResult][pydvl.valuation.result.ValuationResult] only for about half of
+the utility evaluations, because it reuses samples. This means that a stopping criterion
+like [MaxChecks][pydvl.valuation.stopping.MaxChecks] will not work as expected, because
+it will count the number of calls to the criterion, not the number of updates to the
+values. In this case, one should use [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
+or, more likely, [MinUpdates][pydvl.valuation.stopping.MinUpdates] instead.
+
+Another pitfall is the interaction with the `skip_converged` parameter of
+[Semi-value methods][pydvl.valuation.methods.semivalue.SemivalueValuation]. If this is
+set to `True`, the stopping criterion should probably be more stringent.
+
+Finally, stopping criteria that rely on the standard error of the values, like
+[AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError], should be
+used with care. The standard error is a measure of the uncertainty of the estimate,
+but **it does not guarantee that the estimate is close to the true value**. For example,
+if the utility function is very noisy, the standard error might be very low, but the
+estimate might be far from the true value. In this case, one might want to use a
+[RankCorrelation][pydvl.valuation.stopping.RankCorrelation] instead, which checks
+whether the rank of the values is stable.
 
 
 ## Creating stopping criteria
@@ -99,15 +134,6 @@ that can be composed with other stopping criteria.
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods `_check` and
 [completion][pydvl.valuation.stopping.StoppingCriterion.completion].
-
-## Combining stopping criteria
-
-Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
-be combined with the binary operators `&` (*and*), and `|` (*or*), following the
-truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
-(*not*) is also supported. See
-[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] for details on how
-these operations affect the behavior of the stopping criteria.
 
 
 ## References
@@ -126,6 +152,8 @@ from typing import Callable, Protocol, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.stats import spearmanr
+from typing_extensions import Self
 
 from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
@@ -133,12 +161,14 @@ from pydvl.valuation.result import ValuationResult
 __all__ = [
     "make_criterion",
     "AbsoluteStandardError",
-    "StoppingCriterion",
+    "HistoryDeviation",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
     "MaxTime",
-    "HistoryDeviation",
+    "NoStopping",
+    "RankCorrelation",
+    "StoppingCriterion",
 ]
 
 logger = logging.getLogger(__name__)
@@ -147,8 +177,7 @@ logger = logging.getLogger(__name__)
 class StoppingCriterionCallable(Protocol):
     """Signature for a stopping criterion"""
 
-    def __call__(self, result: ValuationResult) -> Status:
-        ...
+    def __call__(self, result: ValuationResult) -> Status: ...
 
 
 class StoppingCriterion(abc.ABC):
@@ -207,22 +236,29 @@ class StoppingCriterion(abc.ABC):
     def __init__(self, modify_result: bool = True):
         self.modify_result = modify_result
         self._converged = np.full(0, False)
+        self._count = 0
 
     @abc.abstractmethod
     def _check(self, result: ValuationResult) -> Status:
         """Check whether the computation should stop."""
         ...
 
+    @property
+    def count(self) -> int:
+        """The number of times that the criterion has been checked."""
+        return self._count
+
     def completion(self) -> float:
         """Returns a value between 0 and 1 indicating the completion of the
-        computation.
-        """
+        computation."""
         if self.converged.size == 0:
             return 0.0
         return float(np.mean(self.converged).item())
 
-    def reset(self) -> None:
-        pass
+    def reset(self) -> Self:
+        self._converged = np.full(0, False)
+        self._count = 0
+        return self
 
     @property
     def converged(self) -> NDArray[np.bool_]:
@@ -248,30 +284,46 @@ class StoppingCriterion(abc.ABC):
                 "At least one iteration finished but no results where generated. "
                 "Please check that your scorer and utility return valid numbers."
             )
+
+        self._count += 1
         status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
         return status
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            other._count += 1
+            return self._check(result) & other._check(result)
+
         return make_criterion(
-            fun=lambda result: self._check(result) & other._check(result),
+            fun=fun,
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
             name=f"{str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            other._count += 1
+            return self._check(result) | other._check(result)
+
         return make_criterion(
-            fun=lambda result: self._check(result) | other._check(result),
+            fun=fun,
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
             name=f"{str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
+        def fun(result: ValuationResult) -> Status:
+            self._count += 1
+            return ~self._check(result)
+
         return make_criterion(
-            fun=lambda result: ~self._check(result),
+            fun=fun,
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
             name=f"NOT {str(self)}",
@@ -333,6 +385,15 @@ class AbsoluteStandardError(StoppingCriterion):
     [Converged][pydvl.utils.status.Status] if $s_i < \epsilon$ for all $i$ and a
     threshold value $\epsilon \gt 0$.
 
+    !!! Warning
+        This criterion should be used with care. The standard error is a measure of the
+        uncertainty of the estimate, but **it does not guarantee that the estimate is
+        close to the true value**. For example, if the utility function is very noisy,
+        the standard error might be very low, but the estimate might be far from the
+        true value. In this case, one might want to use a
+        [RankCorrelation][pydvl.valuation.stopping.RankCorrelation] instead, which
+        checks whether the rank of the values is stable.
+
     Args:
         threshold: A value is considered to have converged if the standard
             error is below this threshold. A way of choosing it is to pick some
@@ -348,6 +409,9 @@ class AbsoluteStandardError(StoppingCriterion):
             [zeros()][pydvl.valuation.result.ValuationResult.zeros]. The default is
             set to an arbitrary minimum which is usually enough but may need to
             be increased.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(
@@ -377,36 +441,40 @@ class AbsoluteStandardError(StoppingCriterion):
 class MaxChecks(StoppingCriterion):
     """Terminate as soon as the number of checks exceeds the threshold.
 
-    A "check" is one call to the criterion.
+    A "check" is one call to the criterion. Note that this might have different
+    interpretations depending on the sampler. For example,
+    [MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] performs a single
+    utility evaluation to update all indices, so that's `len(training_data)` checks for
+    a single training of the model. But it also only changes the `counts` field of the
+    [ValuationResult][pydvl.valuation.result.ValuationResult] for about half of the
+    indices, which is what e.g. [MaxUpdates][pydvl.valuation.stopping.MaxUpdates] checks.
+
 
     Args:
         n_checks: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_checks: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         if n_checks is not None and n_checks < 1:
             raise ValueError("n_iterations must be at least 1 or None")
-        self.n_checks = n_checks
-        self._count = 0
+        self.n_checks = n_checks or np.inf
 
     def _check(self, result: ValuationResult) -> Status:
-        if self.n_checks:
-            self._count += 1
-            if self._count >= self.n_checks:
-                self._converged = np.ones_like(result.values, dtype=bool)
-                return Status.Converged
+        if self._count >= self.n_checks:
+            self._converged = np.ones_like(result.values, dtype=bool)
+            return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
-
-    def reset(self):
-        self._count = 0
 
     def __str__(self) -> str:
         return f"MaxChecks(n_checks={self.n_checks})"
@@ -430,6 +498,9 @@ class MaxUpdates(StoppingCriterion):
         n_updates: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
@@ -440,6 +511,8 @@ class MaxUpdates(StoppingCriterion):
         self.last_max = 0
 
     def _check(self, result: ValuationResult) -> Status:
+        if result.counts.size == 0:
+            return Status.Pending
         if self.n_updates:
             self._converged = result.counts >= self.n_updates
             try:
@@ -454,6 +527,10 @@ class MaxUpdates(StoppingCriterion):
         if self.n_updates:
             return self.last_max / self.n_updates
         return 0.0
+
+    def reset(self) -> Self:
+        self.last_max = 0
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxUpdates(n_updates={self.n_updates})"
@@ -472,44 +549,53 @@ class NoStopping(StoppingCriterion):
         return 0.0
 
     def __str__(self) -> str:
-        return f"NoStopping()"
+        return "NoStopping()"
 
 
 class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
 
     This checks the `counts` field of a
-    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of times that
-    each index has been updated. For powerset samplers, the minimum of this
-    number is a lower bound for the number of subsets sampled. For
-    permutation samplers, it lower-bounds the amount of permutations sampled.
+    [ValuationResult][pydvl.valuation.result.ValuationResult], i.e. the number of times
+    that each index has been updated. For powerset samplers, the minimum of this number
+    is a lower bound for the number of subsets sampled. For permutation samplers, it
+    lower-bounds the amount of permutations sampled.
 
     Args:
         n_updates: Threshold: if `None`, no _check is performed,
             effectively creating a (never) stopping criterion that always returns
             `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         self.n_updates = n_updates
         self.last_min = 0
+        self._actual_completion = 0.0
 
     def _check(self, result: ValuationResult) -> Status:
+        if result.counts.size == 0:
+            return Status.Pending
         if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
-            try:
-                self.last_min = int(np.min(result.counts))
-                if self.last_min >= self.n_updates:
-                    return Status.Converged
-            except ValueError:  # empty counts array. This should not happen
-                pass
+            progress = np.clip(result.counts, 0, self.n_updates) / self.n_updates
+            self._actual_completion = float(np.mean(progress))
+
+            self.last_min = int(np.min(result.counts))
+            if self.last_min >= self.n_updates:
+                return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_updates:
-            return self.last_min / self.n_updates
-        return 0.0
+        return self._actual_completion
+
+    def reset(self) -> Self:
+        self.last_min = 0
+        self._actual_completion = 0.0
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MinUpdates(n_updates={self.n_updates})"
@@ -518,13 +604,16 @@ class MinUpdates(StoppingCriterion):
 class MaxTime(StoppingCriterion):
     """Terminate if the computation time exceeds the given number of seconds.
 
-    Checks the elapsed time since construction
+    Checks the elapsed time *since construction*.
 
     Args:
         seconds: Threshold: The computation is terminated if the elapsed time
             between object construction and a _check exceeds this value. If `None`,
             no _check is performed, effectively creating a (never) stopping criterion
             that always returns `Pending`.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
     """
 
     def __init__(self, seconds: float | None, modify_result: bool = True):
@@ -545,13 +634,61 @@ class MaxTime(StoppingCriterion):
     def completion(self) -> float:
         if self.max_seconds is None:
             return 0.0
-        return (time() - self.start) / self.max_seconds
+        return float(np.clip((time() - self.start) / self.max_seconds, 0.0, 1.0))
 
-    def reset(self):
+    def reset(self) -> Self:
         self.start = time()
+        return super().reset()
 
     def __str__(self) -> str:
         return f"MaxTime(seconds={self.max_seconds})"
+
+
+class RollingMemory:
+    """A simple rolling memory for the last `n_steps` values of each index.
+
+    Updating the memory results in new values are copied to the last column of the
+    matrix and old ones removed from the first.
+
+    Args:
+        n_steps: The number of steps to remember.
+        default: The default value to use when the memory is empty.
+    """
+
+    def __init__(self, n_steps: int, default: float = np.inf):
+        if n_steps < 1:
+            raise ValueError("n_steps must be at least 1")
+        self.n_steps = n_steps
+        self._data = np.full(0, default, dtype=np.float64)
+
+    @property
+    def data(self) -> NDArray[np.float64]:
+        view = self._data.view()
+        view.setflags(write=False)
+        return view.T
+
+    def reset(self) -> Self:
+        self._data = np.full(0, np.inf)
+        return self
+
+    def update(self, r: ValuationResult) -> Self:
+        """Update the memory with the values of the current result.
+
+        The values are appended to the memory as its last column, and the oldest values
+        (the first column) are removed
+        """
+        if len(self._data) == 0:
+            self._data = np.full((len(r.values), self.n_steps + 1), np.inf)
+        self._data = np.concatenate(
+            [self._data[:, 1:], r.values.reshape(-1, 1)], axis=1
+        )
+        return self
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __len__(self) -> int:
+        return self._data.shape[1] if self._data.size > 0 else 0
 
 
 class HistoryDeviation(StoppingCriterion):
@@ -586,8 +723,6 @@ class HistoryDeviation(StoppingCriterion):
         pin_converged: If `True`, once an index has converged, it is pinned
     """
 
-    _memory: NDArray[np.float_]
-
     def __init__(
         self,
         n_steps: int,
@@ -596,46 +731,122 @@ class HistoryDeviation(StoppingCriterion):
         modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        if n_steps < 1:
-            raise ValueError("n_steps must be at least 1")
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
 
-        self.n_steps = n_steps
+        self.memory = RollingMemory(n_steps, default=np.inf)
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
-        self._memory = None  # type: ignore
 
     def _check(self, r: ValuationResult) -> Status:
-        if self._memory is None:
-            self._memory = np.full((len(r.values), self.n_steps + 1), np.inf)
-            self._converged = np.full(len(r), False)
+        if r.values.size == 0:
             return Status.Pending
-
-        # shift left: last column is the last set of values
-        self._memory = np.concatenate(
-            [self._memory[:, 1:], r.values.reshape(-1, 1)], axis=1
-        )
+        self.memory.update(r)
+        if len(self._converged) == 0:
+            self._converged = np.full(len(r), False)
 
         # Look at indices that have been updated more than n_steps times
-        ii = np.where(r.counts > self.n_steps)
+        ii = np.where(r.counts > self.memory.n_steps)
         if len(ii) > 0:
-            curr = self._memory[:, -1]
-            saved = self._memory[:, 0]
+            curr = self.memory[-1]
+            saved = self.memory[0]
             diffs = np.abs(curr[ii] - saved[ii])
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
-                    self._converged, r.counts > self.n_steps
+                    self._converged, r.counts > self.memory.n_steps
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
 
-    def reset(self):
-        self._memory = None  # type: ignore
+    def reset(self) -> Self:
+        self.memory.reset()
+        return super().reset()
 
     def __str__(self) -> str:
-        return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
+        return f"HistoryDeviation(n_steps={self.memory.n_steps}, rtol={self.rtol})"
+
+
+class RankCorrelation(StoppingCriterion):
+    r"""A check for stability of Spearman correlation between checks.
+
+    When the change in rank correlation between two successive iterations is
+    below a given threshold, the computation is terminated.
+    The criterion computes the Spearman correlation between two successive iterations.
+    The Spearman correlation uses the ordering indices of the given values and
+    correlates them. This means it focuses on the order of the elements instead of their
+    exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
+    converge), the criterion stops the algorithm.
+
+    This criterion is used in (Wang et al.)<sup><a href="wang_data_2023">2</a></sup>.
+
+    Args:
+        rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
+        burn_in: The minimum number of iterations before checking for
+            convergence. This is required because the first correlation is
+            meaningless.
+        modify_result: If `True`, the status of the input
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
+
+    !!! tip "Added in 0.9.0"
+    """
+
+    def __init__(
+        self,
+        rtol: float,
+        burn_in: int,
+        modify_result: bool = True,
+    ):
+        super().__init__(modify_result=modify_result)
+        if rtol <= 0 or rtol >= 1:
+            raise ValueError("rtol must be in (0, 1)")
+        self.rtol = rtol
+        self.burn_in = burn_in
+        self.memory = RollingMemory(n_steps=1, default=np.nan)
+        self._corr = 0.0
+        self._completion = 0.0
+
+    def _check(self, r: ValuationResult) -> Status:
+        if len(self.memory) == 0:
+            self.memory.update(r)
+            self._converged = np.full(len(r), False)
+            return Status.Pending
+
+        corr = spearmanr(self.memory[-1], r.values)[0]
+        self.memory.update(r)
+        self._update_completion(corr)
+        if np.isclose(corr, self._corr, rtol=self.rtol) and self._count > self.burn_in:
+            self._converged = np.full(len(r), True)
+            logger.debug(
+                f"RankCorrelation has converged with {corr=} in iteration {self._count}"
+            )
+            return Status.Converged
+        self._corr = np.nan_to_num(corr, nan=0.0)
+        return Status.Pending
+
+    def _update_completion(self, corr: float) -> None:
+        if np.isnan(corr):
+            self._completion = 0.0
+        elif not np.isclose(corr, self._corr, rtol=self.rtol):
+            try:
+                self._completion = np.abs(corr - self._corr) / self._corr
+            except ZeroDivisionError:
+                self._completion = 0.0
+        else:
+            self._completion = 1.0
+
+    def completion(self) -> float:
+        return self._completion
+
+    def reset(self) -> Self:
+        self.memory.reset()
+        self._corr = 0.0
+        self._completion = 0.0
+        return super().reset()
+
+    def __str__(self):
+        return f"RankCorrelation(rtol={self.rtol})"

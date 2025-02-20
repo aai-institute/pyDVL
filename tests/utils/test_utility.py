@@ -134,7 +134,7 @@ def test_utility_serialization(linear_dataset, use_cache):
         cache_backend=cache,
     )
     u_unpickled = pickle.loads(pickle.dumps(u))
-    assert type(u.model) == type(u_unpickled.model)
-    assert type(u.scorer) == type(u_unpickled.scorer)
-    assert type(u.data) == type(u_unpickled.data)
+    assert type(u.model) is type(u_unpickled.model)
+    assert type(u.scorer) is type(u_unpickled.scorer)
+    assert type(u.data) is type(u_unpickled.data)
     assert (u.data.x_train == u_unpickled.data.x_train).all()

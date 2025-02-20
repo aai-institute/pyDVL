@@ -13,6 +13,7 @@ from pydvl.valuation.stopping import (
     MaxTime,
     MaxUpdates,
     MinUpdates,
+    RankCorrelation,
     StoppingCriterion,
     make_criterion,
 )
@@ -22,14 +23,14 @@ def test_stopping_criterion():
     with pytest.raises(TypeError):
         StoppingCriterion()
 
-    StoppingCriterion.__abstractmethods__ = set()
+    StoppingCriterion.__abstractmethods__ = frozenset()
     done = StoppingCriterion()
     assert str(done) == "StoppingCriterion"
     assert done.modify_result is True
 
 
 def test_stopping_criterion_composition():
-    StoppingCriterion.__abstractmethods__ = set()
+    StoppingCriterion.__abstractmethods__ = frozenset()
 
     c = Status.Converged
     p = Status.Pending
@@ -102,35 +103,81 @@ def test_make_criterion():
     assert (C() | F())(v) == Status.Converged
 
 
+def test_count_update_composite_criteria():
+    """Test that the field _count in sub-criteria is updated correctly for composite
+    criteria."""
+
+    class P(StoppingCriterion):
+        def _check(self, result: ValuationResult) -> Status:
+            return Status.Pending
+
+    c1 = P()
+    c2 = P()
+
+    c = c1 & c2
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Pending
+    assert c._count == 1
+    assert c1._count == c2._count == 1
+
+    c = c1 | c2
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Pending
+    assert c._count == 1
+    assert c1._count == c2._count == 2
+
+    c = ~c1
+    assert c._count == 0
+    assert c(ValuationResult.empty()) == Status.Converged
+    assert c._count == 1
+    assert c1._count == 3
+
+
 def test_minmax_updates():
     maxstop = MaxUpdates(10)
     assert str(maxstop) == "MaxUpdates(n_updates=10)"
     v = ValuationResult.from_random(5)
-    v._counts = np.zeros(5)
+    v._counts = np.zeros(5, dtype=int)
     assert maxstop(v) == Status.Pending
-    v._counts += np.ones(5) * 9
+    v._counts += np.ones(5, dtype=int) * 9
     assert maxstop(v) == Status.Pending
     v._counts[0] += 1
     assert maxstop(v) == Status.Converged
+    assert maxstop.completion() == 1.0
+    assert np.sum(maxstop.converged) >= 1
+    maxstop.reset()
+    assert maxstop.completion() == 0.0
+    assert not maxstop.converged.any()
 
     minstop = MinUpdates(10)
     assert str(minstop) == "MinUpdates(n_updates=10)"
-    v._counts = np.zeros(5)
+    v._counts = np.zeros(5, dtype=int)
     assert minstop(v) == Status.Pending
-    v._counts += np.ones(5) * 9
+    v._counts += np.ones(5, dtype=int) * 9
     assert minstop(v) == Status.Pending
     v._counts[0] += 1
     assert minstop(v) == Status.Pending
-    v._counts += np.ones(5)
+    v._counts += np.ones(5, dtype=int)
     assert minstop(v) == Status.Converged
+    assert minstop.completion() == 1.0
+    assert minstop.converged.all()
+    minstop.reset()
+    assert minstop.completion() == 0.0
+    assert not minstop.converged.any()
 
 
+@pytest.mark.flaky(reruns=1)  # Allow for some flakiness due to timing
 def test_max_time():
     v = ValuationResult.from_random(5)
     done = MaxTime(0.3)
     assert done(v) == Status.Pending
     sleep(0.3)
     assert done(v) == Status.Converged
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    np.testing.assert_allclose(done.completion(), 0, atol=0.01)
+    assert not done.converged.any()
 
 
 @pytest.mark.parametrize("n_steps", [1, 42, 100])
@@ -155,6 +202,11 @@ def test_history_deviation(n_steps, rtol):
         status |= done(v)
 
     assert status == Status.Converged
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
 
 
 def test_standard_error():
@@ -167,6 +219,8 @@ def test_standard_error():
     # Trivial case: no variance.
     v = ValuationResult(values=np.ones(n), variances=np.zeros(n))
     assert done(v)
+    assert done.completion() == 1.0
+    assert done.converged.all()
 
     # Reduce the variance until the criterion is triggered.
     v = ValuationResult(values=np.ones(n), variances=np.ones(n))
@@ -182,6 +236,11 @@ def test_standard_error():
     for _ in range(10):
         v.update(0, 1)
     assert done(v)
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
 
 
 def test_max_checks():
@@ -191,8 +250,98 @@ def test_max_checks():
     done = MaxChecks(None)
     for _ in range(10):
         assert not done(v)
+    assert done.completion() == 0.0
 
     done = MaxChecks(5)
     for _ in range(4):
         assert not done(v)
     assert done(v)
+
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+
+
+def test_rank_correlation():
+    """Test the RankCorrelation stopping criterion."""
+    v = ValuationResult.zeros(indices=range(5))
+    arr = np.arange(5)
+
+    done = RankCorrelation(rtol=0.1, burn_in=10)
+    for i in range(20):
+        arr = np.roll(arr, 1)
+        for j in range(5):
+            v.update(j, arr[j] + 0.01 * j)
+        assert not done(v)
+    assert not done(v)
+    assert done(v)
+
+    done = RankCorrelation(rtol=0.1, burn_in=3)
+    v = ValuationResult.from_random(size=5)
+    assert not done(v)
+    assert not done(v)
+    assert not done(v)
+    assert done(v)
+
+    done = RankCorrelation(rtol=0.1, burn_in=2)
+    v = ValuationResult.from_random(size=5)
+    assert not done(v)
+    assert not done(v)
+    assert done(v)
+
+    assert done.completion() == 1.0
+    assert done.converged.all()
+    done.reset()
+    assert done.completion() == 0.0
+    assert not done.converged.any()
+
+
+@pytest.mark.parametrize(
+    "criterion",
+    [
+        AbsoluteStandardError(0.1),
+        HistoryDeviation(10, 0.1),
+        MaxChecks(5),
+        MaxTime(0.1),
+        MaxUpdates(10),
+        MinUpdates(10),
+        RankCorrelation(0.1, 1),
+    ],
+)
+def test_count(criterion):
+    """Test that the _count attribute and count property of stoppingcriteria are properly updated"""
+    assert criterion.count == 0
+    criterion(ValuationResult.empty())
+    assert criterion.count == 1
+    criterion(ValuationResult.empty())
+    assert criterion.count == 2
+    criterion.reset()
+    assert criterion.count == 0
+    criterion(ValuationResult.empty())
+    assert criterion.count == 1
+    criterion(ValuationResult.empty())
+    assert criterion.count == 2
+
+
+# Test that the _memory attribute and memory property of stoppingcriteria are properly updated:
+@pytest.mark.parametrize(
+    "criterion",
+    [
+        HistoryDeviation(6, 0.1),
+        RankCorrelation(0.1, 0),
+    ],
+)
+def test_memory(criterion):
+    r1 = ValuationResult.from_random(5)
+    r2 = ValuationResult.from_random(5)
+
+    assert np.all(criterion.memory.data == [])
+    criterion(r1)
+    np.testing.assert_equal(criterion.memory.data[-1], r1.values)
+    np.testing.assert_equal(criterion.memory[-1], r1.values)
+
+    criterion(r2)
+    tmp = np.vstack((r1.values, r2.values))
+    np.testing.assert_equal(criterion.memory.data[-2:], tmp)
+    np.testing.assert_equal(criterion.memory[-2:], tmp)

@@ -23,7 +23,7 @@ def compute_utility_values_and_sample_masks(
     n_samples: int,
     progress: bool,
     extra_samples: Iterable[SampleT] | None = None,
-) -> Tuple[NDArray[np.float_], NDArray[np.bool_]]:
+) -> Tuple[NDArray[np.float64], NDArray[np.bool_]]:
     """Calculate utility values and sample masks on samples in parallel.
 
     Creating the utility evaluations and sample masks is the computational bottleneck
@@ -89,6 +89,7 @@ def compute_utility_values_and_sample_masks(
             disable=not progress,
             total=n_batches - 1,
             position=0,
+            desc=f"Preparing {n_samples} constraints",
         ),
     )
 
@@ -104,4 +105,4 @@ def compute_utility_values_and_sample_masks(
             masks.extend(m)
             u_values.extend(v)
 
-    return np.array(u_values), np.row_stack(masks)
+    return np.array(u_values), np.vstack(masks)

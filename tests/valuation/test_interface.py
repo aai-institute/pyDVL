@@ -1,7 +1,5 @@
-"""Simple test for the public user interface documented in turorials."""
+"""Simple test for the public user interface documented in tutorials."""
 
-
-import logging
 import os
 from contextlib import contextmanager
 
@@ -22,12 +20,11 @@ from pydvl.valuation.utility import DataUtilityLearning, ModelUtility
 @pytest.fixture
 def datasets():
     train, test = Dataset.from_sklearn(load_iris(), train_size=0.6, random_state=42)
-    return train, test
+    return train[:10], test[:10]
 
 
 @pytest.fixture
 def utility(datasets):
-    model = LogisticRegression()
     model = LogisticRegression()
     _, test = datasets
     utility = ModelUtility(model, SupervisedScorer(model, test, default=0))
@@ -53,10 +50,12 @@ def test_loo_valuation(train_data, utility, n_jobs):
 
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
-def test_data_shapley_valuation(train_data, utility, n_jobs):
-    valuation = DataShapleyValuation(
+def test_shapley_valuation(train_data, utility, n_jobs):
+    valuation = ShapleyValuation(
         utility,
-        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        sampler=PermutationSampler(
+            DeviationTruncation(sigmas=1.0, burn_in_fraction=0.1)
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )
@@ -93,6 +92,7 @@ def test_data_beta_shapley_valuation(train_data, utility, n_jobs):
     got = valuation.values()
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
+    assert got.status is Status.Converged
 
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
@@ -151,9 +151,11 @@ def test_group_testing_valuation(train_data, utility, n_jobs):
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_utility_learning(train_data, utility, n_jobs):
     learned_u = DataUtilityLearning(utility, 10, LinearRegression())
-    valuation = DataShapleyValuation(
+    valuation = ShapleyValuation(
         learned_u,
-        sampler=PermutationSampler(DeviationTruncation(burn_in_fraction=0.1)),
+        sampler=PermutationSampler(
+            DeviationTruncation(burn_in_fraction=0.1, sigmas=1.0)
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )

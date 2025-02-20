@@ -2,7 +2,7 @@ import logging
 import os
 import platform
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pytest
@@ -63,7 +63,10 @@ def seed(request):
 
 @pytest.fixture()
 def seed_alt(request):
-    return 42
+    try:
+        return request.param
+    except AttributeError:
+        return 42
 
 
 @pytest.fixture()
@@ -102,7 +105,7 @@ def memcached_service(request) -> Tuple[str, int]:
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
+def memcache_client_config(memcached_service) -> "MemcachedClientConfig":  # noqa: F821
     from pydvl.utils import MemcachedClientConfig
 
     return MemcachedClientConfig(
@@ -113,10 +116,8 @@ def memcache_client_config(memcached_service) -> "MemcachedClientConfig":
 @pytest.fixture(scope="function")
 def memcached_client(
     memcache_client_config,
-) -> Tuple["Client", "MemcachedClientConfig"]:
+) -> Tuple["Client", "MemcachedClientConfig"]:  # noqa: F821
     from pymemcache.client import Client
-
-    from pydvl.utils import MemcachedClientConfig
 
     try:
         c = Client(**asdict(memcache_client_config))
@@ -168,7 +169,7 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-def num_workers():
+def num_workers() -> int:
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
         return 2
@@ -177,7 +178,7 @@ def num_workers():
 
 
 @pytest.fixture(scope="session")
-def n_jobs():
+def n_jobs() -> int:
     return num_workers()
 
 

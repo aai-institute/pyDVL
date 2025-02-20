@@ -48,7 +48,7 @@ $y_i$ and $-y_i$, respectively.
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
 
-# References
+## References
 
 [^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
     Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
@@ -68,7 +68,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
-from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.classwise import ClasswiseSampler, get_unique_labels
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
@@ -132,19 +132,28 @@ class ClasswiseShapleyValuation(Valuation):
         self.normalize_values = normalize_values
 
     def fit(self, data: Dataset):
+        # TODO?
+        if isinstance(data, GroupedDataset):
+            raise ValueError(
+                "GroupedDataset is not supported for ClasswiseShapleyValuation"
+            )
+
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
             indices=data.indices,
-            data_names=data.data_names,
+            data_names=data.names,
         )
         ensure_backend_has_generator_return()
 
-        self.utility.training_data = data
+        self.is_done.reset()
+        self.utility = self.utility.with_dataset(data)
+
+        strategy = self.sampler.make_strategy(self.utility)
+        updater = self.sampler.result_updater(self.result)
+        processor = delayed(strategy.process)
 
         sample_generator = self.sampler.from_data(data)
-        strategy = self.sampler.make_strategy(self.utility)
-        processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
@@ -155,7 +164,7 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
+                        self.result = updater(evaluation)
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()
@@ -188,13 +197,12 @@ class ClasswiseShapleyValuation(Valuation):
             raise ValueError("You should call fit before calling _normalize()")
 
         logger.info("Normalizing valuation result.")
-        unique_labels = get_unique_labels(self.utility.training_data.y)
-        self.utility.model.fit(
-            self.utility.training_data.x, self.utility.training_data.y
-        )
+        x, y = self.utility.training_data.data()
+        unique_labels = get_unique_labels(y)
+        self.utility.model.fit(x, y)
 
         for idx_label, label in enumerate(unique_labels):
-            active_elements = self.utility.training_data.y == label
+            active_elements = y == label
             indices_label_set = np.where(active_elements)[0]
             indices_label_set = self.utility.training_data.indices[indices_label_set]
 
@@ -205,6 +213,6 @@ class ClasswiseShapleyValuation(Valuation):
 
             sigma = np.sum(self.result.values[indices_label_set])
             if sigma != 0:
-                self.result.scale(in_class_acc / sigma, indices=indices_label_set)
+                self.result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 
         return self.result

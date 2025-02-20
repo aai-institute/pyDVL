@@ -6,6 +6,7 @@ easy to run map-reduce jobs.
     This interface might be deprecated or changed in a future release before 1.0
 
 """
+
 import warnings
 from functools import reduce
 from itertools import accumulate, repeat

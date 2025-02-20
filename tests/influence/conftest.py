@@ -237,16 +237,14 @@ def analytical_linear_influences(
             x,
             y,
         )
-        result: NDArray = np.einsum(
-            "ia,ja->ij", s_test_analytical, train_grads_analytical
-        )
+        result = np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
     elif mode == InfluenceMode.Perturbation:
         train_second_deriv_analytical = linear_mixed_second_derivative_analytical(
             linear_model,
             x,
             y,
         )
-        result: NDArray = np.einsum(
+        result = np.einsum(
             "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
         )
     return result

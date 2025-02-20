@@ -1,3 +1,27 @@
+"""
+Class-wise sampler for the [class-wise Shapley][intro-to-cw-shapley] valuation method.
+
+The class-wise Shapley method, introduced by Schoch et al., 2022[^1], uses a so-called
+*set-conditional marginal Shapley value* that requires selectively sampling subsets of
+data points with the same or a different class from that of the data point of interest.
+
+This sampling scheme is divided into an outer and an inner sampler. The outer one is any
+subclass of [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] that
+generates subsets of the complement set of the data point of interest. The inner sampler
+is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], typically
+(and in the paper) a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
+
+## References
+
+[^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
+    Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
+    Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
+    the Thirty-Sixth Conference on Neural Information Processing Systems
+    (NeurIPS). New Orleans, Louisiana, USA, 2022.
+
+"""
+
 from __future__ import annotations
 
 from itertools import cycle, islice
@@ -24,9 +48,9 @@ V = TypeVar("V")
 
 
 def roundrobin(
-    batch_generators: Mapping[U, Iterable[V]]
+    batch_generators: Mapping[U, Iterable[V]],
 ) -> Generator[tuple[U, V], None, None]:
-    """Taken samples from batch generators in order until all of them are exhausted.
+    """Take samples from batch generators in order until all of them are exhausted.
 
     This was heavily inspired by the roundrobin recipe
     in the official Python documentation for the itertools package.
@@ -80,9 +104,10 @@ def get_unique_labels(array: NDArray) -> NDArray:
 
 
 class ClasswiseSampler(IndexSampler):
-    """Sample permutations of indices and iterate through each returning
-    increasing subsets, as required for the permutation definition of
-    semi-values.
+    """A sampler that samples elements from a dataset in two steps, based on the labels.
+
+    Used by the [class-wise Shapley valuation
+    method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 
     Args:
         in_class: Sampling scheme for elements of a given label.
@@ -98,8 +123,9 @@ class ClasswiseSampler(IndexSampler):
         out_of_class: PowersetSampler,
         *,
         min_elements_per_label: int = 1,
+        batch_size: int = 1,
     ):
-        super().__init__()
+        super().__init__(batch_size=batch_size)
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label
@@ -111,7 +137,7 @@ class ClasswiseSampler(IndexSampler):
         self.out_of_class.interrupt()
 
     def from_data(self, data: Dataset) -> Generator[list[ClasswiseSample], None, None]:
-        labels = get_unique_labels(data.y)
+        labels = get_unique_labels(data.data().y)
         n_labels = len(labels)
 
         # HACK: the outer sampler is over full subsets of T_{-y_i}
@@ -119,12 +145,13 @@ class ClasswiseSampler(IndexSampler):
         # subset but in this case we want all indices.
         # The index for which we compute the value will be removed by
         # the in_class sampler instead.
-        self.out_of_class._index_iteration = NoIndexIteration
+        if not issubclass(self.out_of_class._index_iterator_cls, NoIndexIteration):
+            self.out_of_class._index_iterator_cls = NoIndexIteration
 
         out_of_class_batch_generators = {}
 
         for label in labels:
-            without_label = np.where(data.y != label)[0]
+            without_label = np.where(data.data().y != label)[0]
             out_of_class_batch_generators[label] = self.out_of_class.generate_batches(
                 without_label
             )
@@ -135,12 +162,12 @@ class ClasswiseSampler(IndexSampler):
                     # We make sure that we have at least
                     # `min_elements_per_label` elements per label per sample
                     n_unique_sample_labels = len(
-                        get_unique_labels(data.y[ooc_sample.subset])
+                        get_unique_labels(data.data().y[ooc_sample.subset])
                     )
                     if n_unique_sample_labels < n_labels - 1:
                         continue
 
-                with_label = np.where(data.y == label)[0]
+                with_label = np.where(data.data().y == label)[0]
                 for ic_batch in self.in_class.generate_batches(with_label):
                     batch: list[ClasswiseSample] = []
                     for ic_sample in ic_batch:
@@ -160,15 +187,12 @@ class ClasswiseSampler(IndexSampler):
         # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")
 
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        # The weight method is not needed but has to be implemented
-        # because this class inherits from IndexSampler
-        # This is not needed because this class does not use its own evaluation strategy
-        # It instead uses the in-class sampler's evaluation strategy.
-        raise AttributeError("The weight should come from the in_class sampler")
+    def log_weight(self, n: int, subset_len: int) -> float:
+        # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
+        # method should never be called.
+        raise AttributeError("The weight should come from the in-class sampler")
 
-    def sample_limit(self, indices: IndexSetT) -> int:
+    def sample_limit(self, indices: IndexSetT) -> int | None:
         # The sample list cannot be computed without accessing the label
         # information and using that to compute the sample limits
         # of the in-class and out-of-class samplers first.
@@ -179,6 +203,6 @@ class ClasswiseSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: Callable[[int, int], float] | None = None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
-        return self.in_class.make_strategy(utility, coefficient)
+        return self.in_class.make_strategy(utility, log_coefficient)

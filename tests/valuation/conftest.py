@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import joblib
 import numpy as np
 import pytest
+from joblib import parallel_config
 from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
@@ -19,9 +22,11 @@ from pydvl.valuation.games import (
     ShoesGame,
     SymmetricVotingGame,
 )
-from pydvl.valuation.methods.naive import combinatorial_exact_shapley
+from pydvl.valuation.methods.shapley import ShapleyValuation
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers import DeterministicUniformSampler
 from pydvl.valuation.scorers import SupervisedScorer
+from pydvl.valuation.stopping import NoStopping
 from pydvl.valuation.utility import ModelUtility
 
 from ..conftest import num_workers
@@ -31,6 +36,7 @@ from . import polynomial
 @pytest.fixture(scope="module")
 def test_game(request) -> Game:
     name, kwargs = request.param
+    game: Game
     if name == "miner":
         game = MinerGame(n_players=kwargs["n_players"])
     elif name == "shoes":
@@ -60,13 +66,18 @@ def polynomial_dataset(coefficients: np.ndarray):
     return Dataset.from_sklearn(data=db, train_size=0.15), coefficients
 
 
+@pytest.fixture
+def num_samples():
+    return 4  # A default value for dummy_(train|test)_data
+
+
 @pytest.fixture(scope="function")
 def polynomial_pipeline(coefficients):
     return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
 
 
 @pytest.fixture(scope="function")
-def dummy_train_data(num_samples):
+def dummy_train_data(num_samples) -> Dataset:
     """Training data used in everything that uses dummy_utility."""
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
@@ -75,7 +86,7 @@ def dummy_train_data(num_samples):
 
 
 @pytest.fixture(scope="function")
-def dummy_test_data(num_samples):
+def dummy_test_data(num_samples) -> Dataset:
     """Test data used in everything that uses dummy_utility."""
     nil = np.zeros((num_samples, 1))
     data = Dataset(
@@ -85,7 +96,7 @@ def dummy_test_data(num_samples):
 
 
 @pytest.fixture(scope="function")
-def dummy_utility(dummy_train_data, dummy_test_data):
+def dummy_utility(dummy_train_data, dummy_test_data) -> ModelUtility:
     """Dummy utility for which we get analytical solutions for several methods."""
     # Indices match values
     data = dummy_train_data
@@ -99,22 +110,24 @@ def dummy_utility(dummy_train_data, dummy_test_data):
         """
 
         def __init__(self, data: Dataset):
-            self.m = max(data.x)
+            x, _ = data.data()
+            self.m = max(x)
             self.utility = 0
 
-        def fit(self, x: NDArray, y: NDArray):
+        def fit(self, x: NDArray, y: NDArray | None = None):
             self.utility = np.sum(x) / self.m
 
         def predict(self, x: NDArray) -> NDArray:
             return x
 
-        def score(self, x: NDArray, y: NDArray) -> float:
+        def score(self, x: NDArray, y: NDArray | None = None) -> float:
             return self.utility
 
     model = DummyModel(data)
 
+    x, _ = data.data()
     scorer = SupervisedScorer(
-        model, test_data=test_data, default=0, range=(0, data.x.sum() / data.x.max())
+        model, test_data=test_data, default=0, range=(0, x.sum() / x.max())
     )
 
     return ModelUtility(
@@ -126,10 +139,13 @@ def dummy_utility(dummy_train_data, dummy_test_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_shapley(dummy_utility, dummy_train_data):
+def analytic_shapley(
+    dummy_utility, dummy_train_data
+) -> tuple[ModelUtility, ValuationResult]:
     r"""Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    m = float(max(dummy_train_data.x))
+    x, _ = dummy_train_data.data()
+    m = float(max(x))
     values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",
@@ -142,12 +158,15 @@ def analytic_shapley(dummy_utility, dummy_train_data):
 
 
 @pytest.fixture(scope="function")
-def analytic_banzhaf(dummy_utility, dummy_train_data):
+def analytic_banzhaf(
+    dummy_utility, dummy_train_data
+) -> tuple[ModelUtility, ValuationResult]:
     r"""Scores are i/n, so
     v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
     """
 
-    m = float(max(dummy_train_data.x))
+    x, _ = dummy_train_data.data()
+    m = float(max(x))
     values = np.array([i / m for i in dummy_train_data.indices])
     result = ValuationResult(
         algorithm="exact",
@@ -160,29 +179,42 @@ def analytic_banzhaf(dummy_utility, dummy_train_data):
 
 
 @pytest.fixture(scope="function")
-def linear_shapley(cache, linear_dataset, scorer, n_jobs):
+def linear_shapley(
+    cache, linear_dataset, n_jobs: int
+) -> tuple[ModelUtility, ValuationResult]:
     """This fixture makes use of the cache fixture to avoid recomputing
     exact shapley values for each test run."""
-    args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
+
+    from pydvl.valuation import compose_score, sigmoid
+
+    scorer_name = "squashed r2"
+
+    args_hash = cache.hash_arguments(linear_dataset, scorer_name, n_jobs)
     u_cache_key = f"linear_shapley_u_{args_hash}"
-    exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"
+    exact_result_cache_key = f"linear_shapley_exact_values_{args_hash}"
     try:
-        u = cache.get(u_cache_key, None)
-        exact_values = cache.get(exact_values_cache_key, None)
+        utility = cache.get(u_cache_key, None)
+        exact_result = cache.get(exact_result_cache_key, None)
     except Exception:
         cache.clear_cache(cache._cachedir)
         raise
 
-    if u is None:
-        u = ModelUtility(
-            LinearRegression(),
-            data=linear_dataset,
-            scorer=scorer,
+    train, test = linear_dataset
+    if utility is None:
+        scorer = compose_score(
+            SupervisedScorer("r2", test, default=-np.inf), sigmoid, name=scorer_name
         )
-        exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
-        cache.set(u_cache_key, u)
-        cache.set(exact_values_cache_key, exact_values)
-    return u, exact_values
+        utility = ModelUtility(LinearRegression(), scorer=scorer).with_dataset(train)
+    if exact_result is None:
+        valuation = ShapleyValuation(
+            utility, DeterministicUniformSampler(), is_done=NoStopping(), progress=False
+        )
+        with parallel_config(n_jobs=1):
+            valuation.fit(train)
+        exact_result = valuation.values()
+        cache.set(u_cache_key, utility)
+        cache.set(exact_result_cache_key, exact_result)
+    return utility, exact_result
 
 
 @pytest.fixture(scope="module")
@@ -199,7 +231,7 @@ def cache_backend():
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a: float, b: float, num_points: int):
+def linear_dataset(a: float, b: float, num_points: int) -> tuple[Dataset, Dataset]:
     """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
     x in [-1,1]
 
@@ -210,7 +242,7 @@ def linear_dataset(a: float, b: float, num_points: int):
         train_size: fraction of points to use for training (between 0 and 1)
 
     Returns:
-        Dataset with train/test split. call str() on it to see the parameters
+        train / test split
 
     TODO: This is a duplicate of the fixture in the global conftest.py but using the
     Dataset object from pydvl.valuation

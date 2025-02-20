@@ -3,12 +3,12 @@ from __future__ import annotations
 import functools
 import operator
 import pickle
-from copy import deepcopy
 from itertools import permutations
 
 import cloudpickle
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
 from pydvl.valuation import ValuationResult
@@ -29,21 +29,24 @@ def dummy_values(values, names):
 @pytest.mark.parametrize(
     "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
-def test_sorting(values, names, ranks_asc, dummy_values):
-    dummy_values.sort(key="value")
-    assert np.alltrue([it.value for it in dummy_values] == sorted(values))
-    assert np.alltrue(dummy_values.indices == ranks_asc)
-    assert np.alltrue(
-        [it.value for it in reversed(dummy_values)] == sorted(values, reverse=True)
-    )
-
-    dummy_values.sort(reverse=True)
-    assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
-    assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
+@pytest.mark.parametrize("reverse", [False, True])
+def test_sorting(values, names, ranks_asc, dummy_values, reverse: bool):
+    dummy_values.sort(reverse=reverse, key="value")
+    assert np.all([it.value for it in dummy_values] == sorted(values, reverse=reverse))
+    if reverse:
+        ranks_asc = list(reversed(ranks_asc))
+    assert np.all(dummy_values.indices == ranks_asc)
 
     dummy_values.sort(key="index")
-    assert np.alltrue(dummy_values.indices == list(range(len(values))))
-    assert np.alltrue([it.value for it in dummy_values] == values)
+    assert np.all(dummy_values.indices == list(range(len(values))))
+    assert np.all([it.value for it in dummy_values] == values)
+
+
+@pytest.mark.parametrize("sort", [None, False, True])
+def test_positions_sorting(sort):
+    v = ValuationResult(values=np.arange(10), indices=np.arange(10, 20), sort=sort)
+    data_indices = np.array([10, 13, 15])
+    np.all(v.indices[v.positions(data_indices)] == data_indices)
 
 
 @pytest.mark.parametrize(
@@ -52,19 +55,19 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
     try:
-        import pandas
+        import pandas  # noqa: F401
 
         df = dummy_values.to_dataframe(use_names=False)
-        assert np.alltrue(df.index.values == ranks_asc)
+        assert np.all(df.index.values == ranks_asc)
 
         df = dummy_values.to_dataframe(use_names=True)
-        assert np.alltrue(df.index.values == sorted_names)
-        assert np.alltrue(df["dummy_valuator"].values == sorted(values))
+        assert np.all(df.index.values == sorted_names)
+        assert np.all(df["dummy_valuator"].values == sorted(values))
 
         dummy_values.sort(reverse=True)
         df = dummy_values.to_dataframe(use_names=True)
-        assert np.alltrue(df.index.values == list(reversed(sorted_names)))
-        assert np.alltrue(df["dummy_valuator"].values == sorted(values, reverse=True))
+        assert np.all(df.index.values == list(reversed(sorted_names)))
+        assert np.all(df["dummy_valuator"].values == sorted(values, reverse=True))
     except ImportError:
         pass
 
@@ -74,7 +77,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
 )
 def test_iter(names, ranks_asc, dummy_values):
     for rank, it in enumerate(dummy_values):
-        assert it.index == ranks_asc[rank]
+        assert it.idx == ranks_asc[rank]
 
     for rank, it in enumerate(dummy_values):
         assert it.name == names[ranks_asc[rank]]
@@ -86,16 +89,18 @@ def test_iter(names, ranks_asc, dummy_values):
 def test_todataframe(ranks_asc, dummy_values):
     df = dummy_values.to_dataframe()
     assert "dummy_valuator" in df.columns
-    assert "dummy_valuator_stderr" in df.columns
-    assert np.alltrue(df.index.values == ranks_asc)
+    assert "dummy_valuator_variances" in df.columns
+    assert "dummy_valuator_counts" in df.columns
+    assert np.all(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(column="val")
     assert "val" in df.columns
-    assert "val_stderr" in df.columns
-    assert np.alltrue(df.index.values == ranks_asc)
+    assert "val_variances" in df.columns
+    assert "val_counts" in df.columns
+    assert np.all(df.index.values == ranks_asc)
 
     df = dummy_values.to_dataframe(use_names=True)
-    assert np.alltrue(df.index.values == [it.name for it in dummy_values])
+    assert np.all(df.index.values == [it.name for it in dummy_values])
 
 
 @pytest.mark.parametrize(
@@ -108,14 +113,14 @@ def test_indexing(ranks_asc, dummy_values):
             dummy_values[1]  # noqa
         dummy_values[:2]  # noqa
     else:
-        assert ranks_asc[:] == [it.index for it in dummy_values[:]]
-        assert ranks_asc[0] == dummy_values[0].index
-        assert [ranks_asc[0]] == [it.index for it in dummy_values[[0]]]
-        assert ranks_asc[:2] == [it.index for it in dummy_values[:2]]
-        assert ranks_asc[:2] == [it.index for it in dummy_values[[0, 1]]]
-        assert ranks_asc[:-2] == [it.index for it in dummy_values[:-2]]
-        assert ranks_asc[-2:] == [it.index for it in dummy_values[-2:]]
-        assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
+        assert ranks_asc[:] == [it.idx for it in dummy_values[:]]
+        assert ranks_asc[0] == dummy_values[0].idx
+        assert [ranks_asc[0]] == [it.idx for it in dummy_values[[0]]]
+        assert ranks_asc[:2] == [it.idx for it in dummy_values[:2]]
+        assert ranks_asc[:2] == [it.idx for it in dummy_values[[0, 1]]]
+        assert ranks_asc[:-2] == [it.idx for it in dummy_values[:-2]]
+        assert ranks_asc[-2:] == [it.idx for it in dummy_values[-2:]]
+        assert ranks_asc[-2:] == [it.idx for it in dummy_values[[-2, -1]]]
 
 
 def test_get_idx():
@@ -133,31 +138,43 @@ def test_get_idx():
 
 
 def test_updating():
-    # Test simple updating
+    """Tests updating of values.
+    Variance updates use Bessel's correction, same as np.var(ddof=1) since we are
+    working with sample estimates.
+    """
     v = ValuationResult(values=np.array([1.0, 2.0]))
     v.update(0, 1.0)
-    assert v.values[0] == 1.0
-    assert v.counts[0] == 2
+    np.testing.assert_allclose(v.counts, [2, 1])
+    np.testing.assert_allclose(v.values, [1, 2])
+    np.testing.assert_allclose(v.variances, [0.0, 0.0])
 
     v.update(1, 4.0)
-    assert v.values[1] == 3.0
-    assert v.variances[1] == 1.0
+    np.testing.assert_allclose(v.counts, [2, 2])
+    np.testing.assert_allclose(v.values, [1, 3])
+    np.testing.assert_allclose(v.variances, [0.0, 2.0])
 
     v.update(1, 3.0)
-    assert v.values[1] == 3.0
-    assert np.isclose(v.variances[1], 2 / 3)
+    np.testing.assert_allclose(v.counts, [2, 3])
+    np.testing.assert_allclose(v.values, [1, 3])
+    np.testing.assert_allclose(v.variances, [0.0, 1])
 
     # Test after sorting
-    v = ValuationResult(values=np.array([3.0, 1.0]))
-    v.sort()
+    v.sort(reverse=True, key="value")
+    np.testing.assert_allclose(v.counts, [3, 2])
+    np.testing.assert_allclose(v.values, [3, 1])
+    np.testing.assert_allclose(v.variances, [1, 0.0])
+
     v.update(0, 1.0)
-    assert v.values[0] == 2.0
+    np.testing.assert_allclose(v.counts, [3, 3])
+    np.testing.assert_allclose(v.values, [3, 1])
+    np.testing.assert_allclose(v.variances, [1, 0])
 
     # Test data indexing
-    v = ValuationResult(values=np.array([3.0, 1.0]), indices=np.array([3, 4]))
+    v = ValuationResult(values=np.array([3.0, 0.0]), indices=np.array([3, 4]))
     v.update(4, 1.0)
-    assert v.values[1] == 1.0
-    assert v.counts[1] == 2
+    np.testing.assert_allclose(v.counts, [1, 2])
+    np.testing.assert_allclose(v.values, [3, 0.5])
+    np.testing.assert_allclose(v.variances, [0.0, 0.5])
 
 
 def test_updating_order_invariance():
@@ -187,10 +204,10 @@ def test_serialization(serialize, deserialize, dummy_values):
 
 
 @pytest.mark.parametrize("values, names", [([], []), ([2, 3, 1], ["a", "b", "c"])])
-def test_equality(values, names, dummy_values):
+def test_copy_and_equality(values, names, dummy_values):
     assert dummy_values == dummy_values
 
-    c = deepcopy(dummy_values)
+    c = dummy_values.copy()
     dummy_values.sort(reverse=True)
     assert c != dummy_values
 
@@ -219,7 +236,7 @@ def test_equality(values, names, dummy_values):
         variances=c._variances,
         data_names=c._names,
     )
-    c2.sort(c._sort_order)
+    c2.sort(reverse=not c._sort_order)
 
     assert c == c2
 
@@ -263,7 +280,7 @@ def test_from_random_creation(size: int, total: float | None):
     assert result.status == Status.Converged
     assert result.algorithm == "random"
     if total is not None:
-        assert np.isclose(np.sum(result.values), total)
+        np.testing.assert_allclose(np.sum(result.values), total, atol=1e-5)
 
 
 def test_from_random_creation_errors():
@@ -298,8 +315,10 @@ def test_adding_random():
     true_means = values.mean(axis=1)
     true_variances = values.var(axis=1)
 
-    assert np.allclose(true_means[result.indices], result.values)
-    assert np.allclose(true_variances[result.indices], result.variances)
+    np.testing.assert_allclose(true_means[result.indices], result.values, atol=1e-5)
+    np.testing.assert_allclose(
+        true_variances[result.indices], result.variances, atol=1e-5
+    )
 
 
 @pytest.mark.parametrize(
@@ -375,8 +394,8 @@ def test_adding_different_indices(
     )
     v3 = v1 + v2
 
-    assert np.allclose(v3.indices, np.array(expected_indices))
-    assert np.allclose(v3.values, np.array(expected_values))
+    np.testing.assert_allclose(v3.indices, np.array(expected_indices))
+    np.testing.assert_allclose(v3.values, np.array(expected_values), atol=1e-5)
     assert np.all(v3.names == expected_names)
 
 
@@ -385,7 +404,7 @@ def test_adding_different_indices(
     [
         ([0, 1, 2], np.int64, ["a", "b", "c"], "<U1"),
         ([4, 1, 7], np.int64, [4, 1, 7], np.int64),
-        ([4, 1, 7], np.int64, [4, 1, 7], np.float_),
+        ([4, 1, 7], np.int64, [4, 1, 7], np.float64),
     ],
 )
 def test_types(indices, index_t, data_names, name_t):
@@ -394,7 +413,7 @@ def test_types(indices, index_t, data_names, name_t):
 
     v = ValuationResult(
         indices=np.array(indices, dtype=index_t),
-        values=np.ones(len(indices), dtype=np.float_),
+        values=np.ones(len(indices), dtype=np.float64),
         data_names=np.array(data_names, dtype=name_t),
     )
     assert v.indices.dtype == index_t
@@ -430,3 +449,16 @@ def test_empty(n):
     v2 = ValuationResult(values=np.arange(n))
     v += v2
     assert len(v2) == n
+
+
+@pytest.mark.parametrize("indices", [None, np.array([0, 1, 2])])
+def test_scaling(indices: NDArray | None):
+    """Tests scaling and how"""
+    n = 10
+    v = ValuationResult(values=np.arange(n), variances=np.ones(n))
+    v2 = v.copy()
+    v2.scale(factor=2, data_indices=indices)
+    np.testing.assert_allclose(v.indices[indices], v2.indices[indices])
+    np.testing.assert_allclose(v.values[indices] * 2, v2.values[indices])
+    np.testing.assert_allclose(v.variances[indices] * 4, v2.variances[indices])
+    np.testing.assert_allclose(v.counts[indices], v2.counts[indices])

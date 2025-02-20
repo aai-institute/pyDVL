@@ -1,6 +1,6 @@
 """
 This module provides several predefined games and, depending on the game,
-the corresponding Shapley values, Least Core values or both of them, for
+the corresponding Shapley values, Least-Core values or both of them, for
 benchmarking purposes.
 
 ## References
@@ -14,15 +14,16 @@ benchmarking purposes.
 
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
 from functools import lru_cache
-from typing import Iterable, Tuple
+from typing import Callable
 
 import numpy as np
 import scipy as sp
 from numpy.typing import NDArray
 
-from pydvl.utils import Status
+from pydvl.utils.status import Status
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods._solve_least_core_problems import LeastCoreProblem
@@ -66,27 +67,13 @@ class DummyGameDataset(Dataset):
             description=description,
         )
 
-    def get_data(self, indices: Iterable[int] | None = None) -> Tuple[NDArray, NDArray]:
-        """Returns the subsets of the train set instead of the test set.
-
-        Args:
-            indices: Indices into the training data.
-
-        Returns:
-            Subset of the train data.
-        """
-        if indices is None:
-            return self.x, self.y
-        elif not isinstance(indices, np.ndarray):
-            indices = np.array(indices)
-        x = self.x[indices]
-        y = self.y[indices]
-        return x, y
-
 
 class DummyGameUtility(UtilityBase):
-    def __init__(self, score):
+    def __init__(
+        self, score: Callable[[NDArray], float], score_range: tuple[float, float]
+    ):
         self.score = score
+        self.score_range = score_range
 
     def __call__(self, sample: SampleT | None) -> float:
         if sample is None or len(sample.subset) == 0:
@@ -96,18 +83,19 @@ class DummyGameUtility(UtilityBase):
             raise ValueError("Utility object has no training data.")
 
         idxs: NDArray[np.int32] = np.array(sample.subset, dtype=np.int32)
+        x, _ = self.training_data.data(idxs)
         try:
-            score: float = self.score(self.training_data.x[idxs])
+            score: float = self.score(x)
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
             score = 0.0
         return score
 
-    def with_dataset(self, dataset: Dataset):
-        copy = type(self)(score=self.score)
-        copy.training_data = dataset
-        return copy
+    def with_dataset(self, dataset: Dataset, copy: bool = True):
+        utility = type(self)(self.score, self.score_range) if copy else self
+        utility._training_data = dataset
+        return utility
 
 
 class DummyModel(SupervisedModel):
@@ -135,7 +123,7 @@ class Game(ABC):
 
     Any Game subclass has to implement the abstract `_score` method
     to assign a score to each coalition/subset and at least
-    one of `shapley_values`, `least_core_values`.
+    one of `shapley_values`, `least_core_values`, or `banzhaf_values`.
 
     Args:
         n_players: Number of players that participate in the game.
@@ -151,12 +139,12 @@ class Game(ABC):
     def __init__(
         self,
         n_players: int,
-        score_range: Tuple[float, float] = (-np.inf, np.inf),
+        score_range: tuple[float, float] = (-np.inf, np.inf),
         description: str | None = None,
     ):
         self.n_players = n_players
         self.data = DummyGameDataset(self.n_players, description)
-        self.u = DummyGameUtility(score=self._score)
+        self.u = DummyGameUtility(score=self._score, score_range=score_range)
 
     def shapley_values(self) -> ValuationResult:
         raise NotImplementedError(
@@ -168,9 +156,13 @@ class Game(ABC):
             f"least_core_values method was not implemented for class {self.__class__.__name__}"
         )
 
+    def banzhaf_values(self) -> ValuationResult:
+        raise NotImplementedError(
+            f"banzhaf_values method was not implemented for class {self.__class__.__name__}"
+        )
+
     @abstractmethod
-    def _score(self, X: NDArray) -> float:
-        ...
+    def _score(self, X: NDArray) -> float: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_players={self.n_players})"
@@ -208,9 +200,8 @@ class SymmetricVotingGame(Game):
         )
 
     def _score(self, X: NDArray) -> float:
-        return 1 if len(X) > len(self.data) // 2 else 0
+        return 1 if len(X) > self.n_players // 2 else 0
 
-    @lru_cache
     def shapley_values(self) -> ValuationResult:
         exact_values = np.ones(self.n_players) / self.n_players
         result = ValuationResult(
@@ -218,8 +209,24 @@ class SymmetricVotingGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
+        )
+        return result
+
+    def banzhaf_values(self):
+        # There are n-1 choose n/2 coalitions of size n/2, which are the only
+        # ones for which the marginal utility is 1.
+        exact = math.comb(self.n_players - 1, self.n_players // 2) / 2 ** (
+            self.n_players - 1
+        )
+        result = ValuationResult(
+            algorithm="exact_banzhaf",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=np.full(self.n_players, exact),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -343,8 +350,8 @@ class AsymmetricVotingGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=self.exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -356,16 +363,35 @@ class ShoesGame(Game):
     2009)<sup><a href="#castro_polynomial_2009">1</a></sup>.
 
     In this game, some players have a left shoe and others a right shoe.
-    Single shoes have a worth of zero while pairs have a worth of 1.
 
-    The payoff of a coalition $S$ is:
+    The payoff (utility) of a coalition $S$ is:
 
     $${
-    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
+    U(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
     }$$
 
-    Where $L$, respectively $R$, is the set of players with left shoes,
-    respectively right shoes.
+    Where $L$, respectively $R$, is the set of players with left shoes, respectively
+    right shoes. This means that the marginal contribution of a player with a left shoe
+    to a coalition $S$ is 1 if the number of players with a left shoe in $S$ is strictly
+    less than the number of players with a right shoe in $S$, and 0 otherwise. Let
+    player $i$ have a left shoe, then:
+
+    $${
+    U(S_{+i}) - U(S) =
+        \left\{
+            \begin{array}{ll}
+                1, & \text{ if} \mid S \cap L \mid < \mid S \cap R \mid \\
+                0, & \text{ otherwise}
+            \end{array}
+        \right.
+    }$$
+
+    The situation is analogous for players with a right shoe. In order to compute the
+    Shapley or Banzhaf value for a player $i$ with a left shoe, we need then the number
+    of subsets $S$ of $D_{-i}$ such that $\mid S \cap L \mid < \mid S \cap R \mid$. This
+    number is given by the sum:
+
+    $$\sum^{| L |}_{i = 0} \sum_{j > i}^{| R |} \binom{| L |}{i} \binom{| R |}{j}.$$
 
     Args:
         left: Number of players with a left shoe.
@@ -387,37 +413,56 @@ class ShoesGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        if self.left != self.right and (self.left > 4 or self.right > 4):
-            raise ValueError(
-                "This class only supports getting exact shapley values "
-                "for left <= 4 and right <= 4 or left == right"
+        """
+        We use the fact that the marginal utility of a coalition S of size k is 1 if
+        |S ∩ L| < |S ∩ R| and 0 otherwise, and compute Shapley values with the formula
+        that iterates over subset sizes.
+
+        The solution for left or right shoes is symmetrical
+        """
+        left_value = 0.0
+        right_value = 0.0
+        m = self.n_players - 1
+        for k in range(m + 1):
+            left_value += (
+                1 / math.comb(m, k) * self.n_subsets_left(self.left - 1, self.right, k)
             )
-        precomputed_values = np.array(
-            [
-                [0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.5, 0.667, 0.75, 0.8],
-                [0.0, 0.167, 0.5, 0.65, 0.733],
-                [0.0, 0.083, 0.233, 0.5, 0.638],
-                [0.0, 0.050, 0.133, 0.271, 0.5],
-            ]
-        )
-        if self.left == self.right:
-            value_left = value_right = min(self.left, self.right) / (
-                self.left + self.right
+            right_value += (
+                1 / math.comb(m, k) * self.n_subsets_right(self.left, self.right - 1, k)
             )
-        else:
-            value_left = precomputed_values[self.left, self.right]
-            value_right = precomputed_values[self.right, self.left]
-        exact_values = np.array([value_left] * self.left + [value_right] * self.right)
-        result = ValuationResult(
+        left_value /= self.n_players
+        right_value /= self.n_players
+        exact_values = np.array([left_value] * self.left + [right_value] * self.right)
+        return ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
-        return result
+
+    @lru_cache
+    def banzhaf_values(self) -> ValuationResult:
+        """
+        We use the fact that the marginal utility of a coalition S is 1 if
+        |S ∩ L| < |S ∩ R| and 0 otherwise, and simply count those sets.
+
+        The solution for left or right shoes is symmetrical.
+        """
+        m = self.n_players - 1
+        left_value = self.n_subsets_left(self.left - 1, self.right) / 2**m
+        right_value = self.n_subsets_right(self.left, self.right - 1) / 2**m
+
+        exact_values = np.array([left_value] * self.left + [right_value] * self.right)
+        return ValuationResult(
+            algorithm="exact_banzhaf",
+            status=Status.Converged,
+            indices=self.data.indices,
+            values=exact_values,
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
+        )
 
     @lru_cache
     def least_core_values(self) -> ValuationResult:
@@ -437,8 +482,8 @@ class ShoesGame(Game):
             indices=self.data.indices,
             values=exact_values,
             subsidy=subsidy,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -460,7 +505,21 @@ class ShoesGame(Game):
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"
+        return f"{self.__class__.__name__}(left={self.left}, right={self.right})"
+
+    @staticmethod
+    @lru_cache
+    def n_subsets_left(n_left: int, n_right: int, size: int | None = None) -> int:
+        acc = 0
+        for i in range(n_left + 1):
+            for j in range(i + 1, n_right + 1):
+                if size is None or i + j == size:
+                    acc += math.comb(n_left, i) * math.comb(n_right, j)
+        return acc
+
+    @staticmethod
+    def n_subsets_right(n_left: int, n_right: int, size: int | None = None) -> int:
+        return ShoesGame.n_subsets_left(n_right, n_left, size)
 
 
 class AirportGame(Game):
@@ -526,8 +585,8 @@ class AirportGame(Game):
             status=Status.Converged,
             indices=self.data.indices,
             values=self.exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -595,14 +654,14 @@ class MinimumSpanningTreeGame(Game):
 
     @lru_cache
     def shapley_values(self) -> ValuationResult:
-        exact_values = 2 * np.ones_like(self.data.x)
+        exact_values = 2.0 * np.ones_like(self.data.data().x)
         result = ValuationResult(
             algorithm="exact_shapley",
             status=Status.Converged,
             indices=self.data.indices,
             values=exact_values,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -667,8 +726,8 @@ class MinerGame(Game):
             indices=self.data.indices,
             values=values,
             subsidy=subsidy,
-            variances=np.zeros_like(self.data.x),
-            counts=np.zeros_like(self.data.x),
+            variances=np.zeros_like(self.data.data().x),
+            counts=np.zeros_like(self.data.data().x),
         )
         return result
 
@@ -729,6 +788,6 @@ def _exact_a_lb(n_players):
         )
     else:
         raise NotImplementedError(
-            f"Exact A_lb matrix is not implemented for more than 4 players."
+            "Exact A_lb matrix is not implemented for more than 4 players."
         )
     return a_lb.astype(float)

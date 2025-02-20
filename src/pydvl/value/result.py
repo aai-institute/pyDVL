@@ -358,16 +358,13 @@ class ValuationResult(
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
-        ...
+    def __getitem__(self, key: int) -> ValueItem: ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: slice) -> List[ValueItem]: ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -393,16 +390,13 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: int, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
@@ -557,10 +551,10 @@ class ValuationResult(
         # taken from the result with the name.
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
-                other._names = other._names.astype(self._names.dtype)
                 logger.warning(
                     f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
                 )
+                other._names = other._names.astype(self._names.dtype)
             else:
                 raise TypeError(
                     f"Cannot cast ValuationResult.names from "
@@ -579,7 +573,7 @@ class ValuationResult(
             other_shared_names = np.take(other_names, both_pos)
 
             if np.any(this_shared_names != other_shared_names):
-                raise ValueError(f"Mismatching names in ValuationResults")
+                raise ValueError("Mismatching names in ValuationResults")
 
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names
@@ -616,7 +610,11 @@ class ValuationResult(
         except KeyError:
             raise IndexError(f"Index {idx} not found in ValuationResult")
         val, var = running_moments(
-            self._values[pos], self._variances[pos], self._counts[pos], new_value
+            self._values[pos],
+            self._variances[pos],
+            self._counts[pos],
+            new_value,
+            unbiased=False,
         )
         self[pos] = ValueItem(
             index=cast(IndexT, idx),  # FIXME
@@ -686,6 +684,9 @@ class ValuationResult(
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
         df[column + "_updates"] = self.counts[self._sort_positions]
+        # HACK for compatibility with updated support code in the notebooks
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod

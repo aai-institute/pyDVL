@@ -5,7 +5,7 @@ done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
 !!! Warning
-    This method is very inefficient. Potential improvements to the
+    Group Testing is very inefficient. Potential improvements to the
     implementation notwithstanding, convergence seems to be very slow (in terms
     of evaluations of the utility required). We recommend other Monte Carlo
     methods instead.
@@ -24,17 +24,17 @@ You can read more [in the documentation][data-valuation].
     https://arxiv.org/pdf/2302.11431).
 
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Callable, NamedTuple, cast
+from typing import NamedTuple, cast
 
 import cvxpy as cp
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
-from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.base import Valuation
@@ -43,9 +43,14 @@ from pydvl.valuation.methods._utility_values_and_sample_masks import (
     compute_utility_values_and_sample_masks,
 )
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
-from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.samplers import (
+    GroupTestingSampleSize,
+    IndexSampler,
+    NoIndexIteration,
+    RandomSizeIteration,
+    StratifiedSampler,
+)
+from pydvl.valuation.types import NameT, Sample
 from pydvl.valuation.utility.base import UtilityBase
 
 log = logging.getLogger(__name__)
@@ -59,27 +64,27 @@ class GroupTestingShapleyValuation(Valuation):
     See [Data valuation][data-valuation] for an overview.
 
     !!! Warning
-    This method is very inefficient. Potential improvements to the
-    implementation notwithstanding, convergence seems to be very slow (in terms
-    of evaluations of the utility required). We recommend other Monte Carlo
-    methods instead.
+        This method is very inefficient. Potential improvements to the
+        implementation notwithstanding, convergence seems to be very slow (in
+        terms of evaluations of the utility required). We recommend other Monte
+        Carlo methods instead.
 
     Args:
         utility: Utility object with model, data and scoring function.
         n_samples: The number of samples to use. A sample size with theoretical
             guarantees can be computed using
-            `pydvl.valuation.methods.gt_shapleyt.compute_n_samples`.
+            [compute_n_samples()][pydvl.valuation.methods.gt_shapley.compute_n_samples].
         epsilon: The error tolerance.
         solver_options: Optional dictionary containing a CVXPY solver and options to
-            configure it. For valid values to the "solver" key see
-            [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
-            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+            configure it. For valid values to the "solver" key see [this
+            tutorial](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
+            For additional options [cvxpy's
+            documentation](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         progress: Whether to show a progress bar during the construction of the
             group-testing problem.
         seed: Seed for the random number generator.
         batch_size: The number of samples to draw in each batch. Can be used to reduce
             parallelization overhead for fast utilities. Defaults to 1.
-
     """
 
     algorithm_name = "Group-Testing-Shapley"
@@ -100,7 +105,13 @@ class GroupTestingShapleyValuation(Valuation):
         self._n_samples = n_samples
         self._solver_options = solver_options
         self._progress = progress
-        self._sampler = GTSampler(batch_size=batch_size, seed=seed)
+        self._sampler = StratifiedSampler(
+            index_iteration=NoIndexIteration,
+            sample_sizes=GroupTestingSampleSize(),
+            sample_sizes_iteration=RandomSizeIteration,
+            batch_size=batch_size,
+            seed=seed,
+        )
         self._epsilon = epsilon
 
     def fit(self, data: Dataset) -> Self:
@@ -134,7 +145,7 @@ class GroupTestingShapleyValuation(Valuation):
             problem=problem,
             solver_options=self._solver_options,
             algorithm_name=self.algorithm_name,
-            data_names=data.data_names,
+            data_names=data.names,
         )
 
         self.result = solution
@@ -142,7 +153,7 @@ class GroupTestingShapleyValuation(Valuation):
 
 
 def compute_n_samples(epsilon: float, delta: float, n_obs: int) -> int:
-    """Compute the minimal sample size with epsilon-delta guarantees.
+    r"""Compute the minimal sample size with epsilon-delta guarantees.
 
     Based on the formula in Theorem 4 of
     (Jia, R. et al., 2023)<sup><a href="#jia_update_2023">2</a></sup>
@@ -189,43 +200,6 @@ class GroupTestingProblem(NamedTuple):
     epsilon: float
 
 
-class GTSampler(StochasticSamplerMixin, IndexSampler):
-    """Sampler for the group-testing algorithm.
-
-    Methods that are specific to semi-values like weight and make_strategy are not
-    implemented.
-
-    Args:
-        batch_size: The number of samples to draw from each batch.
-        seed: Seed for the random number generator.
-
-    """
-
-    def __init__(self, batch_size: int = 1, seed: Seed | None = None):
-        super().__init__(batch_size=batch_size, seed=seed)
-
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        n_obs = len(indices)
-        sample_sizes = _create_sample_sizes(n_obs)
-        probabilities = _create_sampling_probabilities(sample_sizes)
-
-        while True:
-            size = self._rng.choice(sample_sizes, p=probabilities)
-            subset = random_subset_of_size(indices, size=size, seed=self._rng)
-            yield Sample(idx=None, subset=subset)
-
-    @staticmethod
-    def weight(n: int, subset_len: int) -> float:
-        raise NotImplementedError("This is not a semi-value sampler.")
-
-    def make_strategy(
-        self,
-        utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
-    ) -> EvaluationStrategy:
-        raise NotImplementedError("This is not a semi-value sampler.")
-
-
 def create_group_testing_problem(
     utility: UtilityBase,
     sampler: IndexSampler,
@@ -257,7 +231,7 @@ def create_group_testing_problem(
         extra_samples=[Sample(idx=None, subset=utility.training_data.indices)],
     )
 
-    total_utility = u_values[-1]
+    total_utility = u_values[-1].item()
     u_values = u_values[:-1]
     masks = masks[:-1]
 
@@ -308,7 +282,7 @@ def solve_group_testing_problem(
     problem: GroupTestingProblem,
     solver_options: dict | None,
     algorithm_name: str,
-    data_names: NDArray[np.object_],
+    data_names: NDArray[NameT],
 ) -> ValuationResult:
     """Solve the group testing problem and create a ValuationResult.
 
@@ -347,11 +321,13 @@ def solve_group_testing_problem(
     if cp_problem.status != "optimal":
         log.warning(f"cvxpy returned status {cp_problem.status}")
         values = (
-            np.nan * np.ones_like(n_obs) if not hasattr(v.value, "__len__") else v.value
+            np.nan * np.ones_like(n_obs)
+            if not hasattr(v.value, "__len__")
+            else cast(NDArray[np.float64], v.value)
         )
         status = Status.Failed
     else:
-        values = v.value
+        values = cast(NDArray[np.float64], v.value)
         status = Status.Converged
 
     result = ValuationResult(

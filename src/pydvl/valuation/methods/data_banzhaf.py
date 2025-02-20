@@ -1,6 +1,6 @@
 r"""
 This module implements the Banzhaf valuation method, as described in
-(Wang and Jia, 2022)<sup><a href="#wang_data_2022">1</a></sup>.
+Wang and Jia, (2022)<sup><a href="#wang_data_2023">1</a></sup>.
 
 Data Banzhaf was proposed as a means to counteract the inherent stochasticity of the
 utility function in machine learning problems. It chooses the coefficients $w(k)$ of the
@@ -18,12 +18,15 @@ best point removal, but can show some
 
 ## References
 
-[^1]: <a name="wang_data_2022"></a> Wang, Jiachen T., and Ruoxi Jia. [Data Banzhaf: A
+[^1]: <a name="wang_data_2023"></a> Wang, Jiachen T., and Ruoxi Jia. [Data Banzhaf: A
       Robust Data Valuation Framework for Machine
       Learning](https://proceedings.mlr.press/v206/wang23e.html). In Proceedings of The
       26th International Conference on Artificial Intelligence and Statistics,
       6388–6421. PMLR, 2023.
 """
+
+import numpy as np
+
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
 __all__ = ["DataBanzhafValuation"]
@@ -34,5 +37,5 @@ class DataBanzhafValuation(SemivalueValuation):
 
     algorithm_name = "Data-Banzhaf"
 
-    def coefficient(self, n: int, k: int) -> float:
-        return float(1 / 2 ** (n - 1))
+    def log_coefficient(self, n: int, k: int) -> float:
+        return float(-(n - 1) * np.log(2))

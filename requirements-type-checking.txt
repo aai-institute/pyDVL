@@ -1,3 +1,4 @@
-mypy==1.5.1
+mypy==1.14
 types-tqdm
 pandas-stubs
+-c requirements-constraints.txt

@@ -1,4 +1,4 @@
-from .influence_function_model import (
+from .influence_function_model import (  # noqa: F401
     ArnoldiInfluence,
     CgInfluence,
     DirectInfluence,
@@ -7,5 +7,5 @@ from .influence_function_model import (
     LissaInfluence,
     NystroemSketchInfluence,
 )
-from .preconditioner import JacobiPreconditioner, NystroemPreconditioner
-from .util import BlockMode, SecondOrderMode
+from .preconditioner import JacobiPreconditioner, NystroemPreconditioner  # noqa: F401
+from .util import BlockMode, SecondOrderMode  # noqa: F401

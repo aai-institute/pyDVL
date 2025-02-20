@@ -6,6 +6,7 @@ from itertools import cycle, takewhile
 from time import time
 from typing import TYPE_CHECKING, Collection, Generic, Iterable, Iterator, TypeVar
 
+from deprecate import deprecated
 from tqdm.auto import tqdm
 
 # This is needed to avoid circular import errors
@@ -18,10 +19,17 @@ __all__ = ["log_duration", "Progress", "repeat_indices"]
 logger = logging.getLogger(__name__)
 
 
+@deprecated(
+    target=True,
+    deprecated_in="0.10.0",
+    remove_in="0.12.0",
+    template_mgs="%(source_name)s used only by the old value module. "
+    "It will be removed in %(remove_in)s.",
+)
 def repeat_indices(
     indices: Collection[int],
-    result: "ValuationResult",
-    done: "StoppingCriterion",
+    result: ValuationResult,
+    done: StoppingCriterion,
     **kwargs,
 ) -> Iterator[int]:
     """Helper function to cycle indefinitely over a collection of indices
@@ -57,7 +65,7 @@ def log_duration(_func=None, *, log_level=logging.DEBUG):
             duration = time() - start_time
             logger.log(
                 log_level,
-                f"Function '{func_name}' completed. " f"Duration: {duration:.2f} sec",
+                f"Function '{func_name}' completed. Duration: {duration:.2f} sec",
             )
             return result
 
@@ -99,28 +107,38 @@ class Progress(Generic[T]):
         self.iterable = iterable
         self.is_done = is_done
         self.total = kwargs.pop("total", 100)
-        self.unit = kwargs.pop("unit", "%")
-        self.desc = kwargs.pop("desc", str(is_done))
-        self.bar_format = "{desc}: {percentage:0.2f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]"
-        self.kwargs = kwargs
-        self.pbar: tqdm | None = None
+        desc = kwargs.pop("desc", str(is_done))
+        unit = kwargs.pop("unit", "%")
+        bar_format = kwargs.pop(
+            "bar_format",
+            "{desc}: {percentage:0.2f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
+        )
+        self.pbar = tqdm(
+            total=self.total,
+            desc=desc,
+            unit=unit,
+            bar_format=bar_format,
+            **kwargs,
+        )
 
     def __iter__(self) -> Iterator[T]:
-        with tqdm(
-            total=self.total,
-            desc=self.desc,
-            unit=self.unit,
-            bar_format=self.bar_format,
-            **self.kwargs,
-        ) as self.pbar:
+        self.pbar.reset()
+        try:
             for item in self.iterable:
-                self.pbar.n = self.total * self.is_done.completion()
-                self.pbar.refresh()
+                self.update()
                 yield item
+        finally:
+            self.update()
+            self.pbar.close()
 
     def __enter__(self):
+        self.pbar.reset()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.pbar is not None:
-            self.pbar.close()
+        self.update()
+        self.pbar.close()
+
+    def update(self):
+        self.pbar.n = self.total * self.is_done.completion()
+        self.pbar.refresh()

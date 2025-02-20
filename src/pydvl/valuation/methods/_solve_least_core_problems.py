@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import logging
 import warnings
-from functools import partial
-from typing import List, NamedTuple, Sequence, Tuple
+from typing import NamedTuple, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
-from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
 from pydvl.utils import Status
@@ -19,7 +17,6 @@ __all__ = [
     "_solve_least_core_linear_program",
     "_solve_egalitarian_least_core_quadratic_program",
     "lc_solve_problem",
-    "lc_solve_problems",
     "LeastCoreProblem",
 ]
 
@@ -29,13 +26,13 @@ logger = logging.getLogger(__name__)
 class LeastCoreProblem(NamedTuple):
     """The linear programming problem that defines the least-core valuation.
 
-    See [LeastCoreValuation](pydvl.valuation.methods.least_core.LeastCoreValuation) for
+    See [LeastCoreValuation][pydvl.valuation.methods.least_core.LeastCoreValuation] for
     details.
 
     """
 
-    utility_values: NDArray[np.float_]
-    A_lb: NDArray[np.float_]
+    utility_values: NDArray[np.float64]
+    A_lb: NDArray[np.float64]
 
 
 def lc_solve_problem(
@@ -131,7 +128,7 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: NDArray[np.float_] | None
+    values: NDArray[np.float64] | None
 
     if subsidy is None:
         logger.debug("No values were found")
@@ -164,18 +161,18 @@ def lc_solve_problem(
         values=values,
         subsidy=subsidy,
         stderr=None,
-        data_names=u.training_data.data_names,
+        data_names=u.training_data.names,
     )
 
 
 def _solve_least_core_linear_program(
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[NDArray[np.float_] | None, float | None]:
+) -> Tuple[NDArray[np.float64] | None, float | None]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -234,7 +231,7 @@ def _solve_least_core_linear_program(
                 "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
-        subsidy = e.value.item()
+        subsidy = cast(NDArray[np.float64], e.value).item()
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:
@@ -247,12 +244,12 @@ def _solve_least_core_linear_program(
 
 def _solve_egalitarian_least_core_quadratic_program(
     subsidy: float,
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
-) -> NDArray[np.float_] | None:
+) -> NDArray[np.float64] | None:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$
