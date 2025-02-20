@@ -147,7 +147,7 @@ class ClasswiseShapleyValuation(Valuation):
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
-        self.utility.training_data = data
+        self.utility = self.utility.with_dataset(data)
 
         strategy = self.sampler.make_strategy(self.utility)
         updater = self.sampler.result_updater(self.result)

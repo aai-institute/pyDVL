@@ -163,9 +163,7 @@ def test_exact_least_core_via_general_least_core_valuation(
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
-    # HACK because check_total_value expects u with data
-    test_game.u = test_game.u.with_dataset(test_game.data)
-    check_total_value(test_game.u, values)
+    check_total_value(test_game.u.with_dataset(test_game.data), values)
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
         check_values(values, exact_values)
@@ -197,9 +195,7 @@ def test_exact_least_core(test_game, non_negative_subsidy):
     )
     valuation.fit(data=test_game.data)
     values = valuation.values()
-    # HACK because check_total_value expects u with data
-    test_game.u = test_game.u.with_dataset(test_game.data)
-    check_total_value(test_game.u, values)
+    check_total_value(test_game.u.with_dataset(test_game.data), values)
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
         check_values(values, exact_values)

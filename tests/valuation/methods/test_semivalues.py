@@ -151,4 +151,4 @@ def test_batch_size(test_game, n_jobs, seed):
     result_multi_batch = timed_fn(batch_size=5)
 
     # Occasionally, batch_2 arrives before batch_1, so rtol isn't always 0.
-    check_values(result_single_batch, result_multi_batch, rtol=1e-4)
+    check_values(result_single_batch, result_multi_batch, rtol=1e-4, atol=1e-3)

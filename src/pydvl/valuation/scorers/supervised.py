@@ -14,7 +14,7 @@ evaluate the model.
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -27,16 +27,20 @@ __all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.base import Scorer
 
+SupervisedModelT = TypeVar(
+    "SupervisedModelT", bound=SupervisedModel, contravariant=True
+)
 
-class SupervisedScorerCallable(Protocol):
+
+class SupervisedScorerCallable(Protocol[SupervisedModelT]):
     """Signature for a scorer"""
 
     def __call__(
-        self, model: SupervisedModel, X: NDArray[Any], y: NDArray[Any]
+        self, model: SupervisedModelT, X: NDArray[Any], y: NDArray[Any]
     ) -> float: ...
 
 
-class SupervisedScorer(Scorer):
+class SupervisedScorer(Generic[SupervisedModelT], Scorer):
     """A scoring callable that takes a model, data, and labels and returns a
     scalar.
 
@@ -62,11 +66,11 @@ class SupervisedScorer(Scorer):
 
     """
 
-    _scorer: SupervisedScorerCallable
+    _scorer: SupervisedScorerCallable[SupervisedModelT]
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable | SupervisedModel,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
         test_data: Dataset,
         default: float,
         range: tuple[float, float] = (-np.inf, np.inf),
@@ -93,7 +97,7 @@ class SupervisedScorer(Scorer):
         self.range = np.array(range, dtype=np.float64)
         self.name = name
 
-    def __call__(self, model: SupervisedModel) -> float:
+    def __call__(self, model: SupervisedModelT) -> float:
         return self._scorer(model, *self.test_data.data())
 
     def __str__(self) -> str:

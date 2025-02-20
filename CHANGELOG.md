@@ -16,8 +16,9 @@
   [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Refactor Classwise Shapley valuation with the interfaces and sampler
   architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616)
-- Refactor KNN Shapley values with the new sampler architecture
+- Refactor KNN Shapley values with the new interface
   [PR #610](https://github.com/aai-institute/pyDVL/pull/610)
+  [PR #645](https://github.com/aai-institute/pyDVL/pull/645)
 - Refactor MSR Banzhaf semivalues with the new sampler architecture.
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)

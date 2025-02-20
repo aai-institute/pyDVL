@@ -92,10 +92,10 @@ class DummyGameUtility(UtilityBase):
             score = 0.0
         return score
 
-    def with_dataset(self, dataset: Dataset):
-        copy = type(self)(score=self.score, score_range=self.score_range)
-        copy.training_data = dataset
-        return copy
+    def with_dataset(self, dataset: Dataset, copy: bool = True):
+        utility = type(self)(self.score, self.score_range) if copy else self
+        utility._training_data = dataset
+        return utility
 
 
 class DummyModel(SupervisedModel):
