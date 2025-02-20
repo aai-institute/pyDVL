@@ -142,7 +142,7 @@ def test_linear_with_outlier(
     values = valuation_permutation.values()
 
     values.sort()
-    check_total_value(utility, values, atol=total_atol)
+    check_total_value(utility.with_dataset(data_train), values, atol=total_atol)
 
     assert values.indices[0] == outlier_idx
 
@@ -236,6 +236,6 @@ def test_polynomial_with_outlier(
     valuation.fit(data_train)
     values = valuation.values()
 
-    check_total_value(poly_utility, values, atol=total_atol)
+    check_total_value(poly_utility.with_dataset(data_train), values, atol=total_atol)
 
     assert values[0].idx == outlier_idx
