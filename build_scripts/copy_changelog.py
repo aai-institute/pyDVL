@@ -14,25 +14,21 @@ target_filepath = docs_dir / changelog_file.name
 
 @mkdocs.plugins.event_priority(100)
 def on_pre_build(config):
-    logger.info("Temporarily copying changelog to docs directory")
+    logger.info("Link changelog to docs directory")
     try:
-        if os.path.getmtime(changelog_file) <= os.path.getmtime(target_filepath):
-            logger.info(
-                f"Changelog '{os.fspath(changelog_file)}' hasn't been updated, skipping."
-            )
-            return
-    except FileNotFoundError:
-        pass
-    logger.info(
-        f"Creating symbolic link for '{os.fspath(changelog_file)}' "
-        f"at '{os.fspath(target_filepath)}'"
-    )
-    target_filepath.symlink_to(changelog_file)
-
-    logger.info("Finished copying changelog to docs directory")
+        target_filepath.symlink_to(changelog_file)
+        logger.info(
+            f"Created symbolic link for '{os.fspath(changelog_file)}' "
+            f"at '{os.fspath(target_filepath)}'"
+        )
+    except FileExistsError:
+        logger.info(
+            f"File '{os.fspath(target_filepath)}' already exists, skipping symlink creation."
+        )
 
 
 @mkdocs.plugins.event_priority(-100)
 def on_shutdown():
-    logger.info("Removing temporary changelog in docs directory")
-    target_filepath.unlink()
+    pass  # Removing the link on shutdown makes mike fail the build
+    # logger.info("Removing temporary changelog in docs directory")
+    # target_filepath.unlink()
