@@ -25,7 +25,7 @@ def test_against_exact_shapley(data, n_jobs):
     model = KNeighborsClassifier(n_neighbors=5)
     train, test = data
 
-    utility = KNNClassifierUtility(model=model, test_data=test)
+    utility = KNNClassifierUtility(model=model, test_data=test, clone_before_fit=False)
     sampler = DeterministicUniformSampler()
     exact_valuation = ShapleyValuation(
         utility, sampler=sampler, is_done=NoStopping(), progress=False

@@ -154,9 +154,20 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
     def _compute_score(self, model: ModelT) -> float:
         raise NotImplementedError("This method should not be called")
 
-    def with_dataset(self, data: Dataset) -> Self:
-        """Return a new instance of the utility with the given dataset and the model
-        fitted on it."""
-        new_utility: Self = super().with_dataset(data)
-        new_utility.model.fit(*data.data())
-        return new_utility
+    def with_dataset(self, data: Dataset, copy: bool = True) -> Self:
+        """Return the utility, or a copy of it, with the given dataset and the model
+        fitted on it.
+
+        Args:
+            data: The dataset to use.
+            copy: Whether to copy the utility object or not. Additionally, if `True`
+                then the model is also cloned. If `False`, the model is only cloned if
+                `clone_before_fit` is `True`.
+        Returns:
+            The utility object.
+        """
+        utility: Self = super().with_dataset(data, copy)
+        if copy or self.clone_before_fit:
+            utility.model = self._maybe_clone_model(self.model, do_clone=True)
+        utility.model.fit(*data.data())
+        return utility

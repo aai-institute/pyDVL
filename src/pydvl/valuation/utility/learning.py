@@ -53,8 +53,7 @@ class DataUtilityLearning(UtilityBase[SampleT]):
         >>>
         >>> train, test = Dataset.from_sklearn(load_iris())
         >>> u = ModelUtility(LogisticRegression())
-        >>> u.training_data = train
-        >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
+        >>> wrapped_u = DataUtilityLearning(u.with_dataset(train), 3, LinearRegression())
         ... # First 3 calls will be computed normally
         >>> for i in range(3):
         ...     _ = wrapped_u(Sample(0, np.array([])))

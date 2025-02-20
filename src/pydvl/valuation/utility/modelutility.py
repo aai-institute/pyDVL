@@ -118,7 +118,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         clone_before_fit: bool = True,
     ):
         self.clone_before_fit = clone_before_fit
-        self.model = self._maybe_clone_model(model)
+        self.model = self._maybe_clone_model(model, clone_before_fit)
         self.scorer = scorer
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
@@ -195,7 +195,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             if not self.show_warnings:
                 warnings.simplefilter("ignore")
             try:
-                model = self._maybe_clone_model(self.model)
+                model = self._maybe_clone_model(self.model, self.clone_before_fit)
                 model.fit(x_train, y_train)
                 score = self._compute_score(model)
                 return score
@@ -205,15 +205,17 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                     return self.scorer.default
                 raise
 
-    def _maybe_clone_model(self, model: ModelT) -> ModelT:
+    @staticmethod
+    def _maybe_clone_model(model: ModelT, do_clone: bool) -> ModelT:
         """Clones the passed model to avoid the possibility of reusing a fitted
         estimator.
 
         Args:
             model: Any supervised model. Typical choices can be found
                 on [this page](https://scikit-learn.org/stable/supervised_learning.html)
+            do_clone: Whether to clone the model or not.
         """
-        if not self.clone_before_fit:
+        if not do_clone:
             return model
         try:
             model = clone(model)

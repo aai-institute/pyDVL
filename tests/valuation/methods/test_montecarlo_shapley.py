@@ -279,7 +279,9 @@ def test_hoeffding_bound_montecarlo(
         valuation.fit(dummy_train_data)
         values = valuation.values()
 
-        check_total_value(u, values, atol=len(dummy_train_data) * eps)
+        check_total_value(
+            u.with_dataset(dummy_train_data), values, atol=len(dummy_train_data) * eps
+        )
         check_rank_correlation(values, exact_values, threshold=0.8)
 
 
