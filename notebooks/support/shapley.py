@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,8 +7,6 @@ from numpy.typing import NDArray
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-
-from pydvl.valuation.dataset import Dataset
 
 __all__ = [
     "load_spotify_dataset",
