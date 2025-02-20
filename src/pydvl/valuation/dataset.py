@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from copy import copy
 from dataclasses import dataclass
 from typing import Sequence, overload
 
@@ -160,8 +159,8 @@ class Dataset:
         self, idx: int | slice | Sequence[int] | NDArray[np.int_]
     ) -> Dataset:
         if idx is None:
-            return self.copy()
-        if isinstance(idx, int):
+            idx = slice(None)
+        elif isinstance(idx, int):
             idx = [idx]
         return Dataset(
             x=self._x[idx],
@@ -170,21 +169,6 @@ class Dataset:
             target_names=self.target_names,
             data_names=self._data_names[idx],
             description="(SLICED): " + self.description,
-        )
-
-    def copy(self) -> Dataset:
-        """Returns a copy of the dataset.
-
-        This is a shallow copy, i.e. the data arrays are not copied. It can also be
-        achieved with `dataset[None]`.
-        """
-        return Dataset(
-            x=self._x.copy(),
-            y=self._y.copy(),
-            feature_names=copy(self.feature_names),
-            target_names=copy(self.target_names),
-            data_names=self._data_names.copy(),
-            description=self.description,
         )
 
     def feature(self, name: str) -> tuple[slice, int]:
