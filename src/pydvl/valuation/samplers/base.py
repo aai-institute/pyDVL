@@ -7,6 +7,7 @@ See [pydvl.valuation.samplers][pydvl.valuation.samplers] for details.
 from __future__ import annotations
 
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, Protocol, TypeVar
 
@@ -127,7 +128,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         is deactivated by default. Samplers must explicitly override the setter to
         signal that they support skipping indices.
         """
-        raise NotImplementedError(f"Cannot skip indices in {self.__class__.__name__}.")
+        warnings.warn(f"Cannot skip indices in {self.__class__.__name__}.")
 
     def interrupt(self):
         self._interrupted = True
@@ -337,6 +338,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         log_coefficient: Callable[[int, int], float] | None = None,
     ):
         self.utility = utility
+        # Used by the decorator suppress_warnings:
+        self.show_warnings = getattr(utility, "show_warnings", False)
         self.n_indices = (
             len(utility.training_data) if utility.training_data is not None else 0
         )

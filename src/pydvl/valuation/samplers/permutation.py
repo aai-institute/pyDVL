@@ -26,6 +26,7 @@ from typing import Callable
 
 import numpy as np
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import logcomb
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import (
@@ -169,6 +170,7 @@ class PermutationEvaluationStrategy(
         self.truncation = copy(sampler.truncation)
         self.truncation.reset(utility)  # Perform initial setup (e.g. total_utility)
 
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
