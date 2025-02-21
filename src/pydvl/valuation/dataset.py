@@ -70,15 +70,18 @@ class RawData:
     y: NDArray
 
     def __post_init__(self):
-        if len(self.x) != len(self.y):
-            raise ValueError("x and y must have the same length")
+        try:
+            if len(self.x) != len(self.y):
+                raise ValueError("x and y must have the same length")
+        except TypeError as e:
+            raise TypeError("x and y must be numpy arrays") from e
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
 
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
-        return RawData(self.x[item], self.y[item])
+        return RawData(np.atleast_1d(self.x[item]), np.atleast_1d(self.y[item]))
 
     def __len__(self):
         return len(self.x)
