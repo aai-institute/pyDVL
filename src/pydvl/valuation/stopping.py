@@ -695,13 +695,12 @@ class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
     computation.
 
-    The method used by (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup> computes the relative
-    distances between the current values $v_i^t$ and the values at the previous
-    checkpoint $v_i^{t-\tau}$. If the sum is below a given threshold, the
-    computation is terminated.
+    The method used by Ghorbani and Zou, (2019)<sup><a
+    href="#ghorbani_data_2019">1</a></sup> computes the relative distances between the
+    current values $v_i^t$ and the values at the previous checkpoint $v_i^{t-\tau}$. If
+    the sum is below a given threshold, the computation is terminated.
 
-    $$\sum_{i=1}^n \frac{\left| v_i^t - v_i^{t-\tau} \right|}{v_i^t} <
-    \epsilon.$$
+    $$\sum_{i=1}^n \frac{\left| v_i^t - v_i^{t-\tau} \right|}{v_i^t} < \epsilon.$$
 
     When the denominator is zero, the summand is set to the value of $v_i^{
     t-\tau}$.
