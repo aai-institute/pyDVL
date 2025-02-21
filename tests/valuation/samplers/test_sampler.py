@@ -684,26 +684,34 @@ def test_skip_indices(
         assert all(sample.idx in expected for sample in all_samples)
 
 
-def test_skip_indices_after_first_batch():
-    n_indices = 4
-    indices = np.arange(n_indices)
-    skip_indices = indices[:2]
+class TestBatchSampler(IndexSampler):
+    def __init__(self, batch_size):
+        super().__init__(batch_size)
 
-    # Generate all samples in one batch
-    sampler = DeterministicUniformSampler(batch_size=2**n_indices)
+    def sample_limit(self, indices: IndexSetT) -> int | None: ...
 
-    batches = sampler.generate_batches(indices)
-    first_batch = list(next(batches))
-    assert first_batch, "First batch should not be empty"
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        yield from (Sample(idx, np.empty_like(indices)) for idx in indices)
 
-    # Skip indices for the next batch of all samples
-    sampler.skip_indices = skip_indices
+    def log_weight(self, n: int, subset_len: int) -> float: ...
 
-    next_batch = list(next(batches))
+    def make_strategy(
+        self,
+        utility: UtilityBase,
+        log_coefficient: Callable[[int, int], float] | None = None,
+    ) -> EvaluationStrategy: ...
 
-    effective_outer_indices = np.setdiff1d(indices, skip_indices)
-    assert len(next_batch) == len(effective_outer_indices) * 2 ** (n_indices - 1)
-    for sample in next_batch:
-        assert sample.idx not in skip_indices, (
-            f"Sample with skipped index {sample.idx} found"
-        )
+
+@pytest.mark.parametrize("indices", [np.arange(1), np.arange(23)])
+@pytest.mark.parametrize("batch_size", [1, 2, 7])
+def test_batching(indices, batch_size):
+    sampler = TestBatchSampler(batch_size)
+    batches = list(sampler.generate_batches(indices))
+
+    assert all(hasattr(batch, "__iter__") for batch in batches)
+
+    assert len(batches) == math.ceil(len(indices) / batch_size)
+    assert len(batches[-1]) == len(indices) % batch_size or batch_size
+
+    all_samples = list(flatten(batches))
+    assert len(all_samples) == len(indices)

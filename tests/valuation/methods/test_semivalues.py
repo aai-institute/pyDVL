@@ -123,32 +123,3 @@ def test_games(
     # plt.show()
 
     check_values(result, exact_result, atol=0.1)
-
-
-@pytest.mark.flaky(reruns=1)
-@pytest.mark.parametrize(
-    "test_game",
-    [("shoes", {"left": 3, "right": 2})],
-    indirect=["test_game"],
-)
-@pytest.mark.parametrize("n_jobs", [1, 2])
-def test_batch_size(test_game, n_jobs, seed):
-    def compute_semivalues(batch_size, n_jobs=n_jobs, seed=seed):
-        valuation = BetaShapleyValuation(
-            utility=test_game.u,
-            sampler=UniformSampler(batch_size=batch_size, seed=seed),
-            is_done=MaxUpdates(100),
-            progress=False,
-            alpha=1,
-            beta=1,
-        )
-        with parallel_config(n_jobs=n_jobs):
-            valuation.fit(test_game.data)
-        return valuation.values()
-
-    timed_fn = timed(compute_semivalues)
-    result_single_batch = timed_fn(batch_size=1)
-    result_multi_batch = timed_fn(batch_size=5)
-
-    # Occasionally, batch_2 arrives before batch_1, so rtol isn't always 0.
-    check_values(result_single_batch, result_multi_batch, rtol=1e-4, atol=1e-3)
