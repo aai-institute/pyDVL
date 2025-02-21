@@ -127,7 +127,7 @@ class WarningsSuppressor:
     def __init__(
         self, func: F, categories: Sequence[Type[Warning]], flag_attribute: str
     ) -> None:
-        functools.update_wrapper(self, func)
+        functools.update_wrapper(cast(F, self), func)
         self.func = func
         self.categories = categories
         self.flag_attribute = flag_attribute
