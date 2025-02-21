@@ -86,6 +86,8 @@
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Updated Least-Core notebook
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Updated Shapley spotify notebook
+  [PR #628](https://github.com/aai-institute/pyDVL/pull/628)
 - Restructured and generalized `StratifiedSampler` to allow using heuristics,
   thus subsuming Variance-Reduced stratified sampling into a unified framework.
   Implemented the heuristics proposed in that paper
