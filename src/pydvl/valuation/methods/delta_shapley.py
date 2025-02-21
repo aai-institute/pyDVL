@@ -55,6 +55,8 @@ class DeltaShapleyValuation(SemivalueValuation):
         upper_bound: The upper bound of the size of the subsets to sample from.
         seed: The seed for the random number generator used by the sampler.
         progress: Whether to show a progress bar
+        skip_converged: Whether to skip converged indices, as determined by the
+            stopping criterion's `converged` array.
     """
 
     algorithm_name = "Delta-Shapley"
@@ -67,6 +69,7 @@ class DeltaShapleyValuation(SemivalueValuation):
         lower_bound: int,
         upper_bound: int,
         seed: Seed | None = None,
+        skip_converged: bool = False,
         progress: bool = False,
     ):
         sampler = StratifiedSampler(
@@ -79,7 +82,9 @@ class DeltaShapleyValuation(SemivalueValuation):
         )
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
-        super().__init__(utility, sampler, is_done, progress=progress)
+        super().__init__(
+            utility, sampler, is_done, progress=progress, skip_converged=skip_converged
+        )
 
     def log_coefficient(self, n: int, k: int) -> float:
         # assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"

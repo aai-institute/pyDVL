@@ -106,6 +106,10 @@ def get_unique_labels(array: NDArray) -> NDArray:
 class ClasswiseSampler(IndexSampler):
     """A sampler that samples elements from a dataset in two steps, based on the labels.
 
+    It proceeds by sampling out-of-class indices (training points with a different
+    label to the point of interest), and in-class indices (training points with the
+    same label as the point of interest), in the complement.
+
     Used by the [class-wise Shapley valuation
     method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 

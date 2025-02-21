@@ -48,9 +48,9 @@ def timed(fun: Callable[..., ReturnT]) -> TimedCallable:
             any type.
 
     Returns:
-        A wrapped function that, when called, returns a tuple containing the original
-            function's result and its execution time in seconds. The decorated function
-            will have the same input arguments and return type as the original function.
+        A wrapped function that, when called, saves its execution time in seconds into
+            the attribute `execution_time`. The wrapped function will have the same
+            input arguments and return type as the original function.
     """
 
     @wraps(fun)

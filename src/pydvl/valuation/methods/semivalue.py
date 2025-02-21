@@ -24,7 +24,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any
 
-import numpy as np
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
@@ -58,8 +57,8 @@ class SemivalueValuation(Valuation):
         utility: Object to compute utilities.
         sampler: Sampling scheme to use.
         is_done: Stopping criterion to use.
-        skip_converged: Whether to skip converged indices. Convergence is determined
-            by the stopping criterion's `converged` array.
+        skip_converged: Whether to skip converged indices, as determined by the
+            stopping criterion's `converged` array.
         progress: Whether to show a progress bar.
     """
 
@@ -132,9 +131,9 @@ class SemivalueValuation(Valuation):
                     for update in batch:
                         self.result = updater(update)
                         if self.skip_converged:
-                            self.sampler.skip_indices = np.where(
+                            self.sampler.skip_indices = data.indices[
                                 self.is_done.converged
-                            )[0]
+                            ]
                         if self.is_done(self.result):
                             flag.set()
                             self.sampler.interrupt()

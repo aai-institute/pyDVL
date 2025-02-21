@@ -278,14 +278,15 @@ class PowersetSampler(IndexSampler, ABC):
 
     @abstractmethod
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        """Generates samples iterating in sequence over the outer indices, then over
-        subsets of the complement of the current index. Each PowersetSampler defines
-        its own
-        [subset_iterator][pydvl.valuation.samplers.PowersetSampler.subset_iterator] to
-        generate the subsets.
+        """Generates samples over the powerset of `indices`
+
+        Each `PowersetSampler` defines its own way to generate the subsets by
+        implementing this method. The outer loop is handled by the `index_iterator`.
+        Batching is handled by the `generate_batches` method.
 
         Args:
-            indices:"""
+            indices: The set from which to generate samples.
+        """
         ...
 
     def log_weight(self, n: int, subset_len: int) -> float:
