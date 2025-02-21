@@ -69,12 +69,22 @@ class RawData:
     x: NDArray
     y: NDArray
 
+    def __post_init__(self):
+        try:
+            if len(self.x) != len(self.y):
+                raise ValueError("x and y must have the same length")
+        except TypeError as e:
+            raise TypeError("x and y must be numpy arrays") from e
+
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
 
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
-        return RawData(self.x[item], self.y[item])
+        return RawData(np.atleast_1d(self.x[item]), np.atleast_1d(self.y[item]))
+
+    def __len__(self):
+        return len(self.x)
 
 
 class Dataset:
@@ -437,7 +447,7 @@ class GroupedDataset(Dataset):
 
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y and group information. Added
-                methods to retrieve indices for groups and vicecersa.
+                methods to retrieve indices for groups and vice versa.
         """
         super().__init__(
             x=x,
@@ -456,7 +466,12 @@ class GroupedDataset(Dataset):
             )
 
         # data index -> abstract index (group id)
-        self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        try:
+            self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        except ValueError as e:
+            raise ValueError(
+                "data_groups must be a mapping from integer data indices to integer group ids"
+            ) from e
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
             {k: [] for k in set(data_groups)}
@@ -469,6 +484,11 @@ class GroupedDataset(Dataset):
             if group_names is not None
             else np.array(list(self.group_to_data.keys()), dtype=np.str_)
         )
+        if len(self._group_names) != len(self.group_to_data):
+            raise ValueError(
+                f"The number of group names ({len(self._group_names)}) "
+                f"does not match the number of groups ({len(self.group_to_data)})"
+            )
 
     def __len__(self):
         return len(self._indices)
@@ -478,13 +498,14 @@ class GroupedDataset(Dataset):
     ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
+        indices = self.data_indices(idx)
         return GroupedDataset(
-            x=self._x[self.data_indices(idx)],
-            y=self._y[self.data_indices(idx)],
-            data_groups=self.data_to_group[self.data_indices(idx)],
+            x=self._x[indices],
+            y=self._y[indices],
+            data_groups=self.data_to_group[indices],
             feature_names=self.feature_names,
             target_names=self.target_names,
-            data_names=self._data_names[self.data_indices(idx)],
+            data_names=self._data_names[indices],
             group_names=self._group_names[idx],
             description="(SLICED): " + self.description,
         )
@@ -699,7 +720,7 @@ class GroupedDataset(Dataset):
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
             kwargs: Additional keyword arguments that will be passed to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             Dataset with the passed X and y arrays split across training and
@@ -708,12 +729,12 @@ class GroupedDataset(Dataset):
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
-                constructor.
+            Added kwargs to pass to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
-                objects.
+            Returns a tuple of two
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] objects.
         """
 
         if data_groups is None:
@@ -734,7 +755,11 @@ class GroupedDataset(Dataset):
 
     @classmethod
     def from_dataset(
-        cls, data: Dataset, data_groups: Sequence[int] | NDArray[np.int_]
+        cls,
+        data: Dataset,
+        data_groups: Sequence[int] | NDArray[np.int_],
+        group_names: Sequence[str] | NDArray[np.str_] | None = None,
+        **kwargs,
     ) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
@@ -755,6 +780,10 @@ class GroupedDataset(Dataset):
             data_groups: An array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
+            group_names: Names of the groups. If not provided, the numerical group ids
+                from `data_groups` will be used.
+            kwargs: Additional arguments to be passed to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             A [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with the initial
@@ -767,4 +796,6 @@ class GroupedDataset(Dataset):
             feature_names=data.feature_names,
             target_names=data.target_names,
             description=data.description,
+            group_names=group_names,
+            **kwargs,
         )
