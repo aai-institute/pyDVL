@@ -8,7 +8,7 @@ import functools
 import inspect
 import warnings
 from functools import partial
-from typing import Any, Callable, Optional, Sequence, Set, Type, TypeVar, Union
+from typing import Any, Callable, Optional, Sequence, Set, Type, TypeVar, Union, cast
 
 __all__ = ["maybe_add_argument", "suppress_warnings"]
 
@@ -146,7 +146,7 @@ class WarningsSuppressor:
         self, instance: Any, owner: Optional[Type[Any]] = None
     ) -> Callable[..., Any]:
         if instance is None:
-            return self  # Allow access via the class.
+            return cast(Callable[..., Any], self)  # Allow access via the class.
 
         @functools.wraps(self.func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -162,7 +162,7 @@ class WarningsSuppressor:
 
 def suppress_warnings(
     categories: Sequence[Type[Warning]] = (Warning,), flag: str = "show_warnings"
-) -> Callable[[F], WarningsSuppressor]:
+) -> Callable[[F], F]:
     """
     A decorator to suppress warnings in class methods.
 
@@ -196,7 +196,9 @@ def suppress_warnings(
         ```
     """
 
-    def wrapper(func: F) -> WarningsSuppressor:
-        return WarningsSuppressor(func, categories=categories, flag_attribute=flag)
+    def wrapper(func: F) -> F:
+        return cast(
+            F, WarningsSuppressor(func, categories=categories, flag_attribute=flag)
+        )
 
     return wrapper
