@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import islice, takewhile
-from typing import Any, Iterator, Type
+from typing import Any, Callable, Iterator, Type
 
 import numpy as np
 import pytest
@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import logcomb, powerset
 from pydvl.utils.types import Seed
+from pydvl.valuation import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
     AntitheticPermutationSampler,
@@ -41,7 +42,8 @@ from pydvl.valuation.samplers import (
     UniformSampler,
 )
 from pydvl.valuation.samplers.permutation import PermutationSamplerBase
-from pydvl.valuation.types import IndexSetT
+from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.utility.base import UtilityBase
 
 from .. import recursive_make
 from . import _check_idxs, _check_subsets
@@ -636,54 +638,80 @@ def test_sampler_weights(
     )
 
 
-class TestSampler(PowersetSampler):
-    def __init__(self):
-        super().__init__(batch_size=1, index_iteration=FiniteSequentialIndexIteration)
-
-    def _generate(self, indices: IndexSetT):
-        pass
-
-    def sample_limit(self, indices: IndexSetT) -> int | None:
-        pass
-
-
+@pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs, n_batches",
+    [
+        (DeterministicUniformSampler, {}, lambda n: 2 ** (n - 1)),
+        (UniformSampler, {}, lambda n: 2 ** (n - 1)),
+        (AntitheticSampler, {}, lambda n: 2 ** (n - 1)),
+        (LOOSampler, {}, lambda n: n),
+        (PermutationSampler, {}, lambda n: math.factorial(n)),
+        (AntitheticPermutationSampler, {}, lambda n: math.factorial(n)),
+    ],
+)
 @pytest.mark.parametrize(
     "indices, skip, expected",
     [
-        (np.arange(6), np.array([2, 4]), [0, 1, 3, 5]),
-        (np.arange(6), np.empty(0), np.arange(6)),
+        (np.arange(5), np.array([2, 4]), [0, 1, 3]),
+        (np.arange(3), np.empty(0), np.arange(3)),
         (np.empty(0), np.arange(6), np.empty(0)),
     ],
 )
-def test_skip_indices(indices, skip, expected):
-    sampler = TestSampler()
+def test_skip_indices(
+    sampler_cls, sampler_kwargs, n_batches, indices, skip, expected, seed
+):
+    sampler_kwargs["batch_size"] = 2
+    sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
     sampler.skip_indices = skip
 
-    result = list(sampler.index_iterator(indices))
+    # Check that the outer iteration skips indices:
+    if hasattr(sampler, "index_iterator"):
+        outer_indices = list(islice(sampler.index_iterator(indices), len(indices)))
+        assert set(outer_indices) == set(expected)
 
-    assert set(result) == set(expected), f"Expected {expected}, but got {result}"
+    # Check that the generated samples skip indices...
+    batches = list(
+        islice(sampler.generate_batches(indices), max(1, n_batches(len(indices))))
+    )
+    all_samples = list(flatten(batches))
 
-
-def test_skip_indices_after_first_batch():
-    n_indices = 4
-    indices = np.arange(n_indices)
-    skip_indices = indices[:2]
-
-    # Generate all samples in one batch
-    sampler = DeterministicUniformSampler(batch_size=2**n_indices)
-
-    batches = sampler.generate_batches(indices)
-    first_batch = list(next(batches))
-    assert first_batch, "First batch should not be empty"
-
-    # Skip indices for the next batch of all samples
-    sampler.skip_indices = skip_indices
-
-    next_batch = list(next(batches))
-
-    effective_outer_indices = np.setdiff1d(indices, skip_indices)
-    assert len(next_batch) == len(effective_outer_indices) * 2 ** (n_indices - 1)
-    for sample in next_batch:
-        assert sample.idx not in skip_indices, (
-            f"Sample with skipped index {sample.idx} found"
+    # ... in sample.subset for permutation samplers
+    if isinstance(sampler, PermutationSamplerBase):
+        assert all(
+            all(idx in expected for idx in sample.subset) for sample in all_samples
         )
+    else:  # ... in sample.idx for other samplers
+        assert all(sample.idx in expected for sample in all_samples)
+
+
+class TestBatchSampler(IndexSampler):
+    def __init__(self, batch_size):
+        super().__init__(batch_size)
+
+    def sample_limit(self, indices: IndexSetT) -> int | None: ...
+
+    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+        yield from (Sample(idx, np.empty_like(indices)) for idx in indices)
+
+    def log_weight(self, n: int, subset_len: int) -> float: ...
+
+    def make_strategy(
+        self,
+        utility: UtilityBase,
+        log_coefficient: Callable[[int, int], float] | None = None,
+    ) -> EvaluationStrategy: ...
+
+
+@pytest.mark.parametrize("indices", [np.arange(1), np.arange(23)])
+@pytest.mark.parametrize("batch_size", [1, 2, 7])
+def test_batching(indices, batch_size):
+    sampler = TestBatchSampler(batch_size)
+    batches = list(sampler.generate_batches(indices))
+
+    assert all(hasattr(batch, "__iter__") for batch in batches)
+
+    assert len(batches) == math.ceil(len(indices) / batch_size)
+    assert len(batches[-1]) == len(indices) % batch_size or batch_size
+
+    all_samples = list(flatten(batches))
+    assert len(all_samples) == len(indices)

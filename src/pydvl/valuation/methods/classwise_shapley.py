@@ -89,13 +89,9 @@ T = TypeVar("T")
 class ClasswiseShapleyValuation(Valuation):
     """Class to compute Class-wise Shapley values.
 
-    It proceeds by sampling independent permutations of the index set
-    for each label and index sets sampled from the powerset of the complement
-    (with respect to the currently evaluated label).
-
     Args:
-        utility: Classwise utility object with model and classwise scoring function.
-        sampler: Classwise sampling scheme to use.
+        utility: Class-wise utility object with model and class-wise scoring function.
+        sampler: Class-wise sampling scheme to use.
         is_done: Stopping criterion to use.
         progress: Whether to show a progress bar.
         normalize_values: Whether to normalize values after valuation.

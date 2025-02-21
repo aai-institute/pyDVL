@@ -105,10 +105,22 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
     ):
         super().__init__(seed=seed, truncation=truncation, batch_size=batch_size)
 
+    @property
+    def skip_indices(self) -> IndexSetT:
+        return self._skip_indices
+
+    @skip_indices.setter
+    def skip_indices(self, indices: IndexSetT):
+        self._skip_indices = indices
+
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
+
         Args:
-            indices:
+            indices: The indices to sample from. If empty, no samples are generated. If
+            [skip_indices][pydvl.valuation.samplers.base.IndexSampler.skip_indices]
+            is set, these indices are removed from the set before generating the
+            permutation.
         """
         if len(indices) == 0:
             return

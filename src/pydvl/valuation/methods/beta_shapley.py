@@ -22,8 +22,11 @@ class BetaShapleyValuation(SemivalueValuation):
         alpha: float,
         beta: float,
         progress: bool = False,
+        skip_converged: bool = False,
     ):
-        super().__init__(utility, sampler, is_done, progress=progress)
+        super().__init__(
+            utility, sampler, is_done, skip_converged=skip_converged, progress=progress
+        )
 
         self.alpha = alpha
         self.beta = beta
