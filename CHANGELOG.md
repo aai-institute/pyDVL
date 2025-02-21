@@ -53,6 +53,8 @@
 
 ### Fixed
 
+- Fixed `show_warnings=False` not being respected in subprocesses
+  [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
 - Fixed several bugs in diverse stopping criteria, including: iteration counts,
   computing completion and resetting
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)

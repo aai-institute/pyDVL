@@ -41,6 +41,7 @@ from typing import Callable, Generator, Generic, Type, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import (
     complement,
     powerset,
@@ -301,6 +302,7 @@ PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
 class PowersetEvaluationStrategy(
     Generic[PowersetSamplerT], EvaluationStrategy[PowersetSamplerT, ValueUpdate]
 ):
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
@@ -310,9 +312,8 @@ class PowersetEvaluationStrategy(
             u = self.utility(sample)
             marginal = u_i - u
             sign = np.sign(marginal)
-            log_marginal = np.log(marginal * sign) + self.log_correction(
-                self.n_indices, len(sample.subset)
-            )
+            log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
@@ -381,6 +382,7 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
         assert utility.training_data is not None
         self.total_utility = utility(Sample(None, utility.training_data.indices))
 
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> list[ValueUpdate]:
@@ -389,9 +391,8 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
             assert sample.idx is not None
             marginal = self.total_utility - self.utility(sample)
             sign = np.sign(marginal)
-            log_marginal = np.log(marginal * sign) + self.log_correction(
-                self.n_indices, len(sample.subset)
-            )
+            log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break

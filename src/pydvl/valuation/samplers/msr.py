@@ -31,6 +31,7 @@ from typing import Callable, List
 
 import numpy as np
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
 from pydvl.valuation.result import ValuationResult
@@ -225,6 +226,7 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
     running means must be updated.
     """
 
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
     ) -> List[MSRValueUpdate]:
@@ -244,6 +246,7 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
         updates = []
         for i, in_sample in enumerate(mask):  # type: int, bool
             k = len(sample.subset) - int(in_sample)
-            update = self.log_correction(self.n_indices, k) + np.log(u * sign)
+            update = -np.inf if u == 0 else np.log(u * sign)
+            update += self.log_correction(self.n_indices, k)
             updates.append(MSRValueUpdate(np.int_(i), update, sign, in_sample))
         return updates
