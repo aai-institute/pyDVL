@@ -94,6 +94,7 @@
   `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
   Also, both now return objects of the same type when slicing.
   [PR #631](https://github.com/aai-institute/pyDVL/pull/631)
+  [PR #648](https://github.com/aai-institute/pyDVL/pull/648)
 - Use tighter bounds for the calculation of the minimal sample size that guarantees
   an epsilon-delta approximation in group testing (Jia et al. 2023)
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
