@@ -444,7 +444,7 @@ class GroupedDataset(Dataset):
 
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y and group information. Added
-                methods to retrieve indices for groups and vicecersa.
+                methods to retrieve indices for groups and vice versa.
         """
         super().__init__(
             x=x,
@@ -495,13 +495,14 @@ class GroupedDataset(Dataset):
     ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
+        indices = self.data_indices(idx)
         return GroupedDataset(
-            x=self._x[self.data_indices(idx)],
-            y=self._y[self.data_indices(idx)],
-            data_groups=self.data_to_group[self.data_indices(idx)],
+            x=self._x[indices],
+            y=self._y[indices],
+            data_groups=self.data_to_group[indices],
             feature_names=self.feature_names,
             target_names=self.target_names,
-            data_names=self._data_names[self.data_indices(idx)],
+            data_names=self._data_names[indices],
             group_names=self._group_names[idx],
             description="(SLICED): " + self.description,
         )
@@ -716,7 +717,7 @@ class GroupedDataset(Dataset):
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
             kwargs: Additional keyword arguments that will be passed to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             Dataset with the passed X and y arrays split across training and
@@ -725,12 +726,12 @@ class GroupedDataset(Dataset):
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
-                constructor.
+            Added kwargs to pass to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
-                objects.
+            Returns a tuple of two
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] objects.
         """
 
         if data_groups is None:
