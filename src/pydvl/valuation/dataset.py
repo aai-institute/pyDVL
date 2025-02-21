@@ -69,12 +69,19 @@ class RawData:
     x: NDArray
     y: NDArray
 
+    def __post_init__(self):
+        if len(self.x) != len(self.y):
+            raise ValueError("x and y must have the same length")
+
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
 
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
         return RawData(self.x[item], self.y[item])
+
+    def __len__(self):
+        return len(self.x)
 
 
 class Dataset:
@@ -456,7 +463,12 @@ class GroupedDataset(Dataset):
             )
 
         # data index -> abstract index (group id)
-        self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        try:
+            self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        except ValueError as e:
+            raise ValueError(
+                "data_groups must be a mapping from integer data indices to integer group ids"
+            ) from e
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
             {k: [] for k in set(data_groups)}
@@ -469,6 +481,11 @@ class GroupedDataset(Dataset):
             if group_names is not None
             else np.array(list(self.group_to_data.keys()), dtype=np.str_)
         )
+        if len(self._group_names) != len(self.group_to_data):
+            raise ValueError(
+                f"The number of group names ({len(self._group_names)}) "
+                f"does not match the number of groups ({len(self.group_to_data)})"
+            )
 
     def __len__(self):
         return len(self._indices)
