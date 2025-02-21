@@ -734,7 +734,11 @@ class GroupedDataset(Dataset):
 
     @classmethod
     def from_dataset(
-        cls, data: Dataset, data_groups: Sequence[int] | NDArray[np.int_]
+        cls,
+        data: Dataset,
+        data_groups: Sequence[int] | NDArray[np.int_],
+        group_names: Sequence[str] | NDArray[np.str_] | None = None,
+        **kwargs,
     ) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
@@ -755,6 +759,10 @@ class GroupedDataset(Dataset):
             data_groups: An array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
+            group_names: Names of the groups. If not provided, the numerical group ids
+                from `data_groups` will be used.
+            kwargs: Additional arguments to be passed to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             A [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with the initial
@@ -767,4 +775,6 @@ class GroupedDataset(Dataset):
             feature_names=data.feature_names,
             target_names=data.target_names,
             description=data.description,
+            group_names=group_names,
+            **kwargs,
         )
