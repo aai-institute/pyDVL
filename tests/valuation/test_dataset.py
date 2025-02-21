@@ -108,7 +108,7 @@ def test_grouped_dataset_results():
     train_size = 0.5
     data_groups = np.random.randint(low=0, high=3, size=len(X)).flatten()
     train, test = GroupedDataset.from_arrays(
-        X, y, data_groups=data_groups, train_size=train_size
+        X, y, train_size=train_size, data_groups=data_groups
     )
 
     v = ValuationResult.zeros(indices=train.indices, data_names=train.names)
@@ -169,6 +169,32 @@ def test_getitem_returns_correct_grouped_dataset(
     assert np.array_equal(sliced_dataset.data_to_group, expected_groups)
     assert np.array_equal(sliced_dataset._data_names, expected_names)
     assert np.array_equal(sliced_dataset.names, expected_group_names)
+
+
+def test_default_group_names():
+    """Test that default group_names are set to the string representations of group ids
+    when not provided."""
+    x = np.array([[1, 2], [3, 4], [5, 6]])
+    y = np.array([0, 1, 0])
+    data_groups = [0, 1, 0]
+    dataset = GroupedDataset(x=x, y=y, data_groups=data_groups)
+    # Default group_names should be created as {group_id: str(group_id)} for each group
+    # present.
+    expected = ["0", "1"]
+    assert all(dataset.names == expected)
+
+
+def test_incomplete_group_names():
+    """Test that providing an incomplete group_names dictionary raise an exception."""
+    x = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+    y = np.array([0, 1, -1, 1])
+    with pytest.raises(ValueError, match="The number of group names"):
+        _ = GroupedDataset(
+            x=x,
+            y=y,
+            data_groups=[0, 1, 0, 2],
+            group_names=["g1", "g3"],
+        )
 
 
 @pytest.mark.parametrize(
