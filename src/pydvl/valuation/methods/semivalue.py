@@ -59,7 +59,8 @@ class SemivalueValuation(Valuation):
         is_done: Stopping criterion to use.
         skip_converged: Whether to skip converged indices, as determined by the
             stopping criterion's `converged` array.
-        progress: Whether to show a progress bar.
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
     """
 
     algorithm_name = "Semi-Value"

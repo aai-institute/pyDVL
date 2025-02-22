@@ -10,7 +10,20 @@ from pydvl.valuation.utility.base import UtilityBase
 
 
 class BetaShapleyValuation(SemivalueValuation):
-    """Computes Beta-Shapley values."""
+    """Computes Beta-Shapley values.
+
+    Args:
+        utility: Object to compute utilities.
+        sampler: Sampling scheme to use.
+        is_done: Stopping criterion to use.
+        skip_converged: Whether to skip converged indices. Convergence is determined
+            by the stopping criterion's `converged` array.
+        alpha: The alpha parameter of the Beta distribution.
+        beta: The beta parameter of the Beta distribution.
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
+
+    """
 
     algorithm_name = "Beta-Shapley"
 

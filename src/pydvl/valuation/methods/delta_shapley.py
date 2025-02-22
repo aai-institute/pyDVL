@@ -54,7 +54,8 @@ class DeltaShapleyValuation(SemivalueValuation):
         lower_bound: The lower bound of the size of the subsets to sample from.
         upper_bound: The upper bound of the size of the subsets to sample from.
         seed: The seed for the random number generator used by the sampler.
-        progress: Whether to show a progress bar
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
         skip_converged: Whether to skip converged indices, as determined by the
             stopping criterion's `converged` array.
     """
