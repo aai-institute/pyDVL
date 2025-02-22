@@ -17,20 +17,21 @@ href="#wang_improving_2022">1</a></sup>.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Tuple
+import logging
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.types import IndexT, Sample, SampleT
+from pydvl.valuation.types import Sample, SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["DataUtilityLearning"]
 
+logger = logging.getLogger(__name__)
+
 
 class DataUtilityLearning(UtilityBase[SampleT]):
-    """This object wraps a [Utility][pydvl.valuation.utility.Utility] and delegates
+    """This object wraps any [utility][pydvl.valuation.utility] and delegates
     calls to it, up until a given budget (number of iterations). Every tuple
     of input and output (a so-called *utility sample*) is stored. Once the
     budget is exhausted, `DataUtilityLearning` fits the given model to the
@@ -81,43 +82,42 @@ class DataUtilityLearning(UtilityBase[SampleT]):
         self.utility = utility
         self.training_budget = training_budget
         self.model = model
-        self._current_iteration = 0
+        self.n_predictions = 0
         self._is_fitted = False
-        self._utility_samples: Dict[Sample, Tuple[NDArray[np.bool_], float]] = {}
-
-    def _convert_indices_to_boolean_vector(
-        self, x: Iterable[IndexT]
-    ) -> NDArray[np.bool_]:
-        assert self.utility.training_data is not None
-        boolean_vector: NDArray[np.bool_] = np.zeros(
-            (1, len(self.utility.training_data)), dtype=np.bool_
-        )
-        if x is not None:
-            boolean_vector[:, tuple(x)] = True
-        return boolean_vector
+        self._utility_samples: dict[Sample, float] = {}
 
     def __call__(self, sample: Sample | None) -> float:
         if self.training_data is None:
             raise ValueError("No training data set for utility")
-        if sample is None or len(sample.subset) == 0:
-            return self.utility(None)
 
-        indices_boolean_vector = self._convert_indices_to_boolean_vector(sample.subset)
+        if sample is None or len(sample.subset) == 0:
+            return self.utility(sample)
+
+        if sample in self._utility_samples:
+            return self._utility_samples[sample]
+
         if len(self._utility_samples) < self.training_budget:
             utility = self.utility(sample)
-            self._utility_samples[sample] = (indices_boolean_vector, utility)
-        else:
-            if not self._is_fitted:
-                X_, y_ = zip(*self._utility_samples.values())
-                X = np.vstack(X_)
-                y = np.asarray(y_)
-                self.model.fit(X, y)
-                self._is_fitted = True
-            if sample in self._utility_samples:
-                utility = self._utility_samples[sample][1]
-            else:
-                utility = self.model.predict(indices_boolean_vector).item()
-        return utility
+            self._utility_samples[sample] = utility
+            return utility
+
+        if not self._is_fitted:
+            x = np.zeros((len(self._utility_samples), len(self.training_data)))
+            y = np.zeros((len(self._utility_samples), 1))
+            for i, (s, u) in enumerate(self._utility_samples.items()):
+                x[i, s.subset] = 1.0
+                y[i] = u
+            logger.info(f"Fitting utility model with {len(x)} samples")
+            self.model.fit(x, y)
+            self._is_fitted = True
+
+        self.n_predictions += 1
+        mask = np.zeros((1, len(self.training_data)))
+        mask[0, sample.subset] = 1.0
+        return float(self.model.predict(mask).item())
+        # Strictly speaking, (sample, prediction) is not a utility sample, and it's
+        # unlikely that we will ever hit the same sample twice, so we don't store it:
+        # self._utility_samples[sample] = utility
 
     # Forward all other calls / property_accesses to the wrapped utility
     def __getattr__(self, item):
