@@ -274,12 +274,12 @@ class Dataset:
         """Returns the number of dimensions of a sample."""
         return int(self._x.shape[1]) if len(self._x.shape) > 1 else 1
 
+    @property
     @deprecated(
         target=None,  # cannot set to Dataset.n_features
         deprecated_in="0.10.0",
         remove_in="0.11.0",
     )
-    @property
     def dim(self):
         return self.n_features
 
