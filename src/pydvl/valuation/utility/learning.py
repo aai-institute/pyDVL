@@ -63,6 +63,18 @@ class DataUtilityLearning(UtilityBase[SampleT]):
 
     """
 
+    # Attributes that belong to this proxy. All other attributes are forwarded to the
+    # wrapped utility.
+    _local_attrs = {
+        "utility",
+        "training_budget",
+        "model",
+        "_current_iteration",
+        "_is_fitted",
+        "_utility_samples",
+        "_n_predictions",
+    }
+
     def __init__(
         self, utility: UtilityBase, training_budget: int, model: SupervisedModel
     ) -> None:
@@ -112,10 +124,10 @@ class DataUtilityLearning(UtilityBase[SampleT]):
         return getattr(self.utility, item)
 
     def __setattr__(self, key, value):
-        if key != "utility":
-            setattr(self.utility, key, value)
+        if key in self._local_attrs:
+            object.__setattr__(self, key, value)
         else:
-            super().__setattr__(key, value)
+            setattr(self.utility, key, value)
 
     # Avoid infinite recursion in __getattr__ when pickling:
     #  my theory: pickle attempts to access .utility before it has been set, which
