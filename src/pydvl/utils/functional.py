@@ -6,11 +6,30 @@ from __future__ import annotations
 
 import functools
 import inspect
+import time
 import warnings
-from functools import partial
-from typing import Any, Callable, Optional, Sequence, Set, Type, TypeVar, Union, cast
+from logging import Logger, getLogger
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Optional,
+    Sequence,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
+from weakref import WeakKeyDictionary
 
-__all__ = ["maybe_add_argument", "suppress_warnings"]
+from typing_extensions import Concatenate, ParamSpec
+
+__all__ = ["maybe_add_argument", "suppress_warnings", "timed"]
+
+
+logger = getLogger(__name__)
 
 
 def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
@@ -34,7 +53,7 @@ def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
     return fun(*args, **kwargs)
 
 
-def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
+def free_arguments(fun: Union[Callable, functools.partial]) -> Set[str]:
     """Computes the set of free arguments for a function or
     [functools.partial][] object.
 
@@ -52,7 +71,9 @@ def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
     """
     args_set_by_partial: Set[str] = set()
 
-    def _rec_unroll_partial_function_args(g: Union[Callable, partial]) -> Callable:
+    def _rec_unroll_partial_function_args(
+        g: Union[Callable, functools.partial],
+    ) -> Callable:
         """Stores arguments and recursively call itself if `g` is a
         [functools.partial][] object. In the end, returns the initially wrapped
         function.
@@ -68,12 +89,12 @@ def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
         """
         nonlocal args_set_by_partial
 
-        if isinstance(g, partial) and g.func == _accept_additional_argument:
+        if isinstance(g, functools.partial) and g.func == _accept_additional_argument:
             arg = g.keywords["arg"]
             if arg in args_set_by_partial:
                 args_set_by_partial.remove(arg)
             return _rec_unroll_partial_function_args(g.keywords["fun"])
-        elif isinstance(g, partial):
+        elif isinstance(g, functools.partial):
             args_set_by_partial.update(g.keywords.keys())
             args_set_by_partial.update(g.args)
             return _rec_unroll_partial_function_args(g.func)
@@ -107,7 +128,7 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     if new_arg in free_arguments(fun):
         return fun
 
-    return partial(_accept_additional_argument, fun=fun, arg=new_arg)
+    return functools.partial(_accept_additional_argument, fun=fun, arg=new_arg)
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -200,5 +221,118 @@ def suppress_warnings(
         return cast(
             F, WarningsSuppressor(func, categories=categories, flag_attribute=flag)
         )
+
+    return wrapper
+
+
+P = ParamSpec("P")  # Args of fun
+R = TypeVar("R")  # Return type
+T = TypeVar("T")  # Instance type for methods
+
+
+class Timed(Generic[T, P, R]):
+    """A decorator that measures the execution time of the wrapped function, storing
+     the elapsed time in the 'execution_time' attribute.
+
+    The decorator preserves the metadata of the original function and supports both
+    plain functions and instance methods.
+
+    To decorate functions, you probably want to call `timed` instead.
+
+    Attributes:
+        execution_time (float): The time taken by the last call to the decorated
+            function in seconds.
+    Args:
+        fun (Callable): The function to decorate.
+        accumulate (bool): If `True`, the execution time will be accumulated across
+            multiple calls. Otherwise, it will be reset on each call.
+        logger (Optional[Logger]): If provided, log the execution time at the INFO
+            level.
+    """
+
+    def __init__(
+        self,
+        fun: Union[Callable[Concatenate[T, P], R], Callable[P, R]],
+        accumulate: bool = False,
+        logger: Logger | None = None,
+    ) -> None:
+        self.execution_time = 0.0
+        self.fun = fun
+        self.accumulate = accumulate
+        self.logger: Logger | None = logger
+        self._method_cache: WeakKeyDictionary[Any, Timed[T, P, R]] = WeakKeyDictionary()
+        functools.update_wrapper(self, fun)
+
+    # For a plain callable (or a bound method)
+    @overload
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
+
+    # For an unbound method (accessed via the class: there is a self argument)
+    @overload
+    def __call__(self, instance: T, *args: P.args, **kwargs: P.kwargs) -> R: ...
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        start = time.perf_counter()
+        try:
+            result = self.fun(*args, **kwargs)
+        finally:
+            t = time.perf_counter() - start
+            self.execution_time = self.execution_time + t if self.accumulate else t
+        if self.logger is not None:
+            self.logger.log(
+                self.logger.level,
+                f"{getattr(self.fun, '__objclass__', None) or self.fun.__module__}."
+                f"{self.fun.__qualname__} took {self.execution_time:.5f} seconds",
+            )
+        return result
+
+    def __get__(self, instance: Any, owner: Any = None) -> Any:
+        """Supports instance methods by binding the wrapped function to the instance.
+        When accessed as a method, returns a `Timed` object around the bound function,
+        or one from cache if it was already bound (the cache is necessary in order to be
+        able to access the `execution_time` attribute, otherwise we would create a new
+        object on each access).
+        """
+        if instance is None:  # Allow access to the descriptor itself
+            return self
+
+        if instance not in self._method_cache:
+            bound_fun: Callable[P, R] = self.fun.__get__(instance, owner)
+            new_wrapper: Timed[T, P, R] = Timed(
+                bound_fun, accumulate=self.accumulate, logger=self.logger
+            )
+            self._method_cache[instance] = new_wrapper
+        return self._method_cache[instance]
+
+    def __repr__(self) -> str:
+        return f"<Timed({self.fun.__name__}) at {hex(id(self))}>"
+
+    def reset(self) -> None:
+        """Reset the execution time to 0. Useful only when the timer was initialised
+        with `accumulate=True`."""
+        self.execution_time = 0.0
+
+
+def timed(
+    *, accumulate: bool = False, logger: Logger | None = None
+) -> Callable[[Callable[..., R]], Timed[Any, P, R]]:
+    """A decorator that measures the execution time of the wrapped function, storing
+    the elapsed time in the 'execution_time' attribute.
+
+    The decorator preserves the metadata of the original function and supports both
+    plain functions and instance methods.
+
+    Args:
+        fun: The function to decorate.
+        accumulate: If `True`, the execution time will be accumulated across multiple
+            calls. Otherwise, it will be reset on each call.
+        logger: If provided, log the execution time at the INFO level.
+
+    Returns:
+        A [Timed][pydvl.utils.functional.Timed] object wrapping the decorated function.
+    """
+
+    def wrapper(fun: Callable[..., R]) -> Timed[Any, P, R]:
+        return Timed(fun, accumulate=accumulate, logger=logger)
 
     return wrapper

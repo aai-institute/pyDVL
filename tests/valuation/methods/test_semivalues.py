@@ -1,9 +1,7 @@
-import math
 from typing import Any, Type
 
 import numpy as np
 import pytest
-from joblib import parallel_config
 
 from pydvl.utils import logcomb
 from pydvl.valuation.games import Game
@@ -13,12 +11,11 @@ from pydvl.valuation.methods import (
     SemivalueValuation,
     ShapleyValuation,
 )
-from pydvl.valuation.samplers import IndexSampler, LOOSampler, UniformSampler
-from pydvl.valuation.stopping import MaxUpdates, MinUpdates
+from pydvl.valuation.samplers import IndexSampler, LOOSampler
+from pydvl.valuation.stopping import MinUpdates
 
 from .. import check_values, recursive_make
 from ..samplers.test_sampler import deterministic_samplers, random_samplers
-from ..utils import timed
 
 
 @pytest.mark.parametrize("n", [10, 100])
