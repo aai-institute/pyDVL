@@ -85,8 +85,10 @@ class SemivalueValuation(Valuation):
         #  something better)
         if isinstance(progress, bool):
             self.tqdm_args.update({"disable": not progress})
+        elif isinstance(progress, dict):
+            self.tqdm_args.update(progress)
         else:
-            self.tqdm_args.update(progress if isinstance(progress, dict) else {})
+            raise TypeError(f"Invalid type for progress: {type(progress)}")
 
     @abstractmethod
     def log_coefficient(self, n: int, k: int) -> float:
