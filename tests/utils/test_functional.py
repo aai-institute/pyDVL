@@ -1,10 +1,15 @@
+import gc
+import inspect
+import logging
+import time
 import warnings
+from time import sleep
 from typing import Any, Type
 
 import numpy as np
 import pytest
 
-from pydvl.utils.functional import suppress_warnings
+from pydvl.utils.functional import suppress_warnings, timed
 
 
 class WarningsClass:
@@ -118,3 +123,253 @@ def test_multi_warning_suppressed():
         assert result == "done"
         # No warnings should be recorded.
         assert len(record) == 0
+
+
+def test_timed_decorator_execution_time():
+    """Test that the timed decorator correctly measures execution time"""
+
+    @timed()
+    def slow_function(sleep_time: float) -> None:
+        sleep(sleep_time)
+
+    sleep_duration = 0.1
+    slow_function(sleep_duration)
+    assert slow_function.execution_time >= sleep_duration
+
+
+def test_timed_decorator_return_value():
+    """Test that the timed decorator preserves the return value"""
+
+    @timed()
+    def identity(x: int) -> int:
+        return x
+
+    assert identity(42) == 42
+    assert hasattr(identity, "execution_time")
+
+
+def test_timed_decorator_with_args_kwargs():
+    """Test that the timed decorator works with different argument patterns"""
+
+    @timed()
+    def function_with_args(*args, **kwargs) -> tuple:
+        return args, kwargs
+
+    args = (1, 2, 3)
+    kwargs = {"a": 1, "b": 2}
+    result_args, result_kwargs = function_with_args(*args, **kwargs)
+
+    assert result_args == args
+    assert result_kwargs == kwargs
+    assert hasattr(function_with_args, "execution_time")
+
+
+def test_timed_decorator_resets_time():
+    """Test that each call updates the execution time"""
+
+    @timed()
+    def fun(fast: bool) -> None:
+        if fast:
+            return
+        sleep(0.2)
+
+    fun(fast=True)
+    fast_time = fun.execution_time
+
+    fun(fast=False)
+    slow_time = fun.execution_time
+
+    assert slow_time > fast_time
+
+
+#######################################################
+
+
+@pytest.fixture
+def timed_function():
+    @timed()
+    def fun(arg: int, kwarg: int = 0) -> int:
+        time.sleep(0.01)
+        return arg + kwarg
+
+    return fun
+
+
+@pytest.fixture
+def timed_class():
+    class TestClass:
+        @timed()
+        def method(self, arg: int) -> int:
+            time.sleep(0.01)
+            return arg * 2
+
+        @timed()
+        def raises_exception(self):
+            time.sleep(0.01)
+            raise ValueError("Intentional error")
+
+    return TestClass
+
+
+def test_function_timing(timed_function):
+    result = timed_function(2, kwarg=3)
+    assert result == 5
+    assert timed_function.execution_time >= 0.01
+
+
+def test_method_timing(timed_class):
+    obj = timed_class()
+    result = obj.method(5)
+    assert result == 10
+    assert obj.method.execution_time >= 0.01
+
+
+@pytest.mark.flaky(reruns=1)
+def test_consecutive_calls(timed_function):
+    times = []
+    for _ in range(10):
+        timed_function(1)
+        times.append(timed_function.execution_time)
+
+    np.testing.assert_allclose(np.mean(times), 0.01, rtol=0.1)
+
+
+def test_function_metadata(timed_function):
+    assert timed_function.__name__ == "fun"
+    assert inspect.signature(timed_function) == inspect.signature(timed_function.fun)
+    assert "arg: int" in str(inspect.signature(timed_function))
+
+
+def test_method_metadata(timed_class):
+    obj = timed_class()
+    method = obj.method
+    assert method.__name__ == "method"
+    assert inspect.signature(method) == inspect.signature(timed_class.method.fun)
+    assert "arg: int" in str(inspect.signature(method))
+
+
+def test_separate_instance_timing(timed_class):
+    obj1 = timed_class()
+    obj2 = timed_class()
+
+    obj1.method(1)
+    obj2.method(1)
+
+    assert obj1.method.execution_time >= 0.01
+    assert obj2.method.execution_time >= 0.01
+    np.testing.assert_allclose(
+        obj1.method.execution_time, obj2.method.execution_time, rtol=0.1
+    )
+
+
+def test_method_wrapper_caching(timed_class):
+    obj = timed_class()
+    wrapper1 = obj.method
+    wrapper2 = obj.method
+    assert wrapper1 is wrapper2
+
+
+def test_exception_propagation(timed_class):
+    obj = timed_class()
+    with pytest.raises(ValueError):
+        obj.raises_exception()
+
+
+def test_exception_timing(timed_class):
+    obj = timed_class()
+    try:
+        obj.raises_exception()
+    except ValueError:
+        pass
+    assert obj.raises_exception.execution_time >= 0.01
+
+
+def test_descriptor_access(timed_class):
+    decorator = timed_class.__dict__["method"]
+    assert decorator is timed_class.method
+
+
+def test_method_cache_cleanup(timed_class):
+    decorator = timed_class.method
+
+    assert len(decorator._method_cache) == 0
+
+    obj = timed_class()
+
+    # Create cache entry and test
+    obj.method(1)
+    assert obj in decorator._method_cache
+    assert len(decorator._method_cache) == 1
+
+    # Remove reference, force GC, verify cache cleanup
+    del obj
+    gc.collect()
+    assert len(decorator._method_cache) == 0
+
+    # This also fails:
+    # assert all(id(key) != obj_id for key in decorator._method_cache.keys())
+
+
+def test_logging_output(caplog):
+    @timed(logger=logging.getLogger("test"))
+    def logging_fun(arg: int, kwarg: int = 0) -> int:
+        time.sleep(0.01)
+        return arg + kwarg
+
+    with caplog.at_level(level=logging.INFO, logger="test"):
+        logging_fun(1)
+        assert any(record.msg.endswith("seconds") for record in caplog.records)
+
+
+def test_method_logging_output(caplog):
+    class TestClass:
+        @timed(logger=logging.getLogger("test"))
+        def method(self, arg: int) -> int:
+            time.sleep(0.01)
+            return arg * 2
+
+    obj = TestClass()
+    with caplog.at_level(level=logging.INFO, logger="test"):
+        obj.method(1)
+        assert any(record.msg.endswith("seconds") for record in caplog.records)
+
+
+def test_zero_execution_time(timed_function):
+    @timed()
+    def instant_func():
+        return
+
+    instant_func()
+    assert instant_func.execution_time < 0.01
+
+
+def test_accumulated_time():
+    @timed(accumulate=True)
+    def slow_function():
+        time.sleep(0.01)
+
+    slow_function()
+    slow_function()
+    assert slow_function.execution_time >= 0.02
+
+
+def test_method_accumulated_time():
+    class TestClass:
+        @timed(accumulate=True)
+        def method(self):
+            time.sleep(0.01)
+
+    obj = TestClass()
+    obj.method()
+    obj.method()
+    assert obj.method.execution_time >= 0.02
+
+
+def test_return_type_preservation(timed_function):
+    result = timed_function(1)
+    assert isinstance(result, int)
+
+
+def test_method_return_type_preservation(timed_class):
+    result = timed_class().method(2)
+    assert isinstance(result, int)

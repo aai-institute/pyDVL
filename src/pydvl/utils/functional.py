@@ -8,6 +8,7 @@ import functools
 import inspect
 import time
 import warnings
+import weakref
 from logging import Logger, getLogger
 from typing import (
     Any,
@@ -296,10 +297,43 @@ class Timed(Generic[T, P, R]):
         if instance is None:  # Allow access to the descriptor itself
             return self
 
-        if instance not in self._method_cache:
+        # Heuristic:if the instance is ephemeral, don’t cache.
+        # This hack is to avoid raising ReferenceError when a timed() method is called
+        # with SomeClass().timed_method(). In this case, the instance is garbage
+        # collected right after __get__() is done, so when the closure
+        # retrieve_instance_and_call is called, the instance is already gone.
+        import sys
+
+        # sys.getrefcount returns a count that is at least 2:
+        # one for the argument, one for the temporary
+        if sys.getrefcount(instance) <= 3:
+            # Create a temporary wrapper that holds the instance strongly.
+            # Note that accessing the execution_time attribute will create a new
+            # Timed object on each access, but that’s the best we can do.
             bound_fun: Callable[P, R] = self.fun.__get__(instance, owner)
+            return Timed(bound_fun, accumulate=self.accumulate, logger=self.logger)
+
+        if instance not in self._method_cache:
+            # In order for the WeakKeyDictionary to work, we cannot store the bound
+            # method directly, as it would create a strong reference to the instance.
+            # With the following, the instance can never be garbage collected:
+            # self._method_cache[instance] = Timed(bound_fun, ...)
+
+            # Instead we create a weak reference to the instance, close around it
+            # and dereference it on every __get__
+            instance_ref = weakref.ref(instance)
+
+            def retrieve_instance_and_call(*args, **kwargs):
+                inst = instance_ref()
+                if inst is None:
+                    raise ReferenceError("The instance has been garbage collected")
+                return self.fun(inst, *args, **kwargs)
+
+            functools.update_wrapper(retrieve_instance_and_call, self.fun)
             new_wrapper: Timed[T, P, R] = Timed(
-                bound_fun, accumulate=self.accumulate, logger=self.logger
+                retrieve_instance_and_call,
+                accumulate=self.accumulate,
+                logger=self.logger,
             )
             self._method_cache[instance] = new_wrapper
         return self._method_cache[instance]
