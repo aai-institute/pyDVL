@@ -2,11 +2,14 @@ from typing import Sequence
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression
 
+from pydvl.utils import SupervisedModel
 from pydvl.valuation import DataUtilityLearning
 from pydvl.valuation.types import Sample
 from pydvl.valuation.utility.base import UtilityBase
+from pydvl.valuation.utility.learning import IndicatorUtilityModel
 
 
 class LinearUtility(UtilityBase):
@@ -42,7 +45,8 @@ def dul_instance():
     weights = [1, 2, 3]
     training_data = [0, 1, 2]
     dummy_util = LinearUtility(weights, training_data)
-    model = LinearRegression(fit_intercept=False)
+    predictor = LinearRegression(fit_intercept=False)
+    model = IndicatorUtilityModel(predictor=predictor, n_data=len(training_data))
     training_budget = 3
 
     return DataUtilityLearning(dummy_util, training_budget, model)
@@ -116,3 +120,54 @@ def test_empty_sample(dul_instance):
     """
     empty_sample = Sample(1, np.empty(0, dtype=int))
     assert dul_instance(empty_sample) == 0.0
+
+
+class FakePredictor(SupervisedModel):
+    """A fake predictor that simply records the inputs to fit() and predict()
+    and predicts the row-sum so that we can verify encoding indirectly."""
+
+    def __init__(self):
+        self.fit_X = None
+        self.fit_y = None
+        self.last_predict_X = None
+
+    def fit(self, X, y):
+        self.fit_X = X
+        self.fit_y = y
+
+    def predict(self, X):
+        self.last_predict_X = X
+        return np.sum(X, axis=1, keepdims=True)
+
+
+@pytest.mark.parametrize(
+    "utility_samples, encoding",
+    [
+        ({Sample(idx=0, subset=np.array([1, 3])): 2.5}, np.array([[0, 1, 0, 1, 0]])),
+        ({Sample(idx=1, subset=np.array([0, 4])): 3.5}, np.array([[1, 0, 0, 0, 1]])),
+        (
+            {
+                Sample(idx=0, subset=np.array([1, 3])): 2.5,
+                Sample(idx=1, subset=np.array([0, 4])): 3.5,
+            },
+            np.array([[0, 1, 0, 1, 0], [1, 0, 0, 0, 1]]),
+        ),
+    ],
+)
+def test_indicator_utility_model_encoding(utility_samples, encoding: NDArray):
+    """Verify that calling fit() encodes each sample correctly into a one-hot vector."""
+    n_data = 5
+    predictor = FakePredictor()
+    model = IndicatorUtilityModel(predictor=predictor, n_data=n_data)
+
+    model.fit(utility_samples)
+
+    np.testing.assert_array_equal(predictor.fit_X, encoding)
+    np.testing.assert_array_equal(
+        predictor.fit_y, np.array(list(utility_samples.values())).reshape(-1, 1)
+    )
+
+    prediction = model.predict(list(utility_samples.keys()))
+    expected_prediction = np.sum(encoding, axis=1).reshape(-1, 1)
+    np.testing.assert_array_equal(predictor.last_predict_X, encoding)
+    np.testing.assert_array_equal(prediction, expected_prediction)

@@ -18,16 +18,63 @@ href="#wang_improving_2022">1</a></sup>.
 from __future__ import annotations
 
 import logging
+from abc import ABC, abstractmethod
+from typing import Collection
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.types import Sample, SampleT
 from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["DataUtilityLearning"]
+__all__ = ["DataUtilityLearning", "IndicatorUtilityModel", "UtilityModel"]
+
 
 logger = logging.getLogger(__name__)
+
+
+class UtilityModel(ABC):
+    """Interface for utility models.
+
+    * fitted on dictionaries of Sample -> utility value
+    * Predict [samples] -> [utility]
+
+    """
+
+    @abstractmethod
+    def fit(self, x: dict[Sample, float]): ...
+
+    @abstractmethod
+    def predict(self, x: Collection[Sample]) -> NDArray[np.float64]: ...
+
+
+class IndicatorUtilityModel(UtilityModel):
+    """A simple wrapper for arbitrary predictors.
+
+    Uses 1-hot encoding of the data as input for the model, as done in Wang et al.,
+    (2022)<sup><a href="#wang_improving_2022">1</a></sup>.
+    """
+
+    def __init__(self, predictor: SupervisedModel, n_data: int):
+        self.n_data = n_data
+        self.predictor = predictor
+
+    def fit(self, samples: dict[Sample, float]):
+        n_samples = len(samples)
+        x = np.zeros((n_samples, self.n_data))
+        y = np.zeros((n_samples, 1))
+        for i, (s, u) in enumerate(samples.items()):
+            x[i, s.subset] = 1.0
+            y[i] = u
+        logger.info(f"Fitting utility model with {n_samples} samples")
+        self.predictor.fit(x, y)
+
+    def predict(self, x: Collection[Sample]) -> NDArray[np.float64]:
+        mask = np.zeros((len(x), self.n_data))
+        for i, s in enumerate(x):
+            mask[i, s.subset] = 1.0
+        return self.predictor.predict(mask)
 
 
 class DataUtilityLearning(UtilityBase[SampleT]):
@@ -45,21 +92,22 @@ class DataUtilityLearning(UtilityBase[SampleT]):
         model: A supervised regression model
 
     ??? Example
-        ``` pycon
-        >>> from pydvl.valuation.dataset import Dataset
-        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
-        >>> from pydvl.valuation.types import Sample
-        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
-        >>> from sklearn.datasets import load_iris
-        >>>
-        >>> train, test = Dataset.from_sklearn(load_iris())
-        >>> u = ModelUtility(LogisticRegression())
-        >>> wrapped_u = DataUtilityLearning(u.with_dataset(train), 3, LinearRegression())
-        ... # First 3 calls will be computed normally
-        >>> for i in range(3):
-        ...     _ = wrapped_u(Sample(0, np.array([])))
-        >>> wrapped_u(Sample(0, np.array([1, 2, 3]))) # Subsequent calls will be computed using the fit model for DUL
-        0.0
+        ``` python
+        from pydvl.valuation import Dataset, DataUtilityLearning, ModelUtility, \
+            Sample, SupervisedScorer
+        from sklearn.linear_model import LinearRegression, LogisticRegression
+        from sklearn.datasets import load_iris
+
+        train, test = Dataset.from_sklearn(load_iris())
+        scorer = SupervisedScorer("accuracy", test, 0, (0,1))
+        utility = ModelUtility(LinearRegression(), scorer)
+        utility_model = IndicatorUtilityModel(LinearRegression(), len(train))
+        dul = DataUtilityLearning(utility, 3, utility_model)
+        # First 3 calls will be computed normally
+        for i in range(3):
+            _ = dul(Sample(0, np.array([])))
+        # Subsequent calls will be computed using the fitted utility_model
+        dul(Sample(0, np.array([1, 2, 3])))
         ```
 
     """
@@ -77,7 +125,7 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     }
 
     def __init__(
-        self, utility: UtilityBase, training_budget: int, model: SupervisedModel
+        self, utility: UtilityBase, training_budget: int, model: UtilityModel
     ) -> None:
         self.utility = utility
         self.training_budget = training_budget
@@ -102,19 +150,12 @@ class DataUtilityLearning(UtilityBase[SampleT]):
             return utility
 
         if not self._is_fitted:
-            x = np.zeros((len(self._utility_samples), len(self.training_data)))
-            y = np.zeros((len(self._utility_samples), 1))
-            for i, (s, u) in enumerate(self._utility_samples.items()):
-                x[i, s.subset] = 1.0
-                y[i] = u
-            logger.info(f"Fitting utility model with {len(x)} samples")
-            self.model.fit(x, y)
+            self.model.fit(self._utility_samples)
             self._is_fitted = True
 
         self.n_predictions += 1
-        mask = np.zeros((1, len(self.training_data)))
-        mask[0, sample.subset] = 1.0
-        return float(self.model.predict(mask).item())
+        return float(self.model.predict([sample]).item())
+
         # Strictly speaking, (sample, prediction) is not a utility sample, and it's
         # unlikely that we will ever hit the same sample twice, so we don't store it:
         # self._utility_samples[sample] = utility
