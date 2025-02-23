@@ -125,15 +125,14 @@ whether the rank of the values is stable.
 
 ## Creating stopping criteria
 
-The easiest way is to declare a function implementing the interface
-[StoppingCriterionCallable][pydvl.valuation.stopping.StoppingCriterionCallable] and
-wrap it with [make_criterion()][pydvl.valuation.stopping.make_criterion]. This
-creates a [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] object
-that can be composed with other stopping criteria.
-
-Alternatively, and in particular if reporting of completion is required, one can
-inherit from this class and implement the abstract methods `_check` and
-[completion][pydvl.valuation.stopping.StoppingCriterion.completion].
+In order to create a new stopping criterion, one can subclass
+[StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] and implement the
+`_check` method. This method should return a [Status][pydvl.utils.status.Status] and
+update the `_converged` attribute, which is a boolean array indicating whether the
+value for each index has converged. When this does not make sense for a particular
+stopping criterion, [completion][pydvl.valuation.stopping.StoppingCriterion.completion]
+should be overridden to provide an overall completion value, since its default
+implementation attempts to compute the mean of `_converged`.
 
 
 ## References
@@ -148,7 +147,7 @@ from __future__ import annotations
 import abc
 import logging
 from time import time
-from typing import Callable, Protocol, Type, cast
+from typing import Callable, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -159,7 +158,6 @@ from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
 
 __all__ = [
-    "make_criterion",
     "AbsoluteStandardError",
     "HistoryDeviation",
     "MaxChecks",
@@ -172,12 +170,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
-class StoppingCriterionCallable(Protocol):
-    """Signature for a stopping criterion"""
-
-    def __call__(self, result: ValuationResult) -> Status: ...
 
 
 class StoppingCriterion(abc.ABC):
@@ -291,56 +283,56 @@ class StoppingCriterion(abc.ABC):
             result._status = status
         return status
 
-    def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+    def __and__(self, other: StoppingCriterion) -> StoppingCriterion:
         def fun(result: ValuationResult) -> Status:
-            self._count += 1
-            other._count += 1
             return self._check(result) & other._check(result)
 
-        return make_criterion(
-            fun=fun,
+        return _make_criterion(
+            check=fun,
+            criteria=[self, other],
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
             name=f"{str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
-    def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
+    def __or__(self, other: StoppingCriterion) -> StoppingCriterion:
         def fun(result: ValuationResult) -> Status:
-            self._count += 1
-            other._count += 1
             return self._check(result) | other._check(result)
 
-        return make_criterion(
-            fun=fun,
+        return _make_criterion(
+            check=fun,
+            criteria=[self, other],
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
             name=f"{str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
-    def __invert__(self) -> "StoppingCriterion":
+    def __invert__(self) -> StoppingCriterion:
         def fun(result: ValuationResult) -> Status:
-            self._count += 1
             return ~self._check(result)
 
-        return make_criterion(
-            fun=fun,
+        return _make_criterion(
+            check=fun,
+            criteria=[self],
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
             name=f"NOT {str(self)}",
         )(modify_result=self.modify_result)
 
 
-def make_criterion(
-    fun: StoppingCriterionCallable,
-    converged: Callable[[], NDArray[np.bool_]] | None = None,
-    completion: Callable[[], float] | None = None,
-    name: str | None = None,
+def _make_criterion(
+    check: Callable[[ValuationResult], Status],
+    criteria: list[StoppingCriterion],
+    converged: Callable[[], NDArray[np.bool_]],
+    completion: Callable[[], float],
+    name: str,
 ) -> Type[StoppingCriterion]:
-    """Create a new [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] from a
-    function. Use this to enable simpler functions to be composed with bitwise operators
+    """Create a new [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] from
+    several callables. Used to compose simpler criteria with bitwise operators
 
     Args:
-        fun: The callable to wrap.
+        check: The callable to wrap.
+        criteria: A list of criteria that are combined into a new criterion
         converged: A callable that returns a boolean array indicating what
             values have converged.
         completion: A callable that returns a value between 0 and 1 indicating
@@ -356,23 +348,29 @@ def make_criterion(
     class WrappedCriterion(StoppingCriterion):
         def __init__(self, modify_result: bool = True):
             super().__init__(modify_result=modify_result)
-            self._name = name or cast(str, getattr(fun, "__name__", "WrappedCriterion"))
-
-        def _check(self, result: ValuationResult) -> Status:
-            return fun(result)
+            self._name = name or cast(
+                str, getattr(check, "__name__", "WrappedCriterion")
+            )
+            self._criteria = criteria if criteria is not None else []
 
         @property
-        def converged(self) -> NDArray[np.bool_]:
-            if converged is None:
-                return super().converged
-            return converged()
+        def criteria(self) -> list[StoppingCriterion]:
+            return self._criteria
+
+        def __call__(self, result: ValuationResult) -> Status:
+            for criterion in self._criteria:
+                criterion._count += 1
+            return super().__call__(result)
+
+        def _check(self, result: ValuationResult) -> Status:
+            status = check(result)
+            self._converged = converged()
+            return status
 
         def __str__(self) -> str:
             return self._name
 
         def completion(self) -> float:
-            if completion is None:
-                return super().completion()
             return completion()
 
     return WrappedCriterion

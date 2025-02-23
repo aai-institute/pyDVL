@@ -15,7 +15,7 @@ from pydvl.valuation.stopping import (
     MinUpdates,
     RankCorrelation,
     StoppingCriterion,
-    make_criterion,
+    _make_criterion,
 )
 
 
@@ -36,71 +36,62 @@ def test_stopping_criterion_composition():
     p = Status.Pending
     f = Status.Failed
 
-    class C(StoppingCriterion):
+    class AlwaysConverged(StoppingCriterion):
         def _check(self, result: ValuationResult) -> Status:
+            self._converged = np.full_like(result.values, True, dtype=bool)
             return c
 
-    class P(StoppingCriterion):
+    class AlwaysPending(StoppingCriterion):
         def _check(self, result: ValuationResult) -> Status:
+            self._converged = np.full_like(result.values, False, dtype=bool)
             return p
 
-    class F(StoppingCriterion):
+    class AlwaysFailed(StoppingCriterion):
         def _check(self, result: ValuationResult) -> Status:
+            self._converged = np.full_like(result.values, False, dtype=bool)
             return f
 
-    v = ValuationResult.empty()
+    v = ValuationResult.from_random(5)
 
-    assert (~C())(v) == f
-    assert (~P())(v) == c
-    assert (~F())(v) == c
+    nac = ~AlwaysConverged()
+    nap = ~AlwaysPending()
+    naf = ~AlwaysFailed()
 
-    assert (C() & C())(v) == c
-    assert (P() | P())(v) == p
+    assert nac(v) == f
+    assert nap(v) == c
+    assert naf(v) == c
+    assert not nac.converged.all()
+    assert nap.converged.all()
+    assert naf.converged.all()
 
-    assert (C() & P())(v) == (c & p)
-    assert (C() | P())(v) == (c | p)
+    ac_and_ac = AlwaysConverged() & AlwaysConverged()
+    ap_or_ap = AlwaysPending() | AlwaysPending()
 
-    assert (C() & C() & C())(v) == c
-    assert (P() | P() | P())(v) == p
+    assert ac_and_ac(v) == c
+    assert ap_or_ap(v) == p
+    assert ac_and_ac.converged.all()
+    assert not ap_or_ap.converged.all()
 
-    assert str(C() & P()) == "C AND P"
-    assert str(C() | P()) == "C OR P"
-    assert str(~C()) == "NOT C"
-    assert str(~P()) == "NOT P"
+    ac_and_ap = AlwaysConverged() & AlwaysPending()
+    ac_or_ap = AlwaysConverged() | AlwaysPending()
 
+    assert ac_and_ap(v) == (c & p)
+    assert ac_or_ap(v) == (c | p)
+    assert not ac_and_ap.converged.all()
+    assert ac_or_ap.converged.all()
 
-def test_make_criterion():
-    def always_converged(result: ValuationResult) -> Status:
-        return Status.Converged
+    ac_and_ac_and_ac = AlwaysConverged() & AlwaysConverged() & AlwaysConverged()
+    ap_and_ap_or_ap = AlwaysPending() & AlwaysPending() | AlwaysPending()
 
-    def always_pending(result: ValuationResult) -> Status:
-        return Status.Pending
+    assert ac_and_ac_and_ac(v) == c
+    assert ap_and_ap_or_ap(v) == p
+    assert ac_and_ac_and_ac.converged.all()
+    assert not ap_and_ap_or_ap.converged.all()
 
-    def always_failed(result: ValuationResult) -> Status:
-        return Status.Failed
-
-    v = ValuationResult.empty()
-
-    C = make_criterion(always_converged)
-    P = make_criterion(always_pending)
-    F = make_criterion(always_failed)
-
-    assert C()(v) == Status.Converged
-    assert P()(v) == Status.Pending
-    assert F()(v) == Status.Failed
-
-    assert str(C()) == "always_converged"
-    assert str(P()) == "always_pending"
-    assert str(F()) == "always_failed"
-
-    assert (~C())(v) == Status.Failed
-    assert (~P())(v) == Status.Converged
-    assert (~F())(v) == Status.Converged
-
-    assert (C() & C())(v) == Status.Converged
-    assert (P() | P())(v) == Status.Pending
-    assert (F() & F())(v) == Status.Failed
-    assert (C() | F())(v) == Status.Converged
+    assert str(ac_and_ap) == "AlwaysConverged AND AlwaysPending"
+    assert str(ac_or_ap) == "AlwaysConverged OR AlwaysPending"
+    assert str(nac) == "NOT AlwaysConverged"
+    assert str(nap) == "NOT AlwaysPending"
 
 
 def test_count_update_composite_criteria():
