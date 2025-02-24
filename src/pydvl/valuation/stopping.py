@@ -713,8 +713,7 @@ class RollingMemory(Generic[DT]):
 
 
 class HistoryDeviation(StoppingCriterion):
-    r"""A simple check for relative distance to a previous step in the
-    computation.
+    r"""A simple check for relative distance to a previous step in the computation.
 
     The method used by Ghorbani and Zou, (2019)<sup><a
     href="#ghorbani_data_2019">1</a></sup> computes the relative distances between the
@@ -723,14 +722,12 @@ class HistoryDeviation(StoppingCriterion):
 
     $$\sum_{i=1}^n \frac{\left| v_i^t - v_i^{t-\tau} \right|}{v_i^t} < \epsilon.$$
 
-    When the denominator is zero, the summand is set to the value of $v_i^{
-    t-\tau}$.
+    When the denominator is zero, the summand is set to the value of $v_i^{ t-\tau}$.
 
     This implementation is slightly generalised to allow for different number of
     updates to individual indices, as happens with powerset samplers instead of
-    permutations. Every subset of indices that is found to converge can be
-    pinned to that state. Once all indices have converged the method has
-    converged.
+    permutations. Every subset of indices that is found to converge can be pinned to
+    that state. Once all indices have converged the method has converged.
 
     !!! Warning
         This criterion is meant for the reproduction of the results in the paper,
@@ -793,69 +790,99 @@ class HistoryDeviation(StoppingCriterion):
 class RankCorrelation(StoppingCriterion):
     r"""A check for stability of Spearman correlation between checks.
 
-    When the change in rank correlation between two successive iterations is
-    below a given threshold, the computation is terminated.
-    The criterion computes the Spearman correlation between two successive iterations.
-    The Spearman correlation uses the ordering indices of the given values and
-    correlates them. This means it focuses on the order of the elements instead of their
-    exact values. If the order stops changing (meaning the Banzhaf semivalues estimates
-    converge), the criterion stops the algorithm.
+    Convergence is reached when the change in rank correlation between two successive
+    iterations is below a given threshold.
 
     This criterion is used in (Wang et al.)<sup><a href="wang_data_2023">2</a></sup>.
 
+    !!! Info "The meaning of _successive iterations_"
+        Stopping criteria in pyDVL are typically evaluated after each batch of value
+        updates is received. This can imply very different things, depending on the
+        configuration of the samplers. For this reason, `RankCorrelation` keeps itself
+        track of the number of updates that each index has seen, and only checks for
+        correlation changes when a given fraction of all indices has been updated more
+        than `burn_in` times **and** once since last time the criterion was checked.
+
     Args:
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula)
-        burn_in: The minimum number of iterations before checking for
-            convergence. This is required because the first correlation is
-            meaningless.
+        burn_in: The minimum number of updates an index must have seen before checking
+            for convergence. This is required because the first correlation checks are
+            usually meaningless.
+        fraction: The fraction of values that must have been updated between two
+            correlation checks. This is to avoid comparing two results where only one
+            value has been updated, which would have almost perfect rank correlation.
         modify_result: If `True`, the status of the input
             [ValuationResult][pydvl.value.result.ValuationResult] is modified in
             place after the call.
 
     !!! tip "Added in 0.9.0"
+    !!! tip "Changed in 0.10.0"
+        The behaviour of the `burn_in` parameter was changed to look at value updates.
+        The parameter `fraction` was added.
     """
 
     def __init__(
         self,
         rtol: float,
         burn_in: int,
+        fraction: float = 1.0,
         modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        if rtol <= 0 or rtol >= 1:
-            raise ValueError("rtol must be in (0, 1)")
+        if rtol < 0 or rtol > 1:
+            raise ValueError("rtol must be in [0, 1]")
+        if fraction <= 0 or fraction > 1:
+            raise ValueError("fraction must be in (0, 1]")
+
         self.rtol = rtol
         self.burn_in = burn_in
-        self.memory = RollingMemory(n_steps=1, default=np.nan)
-        self._corr = 0.0
+        self.fraction = fraction
+        self.memory = RollingMemory(n_steps=1, default=np.nan, dtype=np.float64)
+        self.count_memory = RollingMemory(n_steps=1, default=0, dtype=np.int_)
+        self._corr = np.nan
         self._completion = 0.0
 
     def _check(self, r: ValuationResult) -> Status:
         if len(self.memory) == 0:
             self.memory.update(r.values)
+            self.count_memory.update(r.counts)
             self._converged = np.full(len(r), False)
             return Status.Pending
 
-        corr = spearmanr(self.memory[-1], r.values)[0]
-        self.memory.update(r)
-        self._update_completion(corr)
-        if np.isclose(corr, self._corr, rtol=self.rtol) and self._count > self.burn_in:
-            self._converged = np.full(len(r), True)
-            logger.debug(
-                f"RankCorrelation has converged with {corr=} in iteration {self._count}"
-            )
-            return Status.Converged
-        self._corr = np.nan_to_num(corr, nan=0.0)
+        burnt = np.asarray(r.counts > self.burn_in)
+        valid_updated = np.asarray(r.counts[burnt] - self.count_memory[-1][burnt] > 0)
+        if valid_updated.sum() / len(r) >= self.fraction:
+            # The first update is typically of constant values, so that the Spearman
+            # correlation is undefined
+            if self.memory.n_updates > 1:
+                corr = spearmanr(
+                    self.memory[-1][valid_updated],  # type: ignore
+                    r.values[valid_updated],  # type: ignore
+                )[0]
+                self._update_completion(corr)
+                if np.isclose(corr, self._corr, rtol=self.rtol):
+                    self._converged = np.full(len(r), True)
+                    logger.debug(
+                        f"RankCorrelation has converged with {corr=} for "
+                        f"{valid_updated.sum()} values in iteration {self._count}"
+                    )
+                    return Status.Converged
+
+                self._corr = corr
+
+            self.count_memory.update(r.counts)
+            self.memory.update(r.values)
+
         return Status.Pending
 
     def _update_completion(self, corr: float) -> None:
-        if np.isnan(corr):
+        if np.isnan(corr) or np.isnan(self._corr):
             self._completion = 0.0
         elif not np.isclose(corr, self._corr, rtol=self.rtol):
-            try:
-                self._completion = np.abs(corr - self._corr) / self._corr
-            except ZeroDivisionError:
+            if self._corr == 0.0:
                 self._completion = 0.0
+            else:
+                self._completion = np.abs(corr - self._corr) / self._corr
         else:
             self._completion = 1.0
 
@@ -869,4 +896,4 @@ class RankCorrelation(StoppingCriterion):
         return super().reset()
 
     def __str__(self):
-        return f"RankCorrelation(rtol={self.rtol})"
+        return f"RankCorrelation({self.rtol=}, {self.burn_in=}, {self.fraction=})"
