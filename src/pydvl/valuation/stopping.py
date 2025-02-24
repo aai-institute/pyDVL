@@ -643,7 +643,10 @@ class MaxTime(StoppingCriterion):
         return f"MaxTime(seconds={self.max_seconds})"
 
 
-class RollingMemory:
+DT = TypeVar("DT", bound=np.generic)
+
+
+class RollingMemory(Generic[DT]):
     """A simple rolling memory for the last `n_steps` values of each index.
 
     Updating the memory results in new values are copied to the last column of the
@@ -654,33 +657,52 @@ class RollingMemory:
         default: The default value to use when the memory is empty.
     """
 
-    def __init__(self, n_steps: int, default: float = np.inf):
+    def __init__(
+        self,
+        n_steps: int,
+        default: Union[DT, int, float],
+        *,
+        dtype: Type[DT] | None = None,
+    ):
+        if not isinstance(default, np.generic):  # convert to np scalar
+            default = cast(DT, np.array(default, dtype=np.result_type(default))[()])
+        if dtype is not None:  # user forced conversion
+            default = dtype(default)
         if n_steps < 1:
             raise ValueError("n_steps must be at least 1")
         self.n_steps = n_steps
-        self._data = np.full(0, default, dtype=np.float64)
+        self._n_updates = 0
+        self._default = cast(DT, default)
+        self._data: NDArray[DT] = np.full(0, default, dtype=type(default))
 
     @property
-    def data(self) -> NDArray[np.float64]:
+    def n_updates(self) -> int:
+        return self._n_updates
+
+    @property
+    def data(self) -> NDArray[DT]:
         view = self._data.view()
         view.setflags(write=False)
         return view.T
 
     def reset(self) -> Self:
-        self._data = np.full(0, np.inf)
+        self._data = np.full(0, self._default, dtype=type(self._default))
         return self
 
-    def update(self, r: ValuationResult) -> Self:
+    def update(self, values: NDArray[DT]) -> Self:
         """Update the memory with the values of the current result.
 
         The values are appended to the memory as its last column, and the oldest values
         (the first column) are removed
         """
         if len(self._data) == 0:
-            self._data = np.full((len(r.values), self.n_steps + 1), np.inf)
-        self._data = np.concatenate(
-            [self._data[:, 1:], r.values.reshape(-1, 1)], axis=1
-        )
+            self._data = np.full(
+                (len(values), self.n_steps + 1),
+                self._default,
+                dtype=type(self._default),
+            )
+        self._data = np.concatenate([self._data[:, 1:], values.reshape(-1, 1)], axis=1)
+        self._n_updates += 1
         return self
 
     def __getitem__(self, item):
@@ -732,14 +754,14 @@ class HistoryDeviation(StoppingCriterion):
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
 
-        self.memory = RollingMemory(n_steps, default=np.inf)
+        self.memory = RollingMemory(n_steps, default=np.inf, dtype=np.float64)
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
 
     def _check(self, r: ValuationResult) -> Status:
         if r.values.size == 0:
             return Status.Pending
-        self.memory.update(r)
+        self.memory.update(r.values)
         if len(self._converged) == 0:
             self._converged = np.full(len(r), False)
 
@@ -810,7 +832,7 @@ class RankCorrelation(StoppingCriterion):
 
     def _check(self, r: ValuationResult) -> Status:
         if len(self.memory) == 0:
-            self.memory.update(r)
+            self.memory.update(r.values)
             self._converged = np.full(len(r), False)
             return Status.Pending
 
