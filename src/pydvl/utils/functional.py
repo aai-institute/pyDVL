@@ -8,24 +8,20 @@ import functools
 import inspect
 import time
 import warnings
-import weakref
 from logging import Logger, getLogger
 from typing import (
     Any,
     Callable,
-    Generic,
-    Optional,
+    Protocol,
     Sequence,
     Set,
     Type,
     TypeVar,
     Union,
     cast,
-    overload,
 )
-from weakref import WeakKeyDictionary
 
-from typing_extensions import Concatenate, ParamSpec
+from typing_extensions import ParamSpec
 
 __all__ = ["maybe_add_argument", "suppress_warnings", "timed"]
 
@@ -132,7 +128,9 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     return functools.partial(_accept_additional_argument, fun=fun, arg=new_arg)
 
 
-F = Callable[..., Any]
+P = ParamSpec("P")
+R = TypeVar("R", covariant=True)
+F = Callable[P, R]
 
 
 def suppress_warnings(
@@ -184,166 +182,75 @@ def suppress_warnings(
         sig = inspect.signature(fun)
         params = list(sig.parameters)
         if not params or params[0] != "self":
-            raise TypeError(
-                "suppress_warnings decorator can only be applied to instance methods "
-                "(first parameter must be 'self')."
-            )
 
-        @functools.wraps(fun)
-        def wrapper(self, *args, **kwargs):
-            if getattr(self, flag, False):
-                return fun(self, *args, **kwargs)
-            with warnings.catch_warnings():
-                for category in categories:
-                    warnings.simplefilter("ignore", category=category)
-                return fun(self, *args, **kwargs)
+            @functools.wraps(fun)
+            def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
+                with warnings.catch_warnings():
+                    for category in categories:
+                        warnings.simplefilter("ignore", category=category)
+                    return fun(*args, **kwargs)
 
-        return wrapper  # type: ignore
+            return inner_wrapper
+        else:
+
+            @functools.wraps(fun)
+            def wrapper(self, *args, **kwargs):
+                if getattr(self, flag, False):
+                    return fun(self, *args, **kwargs)
+                with warnings.catch_warnings():
+                    for category in categories:
+                        warnings.simplefilter("ignore", category=category)
+                    return fun(self, *args, **kwargs)
+
+            return wrapper
 
     return decorator
 
 
-P = ParamSpec("P")  # Args of fun
-R = TypeVar("R")  # Return type
-T = TypeVar("T")  # Instance type for methods
+class TimedCallable(Protocol[P, R]):
+    execution_time: float
 
-
-class Timed(Generic[T, P, R]):
-    """A decorator that measures the execution time of the wrapped function, storing
-     the elapsed time in the 'execution_time' attribute.
-
-    The decorator preserves the metadata of the original function and supports both
-    plain functions and instance methods.
-
-    To decorate functions, you probably want to call `timed` instead.
-
-    Attributes:
-        execution_time (float): The time taken by the last call to the decorated
-            function in seconds.
-    Args:
-        fun (Callable): The function to decorate.
-        accumulate (bool): If `True`, the execution time will be accumulated across
-            multiple calls. Otherwise, it will be reset on each call.
-        logger (Optional[Logger]): If provided, log the execution time at the INFO
-            level.
-    """
-
-    def __init__(
-        self,
-        fun: Union[Callable[Concatenate[T, P], R], Callable[P, R]],
-        accumulate: bool = False,
-        logger: Logger | None = None,
-    ) -> None:
-        self.execution_time = 0.0
-        self.fun = fun
-        self.accumulate = accumulate
-        self.logger: Logger | None = logger
-        self._method_cache: WeakKeyDictionary[Any, Timed[T, P, R]] = WeakKeyDictionary()
-        functools.update_wrapper(self, fun)
-
-    # For a plain callable (or a bound method)
-    @overload
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
-
-    # For an unbound method (accessed via the class: there is a self argument)
-    @overload
-    def __call__(self, instance: T, *args: P.args, **kwargs: P.kwargs) -> R: ...
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        start = time.perf_counter()
-        try:
-            result = self.fun(*args, **kwargs)
-        finally:
-            t = time.perf_counter() - start
-            self.execution_time = self.execution_time + t if self.accumulate else t
-        if self.logger is not None:
-            self.logger.log(
-                self.logger.level,
-                f"{getattr(self.fun, '__objclass__', None) or self.fun.__module__}."
-                f"{self.fun.__qualname__} took {self.execution_time:.5f} seconds",
-            )
-        return result
-
-    def __get__(self, instance: Any, owner: Any = None) -> Any:
-        """Supports instance methods by binding the wrapped function to the instance.
-        When accessed as a method, returns a `Timed` object around the bound function,
-        or one from cache if it was already bound (the cache is necessary in order to be
-        able to access the `execution_time` attribute, otherwise we would create a new
-        object on each access).
-        """
-        if instance is None:  # Allow access to the descriptor itself
-            return self
-
-        # Heuristic:if the instance is ephemeral, don’t cache.
-        # This hack is to avoid raising ReferenceError when a timed() method is called
-        # with SomeClass().timed_method(). In this case, the instance is garbage
-        # collected right after __get__() is done, so when the closure
-        # retrieve_instance_and_call is called, the instance is already gone.
-        import sys
-
-        # sys.getrefcount returns a count that is at least 2:
-        # one for the argument, one for the temporary
-        if sys.getrefcount(instance) <= 3:
-            # Create a temporary wrapper that holds the instance strongly.
-            # Note that accessing the execution_time attribute will create a new
-            # Timed object on each access, but that’s the best we can do.
-            bound_fun: Callable[P, R] = self.fun.__get__(instance, owner)
-            return Timed(bound_fun, accumulate=self.accumulate, logger=self.logger)
-
-        if instance not in self._method_cache:
-            # In order for the WeakKeyDictionary to work, we cannot store the bound
-            # method directly, as it would create a strong reference to the instance.
-            # With the following, the instance can never be garbage collected:
-            # self._method_cache[instance] = Timed(bound_fun, ...)
-
-            # Instead we create a weak reference to the instance, close around it
-            # and dereference it on every __get__
-            instance_ref = weakref.ref(instance)
-
-            def retrieve_instance_and_call(*args, **kwargs):
-                inst = instance_ref()
-                if inst is None:
-                    raise ReferenceError("The instance has been garbage collected")
-                return self.fun(inst, *args, **kwargs)
-
-            functools.update_wrapper(retrieve_instance_and_call, self.fun)
-            new_wrapper: Timed[T, P, R] = Timed(
-                retrieve_instance_and_call,
-                accumulate=self.accumulate,
-                logger=self.logger,
-            )
-            self._method_cache[instance] = new_wrapper
-        return self._method_cache[instance]
-
-    def __repr__(self) -> str:
-        return f"<Timed({self.fun.__name__}) at {hex(id(self))}>"
-
-    def reset(self) -> None:
-        """Reset the execution time to 0. Useful only when the timer was initialised
-        with `accumulate=True`."""
-        self.execution_time = 0.0
+    def __call__(self, *args, **kwargs) -> R: ...
 
 
 def timed(
     *, accumulate: bool = False, logger: Logger | None = None
-) -> Callable[[Callable[..., R]], Timed[Any, P, R]]:
-    """A decorator that measures the execution time of the wrapped function, storing
-    the elapsed time in the 'execution_time' attribute.
-
-    The decorator preserves the metadata of the original function and supports both
-    plain functions and instance methods.
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    A decorator that measures the execution time of the wrapped function.
+    Optionally logs the time taken.
 
     Args:
-        fun: The function to decorate.
-        accumulate: If `True`, the execution time will be accumulated across multiple
-            calls. Otherwise, it will be reset on each call.
-        logger: If provided, log the execution time at the INFO level.
+        accumulate: If `True`, the total execution time will be accumulated across all
+            calls.
+        logger: If provided, the execution time will be logged at the logger's level.
 
     Returns:
-        A [Timed][pydvl.utils.functional.Timed] object wrapping the decorated function.
+        A decorator that wraps a function, measuring and optionally logging its
+        execution time. The function will have an attribute `execution_time` where
+        either the time of the last execution or the accumulated total is stored.
     """
 
-    def wrapper(fun: Callable[..., R]) -> Timed[Any, P, R]:
-        return Timed(fun, accumulate=accumulate, logger=logger)
+    def decorator(func: Callable[P, R]) -> TimedCallable[P, R]:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> R:
+            start = time.perf_counter()
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                elapsed = time.perf_counter() - start
+                if accumulate:
+                    cast(TimedCallable, wrapper).execution_time += elapsed
+                else:
+                    cast(TimedCallable, wrapper).execution_time = elapsed
+                if logger is not None:
+                    logger.log(
+                        logger.level,
+                        f"{func.__module__}.{func.__qualname__} took {elapsed:.5f} seconds",
+                    )
+            return result
 
-    return wrapper
+        cast(TimedCallable, wrapper).execution_time = 0.0
+        return cast(TimedCallable, wrapper)
+
+    return decorator

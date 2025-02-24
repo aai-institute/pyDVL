@@ -205,6 +205,11 @@ def timed_class():
             time.sleep(0.01)
             return arg * 2
 
+        @timed(accumulate=True)
+        def accumulating_method(self, arg: int) -> int:
+            time.sleep(0.01)
+            return arg * 2
+
         @timed()
         def raises_exception(self):
             time.sleep(0.01)
@@ -236,9 +241,23 @@ def test_consecutive_calls(timed_function):
     np.testing.assert_allclose(np.mean(times), 0.01, rtol=0.1)
 
 
+def test_accumulating_method(timed_class):
+    obj = timed_class()
+
+    initial_time = obj.accumulating_method.execution_time
+    assert initial_time == 0.0
+
+    obj.accumulating_method(1)
+    time_after_first_call = obj.accumulating_method.execution_time
+    assert time_after_first_call > initial_time
+
+    obj.accumulating_method(1)
+    time_after_second_call = obj.accumulating_method.execution_time
+    assert time_after_second_call > time_after_first_call
+
+
 def test_function_metadata(timed_function):
     assert timed_function.__name__ == "fun"
-    assert inspect.signature(timed_function) == inspect.signature(timed_function.fun)
     assert "arg: int" in str(inspect.signature(timed_function))
 
 
@@ -246,7 +265,6 @@ def test_method_metadata(timed_class):
     obj = timed_class()
     method = obj.method
     assert method.__name__ == "method"
-    assert inspect.signature(method) == inspect.signature(timed_class.method.fun)
     assert "arg: int" in str(inspect.signature(method))
 
 
@@ -262,13 +280,6 @@ def test_separate_instance_timing(timed_class):
     np.testing.assert_allclose(
         obj1.method.execution_time, obj2.method.execution_time, rtol=0.1
     )
-
-
-def test_method_wrapper_caching(timed_class):
-    obj = timed_class()
-    wrapper1 = obj.method
-    wrapper2 = obj.method
-    assert wrapper1 is wrapper2
 
 
 def test_exception_propagation(timed_class):
@@ -289,27 +300,6 @@ def test_exception_timing(timed_class):
 def test_descriptor_access(timed_class):
     decorator = timed_class.__dict__["method"]
     assert decorator is timed_class.method
-
-
-def test_method_cache_cleanup(timed_class):
-    decorator = timed_class.method
-
-    assert len(decorator._method_cache) == 0
-
-    obj = timed_class()
-
-    # Create cache entry and test
-    obj.method(1)
-    assert obj in decorator._method_cache
-    assert len(decorator._method_cache) == 1
-
-    # Remove reference, force GC, verify cache cleanup
-    del obj
-    gc.collect()
-    assert len(decorator._method_cache) == 0
-
-    # This also fails:
-    # assert all(id(key) != obj_id for key in decorator._method_cache.keys())
 
 
 def test_logging_output(caplog):
