@@ -2,10 +2,54 @@
 This module implements **Data Utility Learning** (Wang et al., 2022)<sup><a
 href="#wang_improving_2022">1</a></sup>.
 
+Data Utility learning accelerates data valuation by learning the utility function from a
+small number of subsets. The process is as follows:
+
+1. Collect a small number of so-called _utility samples_ (subsets and their utility
+   values) during the normal course of data valuation.
+2. Fit a model to the utility samples. The model is trained to predict the utility of
+   new subsets.
+3. Continue the valuation process, sampling subsets, but instead of evaluating the
+   original utility function, use the learned model to predict it.
+
+## Usage
+
+There are three components (sorry for the confusing naming!):
+
+1. The original utility object to learn, typically (but not necessarily) a
+   [ModelUtility][pydvl.valuation.utility.ModelUtility] object which will be expensive
+   to evaluate.
+2. A [UtilityModel][pydvl.valuation.utility.learning.UtilityModel] which will be trained
+   to predict the utility of subsets.
+3. The [DataUtilityLearning][pydvl.valuation.utility.learning.DataUtilityLearning]
+   object.
+
+Assuming you have some data valuation algorithm and your `Utility` object:
+
+1. Pick the actual machine learning model to use to learn the utility. In most cases
+   the utility takes continuous values, so this should be any regression model, such as
+   a linear regression or a neural network. The input to it will be sets of indices, so
+   one has to encode the data accordingly. For example, an indicator vector of the set
+   as done in Wang et al., (2022)<sup><a href="#wang_improving_2022">1</a></sup>, with
+   [IndicatorUtilityModel][pydvl.valuation.utility.learning.IndicatorUtilityModel]. This
+   wrapper accepts any machine learning model for the actual fitting. An alternative way
+   to encode the data is to use a deep learning model, such as
+   [DeepSet][pydvl.valuation.utility.deepset.DeepSet], which is a simple permutation
+   invariant architecture to learn embeddings for sets of points.
+2. Wrap your `Utility` object within a
+   [DataUtilityLearning][pydvl.valuation.utility.learning.DataUtilityLearning] object
+   and give it the object constructed in the previous point
+3. Use this `DataUtilityLearning` object in your data valuation algorithm instead of the
+   original `Utility` object.
+
+
 !!! fixme "Parallel processing not supported"
-    As of 0.9.0, this method does not support parallel processing. DataUtilityLearning
+    As of 0.9.0, this method does not support parallel processing. `DataUtilityLearning`
     would have to collect all utility samples in a single process before fitting the
-    model.
+    model. Gathering utility samples via custom evaluation strategies and result
+    updaters might be possible, but some IPC mechanism would be required to send the
+    fitted utility model to the workers, and this has to be implemented manually and
+    made to support all backends.
 
 ## References
 
@@ -23,6 +67,7 @@ from typing import Collection
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.types import Sample, SampleT
@@ -37,22 +82,27 @@ logger = logging.getLogger(__name__)
 class UtilityModel(ABC):
     """Interface for utility models.
 
-    * fitted on dictionaries of Sample -> utility value
-    * Predict [samples] -> [utility]
+    A _utility model_ predicts the value of a utility function given a sample. The model
+    is trained on a collection of samples and their respective utility values. These
+    tuples are called _Utility Samples_.
 
+    Utility models:
+
+    * are fitted on dictionaries of Sample -> utility value
+    * predict: Collection[samples] -> NDArray[utility values]
     """
 
     @abstractmethod
-    def fit(self, x: dict[Sample, float]): ...
+    def fit(self, x: dict[Sample, float]) -> Self: ...
 
     @abstractmethod
-    def predict(self, x: Collection[Sample]) -> NDArray[np.float64]: ...
+    def predict(self, x: Collection[Sample]) -> NDArray: ...
 
 
 class IndicatorUtilityModel(UtilityModel):
     """A simple wrapper for arbitrary predictors.
 
-    Uses 1-hot encoding of the data as input for the model, as done in Wang et al.,
+    Uses 1-hot encoding of the indices as input for the model, as done in Wang et al.,
     (2022)<sup><a href="#wang_improving_2022">1</a></sup>.
     """
 
@@ -60,7 +110,7 @@ class IndicatorUtilityModel(UtilityModel):
         self.n_data = n_data
         self.predictor = predictor
 
-    def fit(self, samples: dict[Sample, float]):
+    def fit(self, samples: dict[Sample, float]) -> Self:
         n_samples = len(samples)
         x = np.zeros((n_samples, self.n_data))
         y = np.zeros((n_samples, 1))
@@ -69,8 +119,9 @@ class IndicatorUtilityModel(UtilityModel):
             y[i] = u
         logger.info(f"Fitting utility model with {n_samples} samples")
         self.predictor.fit(x, y)
+        return self
 
-    def predict(self, x: Collection[Sample]) -> NDArray[np.float64]:
+    def predict(self, x: Collection[Sample]) -> NDArray:
         mask = np.zeros((len(x), self.n_data))
         for i, s in enumerate(x):
             mask[i, s.subset] = 1.0
