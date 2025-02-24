@@ -36,11 +36,9 @@ class LinearUtility(UtilityBase):
 
 @pytest.fixture
 def dul_instance():
-    """
-    A simple linear function with three features. The training data determines the
+    """A simple linear function with three features. The training data determines the
     dimension (3). A LinearRegression model is used to learn the utility with a small
-    budget of three samples before shifting to prediction.
-    """
+    budget of three samples before shifting to prediction."""
 
     weights = [1, 2, 3]
     training_data = [0, 1, 2]
@@ -53,12 +51,10 @@ def dul_instance():
 
 
 def test_training_phase(dul_instance):
-    """
-    Test that during the training phase (i.e. before the budget is reached),
-    calls to the DUL instance use the underlying utility and record the samples.
-    """
+    """Test that during the training phase (i.e. before the budget is reached),
+    calls to the DUL instance use the underlying utility and record the samples."""
     dul = dul_instance
-    # Create training samples. For a sample with subset (0,), DummyUtility returns 1.
+
     sample1 = Sample(0, np.array([0]))
     sample2 = Sample(1, np.array([1]))
     sample3 = Sample(2, np.array([2]))
@@ -70,7 +66,6 @@ def test_training_phase(dul_instance):
 
     # At this point the training budget is exactly reached.
     assert len(dul._utility_samples) == dul.training_budget
-    # The model should not have been fitted yet.
     assert not dul._is_fitted
 
 

@@ -14,8 +14,8 @@ from pydvl.valuation.stopping import (
     MaxUpdates,
     MinUpdates,
     RankCorrelation,
+    RollingMemory,
     StoppingCriterion,
-    _make_criterion,
 )
 
 
@@ -255,30 +255,19 @@ def test_max_checks():
 
 
 def test_rank_correlation():
-    """Test the RankCorrelation stopping criterion."""
     v = ValuationResult.zeros(indices=range(5))
     arr = np.arange(5)
 
-    done = RankCorrelation(rtol=0.1, burn_in=10)
+    done = RankCorrelation(rtol=0.1, burn_in=20, fraction=1)
     for i in range(20):
         arr = np.roll(arr, 1)
         for j in range(5):
-            v.update(j, arr[j] + 0.01 * j)
+            v.update(j, float(arr[j] + 0.01 * j))
         assert not done(v)
-    assert not done(v)
-    assert done(v)
-
-    done = RankCorrelation(rtol=0.1, burn_in=3)
-    v = ValuationResult.from_random(size=5)
-    assert not done(v)
-    assert not done(v)
-    assert not done(v)
-    assert done(v)
-
-    done = RankCorrelation(rtol=0.1, burn_in=2)
-    v = ValuationResult.from_random(size=5)
-    assert not done(v)
-    assert not done(v)
+    # Update all indices to trigger correlation computation and convergence
+    arr = np.roll(arr, 1)
+    for j in range(5):
+        v.update(j, float(arr[j] + 0.01 * j))
     assert done(v)
 
     assert done.completion() == 1.0
@@ -297,7 +286,7 @@ def test_rank_correlation():
         MaxTime(0.1),
         MaxUpdates(10),
         MinUpdates(10),
-        RankCorrelation(0.1, 1),
+        RankCorrelation(0.1, 1, 0.1),
     ],
 )
 def test_count(criterion):
@@ -315,24 +304,23 @@ def test_count(criterion):
     assert criterion.count == 2
 
 
-# Test that the _memory attribute and memory property of stoppingcriteria are properly updated:
-@pytest.mark.parametrize(
-    "criterion",
-    [
-        HistoryDeviation(6, 0.1),
-        RankCorrelation(0.1, 0),
-    ],
-)
-def test_memory(criterion):
+def test_memory():
     r1 = ValuationResult.from_random(5)
     r2 = ValuationResult.from_random(5)
+    memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
 
-    assert np.all(criterion.memory.data == [])
-    criterion(r1)
-    np.testing.assert_equal(criterion.memory.data[-1], r1.values)
-    np.testing.assert_equal(criterion.memory[-1], r1.values)
+    assert np.all(memory.data == [])
+    memory.update(r1.values)
+    np.testing.assert_equal(memory.data[-1], r1.values)
+    np.testing.assert_equal(memory[-1], r1.values)
 
-    criterion(r2)
+    memory.update(r2.values)
     tmp = np.vstack((r1.values, r2.values))
-    np.testing.assert_equal(criterion.memory.data[-2:], tmp)
-    np.testing.assert_equal(criterion.memory[-2:], tmp)
+    np.testing.assert_equal(memory.data[-2:], tmp)
+    np.testing.assert_equal(memory[-2:], tmp)
+
+    r3 = ValuationResult.from_random(5)
+    memory.update(r3.values)
+    tmp = np.vstack((r2.values, r3.values))
+    np.testing.assert_equal(memory.data[-2:], tmp)
+    np.testing.assert_equal(memory[-2:], tmp)

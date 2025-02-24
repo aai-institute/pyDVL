@@ -98,7 +98,7 @@ class Sample:
         if self.idx is None:
             raise ValueError("Cannot add idx to subset if idx is None.")
 
-        new_subset = np.array(self.subset.tolist() + [self.idx])
+        new_subset = np.append(self.subset, self.idx)
         return replace(self, subset=new_subset)
 
     def with_idx(self, idx: IndexT) -> Self:
