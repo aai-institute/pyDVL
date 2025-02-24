@@ -147,7 +147,7 @@ from __future__ import annotations
 import abc
 import logging
 from time import time
-from typing import Callable, Type, cast
+from typing import Callable, Generic, Type, TypeVar, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -541,6 +541,7 @@ class NoStopping(StoppingCriterion):
         super().__init__(modify_result=modify_result)
 
     def _check(self, result: ValuationResult) -> Status:
+        self._converged = np.full_like(result.values, False, dtype=bool)
         return Status.Pending
 
     def completion(self) -> float:
