@@ -154,16 +154,6 @@ class WarningsSuppressor:
         self.categories = categories
         self.flag_attribute = flag_attribute
 
-        # HACK: Crappy heuristic to verify that the function is an instance method
-        #  At decoration time it's not yet bound, so we must resort to this sort of crap
-        sig = inspect.signature(func)
-        params = list(sig.parameters)
-        if not params or params[0] != "self":
-            raise TypeError(
-                "suppress_warnings decorator can only be applied to instance methods "
-                "(first parameter must be 'self')."
-            )
-
     def __get__(
         self, instance: Any, owner: Optional[Type[Any]] = None
     ) -> Callable[..., Any]:
@@ -219,9 +209,24 @@ def suppress_warnings(
     """
 
     def wrapper(func: F) -> F:
-        return cast(
-            F, WarningsSuppressor(func, categories=categories, flag_attribute=flag)
-        )
+        # HACK: Crappy heuristic to check if the function is an unbound instance method
+        #  At decoration time it's not yet bound, so we must resort to this sort of crap
+        sig = inspect.signature(func)
+        params = list(sig.parameters)
+        if not params or params[0] != "self":
+
+            @functools.wraps(func)
+            def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
+                with warnings.catch_warnings():
+                    for category in categories:
+                        warnings.simplefilter("ignore", category=category)
+                    return func(*args, **kwargs)
+
+            return inner_wrapper
+        else:
+            return cast(
+                F, WarningsSuppressor(func, categories=categories, flag_attribute=flag)
+            )
 
     return wrapper
 

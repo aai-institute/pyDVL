@@ -83,13 +83,15 @@ def test_different_categories(
     assert warning_message in str(w.message)
 
 
-def test_invalid_decorator_usage():
-    # Applying the decorator to a function that is not an instance method should raise a TypeError.
-    with pytest.raises(TypeError):
+def test_nonmethod_decorator_usage():
+    @suppress_warnings(categories=(RuntimeWarning,))
+    def fun(x: int) -> float:
+        return np.log(x)
 
-        @suppress_warnings(categories=(UserWarning,))
-        def not_a_method(x: int) -> int:
-            return x
+    with warnings.catch_warnings(record=True) as record:
+        result = fun(0)
+        assert result == -np.inf
+        assert len(record) == 0
 
 
 class MultiWarningClass:
