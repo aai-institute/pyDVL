@@ -16,28 +16,27 @@ class WarningsClass:
     def __init__(self, show_warnings: bool = True):
         self.show_warnings = show_warnings
 
-    @suppress_warnings(categories=(UserWarning,))
+    @suppress_warnings(categories=(UserWarning,), flag="show_warnings")
     def method_warn(self) -> str:
         warnings.warn("User warning", UserWarning)
         return "done"
 
-    @suppress_warnings(categories=(DeprecationWarning,))
+    @suppress_warnings(categories=(DeprecationWarning,), flag="show_warnings")
     def method_deprecation(self) -> str:
         warnings.warn("Deprecated", DeprecationWarning)
         return "done"
 
-    @suppress_warnings(categories=(RuntimeWarning,))
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def division_by_zero(self) -> float:
         # This will trigger a RuntimeWarning from numpy.
         return np.log(0)
 
-    @suppress_warnings()
+    @suppress_warnings
     def runtime_warning_no_explicit_category(self) -> float:
         return np.log(0)
 
 
-def test_warning_shown(recwarn: Any):
-    # When show_warnings is True, the warning should be emitted.
+def test_warning_shown_method(recwarn: Any):
     obj = WarningsClass(show_warnings=True)
     result = obj.method_warn()
     assert result == "done"
@@ -48,13 +47,30 @@ def test_warning_shown(recwarn: Any):
     assert not recwarn  # Ensure no extra warnings were issued.
 
 
-def test_warning_suppressed():
-    # When show_warnings is False, the warning should be suppressed.
+def test_warning_suppressed_method():
     obj = WarningsClass(show_warnings=False)
     with warnings.catch_warnings(record=True) as record:
         result = obj.method_warn()
         assert result == "done"
         assert len(record) == 0
+
+
+def test_warning_suppressed_function(recwarn: Any):
+    def fun():
+        warnings.warn("User warning", UserWarning)
+
+    silent_fun = suppress_warnings(fun)
+    with warnings.catch_warnings(record=True) as record:
+        silent_fun()
+        assert len(record) == 0
+
+
+def test_warning_noflag_for_methods():
+    def fun():
+        warnings.warn("User warning", UserWarning)
+
+    with pytest.raises(ValueError):
+        suppress_warnings(fun, flag="whatever")
 
 
 def test_any_warning_suppressed():

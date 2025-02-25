@@ -131,31 +131,52 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
 
 P = ParamSpec("P")
 R = TypeVar("R", covariant=True)
-F = Callable[P, R]
+
+
+@overload
+def suppress_warnings(fun: Callable[P, R]) -> Callable[P, R]: ...
+
+
+@overload
+def suppress_warnings(
+    fun: None = None,
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
+
+@overload
+def suppress_warnings(
+    fun: Callable[P, R],
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Callable[P, R]: ...
 
 
 def suppress_warnings(
-    categories: Sequence[Type[Warning]] = (Warning,), flag: str = "show_warnings"
-) -> Callable[[F], F]:
+    fun: Callable[P, R] | None = None,
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Union[Callable[[Callable[P, R]], Callable[P, R]], Callable[P, R]]:
     """Decorator for class methods to conditionally suppress warnings.
 
     The decorated method will execute with warnings suppressed for the specified
-    categories unless the instance attribute (named by `flag`) evaluates to True.
+    categories. If the instance has the attribute named by `flag`, and it evaluates to
+    `True`, then suppression will be deactivated.
 
     ??? Example "Suppress all warnings"
         ```python
         class A:
-            @suppress_warnings()
+            @suppress_warnings
             def method(self, ...):
                 ...
         ```
     ??? Example "Suppress only `UserWarning`"
         ```python
         class A:
-            def __init__(self, show_warnings: bool):
-                # the decorator will look for this attribute by default
-                self.show_warnings = show_warnings
-
             @suppress_warnings(categories=(UserWarning,))
             def method(self, ...):
                 ...
@@ -163,49 +184,135 @@ def suppress_warnings(
     ??? Example "Configuring behaviour at runtime"
         ```python
         class A:
-            def __init__(self, warn_enabled: bool)
+            def __init__(self, warn_enabled: bool):
                 self.warn_enabled = warn_enabled
 
             @suppress_warnings(flag="warn_enabled")
             def method(self, ...):
-                ....
+                ...
         ```
 
     Args:
+        fun: Optional callable to decorate. If provided, the decorator is applied inline.
         categories: Sequence of warning categories to suppress.
-        flag: Name of the instance attribute to check for enabling warnings. If the
-            attribute evaluates to `True`, warnings will **not** be suppressed.
+        flag: Name of an instance attribute to check for enabling warnings. If the
+              attribute exists and evaluates to `True`, warnings will **not** be
+              suppressed.
 
+    Returns:
+        Either a decorator (if no function is provided) or the decorated callable.
     """
 
-    def decorator(fun: F) -> F:
-        # HACK: Crappy heuristic to verify that the function is a method
-        sig = inspect.signature(fun)
+    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
+        # Use a simple heuristic: if the first parameter is "self", assume it's a method.
+        sig = inspect.signature(fn)
         params = list(sig.parameters)
         if not params or params[0] != "self":
+            if flag:
+                raise ValueError("Cannot use suppress_warnings flag with non-methods")
 
-            @functools.wraps(fun)
-            def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
+            @functools.wraps(fn)
+            def wrapper(*args: Any, **kwargs: Any) -> R:
                 with warnings.catch_warnings():
                     for category in categories:
                         warnings.simplefilter("ignore", category=category)
-                    return fun(*args, **kwargs)
+                    return fn(*args, **kwargs)
 
-            return inner_wrapper
+            return cast(Callable[P, R], wrapper)
         else:
 
-            @functools.wraps(fun)
-            def wrapper(self, *args, **kwargs):
-                if getattr(self, flag, False):
-                    return fun(self, *args, **kwargs)
+            @functools.wraps(fn)
+            def wrapper(self, *args: Any, **kwargs: Any) -> R:
+                if flag and not hasattr(self, flag):
+                    raise AttributeError(
+                        f"Instance has no attribute '{flag}' for suppress_warnings"
+                    )
+                if flag and getattr(self, flag, False):
+                    return fn(self, *args, **kwargs)
                 with warnings.catch_warnings():
                     for category in categories:
                         warnings.simplefilter("ignore", category=category)
-                    return fun(self, *args, **kwargs)
+                    return fn(self, *args, **kwargs)
 
-            return wrapper
+            return cast(Callable[P, R], wrapper)
 
-    return decorator
+    if fun is None:
+        return decorator
+    return decorator(fun)
+
+
+# def suppress_warnings(
+#     categories: Sequence[Type[Warning]] = (Warning,), flag: str = "show_warnings"
+# ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+#     """Decorator for class methods to conditionally suppress warnings.
+#
+#     The decorated method will execute with warnings suppressed for the specified
+#     categories unless the instance attribute (named by `flag`) evaluates to True.
+#
+#     ??? Example "Suppress all warnings"
+#         ```python
+#         class A:
+#             @suppress_warnings()
+#             def method(self, ...):
+#                 ...
+#         ```
+#     ??? Example "Suppress only `UserWarning`"
+#         ```python
+#         class A:
+#             def __init__(self, show_warnings: bool):
+#                 # the decorator will look for this attribute by default
+#                 self.show_warnings = show_warnings
+#
+#             @suppress_warnings(categories=(UserWarning,))
+#             def method(self, ...):
+#                 ...
+#         ```
+#     ??? Example "Configuring behaviour at runtime"
+#         ```python
+#         class A:
+#             def __init__(self, warn_enabled: bool)
+#                 self.warn_enabled = warn_enabled
+#
+#             @suppress_warnings(flag="warn_enabled")
+#             def method(self, ...):
+#                 ....
+#         ```
+#
+#     Args:
+#         categories: Sequence of warning categories to suppress.
+#         flag: Name of the instance attribute to check for enabling warnings. If the
+#             attribute evaluates to `True`, warnings will **not** be suppressed.
+#
+#     """
+#
+#     def decorator(fun: Callable[P, R]) -> Callable[P, R]:
+#         # HACK: Crappy heuristic to check if the function is a method
+#         sig = inspect.signature(fun)
+#         params = list(sig.parameters)
+#         if not params or params[0] != "self":
+#
+#             @functools.wraps(fun)
+#             def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
+#                 with warnings.catch_warnings():
+#                     for category in categories:
+#                         warnings.simplefilter("ignore", category=category)
+#                     return fun(*args, **kwargs)
+#
+#             return inner_wrapper
+#         else:
+#
+#             @functools.wraps(fun)
+#             def wrapper(self, *args, **kwargs):
+#                 if getattr(self, flag, False):
+#                     return fun(self, *args, **kwargs)
+#                 with warnings.catch_warnings():
+#                     for category in categories:
+#                         warnings.simplefilter("ignore", category=category)
+#                     return fun(self, *args, **kwargs)
+#
+#             return wrapper
+#
+#     return decorator
 
 
 class TimedCallable(Protocol[P, R]):
