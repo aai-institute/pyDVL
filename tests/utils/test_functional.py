@@ -189,7 +189,7 @@ def test_timed_decorator_resets_time():
 
 @pytest.fixture
 def timed_function():
-    @timed()
+    @timed
     def fun(arg: int, kwarg: int = 0) -> int:
         time.sleep(0.01)
         return arg + kwarg
@@ -200,7 +200,7 @@ def timed_function():
 @pytest.fixture
 def timed_class():
     class TestClass:
-        @timed()
+        @timed  # no args form
         def method(self, arg: int) -> int:
             time.sleep(0.01)
             return arg * 2
@@ -210,7 +210,7 @@ def timed_class():
             time.sleep(0.01)
             return arg * 2
 
-        @timed()
+        @timed()  # explicit no args form
         def raises_exception(self):
             time.sleep(0.01)
             raise ValueError("Intentional error")

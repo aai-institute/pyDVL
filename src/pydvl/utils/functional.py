@@ -19,6 +19,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    overload,
 )
 
 from typing_extensions import ParamSpec
@@ -213,14 +214,56 @@ class TimedCallable(Protocol[P, R]):
     def __call__(self, *args, **kwargs) -> R: ...
 
 
+@overload
+def timed(fun: Callable[P, R]) -> TimedCallable[P, R]: ...
+
+
+@overload
 def timed(
-    *, accumulate: bool = False, logger: Logger | None = None
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    A decorator that measures the execution time of the wrapped function.
+    fun: None = None, *, accumulate: bool = False, logger: Logger | None = None
+) -> Callable[[Callable[P, R]], TimedCallable[P, R]]: ...
+
+
+@overload
+def timed(
+    fun: Callable[P, R], *, accumulate: bool = False, logger: Logger | None = None
+) -> TimedCallable[P, R]: ...
+
+
+def timed(
+    fun: Callable[P, R] | None = None,
+    *,
+    accumulate: bool = False,
+    logger: Logger | None = None,
+) -> Union[Callable[[Callable[P, R]], TimedCallable[P, R]], TimedCallable[P, R]]:
+    """A decorator that measures the execution time of the wrapped function.
     Optionally logs the time taken.
 
+    ??? Example "Decorator usage"
+        ```python
+        @timed
+        def fun(...):
+            ...
+
+        @timed(accumulate=True, logger=getLogger(__name__))
+        def fun(...):
+            ...
+        ```
+
+    ??? Example "Inline usage"
+        ```python
+        timed_fun = timed(fun)
+        fun(...)
+        print(timed_fun.execution_time)
+
+        accum_time = timed(fun, accumulate=True)
+        fun(...)
+        fun(...)
+        print(accum_time.execution_time)
+        ```
+
     Args:
+        fun:
         accumulate: If `True`, the total execution time will be accumulated across all
             calls.
         logger: If provided, the execution time will be logged at the logger's level.
@@ -231,26 +274,35 @@ def timed(
         either the time of the last execution or the accumulated total is stored.
     """
 
-    def decorator(func: Callable[P, R]) -> TimedCallable[P, R]:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> R:
-            start = time.perf_counter()
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                elapsed = time.perf_counter() - start
-                if accumulate:
-                    cast(TimedCallable, wrapper).execution_time += elapsed
-                else:
-                    cast(TimedCallable, wrapper).execution_time = elapsed
-                if logger is not None:
-                    logger.log(
-                        logger.level,
-                        f"{func.__module__}.{func.__qualname__} took {elapsed:.5f} seconds",
-                    )
-            return result
+    if fun is None:
 
-        cast(TimedCallable, wrapper).execution_time = 0.0
-        return cast(TimedCallable, wrapper)
+        def decorator(func: Callable[P, R]) -> TimedCallable[P, R]:
+            return timed(func, accumulate=accumulate, logger=logger)
 
-    return decorator
+        return decorator
+
+    assert fun is not None
+
+    @functools.wraps(fun)
+    def wrapper(*args, **kwargs) -> R:
+        start = time.perf_counter()
+        try:
+            assert fun is not None
+            result = fun(*args, **kwargs)
+        finally:
+            elapsed = time.perf_counter() - start
+            if accumulate:
+                cast(TimedCallable, wrapper).execution_time += elapsed
+            else:
+                cast(TimedCallable, wrapper).execution_time = elapsed
+            if logger is not None:
+                assert fun is not None
+                logger.log(
+                    logger.level,
+                    f"{fun.__module__}.{fun.__qualname__} took {elapsed:.5f} seconds",
+                )
+        return result
+
+    cast(TimedCallable, wrapper).execution_time = 0.0
+
+    return cast(TimedCallable[P, R], wrapper)
