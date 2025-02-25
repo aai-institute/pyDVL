@@ -69,6 +69,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.types import Sample, SampleT
 from pydvl.valuation.utility.base import UtilityBase
@@ -176,15 +177,21 @@ class DataUtilityLearning(UtilityBase[SampleT]):
     }
 
     def __init__(
-        self, utility: UtilityBase, training_budget: int, model: UtilityModel
+        self,
+        utility: UtilityBase,
+        training_budget: int,
+        model: UtilityModel,
+        show_warnings: bool = True,
     ) -> None:
         self.utility = utility
         self.training_budget = training_budget
         self.model = model
         self.n_predictions = 0
+        self.show_warnings = show_warnings
         self._is_fitted = False
         self._utility_samples: dict[Sample, float] = {}
 
+    @suppress_warnings(flag="show_warnings")
     def __call__(self, sample: Sample | None) -> float:
         if self.training_data is None:
             raise ValueError("No training data set for utility")
