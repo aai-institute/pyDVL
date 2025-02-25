@@ -195,7 +195,7 @@ class DeepSetUtilityModel(UtilityModel):
         lr_gamma: float = 0.1,
         batch_size: int = 64,
         num_epochs: int = 20,
-        device: torch.device = "cpu",
+        device: str = "cpu",
         dtype: torch.dtype = torch.float32,
         progress: dict[str, Any] | bool = False,
     ):
