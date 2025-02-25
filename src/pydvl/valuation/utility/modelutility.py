@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.types import BaseModel
 from pydvl.valuation.scorers import Scorer
 from pydvl.valuation.types import SampleT
@@ -173,6 +174,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             raise
         return score
 
+    @suppress_warnings(flag="show_warnings")
     def _utility(self, sample: SampleT) -> float:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
@@ -191,19 +193,16 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
         x_train, y_train = self.training_data.data(sample.subset)
 
-        with warnings.catch_warnings():
-            if not self.show_warnings:
-                warnings.simplefilter("ignore")
-            try:
-                model = self._maybe_clone_model(self.model, self.clone_before_fit)
-                model.fit(x_train, y_train)
-                score = self._compute_score(model)
-                return score
-            except Exception as e:
-                if self.catch_errors:
-                    warnings.warn(str(e), RuntimeWarning)
-                    return self.scorer.default
-                raise
+        try:
+            model = self._maybe_clone_model(self.model, self.clone_before_fit)
+            model.fit(x_train, y_train)
+            score = self._compute_score(model)
+            return score
+        except Exception as e:
+            if self.catch_errors:
+                warnings.warn(str(e), RuntimeWarning)
+                return self.scorer.default
+            raise
 
     @staticmethod
     def _maybe_clone_model(model: ModelT, do_clone: bool) -> ModelT:
