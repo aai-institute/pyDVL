@@ -671,13 +671,13 @@ class RollingMemory(Generic[DT]):
         if n_steps < 1:
             raise ValueError("n_steps must be at least 1")
         self.n_steps = n_steps
-        self._n_updates = 0
+        self._count = 0
         self._default = cast(DT, default)
         self._data: NDArray[DT] = np.full(0, default, dtype=type(default))
 
     @property
-    def n_updates(self) -> int:
-        return self._n_updates
+    def count(self) -> int:
+        return self._count
 
     @property
     def data(self) -> NDArray[DT]:
@@ -697,12 +697,12 @@ class RollingMemory(Generic[DT]):
         """
         if len(self._data) == 0:
             self._data = np.full(
-                (len(values), self.n_steps + 1),
+                (len(values), self.n_steps),
                 self._default,
                 dtype=type(self._default),
             )
         self._data = np.concatenate([self._data[:, 1:], values.reshape(-1, 1)], axis=1)
-        self._n_updates += 1
+        self._count += 1
         return self
 
     def __getitem__(self, item):
@@ -734,8 +734,8 @@ class HistoryDeviation(StoppingCriterion):
         but we do not recommend using it in practice.
 
     Args:
-        n_steps: Checkpoint values every so many updates and use these saved
-            values to compare.
+        n_steps: Compare values after so many steps. A step is one evaluation of the
+            criterion, which happens once per batch.
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula).
         pin_converged: If `True`, once an index has converged, it is pinned
     """
@@ -751,24 +751,28 @@ class HistoryDeviation(StoppingCriterion):
         if rtol <= 0 or rtol >= 1:
             raise ValueError("rtol must be in (0, 1)")
 
-        self.memory = RollingMemory(n_steps, default=np.inf, dtype=np.float64)
+        self.memory = RollingMemory(n_steps + 1, default=np.inf, dtype=np.float64)
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
 
     def _check(self, r: ValuationResult) -> Status:
         if r.values.size == 0:
             return Status.Pending
-        self.memory.update(r.values)
         if len(self._converged) == 0:
             self._converged = np.full(len(r), False)
+        self.memory.update(r.values)
+        if self.memory.count < self.memory.n_steps:  # Memory not full yet
+            return Status.Pending
 
         # Look at indices that have been updated more than n_steps times
-        ii = np.where(r.counts > self.memory.n_steps)
-        if len(ii) > 0:
+        ii = r.counts > self.memory.n_steps
+        if sum(ii) > 0:
             curr = self.memory[-1]
             saved = self.memory[0]
             diffs = np.abs(curr[ii] - saved[ii])
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
+            # if np.any(~np.isfinite(quots)):
+            #     warnings.warn("HistoryDeviation memory contains non-finite entries")
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if len(quots) > 0 and np.mean(quots) < self.rtol:
@@ -837,41 +841,42 @@ class RankCorrelation(StoppingCriterion):
         self.rtol = rtol
         self.burn_in = burn_in
         self.fraction = fraction
-        self.memory = RollingMemory(n_steps=1, default=np.nan, dtype=np.float64)
-        self.count_memory = RollingMemory(n_steps=1, default=0, dtype=np.int_)
+        self.memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
+        self.count_memory = RollingMemory(n_steps=2, default=0, dtype=np.int_)
         self._corr = np.nan
         self._completion = 0.0
 
     def _check(self, r: ValuationResult) -> Status:
-        if len(self.memory) == 0:
+        # The first update is typically of constant values, so that the Spearman
+        # correlation is undefined. We need to wait for the second update.
+        if self.memory.count < 1:
             self.memory.update(r.values)
             self.count_memory.update(r.counts)
             self._converged = np.full(len(r), False)
             return Status.Pending
 
-        burnt = np.asarray(r.counts > self.burn_in)
-        valid_updated = np.asarray(r.counts[burnt] - self.count_memory[-1][burnt] > 0)
+        self.count_memory.update(r.counts)
+        self.memory.update(r.values)
+
+        burnt = np.asarray(self.count_memory[-1] > self.burn_in)
+        valid_updated = np.asarray(
+            self.count_memory[-1][burnt] - self.count_memory[0][burnt] > 0
+        )
         if valid_updated.sum() / len(r) >= self.fraction:
-            # The first update is typically of constant values, so that the Spearman
-            # correlation is undefined
-            if self.memory.n_updates > 1:
-                corr = spearmanr(
-                    self.memory[-1][valid_updated],  # type: ignore
-                    r.values[valid_updated],  # type: ignore
-                )[0]
-                self._update_completion(corr)
-                if np.isclose(corr, self._corr, rtol=self.rtol):
-                    self._converged = np.full(len(r), True)
-                    logger.debug(
-                        f"RankCorrelation has converged with {corr=} for "
-                        f"{valid_updated.sum()} values in iteration {self._count}"
-                    )
-                    return Status.Converged
+            corr = spearmanr(
+                self.memory[0][valid_updated],  # type: ignore
+                self.memory[-1][valid_updated],  # type: ignore
+            )[0]
+            self._update_completion(corr)
+            if np.isclose(corr, self._corr, rtol=self.rtol):
+                self._converged = np.full(len(r), True)
+                logger.debug(
+                    f"RankCorrelation has converged with {corr=} for "
+                    f"{valid_updated.sum()} values in iteration {self._count}"
+                )
+                return Status.Converged
 
-                self._corr = corr
-
-            self.count_memory.update(r.counts)
-            self.memory.update(r.values)
+            self._corr = corr
 
         return Status.Pending
 

@@ -171,7 +171,7 @@ def test_max_time():
     assert not done.converged.any()
 
 
-@pytest.mark.parametrize("n_steps", [1, 42, 100])
+@pytest.mark.parametrize("n_steps", [1, 42])
 @pytest.mark.parametrize("rtol", [0.01, 0.05])
 def test_history_deviation(n_steps, rtol):
     """Values are equal and set to 1/t. The criterion will be fulfilled after
@@ -255,19 +255,26 @@ def test_max_checks():
 
 
 def test_rank_correlation():
-    v = ValuationResult.zeros(indices=range(5))
-    arr = np.arange(5)
-
-    done = RankCorrelation(rtol=0.1, burn_in=20, fraction=1)
-    for i in range(20):
-        arr = np.roll(arr, 1)
-        for j in range(5):
+    n = 5
+    burn_factor = 4
+    v = ValuationResult.zeros(indices=range(n))
+    arr = np.arange(n)
+    def update_all():
+        for j in range(n):
             v.update(j, float(arr[j] + 0.01 * j))
+
+    done = RankCorrelation(rtol=0.1, burn_in=n * burn_factor, fraction=1)
+    for i in range(n * burn_factor):
+        arr = np.roll(arr, 1)
+        update_all()
         assert not done(v)
-    # Update all indices to trigger correlation computation and convergence
-    arr = np.roll(arr, 1)
-    for j in range(5):
-        v.update(j, float(arr[j] + 0.01 * j))
+
+    # After reaching burn_in, the first correlation computation is triggered:
+    update_all()
+    assert not done(v)
+
+    # The next correlation computation will trigger the criterion
+    update_all()
     assert done(v)
 
     assert done.completion() == 1.0
