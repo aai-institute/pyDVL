@@ -156,6 +156,7 @@ from typing_extensions import Self
 
 from pydvl.utils.status import Status
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers.base import IndexSampler
 
 __all__ = [
     "AbsoluteStandardError",
@@ -535,17 +536,33 @@ class MaxUpdates(StoppingCriterion):
 
 
 class NoStopping(StoppingCriterion):
-    """Keep running forever."""
+    """Keep running forever or until sampling stops.
 
-    def __init__(self, modify_result: bool = True):
+    If a sampler instance is passed, and it is a finite sampler, its counter will be
+    used to update completion status.
+
+    Args:
+        sampler: A sampler instance to use for completion status.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call
+    """
+
+    def __init__(self, sampler: IndexSampler | None = None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
+        self.sampler = sampler
 
     def _check(self, result: ValuationResult) -> Status:
         self._converged = np.full_like(result.values, False, dtype=bool)
         return Status.Pending
 
     def completion(self) -> float:
-        return 0.0
+        if self.sampler is None:
+            return 0.0
+        try:
+            return self.sampler.n_samples / len(self.sampler)
+        except TypeError:  # Sampler has no length
+            return 0.0
 
     def __str__(self) -> str:
         return "NoStopping()"
