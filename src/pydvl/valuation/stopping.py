@@ -1,21 +1,27 @@
 """
 Stopping criteria for value computations.
 
-This module provides a basic set of stopping criteria, like
+This module provides a basic set of stopping criteria to be used with valuation
+algorithms, in particular all
+[semi-values][pydvl.valuation.methods.semivalue.SemivalueValuation]. Common examples are
 [MinUpdates][pydvl.valuation.stopping.MinUpdates],
 [MaxTime][pydvl.valuation.stopping.MaxTime], or
-[HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation] among others. These
-can behave in different ways depending on the context. For example,
-[MaxUpdates][pydvl.valuation.stopping.MaxUpdates] limits
-the number of updates to values, which depending on the algorithm may mean a
-different number of utility evaluations or imply other computations like solving
-a linear or quadratic program.
+[HistoryDeviation][pydvl.valuation.stopping.HistoryDeviation].
+
+Stopping criteria can behave in different ways depending on the context. For example,
+[MaxUpdates][pydvl.valuation.stopping.MaxUpdates] limits the number of updates to
+values, which depending on the algorithm may mean a different number of utility
+evaluations or imply other computations like solving a linear or quadratic program.
+In the case of [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation],
+the criteria are evaluated once per batch, which might lead to different behavior
+depending on the batch size (e.g. for certain batch_sizes it might happen that the
+number of updates to values after convergence is not exactly was required, since
+multiple updates might happen at once).
 
 Stopping criteria are callables that are evaluated on a
 [ValuationResult][pydvl.valuation.result.ValuationResult] and return a
 [Status][pydvl.utils.status.Status] object. They can be combined using boolean
 operators.
-
 
 ## Combining stopping criteria
 
@@ -56,6 +62,26 @@ check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
 `skip_converged=True` this check can still take less time than the first one,
 despite requiring more iterations for some indices.
 
+??? Tip "Stoppig criterion for finite samplers"
+    Using a finite sampler naturally defines when the valuation algorithm terminates.
+    However, in order to properly report progress, we need to use a stopping criterion
+    that keeps track of the number of iterations. In this case, one can use
+    [NoStopping][pydvl.valuation.stopping.NoStopping] with the sampler as an argument.
+    This quirk is due to progress reported depending on the
+    [completion][pydvl.valuation.stopping.StoppingCriterion.completion] attribute of
+    a criterion. Here's how it's done:
+
+    ```python
+    from pydvl.valuation import ShapleyValuation, NoStopping
+
+    sampler = DeterministicUniformSampler()
+    stopping = NoStopping(sampler)
+    valuation = ShapleyValuation(
+        utility=utility, sampler=sampler, is_done=stopping, progress=True
+    )
+    with parallel_config(n_jobs=4):
+        valuation.fit(data)
+    ```
 
 ## Choosing a stopping criterion
 
@@ -83,9 +109,8 @@ as described above for semi-values.
     stopping = RankCorrelation(rtol=1e-2, burn_in=32) | MinUpdates(1000)
     valuation = DataBanzhafValuation(utility=utility, sampler=sampler, is_done=stopping)
     with parallel_config(n_jobs=4):
-        valuation.fit(trainig_data)
+        valuation.fit(training_data)
     result = valuation.values()
-
     ```
     This will compute the Banzhaf semivalues for `utility` until either the change in
     Spearman rank correlation between updates is below `1e-2` or `1000` updates have
