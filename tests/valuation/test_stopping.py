@@ -1,10 +1,12 @@
 import math
+from itertools import islice
 from time import sleep
 
 import numpy as np
 import pytest
 
 from pydvl.utils import Status
+from pydvl.valuation import IndexSampler
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.stopping import (
     AbsoluteStandardError,
@@ -13,6 +15,7 @@ from pydvl.valuation.stopping import (
     MaxTime,
     MaxUpdates,
     MinUpdates,
+    NoStopping,
     RankCorrelation,
     RollingMemory,
     StoppingCriterion,
@@ -259,6 +262,7 @@ def test_rank_correlation():
     burn_factor = 4
     v = ValuationResult.zeros(indices=range(n))
     arr = np.arange(n)
+
     def update_all():
         for j in range(n):
             v.update(j, float(arr[j] + 0.01 * j))
@@ -331,3 +335,88 @@ def test_memory():
     tmp = np.vstack((r2.values, r3.values))
     np.testing.assert_equal(memory.data[-2:], tmp)
     np.testing.assert_equal(memory[-2:], tmp)
+
+
+def test_no_stopping_without_sampler():
+    result = ValuationResult.from_random(5)
+    no_stop = NoStopping()
+    status = no_stop(result)
+    assert status == Status.Pending
+    assert no_stop.completion() == 0.0
+    np.testing.assert_equal(no_stop.converged, False)
+    assert str(no_stop) == "NoStopping()"
+
+
+def test_no_stopping_with_finite_sampler():
+    class DummyFiniteSampler(IndexSampler):
+        def __init__(self, total_samples: int = 10, batch_size: int = 1):
+            super().__init__(batch_size=batch_size)
+            self.total_samples = total_samples
+
+        def sample_limit(self, indices):
+            return self.total_samples
+
+        def _generate(self, indices):
+            for i in range(self.total_samples):
+                yield i, set()
+
+        def log_weight(self, n, subset_len):
+            return 0.0
+
+        def make_strategy(self, utility, log_coefficient=None):
+            return None
+
+    r = ValuationResult.from_random(5)
+    total_samples = 10
+    batch_size = 3
+    sampler = DummyFiniteSampler(total_samples, batch_size)
+    no_stop = NoStopping(sampler=sampler)
+    # Manually iterate over batches to observe sampler progress.
+    gen = sampler.generate_batches(np.arange(1))
+    total_seen = 0
+    for _ in range(total_samples // batch_size):
+        batch = list(next(gen))
+        assert len(batch) == batch_size
+        total_seen += len(batch)
+        comp = no_stop.completion()
+        np.testing.assert_allclose(comp, total_seen / sampler.total_samples)
+        # Calling the criterion should always return Pending
+        # and mark all indices as not converged.
+        status = no_stop(r)
+        assert status == Status.Pending
+        np.testing.assert_equal(no_stop.converged, False)
+
+    # Final check must trigger convergence
+    _ = next(gen)
+    assert no_stop(r) == Status.Converged
+    np.testing.assert_equal(no_stop.converged, True)
+    assert sampler.n_samples == len(sampler)
+    np.testing.assert_allclose(no_stop.completion(), 1.0)
+
+
+def test_no_stopping_infinite_sampler():
+    class DummyInfiniteSampler(IndexSampler):
+        def sample_limit(self, indices):
+            return None  # Indicates an infinite sampler.
+
+        def _generate(self, indices):
+            while True:
+                yield (0, set())
+
+        def log_weight(self, n, subset_len):
+            return 0.0
+
+        def make_strategy(self, utility, log_coefficient=None):
+            return None
+
+    sampler = DummyInfiniteSampler(batch_size=1)
+    no_stop = NoStopping(sampler=sampler)
+
+    batches = list(islice(sampler.generate_batches(np.array([0])), 10))
+    assert sampler.n_samples == len(batches)
+
+    # Verify that calling the criterion still returns Pending and marks no index as converged.
+    result = ValuationResult.from_random(5)
+    status = no_stop(result)
+    assert status == Status.Pending
+    np.testing.assert_equal(no_stop.converged, False)

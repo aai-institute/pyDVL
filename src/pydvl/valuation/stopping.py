@@ -554,6 +554,13 @@ class NoStopping(StoppingCriterion):
 
     def _check(self, result: ValuationResult) -> Status:
         self._converged = np.full_like(result.values, False, dtype=bool)
+        if self.sampler is not None:
+            try:
+                if self.sampler.n_samples >= len(self.sampler):
+                    self._converged = np.full_like(result.values, True, dtype=bool)
+                    return Status.Converged
+            except TypeError:  # Sampler has no len()
+                pass
         return Status.Pending
 
     def completion(self) -> float:
