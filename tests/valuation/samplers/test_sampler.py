@@ -398,7 +398,10 @@ def test_proper(sampler_cls, sampler_kwargs: dict, indices: NDArray[np.int_], se
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
-def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
+@pytest.mark.parametrize("batch_size, n_batches", [(1, 5), (2, 3)])
+def test_sample_counter(
+    sampler_cls, sampler_kwargs: dict, batch_size: int, n_batches: int, seed: int
+):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
@@ -406,17 +409,13 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
     """
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
     indices = np.arange(4)
-    max_iterations = 2 ** (len(indices) + 1)
-    samples = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations,
-            sampler.generate_batches(indices),
-        )
-    )
-    assert sampler.n_samples == len(list(flatten(samples)))
+    batches = list(islice(sampler.generate_batches(indices), n_batches))
+    assert sampler.n_samples == len(list(flatten(batches)))
 
 
-@pytest.mark.parametrize("indices", [np.array([]), np.arange(3)])
+@pytest.mark.parametrize(
+    "indices", [np.array([]), np.arange(3)], ids=["no_indices", "3_indices"]
+)
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs, expected_length",
     [
@@ -477,6 +476,16 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
             lambda n: n * 13,
         ),
     ],
+    ids=[
+        "DeterministicUniformSampler",
+        "DeterministicUniformSampler-FiniteNoIndexIteration",
+        "DeterministicPermutationSampler",
+        "LOOSampler",
+        "OwenSampler-Grid4-Inner2",
+        "AntitheticOwenSampler-Grid4-Sequential",
+        "StratifiedSampler-Harmonic32",
+        "StratifiedSampler-PowerLaw13",
+    ],
 )
 def test_length_for_finite_samplers(
     indices, sampler_cls, sampler_kwargs, expected_length
@@ -484,10 +493,15 @@ def test_length_for_finite_samplers(
     sampler = recursive_make(sampler_cls, sampler_kwargs)
     assert sampler.sample_limit(indices) == expected_length(len(indices))
     assert len(list(sampler.generate_batches(indices))) == expected_length(len(indices))
+    assert len(sampler) == expected_length(len(indices))
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
-def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs, seed):
+@pytest.mark.parametrize("indices", [np.empty(0), np.arange(3)])
+@pytest.mark.parametrize("batch_size", [1, 2])
+def test_length_of_infinite_samplers(
+    sampler_cls, sampler_kwargs, indices: NDArray, batch_size: int, seed: int
+):
     """All infinite samplers are random, but not all random are infinite..."""
     if sampler_cls in (
         OwenSampler,
@@ -495,17 +509,16 @@ def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs, seed):
         StratifiedSampler,
     ):
         pytest.skip(f"{sampler_cls.__name__} is a finite sampler")
-    indices = np.arange(4)
-    max_iter = 2 ** len(indices) * 10
+    sampler_kwargs |= {"batch_size": batch_size}
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
+    n_batches = 2 ** (len(indices) + 1)
     assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
-    samples = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iter, sampler.generate_batches(indices)
-        )
-    )
-    assert len(samples) == max_iter
+    batches = list(islice(sampler.generate_batches(indices), n_batches))
+    if len(indices) > 0:
+        assert len(list(flatten(batches))) == n_batches * batch_size
+    with pytest.raises(TypeError):
+        len(sampler)
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers(proper=True))

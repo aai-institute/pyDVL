@@ -98,6 +98,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         self._n_samples = 0
         self._interrupted = False
         self._skip_indices = np.empty(0, dtype=bool)
+        self._len: int | None = None
 
     @property
     def n_samples(self) -> int:
@@ -139,11 +140,24 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}"
 
+    def __len__(self) -> int:
+        """Returns the length of the current sample generation in generate_batches.
+
+        Raises:
+            `TypeError` if the sampler is infinite or
+                [generate_batches][pydvl.valuation.samplers.IndexSampler.generate_batches]
+                has not been called yet.
+        """
+        if self._len is None:
+            raise TypeError(f"This {self.__class__.__name__} has no length")
+        return self._len
+
     def from_data(self, data: Dataset) -> BatchGenerator:
         return self.generate_batches(data.indices)
 
     def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
+        self._len = self.sample_limit(indices)
 
         # Create an empty generator if the indices are empty: `return` acts like a
         # `break`, and produces an empty generator.
@@ -153,8 +167,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         self._interrupted = False
         self._n_samples = 0
         for batch in chunked(self._generate(indices), self.batch_size):
-            yield batch
             self._n_samples += len(batch)
+            yield batch
             if self._interrupted:
                 break
 
