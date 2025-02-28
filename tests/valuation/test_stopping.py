@@ -46,12 +46,12 @@ def test_stopping_criterion_composition():
 
     class AlwaysPending(StoppingCriterion):
         def _check(self, result: ValuationResult) -> Status:
-            self._converged = np.full_like(result.values, False, dtype=bool)
+            # self._converged is set to False by __call__
             return p
 
     class AlwaysFailed(StoppingCriterion):
         def _check(self, result: ValuationResult) -> Status:
-            self._converged = np.full_like(result.values, False, dtype=bool)
+            # self._converged is set to False by __call__
             return f
 
     v = ValuationResult.from_random(5)
@@ -83,8 +83,8 @@ def test_stopping_criterion_composition():
     assert not ac_and_ap.converged.all()
     assert ac_or_ap.converged.all()
 
-    ac_and_ac_and_ac = AlwaysConverged() & AlwaysConverged() & AlwaysConverged()
-    ap_and_ap_or_ap = AlwaysPending() & AlwaysPending() | AlwaysPending()
+    ac_and_ac_and_ac = AlwaysConverged() & (AlwaysConverged() & AlwaysConverged())
+    ap_and_ap_or_ap = AlwaysPending() & (AlwaysPending() | AlwaysPending())
 
     assert ac_and_ac_and_ac(v) == c
     assert ap_and_ap_or_ap(v) == p
@@ -105,24 +105,26 @@ def test_count_update_composite_criteria():
         def _check(self, result: ValuationResult) -> Status:
             return Status.Pending
 
+    r = ValuationResult.from_random(5)
+
     c1 = P()
     c2 = P()
 
     c = c1 & c2
     assert c._count == 0
-    assert c(ValuationResult.empty()) == Status.Pending
+    assert c(r) == Status.Pending
     assert c._count == 1
     assert c1._count == c2._count == 1
 
     c = c1 | c2
     assert c._count == 0
-    assert c(ValuationResult.empty()) == Status.Pending
+    assert c(r) == Status.Pending
     assert c._count == 1
     assert c1._count == c2._count == 2
 
     c = ~c1
     assert c._count == 0
-    assert c(ValuationResult.empty()) == Status.Converged
+    assert c(r) == Status.Converged
     assert c._count == 1
     assert c1._count == 3
 

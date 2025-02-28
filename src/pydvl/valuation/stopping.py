@@ -302,8 +302,9 @@ class StoppingCriterion(abc.ABC):
                 "At least one iteration finished but no results where generated. "
                 "Please check that your scorer and utility return valid numbers."
             )
-
         self._count += 1
+        if self._converged.size == 0:
+            self._converged = np.full_like(result.indices, False, dtype=bool)
         status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
@@ -383,9 +384,26 @@ def _make_criterion(
         def criteria(self) -> list[StoppingCriterion]:
             return self._criteria
 
-        def __call__(self, result: ValuationResult) -> Status:
+        def increase_criteria_count(self):
             for criterion in self._criteria:
-                criterion._count += 1
+                if hasattr(criterion, "_criteria"):
+                    cast(WrappedCriterion, criterion).increase_criteria_count()
+                else:
+                    criterion._count += 1
+
+        def init_criteria_converged(self, result: ValuationResult):
+            for criterion in self._criteria:
+                if hasattr(criterion, "_criteria"):
+                    cast(WrappedCriterion, criterion).init_criteria_converged(result)
+                else:
+                    if criterion._converged.size == 0:
+                        criterion._converged = np.full_like(
+                            result.indices, False, dtype=bool
+                        )
+
+        def __call__(self, result: ValuationResult) -> Status:
+            self.increase_criteria_count()
+            self.init_criteria_converged(result)
             return super().__call__(result)
 
         def _check(self, result: ValuationResult) -> Status:
@@ -491,7 +509,7 @@ class MaxChecks(StoppingCriterion):
 
     def _check(self, result: ValuationResult) -> Status:
         if self._count >= self.n_checks:
-            self._converged = np.ones_like(result.values, dtype=bool)
+            self._converged = np.full_like(result.indices, True, dtype=bool)
             return Status.Converged
         return Status.Pending
 
@@ -578,11 +596,10 @@ class NoStopping(StoppingCriterion):
         self.sampler = sampler
 
     def _check(self, result: ValuationResult) -> Status:
-        self._converged = np.full_like(result.values, False, dtype=bool)
         if self.sampler is not None:
             try:
                 if self.sampler.n_samples >= len(self.sampler):
-                    self._converged = np.full_like(result.values, True, dtype=bool)
+                    self._converged = np.full_like(result.indices, True, dtype=bool)
                     return Status.Converged
             except TypeError:  # Sampler has no len()
                 pass
@@ -672,8 +689,6 @@ class MaxTime(StoppingCriterion):
         self.start = time()
 
     def _check(self, result: ValuationResult) -> Status:
-        if self._converged is None:
-            self._converged = np.full(result.values.shape, False)
         if time() > self.start + self.max_seconds:
             self._converged.fill(True)
             return Status.Converged
@@ -807,8 +822,6 @@ class HistoryDeviation(StoppingCriterion):
     def _check(self, r: ValuationResult) -> Status:
         if r.values.size == 0:
             return Status.Pending
-        if len(self._converged) == 0:
-            self._converged = np.full(len(r), False)
         self.memory.update(r.values)
         if self.memory.count < self.memory.n_steps:  # Memory not full yet
             return Status.Pending
@@ -896,12 +909,14 @@ class RankCorrelation(StoppingCriterion):
         self._completion = 0.0
 
     def _check(self, r: ValuationResult) -> Status:
+        if r.values.size == 0:
+            return Status.Pending
         # The first update is typically of constant values, so that the Spearman
         # correlation is undefined. We need to wait for the second update.
         if self.memory.count < 1:
             self.memory.update(r.values)
             self.count_memory.update(r.counts)
-            self._converged = np.full(len(r), False)
+            self._converged = np.full_like(r.indices, False, dtype=bool)
             return Status.Pending
 
         self.count_memory.update(r.counts)
