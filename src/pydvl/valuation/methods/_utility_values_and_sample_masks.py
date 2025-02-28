@@ -72,7 +72,7 @@ def compute_utility_values_and_sample_masks(
     generator = cast(
         BatchGenerator,
         takewhile(
-            lambda _: sampler.n_samples < n_samples,
+            lambda _: sampler.n_samples <= n_samples,
             sampler.generate_batches(indices),
         ),
     )
