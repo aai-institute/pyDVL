@@ -161,12 +161,9 @@ class ClasswiseShapleyValuation(Valuation):
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
                         self.result = updater(evaluation)
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            break
-
                     if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
                         break
 
         if self.normalize_values:

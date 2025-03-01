@@ -138,12 +138,10 @@ class SemivalueValuation(Valuation):
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
                         self.result = updater(update)
-                        if self.skip_converged:
-                            self.sampler.skip_indices = data.indices[
-                                self.is_done.converged
-                            ]
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            return self
+                    if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
+                        return self
+                    if self.skip_converged:
+                        self.sampler.skip_indices = data.indices[self.is_done.converged]
         return self
