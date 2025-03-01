@@ -171,6 +171,6 @@ def test_deepset_set_device(device):
         phi_output_dim=6,
         rho_hidden_dim=4,
         use_embedding=False,
-    ).to(device="cuda")
+    ).to(device=device)
 
-    model.forward(torch.zeros((1, 1, 10), device="cuda"))
+    model.forward(torch.zeros((1, 1, 10), device=device))
