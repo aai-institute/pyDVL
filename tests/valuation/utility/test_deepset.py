@@ -20,6 +20,17 @@ class DummyDataset:
         return self._data
 
 
+@pytest.fixture(scope="session")
+def device(request):
+    import torch
+
+    use_cuda = request.config.getoption("--with-cuda")
+    if use_cuda and torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cpu")
+
+
 @pytest.mark.parametrize(
     "use_embedding, input_shape, extra_args",
     [
@@ -119,7 +130,6 @@ def test_setdatasetraw_getitem(dummy_dataset):
     assert target.item() == 1.0
 
 
-@pytest.mark.parametrize("device", ["cpu", "cuda"])
 def test_setdatasetraw_device(dummy_dataset, device):
     sample1 = Sample(idx=None, subset=np.array([0, 1]))
     sample2 = Sample(idx=None, subset=np.array([2, 3, 4]))
@@ -151,17 +161,6 @@ def test_deepset_utility_model_predict():
     assert isinstance(predictions, np.ndarray)
     assert predictions.shape == (len(test_samples), 1)
     assert predictions.dtype == np.float32
-
-
-@pytest.fixture(scope="session")
-def device(request):
-    import torch
-
-    use_cuda = request.config.getoption("--with-cuda")
-    if use_cuda and torch.cuda.is_available():
-        return torch.device("cuda")
-    else:
-        return torch.device("cpu")
 
 
 def test_deepset_set_device(device):
