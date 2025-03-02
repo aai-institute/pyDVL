@@ -3588,6 +3588,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../deepset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deepset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../knn/" class="md-nav__link">
         
   
@@ -3655,9 +3676,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning--usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pydvl.valuation.utility.learning--references" class="md-nav__link">
     <span class="md-ellipsis">
       References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning.UtilityModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UtilityModel
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning.IndicatorUtilityModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;IndicatorUtilityModel
     </span>
   </a>
   
@@ -4505,9 +4553,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning--usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pydvl.valuation.utility.learning--references" class="md-nav__link">
     <span class="md-ellipsis">
       References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning.UtilityModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;UtilityModel
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.valuation.utility.learning.IndicatorUtilityModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;IndicatorUtilityModel
     </span>
   </a>
   
@@ -4578,11 +4653,53 @@
 
         <p>This module implements <strong>Data Utility Learning</strong> (Wang et al., 2022)<sup><a
 href="#wang_improving_2022">1</a></sup>.</p>
+<p>Data Utility learning accelerates data valuation by learning the utility function from a
+small number of subsets. The process is as follows:</p>
+<ol>
+<li>Collect a small number of so-called <em>utility samples</em> (subsets and their utility
+   values) during the normal course of data valuation.</li>
+<li>Fit a model to the utility samples. The model is trained to predict the utility of
+   new subsets.</li>
+<li>Continue the valuation process, sampling subsets, but instead of evaluating the
+   original utility function, use the learned model to predict it.</li>
+</ol>
+<h3 id="pydvl.valuation.utility.learning--usage">Usage<a class="headerlink" href="#pydvl.valuation.utility.learning--usage" title="Permanent link">&para;</a></h3>
+<p>There are three components (sorry for the confusing naming!):</p>
+<ol>
+<li>The original utility object to learn, typically (but not necessarily) a
+   <a class="autorefs autorefs-internal" href="../#pydvl.valuation.utility.ModelUtility">ModelUtility</a> object which will be expensive
+   to evaluate.</li>
+<li>A <a class="autorefs autorefs-internal" href="#pydvl.valuation.utility.learning.UtilityModel">UtilityModel</a> which will be trained
+   to predict the utility of subsets.</li>
+<li>The <a class="autorefs autorefs-internal" href="#pydvl.valuation.utility.learning.DataUtilityLearning">DataUtilityLearning</a>
+   object.</li>
+</ol>
+<p>Assuming you have some data valuation algorithm and your <code>Utility</code> object:</p>
+<ol>
+<li>Pick the actual machine learning model to use to learn the utility. In most cases
+   the utility takes continuous values, so this should be any regression model, such as
+   a linear regression or a neural network. The input to it will be sets of indices, so
+   one has to encode the data accordingly. For example, an indicator vector of the set
+   as done in Wang et al., (2022)<sup><a href="#wang_improving_2022">1</a></sup>, with
+   <a class="autorefs autorefs-internal" href="#pydvl.valuation.utility.learning.IndicatorUtilityModel">IndicatorUtilityModel</a>. This
+   wrapper accepts any machine learning model for the actual fitting. An alternative way
+   to encode the data is to use a deep learning model, such as
+   <a class="autorefs autorefs-internal" href="../deepset/#pydvl.valuation.utility.deepset.DeepSet">DeepSet</a>, which is a simple permutation
+   invariant architecture to learn embeddings for sets of points.</li>
+<li>Wrap your <code>Utility</code> object within a
+   <a class="autorefs autorefs-internal" href="#pydvl.valuation.utility.learning.DataUtilityLearning">DataUtilityLearning</a> object
+   and give it the object constructed in the previous point</li>
+<li>Use this <code>DataUtilityLearning</code> object in your data valuation algorithm instead of the
+   original <code>Utility</code> object.</li>
+</ol>
 <div class="admonition fixme">
 <p class="admonition-title">Parallel processing not supported</p>
-<p>As of 0.9.0, this method does not support parallel processing. DataUtilityLearning
+<p>As of 0.9.0, this method does not support parallel processing. <code>DataUtilityLearning</code>
 would have to collect all utility samples in a single process before fitting the
-model.</p>
+model. Gathering utility samples via custom evaluation strategies and result
+updaters might be possible, but some IPC mechanism would be required to send the
+fitted utility model to the workers, and this has to be implemented manually and
+made to support all backends.</p>
 </div>
 <h3 id="pydvl.valuation.utility.learning--references">References<a class="headerlink" href="#pydvl.valuation.utility.learning--references" title="Permanent link">&para;</a></h3>
 <div class="footnote">
@@ -4616,14 +4733,125 @@ learning</a>. arXiv preprint arXiv:2107.06336.&#160;<a class="footnote-backref" 
 
 
 
+<h2 id="pydvl.valuation.utility.learning.UtilityModel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">UtilityModel</span>
+
+
+<a href="#pydvl.valuation.utility.learning.UtilityModel" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3/library/abc.html#abc.ABC">ABC</a></code></p>
+
+
+        <p>Interface for utility models.</p>
+<p>A <em>utility model</em> predicts the value of a utility function given a sample. The model
+is trained on a collection of samples and their respective utility values. These
+tuples are called <em>Utility Samples</em>.</p>
+<p>Utility models:</p>
+<ul>
+<li>are fitted on dictionaries of Sample -&gt; utility value</li>
+<li>predict: Collection[samples] -&gt; NDArray[utility values]</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="pydvl.valuation.utility.learning.IndicatorUtilityModel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">IndicatorUtilityModel</span>
+
+
+<a href="#pydvl.valuation.utility.learning.IndicatorUtilityModel" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">IndicatorUtilityModel</span><span class="p">(</span><span class="n">predictor</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pydvl.utils.types.SupervisedModel" href="../../../utils/types/#pydvl.utils.types.SupervisedModel">SupervisedModel</a></span><span class="p">,</span> <span class="n">n_data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.learning.UtilityModel" href="#pydvl.valuation.utility.learning.UtilityModel">UtilityModel</a></code></p>
+
+
+        <p>A simple wrapper for arbitrary predictors.</p>
+<p>Uses 1-hot encoding of the indices as input for the model, as done in Wang et al.,
+(2022)<sup><a href="#wang_improving_2022">1</a></sup>.</p>
+
+
+
+
+
+
+                  <details class="quote">
+                    <summary>Source code in <code>src/pydvl/valuation/utility/learning.py</code></summary>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictor</span><span class="p">:</span> <span class="n">SupervisedModel</span><span class="p">,</span> <span class="n">n_data</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">n_data</span> <span class="o">=</span> <span class="n">n_data</span>
+</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">predictor</span> <span class="o">=</span> <span class="n">predictor</span>
+</span></code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="pydvl.valuation.utility.learning.DataUtilityLearning" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">DataUtilityLearning</span>
 
 
 <a href="#pydvl.valuation.utility.learning.DataUtilityLearning" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">DataUtilityLearning</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">utility</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.base.UtilityBase" href="../base/#pydvl.valuation.utility.base.UtilityBase">UtilityBase</a></span><span class="p">,</span> <span class="n">training_budget</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pydvl.utils.types.SupervisedModel" href="../../../utils/types/#pydvl.utils.types.SupervisedModel">SupervisedModel</a></span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">utility</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.base.UtilityBase" href="../base/#pydvl.valuation.utility.base.UtilityBase">UtilityBase</a></span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">training_budget</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">model</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.learning.UtilityModel" href="#pydvl.valuation.utility.learning.UtilityModel">UtilityModel</a></span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">show_warnings</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4631,7 +4859,7 @@ learning</a>. arXiv preprint arXiv:2107.06336.&#160;<a class="footnote-backref" 
               Bases: <code><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.base.UtilityBase" href="../base/#pydvl.valuation.utility.base.UtilityBase">UtilityBase</a>[<span title="pydvl.valuation.types.SampleT">SampleT</span>]</code></p>
 
 
-        <p>This object wraps a [Utility][pydvl.valuation.utility.Utility] and delegates
+        <p>This object wraps any <a class="autorefs autorefs-internal" href="../#pydvl.valuation.utility">utility</a> and delegates
 calls to it, up until a given budget (number of iterations). Every tuple
 of input and output (a so-called <em>utility sample</em>) is stored. Once the
 budget is exhausted, <code>DataUtilityLearning</code> fits the given model to the
@@ -4691,7 +4919,7 @@ the given model.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title="pydvl.utils.types.SupervisedModel" href="../../../utils/types/#pydvl.utils.types.SupervisedModel">SupervisedModel</a></code>
+                      <code><a class="autorefs autorefs-internal" title="pydvl.valuation.utility.learning.UtilityModel" href="#pydvl.valuation.utility.learning.UtilityModel">UtilityModel</a></code>
                   </span>
               </p>
             </td>
@@ -4700,20 +4928,20 @@ the given model.</p>
     </table>
         <details class="example">
 <summary>Example</summary>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation.utility</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelUtility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sample</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_iris</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt;</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_sklearn</span><span class="p">(</span><span class="n">load_iris</span><span class="p">())</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">ModelUtility</span><span class="p">(</span><span class="n">LogisticRegression</span><span class="p">())</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_u</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">with_dataset</span><span class="p">(</span><span class="n">train</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="n">LinearRegression</span><span class="p">())</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">... </span><span class="c1"># First 3 calls will be computed normally</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">wrapped_u</span><span class="p">(</span><span class="n">Sample</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])))</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_u</span><span class="p">(</span><span class="n">Sample</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])))</span> <span class="c1"># Subsequent calls will be computed using the fit model for DUL</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="go">0.0</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">ModelUtility</span><span class="p">,</span>             <span class="n">Sample</span><span class="p">,</span> <span class="n">SupervisedScorer</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_iris</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_sklearn</span><span class="p">(</span><span class="n">load_iris</span><span class="p">())</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">scorer</span> <span class="o">=</span> <span class="n">SupervisedScorer</span><span class="p">(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">ModelUtility</span><span class="p">(</span><span class="n">LinearRegression</span><span class="p">(),</span> <span class="n">scorer</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">utility_model</span> <span class="o">=</span> <span class="n">IndicatorUtilityModel</span><span class="p">(</span><span class="n">LinearRegression</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">))</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">dul</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">utility_model</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># First 3 calls will be computed normally</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">_</span> <span class="o">=</span> <span class="n">dul</span><span class="p">(</span><span class="n">Sample</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])))</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1"># Subsequent calls will be computed using the fitted utility_model</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">dul</span><span class="p">(</span><span class="n">Sample</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])))</span>
 </span></code></pre></div>
 </details>
 
@@ -4724,23 +4952,33 @@ the given model.</p>
 
                   <details class="quote">
                     <summary>Source code in <code>src/pydvl/valuation/utility/learning.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">utility</span><span class="p">:</span> <span class="n">UtilityBase</span><span class="p">,</span> <span class="n">training_budget</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">SupervisedModel</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">utility</span> <span class="o">=</span> <span class="n">utility</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">training_budget</span> <span class="o">=</span> <span class="n">training_budget</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_current_iteration</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_utility_samples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Sample</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-179"><a id="__codelineno-0-179" name="__codelineno-0-179"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="n">utility</span><span class="p">:</span> <span class="n">UtilityBase</span><span class="p">,</span>
+</span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="n">training_budget</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="n">model</span><span class="p">:</span> <span class="n">UtilityModel</span><span class="p">,</span>
+</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="n">show_warnings</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">utility</span> <span class="o">=</span> <span class="n">utility</span>
+</span><span id="__span-0-187"><a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">training_budget</span> <span class="o">=</span> <span class="n">training_budget</span>
+</span><span id="__span-0-188"><a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+</span><span id="__span-0-189"><a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">n_predictions</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-0-190"><a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">show_warnings</span> <span class="o">=</span> <span class="n">show_warnings</span>
+</span><span id="__span-0-191"><a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-0-192"><a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_utility_samples</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Sample</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -4871,7 +5109,7 @@ Returns:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-02-24</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-02</span>
   </span>
 
     
@@ -4881,7 +5119,7 @@ Returns:
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-02-24</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-02</span>
   </span>
 
     
