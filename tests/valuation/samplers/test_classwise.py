@@ -10,8 +10,6 @@ from pydvl.valuation.samplers import (
 )
 from pydvl.valuation.types import ClasswiseSample
 
-from . import _check_classwise_batches
-
 
 @pytest.mark.parametrize(
     "data, expected_batches",
@@ -177,5 +175,11 @@ def test_classwise_sampler(data, expected_batches):
     sampler = ClasswiseSampler(
         in_class=in_class_sampler, out_of_class=out_of_class_sampler
     )
+
     batches = list(sampler.from_data(data))
-    _check_classwise_batches(batches, expected_batches)
+    assert len(batches) == len(expected_batches), (
+        f"{len(batches)=} != {len(expected_batches)=}"
+    )
+    for batch, expected_batch in zip(batches, expected_batches):
+        for sample, expected_sample in zip(batch, expected_batch):
+            assert sample == expected_sample

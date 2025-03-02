@@ -52,6 +52,7 @@ from dataclasses import dataclass
 from typing import Sequence, overload
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
@@ -269,9 +270,18 @@ class Dataset:
         return self._data_names
 
     @property
-    def dim(self) -> int:
+    def n_features(self) -> int:
         """Returns the number of dimensions of a sample."""
         return int(self._x.shape[1]) if len(self._x.shape) > 1 else 1
+
+    @property
+    @deprecated(
+        target=None,  # cannot set to Dataset.n_features
+        deprecated_in="0.10.0",
+        remove_in="0.11.0",
+    )
+    def dim(self):
+        return self.n_features
 
     def __str__(self):
         return self.description
@@ -283,7 +293,7 @@ class Dataset:
     def from_sklearn(
         cls,
         data: Bunch,
-        train_size: float = 0.8,
+        train_size: int | float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
@@ -295,7 +305,7 @@ class Dataset:
         ??? Example
             ```pycon
             >>> from pydvl.valuation.dataset import Dataset
-            >>> from sklearn.datasets import load_boston
+            >>> from sklearn.datasets import load_boston  # noqa
             >>> train, test = Dataset.from_sklearn(load_boston())
             ```
 
@@ -308,6 +318,10 @@ class Dataset:
                 - `target_names` (**optional**): the target names.
                 - `DESCR` (**optional**): a description.
             train_size: size of the training dataset. Used in `train_test_split`
+                float values represent the fraction of the dataset to include in the
+                training split and should be in (0,1). An integer value sets the
+                absolute number of training samples.
+        the value is automatically set to the complement of the test size.
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
@@ -594,7 +608,7 @@ class GroupedDataset(Dataset):
     def from_sklearn(
         cls,
         data: Bunch,
-        train_size: float = 0.8,
+        train_size: int | float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
@@ -622,7 +636,10 @@ class GroupedDataset(Dataset):
                 - `feature_names` (**optional**): the feature names.
                 - `target_names` (**optional**): the target names.
                 - `DESCR` (**optional**): a description.
-            train_size: size of the training dataset. Used in `train_test_split`.
+            train_size: size of the training dataset. Used in `train_test_split`
+                float values represent the fraction of the dataset to include in the
+                training split and should be in (0,1). An integer value sets the
+                absolute number of training samples.
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in

@@ -198,9 +198,8 @@ class PermutationEvaluationStrategy(
                     curr = self.utility(new_sample)
                 marginal = curr - prev
                 sign = np.sign(marginal)
-                update = self.log_correction(self.n_indices, i) + np.log(
-                    marginal * sign
-                )
+                log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+                update = self.log_correction(self.n_indices, i) + log_marginal
                 r.append(ValueUpdate(idx, update, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):

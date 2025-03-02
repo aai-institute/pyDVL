@@ -8,6 +8,7 @@ import pytest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
+from pydvl.valuation import IndicatorUtilityModel
 from pydvl.valuation.methods import *
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import AntitheticSampler, PermutationSampler
@@ -150,7 +151,12 @@ def test_group_testing_valuation(train_data, utility, n_jobs):
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_utility_learning(train_data, utility, n_jobs):
-    learned_u = DataUtilityLearning(utility, 10, LinearRegression())
+    utility_model = IndicatorUtilityModel(
+        predictor=LinearRegression(), n_data=len(train_data)
+    )
+    learned_u = DataUtilityLearning(
+        utility=utility, training_budget=3, model=utility_model
+    )
     valuation = ShapleyValuation(
         learned_u,
         sampler=PermutationSampler(

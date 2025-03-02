@@ -74,6 +74,8 @@ def shaded_mean_std(
     ax.set_title(title or "")
     ax.set_xlabel(xlabel or "")
     ax.set_ylabel(ylabel or "")
+    ax.set_xticks(abscissa)
+    ax.set_xticklabels(abscissa, rotation=60)
 
     return ax
 

@@ -27,6 +27,7 @@ from typing import Any
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
@@ -59,7 +60,9 @@ class SemivalueValuation(Valuation):
         is_done: Stopping criterion to use.
         skip_converged: Whether to skip converged indices, as determined by the
             stopping criterion's `converged` array.
-        progress: Whether to show a progress bar.
+        show_warnings: Whether to show warnings.
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
     """
 
     algorithm_name = "Semi-Value"
@@ -70,6 +73,7 @@ class SemivalueValuation(Valuation):
         sampler: IndexSampler,
         is_done: StoppingCriterion,
         skip_converged: bool = False,
+        show_warnings: bool = True,
         progress: dict[str, Any] | bool = False,
     ):
         super().__init__()
@@ -77,6 +81,7 @@ class SemivalueValuation(Valuation):
         self.sampler = sampler
         self.is_done = is_done
         self.skip_converged = skip_converged
+        self.show_warnings = show_warnings
         self.tqdm_args: dict[str, Any] = {
             "desc": f"{self.__class__.__name__}: {str(is_done)}"
         }
@@ -84,8 +89,10 @@ class SemivalueValuation(Valuation):
         #  something better)
         if isinstance(progress, bool):
             self.tqdm_args.update({"disable": not progress})
+        elif isinstance(progress, dict):
+            self.tqdm_args.update(progress)
         else:
-            self.tqdm_args.update(progress if isinstance(progress, dict) else {})
+            raise TypeError(f"Invalid type for progress: {type(progress)}")
 
     @abstractmethod
     def log_coefficient(self, n: int, k: int) -> float:
@@ -105,6 +112,7 @@ class SemivalueValuation(Valuation):
         """
         ...
 
+    @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)
@@ -130,12 +138,10 @@ class SemivalueValuation(Valuation):
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
                         self.result = updater(update)
-                        if self.skip_converged:
-                            self.sampler.skip_indices = data.indices[
-                                self.is_done.converged
-                            ]
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            return self
+                    if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
+                        return self
+                    if self.skip_converged:
+                        self.sampler.skip_indices = data.indices[self.is_done.converged]
         return self

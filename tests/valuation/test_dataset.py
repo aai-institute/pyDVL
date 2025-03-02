@@ -461,12 +461,12 @@ def test_names_property_returns_correct_names():
     assert np.array_equal(dataset.names, np.array(["a", "b", "c"]))
 
 
-def test_dim_property_returns_correct_dimension():
+def test_n_features_property_returns_correct_dimension():
     dataset = Dataset(
         x=np.array([[1, 2], [3, 4], [5, 6]]),
         y=np.array([0, 1, 0]),
     )
-    assert dataset.dim == 2
+    assert dataset.n_features == 2
 
 
 def test_str_method_returns_description():

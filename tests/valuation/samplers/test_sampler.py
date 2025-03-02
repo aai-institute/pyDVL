@@ -32,7 +32,6 @@ from pydvl.valuation.samplers import (
     OwenSampler,
     PermutationSampler,
     PowerLawSampleSize,
-    PowersetSampler,
     RandomIndexIteration,
     RandomSizeIteration,
     SequentialIndexIteration,
@@ -46,7 +45,6 @@ from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
 
 from .. import recursive_make
-from . import _check_idxs, _check_subsets
 
 
 def deterministic_samplers():
@@ -290,93 +288,116 @@ def random_samplers(proper: bool = False):
     )
 
 
-def test_deterministic_uniform_sampler_batch_size_1():
-    sampler = DeterministicUniformSampler()
-    indices = np.array([1, 2, 3])
-    max_iterations = 5
+@pytest.mark.parametrize(
+    "sampler_cls, sampler_kwargs, indices, max_samples, expected_batches",
+    [
+        (
+            DeterministicUniformSampler,
+            {"batch_size": 1},
+            np.array([1, 2, 3]),
+            5,
+            [
+                [Sample(1, np.array([]))],
+                [Sample(1, np.array([2]))],
+                [Sample(1, np.array([3]))],
+                [Sample(1, np.array([2, 3]))],
+                [Sample(2, np.array([]))],
+            ],
+        ),
+        (
+            DeterministicUniformSampler,
+            {"index_iteration": FiniteSequentialIndexIteration, "batch_size": 4},
+            np.array([1, 2, 3]),
+            8,
+            [
+                [
+                    Sample(1, np.array([])),
+                    Sample(1, np.array([2])),
+                    Sample(1, np.array([3])),
+                    Sample(1, np.array([2, 3])),
+                ],
+                [
+                    Sample(2, np.array([])),
+                    Sample(2, np.array([1])),
+                    Sample(2, np.array([3])),
+                    Sample(2, np.array([1, 3])),
+                ],
+            ],
+        ),
+        (
+            DeterministicUniformSampler,
+            {"index_iteration": FiniteNoIndexIteration, "batch_size": 4},
+            np.array([1, 2]),
+            None,
+            [
+                [
+                    Sample(None, np.array([])),
+                    Sample(None, np.array([1])),
+                    Sample(None, np.array([2])),
+                    Sample(None, np.array([1, 2])),
+                ],
+            ],
+        ),
+        (
+            DeterministicPermutationSampler,
+            {},
+            np.array([0, 1, 2]),
+            None,
+            [
+                [Sample(None, np.array([0, 1, 2]))],
+                [Sample(None, np.array([0, 2, 1]))],
+                [Sample(None, np.array([1, 0, 2]))],
+                [Sample(None, np.array([1, 2, 0]))],
+                [Sample(None, np.array([2, 0, 1]))],
+                [Sample(None, np.array([2, 1, 0]))],
+            ],
+        ),
+        (
+            LOOSampler,
+            {},
+            np.array([0, 1, 2]),
+            None,
+            [
+                [Sample(0, np.array([1, 2]))],
+                [Sample(1, np.array([0, 2]))],
+                [Sample(2, np.array([0, 1]))],
+            ],
+        ),
+    ],
+    ids=[
+        "deterministic_uniform_sampler_bs1",
+        "deterministic_uniform_sampler_bs4",
+        "deterministic_uniform_sampler_noindex",
+        "deterministic_permutation_sampler",
+        "loo_sampler",
+    ],
+)
+def test_deterministic_samplers_batched(
+    sampler_cls: Type[IndexSampler],
+    sampler_kwargs: dict,
+    indices: NDArray[np.int_],
+    max_samples: int,
+    expected_batches: list[list[Sample]],
+):
+    sampler = recursive_make(sampler_cls, sampler_kwargs)
 
-    batches = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations,
-            sampler.generate_batches(indices),
+    if max_samples is None:
+        batches = list(sampler.generate_batches(indices))
+    else:
+        batches = list(
+            takewhile(
+                lambda _: sampler.n_samples <= max_samples,
+                sampler.generate_batches(indices),
+            )
         )
-    )
-    expected_idxs = [[1], [1], [1], [1], [2]]
-    _check_idxs(batches, expected_idxs)
 
-    expected_subsets = [
-        [np.array([])],
-        [np.array([2])],
-        [np.array([3])],
-        [np.array([2, 3])],
-        [np.array([])],
-    ]
-    _check_subsets(batches, expected_subsets)
+    assert len(batches) == len(expected_batches)
 
-
-def test_deterministic_uniform_sampler_batch_size_4():
-    sampler = DeterministicUniformSampler(batch_size=4)
-    indices = np.array([1, 2, 3])
-    max_iterations = 8
-
-    batches = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations,
-            sampler.generate_batches(indices),
-        )
-    )
-
-    expected_idxs = [[1, 1, 1, 1], [2, 2, 2, 2]]
-    _check_idxs(batches, expected_idxs)
-
-    expected_subsets = [
-        [np.array([]), np.array([2]), np.array([3]), np.array([2, 3])],
-        [np.array([]), np.array([1]), np.array([3]), np.array([1, 3])],
-    ]
-    _check_subsets(batches, expected_subsets)
-
-
-def test_deterministic_permutation_sampler_batch_size_1():
-    sampler = DeterministicPermutationSampler()
-    indices = np.array([0, 1, 2])
-
-    batches = list(sampler.generate_batches(indices))
-
-    expected_idxs = [[None]] * 6
-    _check_idxs(batches, expected_idxs)
-
-    expected_subsets = [
-        [np.array([0, 1, 2])],
-        [np.array([0, 2, 1])],
-        [np.array([1, 0, 2])],
-        [np.array([1, 2, 0])],
-        [np.array([2, 0, 1])],
-        [np.array([2, 1, 0])],
-    ]
-    _check_subsets(batches, expected_subsets)
-
-
-def test_loo_sampler_batch_size_1():
-    sampler = LOOSampler()
-    indices = np.array([0, 1, 2])
-    max_iterations = 3
-
-    batches = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations,
-            sampler.generate_batches(indices),
-        )
-    )
-
-    expected_idxs = [[0], [1], [2]]
-    _check_idxs(batches, expected_idxs)
-
-    expected_subsets = [
-        [np.array([1, 2])],
-        [np.array([0, 2])],
-        [np.array([0, 1])],
-    ]
-    _check_subsets(batches, expected_subsets)
+    for batch, expected_batch in zip(batches, expected_batches):
+        batch = list(batch)
+        assert len(batch) == len(expected_batch)
+        for sample, expected in zip(batch, expected_batch):
+            assert sample == expected
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
@@ -398,7 +419,10 @@ def test_proper(sampler_cls, sampler_kwargs: dict, indices: NDArray[np.int_], se
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
-def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
+@pytest.mark.parametrize("batch_size, n_batches", [(1, 5), (2, 3)])
+def test_sample_counter(
+    sampler_cls, sampler_kwargs: dict, batch_size: int, n_batches: int, seed: int
+):
     """Test that the sample counter indeed reflects the number of samples generated.
 
     This test was introduced after finding a bug in the DeterministicUniformSampler
@@ -406,17 +430,13 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
     """
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
     indices = np.arange(4)
-    max_iterations = 2 ** (len(indices) + 1)
-    samples = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iterations,
-            sampler.generate_batches(indices),
-        )
-    )
-    assert sampler.n_samples == len(list(flatten(samples)))
+    batches = list(islice(sampler.generate_batches(indices), n_batches))
+    assert sampler.n_samples == len(list(flatten(batches)))
 
 
-@pytest.mark.parametrize("indices", [np.array([]), np.arange(3)])
+@pytest.mark.parametrize(
+    "indices", [np.array([]), np.arange(3)], ids=["no_indices", "3_indices"]
+)
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs, expected_length",
     [
@@ -477,6 +497,16 @@ def test_sample_counter(sampler_cls, sampler_kwargs: dict, seed: int):
             lambda n: n * 13,
         ),
     ],
+    ids=[
+        "DeterministicUniformSampler",
+        "DeterministicUniformSampler-FiniteNoIndexIteration",
+        "DeterministicPermutationSampler",
+        "LOOSampler",
+        "OwenSampler-Grid4-Inner2",
+        "AntitheticOwenSampler-Grid4-Sequential",
+        "StratifiedSampler-Harmonic32",
+        "StratifiedSampler-PowerLaw13",
+    ],
 )
 def test_length_for_finite_samplers(
     indices, sampler_cls, sampler_kwargs, expected_length
@@ -484,10 +514,15 @@ def test_length_for_finite_samplers(
     sampler = recursive_make(sampler_cls, sampler_kwargs)
     assert sampler.sample_limit(indices) == expected_length(len(indices))
     assert len(list(sampler.generate_batches(indices))) == expected_length(len(indices))
+    assert len(sampler) == expected_length(len(indices))
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
-def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs, seed):
+@pytest.mark.parametrize("indices", [np.empty(0), np.arange(3)])
+@pytest.mark.parametrize("batch_size", [1, 2])
+def test_length_of_infinite_samplers(
+    sampler_cls, sampler_kwargs, indices: NDArray, batch_size: int, seed: int
+):
     """All infinite samplers are random, but not all random are infinite..."""
     if sampler_cls in (
         OwenSampler,
@@ -495,17 +530,16 @@ def test_length_of_infinite_samplers(sampler_cls, sampler_kwargs, seed):
         StratifiedSampler,
     ):
         pytest.skip(f"{sampler_cls.__name__} is a finite sampler")
-    indices = np.arange(4)
-    max_iter = 2 ** len(indices) * 10
+    sampler_kwargs |= {"batch_size": batch_size}
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
+    n_batches = 2 ** (len(indices) + 1)
     assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
-    samples = list(
-        takewhile(
-            lambda _: sampler.n_samples < max_iter, sampler.generate_batches(indices)
-        )
-    )
-    assert len(samples) == max_iter
+    batches = list(islice(sampler.generate_batches(indices), n_batches))
+    if len(indices) > 0:
+        assert len(list(flatten(batches))) == n_batches * batch_size
+    with pytest.raises(TypeError):
+        len(sampler)
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers(proper=True))

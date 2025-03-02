@@ -5,6 +5,9 @@
 
 ### Added
 
+- Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
+  and `DeepSetsUtilityModel` for data utility learning
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Introduced the concept of `ResultUpdater` in order to allow samplers to
   declare the proper strategy to use by valuations 
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -56,8 +59,9 @@
 - Fixed `show_warnings=False` not being respected in subprocesses
   [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
 - Fixed several bugs in diverse stopping criteria, including: iteration counts,
-  computing completion and resetting
+  computing completion, resetting, nested composition
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Fixed all weights of all samplers to ensure that mix-and-matching samplers and
   semi-value methods always works, for all possible combinations
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -88,6 +92,8 @@
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Updated Shapley spotify notebook
   [PR #628](https://github.com/aai-institute/pyDVL/pull/628)
+- Updated Data Utility notebook
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Restructured and generalized `StratifiedSampler` to allow using heuristics,
   thus subsuming Variance-Reduced stratified sampling into a unified framework.
   Implemented the heuristics proposed in that paper
