@@ -40,6 +40,7 @@ from pydvl.valuation.samplers import (
     UniformOwenStrategy,
     UniformSampler,
 )
+from pydvl.valuation.samplers.ame import AMESampler
 from pydvl.valuation.samplers.permutation import PermutationSamplerBase
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
@@ -170,6 +171,17 @@ def random_samplers(proper: bool = False):
         ),
     ]
 
+    amesampler_samplers = [
+        (
+            AMESampler,
+            {"index_iteration": RandomIndexIteration, "seed": lambda seed: seed},
+        ),
+        (
+            AMESampler,
+            {"index_iteration": SequentialIndexIteration, "seed": lambda seed: seed},
+        ),
+    ]
+
     stratified_samplers = [
         (
             StratifiedSampler,
@@ -282,6 +294,7 @@ def random_samplers(proper: bool = False):
     return (
         permutation_samplers
         + powerset_samplers
+        + amesampler_samplers
         + stratified_samplers
         + owen_samplers
         + (improper_samplers if not proper else [])
@@ -533,13 +546,15 @@ def test_length_of_infinite_samplers(
     sampler_kwargs |= {"batch_size": batch_size}
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
     n_batches = 2 ** (len(indices) + 1)
-    assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
     batches = list(islice(sampler.generate_batches(indices), n_batches))
     if len(indices) > 0:
+        assert sampler.sample_limit(indices) is None
         assert len(list(flatten(batches))) == n_batches * batch_size
-    with pytest.raises(TypeError):
-        len(sampler)
+        with pytest.raises(TypeError):
+            len(sampler)
+    else:
+        assert sampler.sample_limit(indices) == 0
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers(proper=True))

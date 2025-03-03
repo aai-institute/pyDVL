@@ -123,6 +123,8 @@ for positive and negative updates.
 from typing import Union
 
 from .base import *
+
+from .ame import *  # isort: skip
 from .classwise import *
 from .msr import *
 from .owen import *
@@ -136,6 +138,7 @@ from .truncation import *
 StochasticSampler = Union[
     UniformSampler,
     PermutationSampler,
+    AMESampler,
     AntitheticSampler,
     StratifiedSampler,
     OwenSampler,
