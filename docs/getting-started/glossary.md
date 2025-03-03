@@ -13,7 +13,7 @@ Terms in data valuation and influence functions:
 
 The Arnoldi method approximately computes eigenvalue, eigenvector pairs of
 a symmetric matrix. For influence functions, it is used to approximate
-the [iHVP][glossary-inverse-hessian-vector-product].
+the [iHVP][glossary-iHVP].
 Introduced by [@schioppa_scaling_2022] in the context of influence functions.
 
   * [Implementation (torch)
@@ -24,7 +24,7 @@ Introduced by [@schioppa_scaling_2022] in the context of influence functions.
 
 A blocked version of [CG][glossary-conjugate-gradient], which solves several linear
 systems simultaneously. For Influence Functions, it is used to
-approximate the [iHVP][glossary-inverse-hessian-vector-product].
+approximate the [iHVP][glossary-iHVP].
 
  * [Implementation (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -47,7 +47,7 @@ Introduced by [@schoch_csshapley_2022].
 
 CG is an algorithm for solving linear systems with a symmetric and
 positive-definite coefficient matrix. For Influence Functions, it is used to
-approximate the [iHVP][glossary-inverse-hessian-vector-product].
+approximate the [iHVP][glossary-iHVP].
 
  * [Implementation
    (torch)][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -80,14 +80,14 @@ Introduced by [@wang_improving_2022].
 
 ### Eigenvalue-corrected Kronecker-Factored Approximate Curvature
 
-EKFAC builds on [K-FAC][glossary-kronecker-factored-approximate-curvature] by
-correcting for the approximation errors in the eigenvalues of the blocks of the
-Kronecker-factored approximate curvature matrix. This correction aims to refine
-the accuracy of natural gradient approximations, thus potentially offering
-better training efficiency and stability in neural networks.
+EKFAC builds on [K-FAC][flossary-k-fac] by correcting for the approximation
+errors in the eigenvalues of the blocks of the Kronecker-factored approximate
+curvature matrix. This correction aims to refine the accuracy of natural
+gradient approximations, thus potentially offering better training efficiency
+and stability in neural networks.
 
- * [Implementation (torch)
-   ][pydvl.influence.torch.influence_function_model.EkfacInfluence]
+ * [Implementation
+   (torch)][pydvl.influence.torch.influence_function_model.EkfacInfluence]
  * [Documentation (torch)][eigenvalue-corrected-k-fac]
 
 
@@ -142,7 +142,7 @@ LiSSA is an efficient algorithm for approximating the inverse Hessian-vector
 product, enabling faster computations in large-scale machine learning
 problems, particularly for second-order optimization.
 For Influence Functions, it is used to
-approximate the [iHVP][glossary-inverse-hessian-vector-product].
+approximate the [iHVP][glossary-iHVP].
 Introduced by [@agarwal_secondorder_2017].
 
  * [Implementation (torch)
@@ -196,7 +196,7 @@ Introduced into data valuation by [@ghorbani_data_2019].
 
 The Nyström approximation computes a low-rank approximation to a symmetric
 positive-definite matrix via random projections. For influence functions, 
-it is used to approximate the [iHVP][glossary-inverse-hessian-vector-product].
+it is used to approximate the [iHVP][glossary-iHVP].
 Introduced as sketch and solve algorithm in [@hataya_nystrom_2023], and as
 preconditioner for [PCG][glossary-preconditioned-conjugate-gradient] in
 [@frangella_randomized_2023].
@@ -220,7 +220,7 @@ performance, where the points are removed in order of their value. See
 
 A blocked version of [PCG][glossary-preconditioned-conjugate-gradient], which solves 
 several linear systems simultaneously. For Influence Functions, it is used to
-approximate the [iHVP][glossary-inverse-hessian-vector-product].
+approximate the [iHVP][glossary-iHVP].
 
  * [Implementation CG (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -233,7 +233,7 @@ approximate the [iHVP][glossary-inverse-hessian-vector-product].
 A preconditioned version of [CG][glossary-conjugate-gradient] for improved
 convergence, depending on the characteristics of the matrix and the
 preconditioner. For Influence Functions, it is used to
-approximate the [iHVP][glossary-inverse-hessian-vector-product].
+approximate the [iHVP][glossary-iHVP].
 
  * [Implementation CG (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]

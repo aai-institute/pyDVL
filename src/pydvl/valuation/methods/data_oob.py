@@ -79,7 +79,7 @@ class DataOOBValuation(Valuation):
         self.score = score
 
     def fit(self, data: Dataset) -> Self:
-        """ Compute the Data-OOB values.
+        """Compute the Data-OOB values.
 
         This requires the bagging model passed upon construction to be fitted.
 
