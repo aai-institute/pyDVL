@@ -26,15 +26,15 @@ from typing import Callable
 
 import numpy as np
 
-from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import (
+    SupervisedModelT,
     SupervisedScorer,
     SupervisedScorerCallable,
 )
 
 
-class ClasswiseSupervisedScorer(SupervisedScorer):
+class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
     """A Scorer designed for evaluation in classification problems.
 
     The final score is the combination of the in-class and out-of-class scores, which
@@ -77,7 +77,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable | SupervisedModel,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
         test_data: Dataset,
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),
@@ -105,7 +105,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
     def __str__(self) -> str:
         return self.name
 
-    def __call__(self, model: SupervisedModel) -> float:
+    def __call__(self, model: SupervisedModelT) -> float:
         (in_class_score, out_of_class_score) = self.compute_in_and_out_of_class_scores(
             model,
             rescale_scores=self.rescale_scores,
@@ -115,7 +115,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer):
         return disc_score_in_class * disc_score_out_of_class
 
     def compute_in_and_out_of_class_scores(
-        self, model: SupervisedModel, rescale_scores: bool = True
+        self, model: SupervisedModelT, rescale_scores: bool = True
     ) -> tuple[float, float]:
         r"""
         Computes in-class and out-of-class scores using the provided inner

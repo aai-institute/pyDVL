@@ -24,7 +24,7 @@ from pydvl.parallel import (
 from pydvl.utils import Utility, random_powerset
 from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import MinUpdates
 
 __all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
@@ -83,7 +83,7 @@ def _owen_sampling_shapley(
     result = ValuationResult.zeros(
         algorithm="owen_sampling_shapley_" + str(method),
         indices=np.array(indices, dtype=np.int_),
-        data_names=[u.data.data_names[i] for i in indices],
+        data_names=u.data.data_names[indices],
     )
 
     rng = np.random.default_rng(seed)

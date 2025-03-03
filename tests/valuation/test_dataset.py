@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import load_wine, make_classification
 
-from pydvl.valuation.dataset import Dataset, GroupedDataset
+from pydvl.valuation.dataset import Dataset, GroupedDataset, RawData
 from pydvl.valuation.result import ValuationResult
 
 
@@ -108,7 +108,7 @@ def test_grouped_dataset_results():
     train_size = 0.5
     data_groups = np.random.randint(low=0, high=3, size=len(X)).flatten()
     train, test = GroupedDataset.from_arrays(
-        X, y, data_groups=data_groups, train_size=train_size
+        X, y, train_size=train_size, data_groups=data_groups
     )
 
     v = ValuationResult.zeros(indices=train.indices, data_names=train.names)
@@ -169,6 +169,32 @@ def test_getitem_returns_correct_grouped_dataset(
     assert np.array_equal(sliced_dataset.data_to_group, expected_groups)
     assert np.array_equal(sliced_dataset._data_names, expected_names)
     assert np.array_equal(sliced_dataset.names, expected_group_names)
+
+
+def test_default_group_names():
+    """Test that default group_names are set to the string representations of group ids
+    when not provided."""
+    x = np.array([[1, 2], [3, 4], [5, 6]])
+    y = np.array([0, 1, 0])
+    data_groups = [0, 1, 0]
+    dataset = GroupedDataset(x=x, y=y, data_groups=data_groups)
+    # Default group_names should be created as {group_id: str(group_id)} for each group
+    # present.
+    expected = ["0", "1"]
+    assert all(dataset.names == expected)
+
+
+def test_incomplete_group_names():
+    """Test that providing an incomplete group_names dictionary raise an exception."""
+    x = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+    y = np.array([0, 1, -1, 1])
+    with pytest.raises(ValueError, match="The number of group names"):
+        _ = GroupedDataset(
+            x=x,
+            y=y,
+            data_groups=[0, 1, 0, 2],
+            group_names=["g1", "g3"],
+        )
 
 
 @pytest.mark.parametrize(
@@ -435,12 +461,12 @@ def test_names_property_returns_correct_names():
     assert np.array_equal(dataset.names, np.array(["a", "b", "c"]))
 
 
-def test_dim_property_returns_correct_dimension():
+def test_n_features_property_returns_correct_dimension():
     dataset = Dataset(
         x=np.array([[1, 2], [3, 4], [5, 6]]),
         y=np.array([0, 1, 0]),
     )
-    assert dataset.dim == 2
+    assert dataset.n_features == 2
 
 
 def test_str_method_returns_description():
@@ -525,3 +551,79 @@ def test_grouped_logical_indices_returns_correct_indices(
     )
     result = dataset.logical_indices(data_indices)
     assert np.array_equal(result, expected_indices)
+
+
+@pytest.mark.parametrize(
+    "x, y",
+    [
+        (np.array([1, 2]), np.array([1, 2, 3])),
+        (np.array([1, 2, 3]), np.array([1, 2])),
+        (np.zeros((3, 2)), np.zeros(2)),
+    ],
+    ids=["x_shorter", "y_shorter", "different_shapes"],
+)
+def test_rawdata_creation_raises_on_length_mismatch(x, y):
+    with pytest.raises(ValueError, match="x and y must have the same length"):
+        RawData(x, y)
+
+
+@pytest.mark.parametrize(
+    "x, y", [(np.array([[1]]), 1), (3, np.array([1])), (1, 2), (None, None)]
+)
+def test_rawdata_creation_raises_on_non_arrays(x, y):
+    with pytest.raises(TypeError, match="x and y must be numpy arrays"):
+        RawData(x, y)
+
+
+def test_rawdata_iteration():
+    x = np.array([1, 2, 3])
+    y = np.array([4, 5, 6])
+    data = RawData(x, y)
+    unpacked_x, unpacked_y = data
+    assert np.array_equal(unpacked_x, x)
+    assert np.array_equal(unpacked_y, y)
+
+
+@pytest.mark.parametrize(
+    "idx, expected_x, expected_y",
+    [
+        (
+            1,
+            np.array([2]),
+            np.array([5]),
+        ),
+        (
+            slice(1, None),
+            np.array([2, 3]),
+            np.array([5, 6]),
+        ),
+        (
+            [0, 2],
+            np.array([1, 3]),
+            np.array([4, 6]),
+        ),
+    ],
+    ids=["single_index", "slice", "sequence"],
+)
+def test_rawdata_getitem(idx, expected_x, expected_y):
+    x = np.array([1, 2, 3])
+    y = np.array([4, 5, 6])
+    data = RawData(x, y)
+    result = data[idx]
+    assert isinstance(result, RawData)
+    assert np.array_equal(result.x, expected_x)
+    assert np.array_equal(result.y, expected_y)
+
+
+@pytest.mark.parametrize(
+    "x, y, length",
+    [
+        (np.array([1, 2, 3]), np.array([4, 5, 6]), 3),
+        (np.zeros((5, 2)), np.zeros(5), 5),
+        (np.array([]), np.array([]), 0),
+    ],
+    ids=["1d_arrays", "2d_arrays", "empty_arrays"],
+)
+def test_rawdata_len(x, y, length):
+    data = RawData(x, y)
+    assert len(data) == length

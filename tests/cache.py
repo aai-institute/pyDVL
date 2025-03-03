@@ -35,7 +35,7 @@ class CloudPickleCache(JsonCache):
         ```
     """
 
-    def hash_arguments(*args) -> str:
+    def hash_arguments(*args) -> bytes:
         m = hashlib.sha256()
         for arg in args:
             m.update(str(arg).encode())

@@ -48,7 +48,7 @@ $y_i$ and $-y_i$, respectively.
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
 
-# References
+## References
 
 [^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
     Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
@@ -89,13 +89,9 @@ T = TypeVar("T")
 class ClasswiseShapleyValuation(Valuation):
     """Class to compute Class-wise Shapley values.
 
-    It proceeds by sampling independent permutations of the index set
-    for each label and index sets sampled from the powerset of the complement
-    (with respect to the currently evaluated label).
-
     Args:
-        utility: Classwise utility object with model and classwise scoring function.
-        sampler: Classwise sampling scheme to use.
+        utility: Class-wise utility object with model and class-wise scoring function.
+        sampler: Class-wise sampling scheme to use.
         is_done: Stopping criterion to use.
         progress: Whether to show a progress bar.
         normalize_values: Whether to normalize values after valuation.
@@ -146,11 +142,14 @@ class ClasswiseShapleyValuation(Valuation):
         )
         ensure_backend_has_generator_return()
 
-        self.utility.training_data = data
+        self.is_done.reset()
+        self.utility = self.utility.with_dataset(data)
+
+        strategy = self.sampler.make_strategy(self.utility)
+        updater = self.sampler.result_updater(self.result)
+        processor = delayed(strategy.process)
 
         sample_generator = self.sampler.from_data(data)
-        strategy = self.sampler.make_strategy(self.utility)
-        processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
@@ -161,13 +160,10 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            break
-
+                        self.result = updater(evaluation)
                     if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
                         break
 
         if self.normalize_values:
@@ -210,6 +206,6 @@ class ClasswiseShapleyValuation(Valuation):
 
             sigma = np.sum(self.result.values[indices_label_set])
             if sigma != 0:
-                self.result.scale(in_class_acc / sigma, indices=indices_label_set)
+                self.result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 
         return self.result

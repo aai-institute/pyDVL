@@ -87,19 +87,18 @@ class ValueItem:
     order. Comparisons take only the `value` into account.
 
     !!! todo
-        Maybe have a mode of comparing similar to `np.isclose`, or taking the
-        `variance` into account.
+        Maybe have a mode of comparison taking the `variance` into account.
 
     Attributes:
-        index: Index of the sample with this value in the original
+        idx: Index of the sample with this value in the original
             [Dataset][pydvl.utils.dataset.Dataset]
-        name: Name of the sample if it was provided. Otherwise, `str(index)`
+        name: Name of the sample if it was provided. Otherwise, `str(idx)`
         value: The value
         variance: Variance of the marginals from which the value was computed.
         count: Number of updates for this value
     """
 
-    index: IndexT
+    idx: IndexT
     name: NameT
     value: float
     variance: float | None
@@ -113,10 +112,10 @@ class ValueItem:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ValueItem):
             raise TypeError(f"Cannot compare ValueItem with {type(other)}")
-        return self.value == other.value
+        return self.idx == other.idx and bool(np.isclose(self.value, other.value))
 
     def __index__(self) -> IndexT:
-        return self.index
+        return self.idx
 
     @property
     def stderr(self) -> float | None:
@@ -140,45 +139,55 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     ## Indexing
 
     Indexing can be position-based, when accessing any of the attributes
-    [values][pydvl.valuation.result.ValuationResult.values], [variances][pydvl.valuation.result.ValuationResult.variances],
-    [counts][pydvl.valuation.result.ValuationResult.counts] and [indices][pydvl.valuation.result.ValuationResult.indices], as
-    well as when iterating over the object, or using the item access operator,
-    both getter and setter. The "position" is either the original sequence in
-    which the data was passed to the constructor, or the sequence in which the
-    object is sorted, see below.
+    [values][pydvl.valuation.result.ValuationResult.values],
+    [variances][pydvl.valuation.result.ValuationResult.variances],
+    [counts][pydvl.valuation.result.ValuationResult.counts] and
+    [indices][pydvl.valuation.result.ValuationResult.indices], as well as when iterating
+    over the object, or using the item access operator, both getter and setter. The
+    "position" is either the original sequence in which the data was passed to the
+    constructor, or the sequence in which the object is sorted, see below.
+    One can retrieve the position for a given data index using the method
+    [positions()][pydvl.valuation.result.ValuationResult.positions].
 
-    Alternatively, indexing can be data-based, i.e. using the indices in the
-    original dataset. This is the case for the methods [get()][pydvl.valuation.result.ValuationResult.get] and
+    Some methods use data indices instead. This is the case for
+    [get()][pydvl.valuation.result.ValuationResult.get] and
     [update()][pydvl.valuation.result.ValuationResult.update].
 
     ## Sorting
 
-    Results can be sorted in-place with [sort()][pydvl.valuation.result.ValuationResult.sort], or alternatively using
-    python's standard `sorted()` and `reversed()` Note that sorting values
-    affects how iterators and the object itself as `Sequence` behave:
-    `values[0]` returns a [ValueItem][pydvl.valuation.result.ValueItem] with the highest or lowest
-    ranking point if this object is sorted by descending or ascending value,
-    respectively. If unsorted, `values[0]` returns the `ValueItem` at
-    position 0, which has data index `indices[0]` in the
-    [Dataset][pydvl.utils.dataset.Dataset].
+    Results can be sorted in-place with
+    [sort()][pydvl.valuation.result.ValuationResult.sort], or alternatively using
+    python's standard `sorted()` and `reversed()` Note that sorting values affects how
+    iterators and the object itself as `Sequence` behave: `values[0]` returns a
+    [ValueItem][pydvl.valuation.result.ValueItem] with the highest or lowest ranking
+    point if this object is sorted by descending or ascending value, respectively.the methods If
+    unsorted, `values[0]` returns the `ValueItem` at position 0, which has data index
+    `indices[0]` in the [Dataset][pydvl.utils.dataset.Dataset].
 
     The same applies to direct indexing of the `ValuationResult`: the index
     is positional, according to the sorting. It does not refer to the "data
-    index". To sort according to data index, use [sort()][pydvl.valuation.result.ValuationResult.sort] with
-    `key="index"`.
+    index". To sort according to data index, use
+    [sort()][pydvl.valuation.result.ValuationResult.sort] with `key="index"`.
 
-    In order to access [ValueItem][pydvl.valuation.result.ValueItem] objects by their data index, use
-    [get()][pydvl.valuation.result.ValuationResult.get].
+    In order to access [ValueItem][pydvl.valuation.result.ValueItem] objects by their
+    data index, use [get()][pydvl.valuation.result.ValuationResult.get], or use
+    [positions()][pydvl.valuation.result.ValuationResult.positions] to convert data
+    indices to positions.
+
+    !!! tip "Converting back and forth from data indices and positions"
+        `data_indices = result.indices[result.positions(data_indices)]` is a noop.
 
     ## Operating on results
 
     Results can be added to each other with the `+` operator. Means and
     variances are correctly updated, using the `counts` attribute.
 
-    Results can also be updated with new values using [update()][pydvl.valuation.result.ValuationResult.update]. Means and
-    variances are updated accordingly using the Welford algorithm.
+    Results can also be updated with new values using
+    [update()][pydvl.valuation.result.ValuationResult.update]. Means and variances are
+    updated accordingly using the Welford algorithm.
 
-    Empty objects behave in a special way, see [empty()][pydvl.valuation.result.ValuationResult.empty].
+    Empty objects behave in a special way, see
+    [empty()][pydvl.valuation.result.ValuationResult.empty].
 
     Args:
         values: An array of values. If omitted, defaults to an empty array
@@ -195,13 +204,17 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         data_names: Names for the data points. Defaults to index numbers if not set.
         algorithm: The method used.
         status: The end status of the algorithm.
-        sort: Whether to sort the indices by ascending value. See above how
-            this affects usage as an iterable or sequence.
+        sort: Whether to sort the indices. Defaults to `None` for no sorting. Set to
+            `True` for ascending order by value, `False` for descending. See above how
+            sorting affects usage as an iterable or sequence.
         extra_values: Additional values that can be passed as keyword arguments.
             This can contain, for example, the least core value.
 
     Raises:
          ValueError: If input arrays have mismatching lengths.
+
+    ??? tip "Changed in 0.10.0"
+        Changed the behaviour of the `sort` argument.
     """
 
     _indices: NDArray[IndexT]
@@ -215,6 +228,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     # None for unsorted, True for ascending, False for descending
     _sort_order: bool | None
     _extra_values: dict[str, Any]
+    _sort_positions: NDArray[IndexT]
 
     def __init__(
         self,
@@ -226,36 +240,48 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         data_names: Sequence[NameT] | NDArray[NameT] | None = None,
         algorithm: str = "",
         status: Status = Status.Pending,
-        sort: bool = False,
+        sort: bool | None = None,
         **extra_values,
     ):
         if variances is not None and len(variances) != len(values):
-            raise ValueError("Lengths of values and variances do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and variances ({len(variances)}) do not match"
+            )
         if data_names is not None and len(data_names) != len(values):
-            raise ValueError("Lengths of values and data_names do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and data_names ({len(data_names)}) do not match"
+            )
         if indices is not None and len(indices) != len(values):
-            raise ValueError("Lengths of values and indices do not match")
+            raise ValueError(
+                f"Lengths of values ({len(values)}) "
+                f"and indices ({len(indices)}) do not match"
+            )
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = np.asarray(values)
+        self._values = np.asarray(values, dtype=np.float64)
         self._variances = (
             np.zeros_like(values) if variances is None else np.asarray(variances)
         )
-        self._counts = np.ones_like(values) if counts is None else np.asarray(counts)
+        self._counts = (
+            np.ones_like(values, dtype=int) if counts is None else np.asarray(counts)
+        )
         self._sort_order = None
         self._extra_values = extra_values or {}
 
+        # Internal indices -> data indices
         self._indices = self._create_indices_array(indices, len(self._values))
         self._names = self._create_names_array(data_names, self._indices)
 
+        # Data indices -> Internal indices
         self._positions = {idx: pos for pos, idx in enumerate(self._indices)}
 
-        self._sort_positions: NDArray[np.int_] = np.arange(
-            len(self._values), dtype=np.int_
-        )
-        if sort:
-            self.sort()
+        # Sorted indices -> Internal indices
+        self._sort_positions = np.arange(len(self._values), dtype=np.int_)
+        if sort is not None:
+            self.sort(reverse=not sort)
 
     def sort(
         self,
@@ -287,10 +313,24 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             "name": "_names",
             "stderr": "stderr",
         }
-        self._sort_positions = np.argsort(getattr(self, keymap[key]))
+        self._sort_positions = np.argsort(getattr(self, keymap[key])).astype(int)
         if reverse:
             self._sort_positions = self._sort_positions[::-1]
-        self._sort_order = reverse
+        self._sort_order = not reverse
+
+    def positions(self, data_indices: IndexSetT | list[IndexT]) -> IndexSetT:
+        """Return the location (indices) within the `ValuationResult` for the given
+        data indices.
+
+        Sorting is taken into account. This operation is the inverse of indexing the
+        [indices][pydvl.valuation.result.ValuationResult.indices] property:
+
+        ```python
+        np.all(v.indices[v.positions(data_indices)] == data_indices) == True
+        ```
+        """
+        indices = [self._positions[idx] for idx in data_indices]
+        return self._sort_positions[indices]
 
     @property
     def values(self) -> NDArray[np.float64]:
@@ -344,6 +384,20 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def algorithm(self) -> str:
         return self._algorithm
 
+    def copy(self) -> ValuationResult:
+        """Returns a copy of the object."""
+        return ValuationResult(
+            values=self._values.copy(),
+            variances=self._variances.copy(),
+            counts=self._counts.copy(),
+            indices=self._indices.copy(),
+            data_names=self._names.copy(),
+            algorithm=self._algorithm,
+            status=self._status,
+            sort=self._sort_order,
+            **self._extra_values,
+        )
+
     def __getattr__(self, attr: str) -> Any:
         """Allows access to extra values as if they were properties of the instance."""
         # This is here to avoid a RecursionError when copying or pickling the object
@@ -377,7 +431,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 key += len(self)
             if key < 0 or int(key) >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            idx = self._sort_positions[key]
+            idx = self._sort_positions[key].item()
             return ValueItem(
                 self._indices[idx],
                 self._names[idx],
@@ -412,7 +466,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             if key < 0 or int(key) >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
             pos = self._sort_positions[key]
-            self._indices[pos] = value.index
+            self._indices[pos] = value.idx
             self._names[pos] = value.name
             self._values[pos] = value.value
             self._variances[pos] = value.variance
@@ -450,6 +504,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             and np.all(self._variances == other._variances)
             and np.all(self._names == other._names)
             and np.all(self._counts == other._counts)
+            and np.all(self._sort_positions == other._sort_positions)
+            and self._extra_values == other._extra_values
         )
 
     def __repr__(self) -> str:
@@ -588,12 +644,15 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> ValuationResult:
+    def update(self, data_idx: int | IndexT, new_value: float) -> ValuationResult:
         """Updates the result in place with a new value, using running mean
         and variance.
 
+        The variance computation uses Bessel's correction for sample estimates of the
+        variance.
+
         Args:
-            idx: Data index of the value to update.
+            data_idx: Data index of the value to update.
             new_value: New value to add to the result.
 
         Returns:
@@ -603,43 +662,46 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             IndexError: If the index is not found.
         """
         try:
-            pos = self._positions[idx]
+            pos = self._positions[data_idx]
         except KeyError:
-            raise IndexError(f"Index {idx} not found in ValuationResult")
+            raise IndexError(f"Index {data_idx} not found in ValuationResult")
         val, var = running_moments(
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
-        self[pos] = ValueItem(
-            index=cast(IndexT, idx),  # FIXME
-            name=self._names[pos],
-            value=val,
-            variance=var,
-            count=self._counts[pos] + 1,
-        )
+        self._values[pos] = val
+        self._counts[pos] += 1
+        self._variances[pos] = var
         return self
 
-    def scale(self, factor: float, indices: NDArray[IndexT] | None = None):
+    def scale(self, factor: float, data_indices: NDArray[IndexT] | None = None):
         """
         Scales the values and variances of the result by a coefficient.
 
         Args:
             factor: Factor to scale by.
-            indices: Indices to scale. If None, all values are scaled.
+            data_indices: Data indices to scale. If `None`, all values are scaled.
         """
-        self._values[self._sort_positions[indices]] *= factor
-        self._variances[self._sort_positions[indices]] *= factor**2
+        if data_indices is None:
+            positions = None
+        else:
+            positions = [self._positions[idx] for idx in data_indices]
+        self._values[positions] *= factor
+        self._variances[positions] *= factor**2
 
-    def get(self, idx: Integral) -> ValueItem:
+    def get(self, data_idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like
         the indexing operator.
+
+        Args:
+            data_idx: Data index of the value to retrieve.
 
         Raises:
              IndexError: If the index is not found.
         """
         try:
-            pos = self._positions[idx]
+            pos = self._positions[data_idx]
         except KeyError:
-            raise IndexError(f"Index {idx} not found in ValuationResult")
+            raise IndexError(f"Index {data_idx} not found in ValuationResult")
 
         return ValueItem(
             self._indices[pos],

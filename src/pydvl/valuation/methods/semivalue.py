@@ -25,7 +25,9 @@ from abc import abstractmethod
 from typing import Any
 
 from joblib import Parallel, delayed
+from typing_extensions import Self
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
@@ -44,20 +46,23 @@ __all__ = ["SemivalueValuation"]
 class SemivalueValuation(Valuation):
     r"""Abstract class to define semi-values.
 
-    Implementations must only provide the `coefficient()` method, corresponding
+    Implementations must only provide the `log_coefficient()` method, corresponding
     to the semi-value coefficient.
 
     !!! Note
         For implementation consistency, we slightly depart from the common definition
         of semi-values, which includes a factor $1/n$ in the sum over subsets.
         Instead, we subsume this factor into the coefficient $w(k)$.
-        TODO: see ...
 
     Args:
         utility: Object to compute utilities.
         sampler: Sampling scheme to use.
         is_done: Stopping criterion to use.
-        progress: Whether to show a progress bar.
+        skip_converged: Whether to skip converged indices, as determined by the
+            stopping criterion's `converged` array.
+        show_warnings: Whether to show warnings.
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
     """
 
     algorithm_name = "Semi-Value"
@@ -67,12 +72,16 @@ class SemivalueValuation(Valuation):
         utility: UtilityBase,
         sampler: IndexSampler,
         is_done: StoppingCriterion,
+        skip_converged: bool = False,
+        show_warnings: bool = True,
         progress: dict[str, Any] | bool = False,
     ):
         super().__init__()
         self.utility = utility
         self.sampler = sampler
         self.is_done = is_done
+        self.skip_converged = skip_converged
+        self.show_warnings = show_warnings
         self.tqdm_args: dict[str, Any] = {
             "desc": f"{self.__class__.__name__}: {str(is_done)}"
         }
@@ -80,29 +89,31 @@ class SemivalueValuation(Valuation):
         #  something better)
         if isinstance(progress, bool):
             self.tqdm_args.update({"disable": not progress})
+        elif isinstance(progress, dict):
+            self.tqdm_args.update(progress)
         else:
-            self.tqdm_args.update(progress if isinstance(progress, dict) else {})
+            raise TypeError(f"Invalid type for progress: {type(progress)}")
 
     @abstractmethod
-    def coefficient(self, n: int, k: int, other: float) -> float:
-        """Returns the function computing the final coefficient to be used in the
-        semi-value valuation.
+    def log_coefficient(self, n: int, k: int) -> float:
+        """The semi-value coefficient in log-space.
 
         The semi-value coefficient is a function of the number of elements in the set,
         and the size of the subset for which the coefficient is being computed.
-        Coefficients can be very large or very small, so that simply multiplying them
-        with the rest of the factors in a semi-value computation can lead to overflow or
-        underflow. To avoid this, we pass the other factors to this method, and delegate
-        the choice of whether to multiply or divide to the implementation.
+        Because both coefficients and sampler weights can be very large or very small,
+        we perform all computations in log-space to avoid numerical issues.
 
         Args:
             n: Total number of elements in the set.
             k: Size of the subset for which the coefficient is being computed
-            other: The other factors in the computation.
+
+        Returns:
+            The natural logarithm of the semi-value coefficient.
         """
         ...
 
-    def fit(self, data: Dataset):
+    @suppress_warnings(flag="show_warnings")
+    def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
             # TODO: automate str representation for all Valuations (and find something better)
             algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
@@ -111,9 +122,11 @@ class SemivalueValuation(Valuation):
         )
         ensure_backend_has_generator_return()
 
-        self.utility.training_data = data
+        self.is_done.reset()
+        self.utility = self.utility.with_dataset(data)
 
-        strategy = self.sampler.make_strategy(self.utility, self.coefficient)
+        strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
+        updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
@@ -123,14 +136,12 @@ class SemivalueValuation(Valuation):
                     for batch in self.sampler.generate_batches(data.indices)
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
-                    for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            break
-
+                    for update in batch:
+                        self.result = updater(update)
                     if self.is_done(self.result):
-                        break
-
+                        flag.set()
+                        self.sampler.interrupt()
+                        return self
+                    if self.skip_converged:
+                        self.sampler.skip_indices = data.indices[self.is_done.converged]
         return self

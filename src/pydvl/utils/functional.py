@@ -1,14 +1,33 @@
 """
-Supporting utilities for manipulating arguments of functions.
+Supporting utilities for manipulating functions.
 """
 
 from __future__ import annotations
 
+import functools
 import inspect
-from functools import partial
-from typing import Callable, Set, Union
+import time
+import warnings
+from logging import Logger, getLogger
+from typing import (
+    Any,
+    Callable,
+    Protocol,
+    Sequence,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
-__all__ = ["maybe_add_argument"]
+from typing_extensions import ParamSpec
+
+__all__ = ["maybe_add_argument", "suppress_warnings", "timed"]
+
+
+logger = getLogger(__name__)
 
 
 def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
@@ -32,7 +51,7 @@ def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
     return fun(*args, **kwargs)
 
 
-def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
+def free_arguments(fun: Union[Callable, functools.partial]) -> Set[str]:
     """Computes the set of free arguments for a function or
     [functools.partial][] object.
 
@@ -50,7 +69,9 @@ def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
     """
     args_set_by_partial: Set[str] = set()
 
-    def _rec_unroll_partial_function_args(g: Union[Callable, partial]) -> Callable:
+    def _rec_unroll_partial_function_args(
+        g: Union[Callable, functools.partial],
+    ) -> Callable:
         """Stores arguments and recursively call itself if `g` is a
         [functools.partial][] object. In the end, returns the initially wrapped
         function.
@@ -66,12 +87,12 @@ def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
         """
         nonlocal args_set_by_partial
 
-        if isinstance(g, partial) and g.func == _accept_additional_argument:
+        if isinstance(g, functools.partial) and g.func == _accept_additional_argument:
             arg = g.keywords["arg"]
             if arg in args_set_by_partial:
                 args_set_by_partial.remove(arg)
             return _rec_unroll_partial_function_args(g.keywords["fun"])
-        elif isinstance(g, partial):
+        elif isinstance(g, functools.partial):
             args_set_by_partial.update(g.keywords.keys())
             args_set_by_partial.update(g.args)
             return _rec_unroll_partial_function_args(g.func)
@@ -105,4 +126,290 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     if new_arg in free_arguments(fun):
         return fun
 
-    return partial(_accept_additional_argument, fun=fun, arg=new_arg)
+    return functools.partial(_accept_additional_argument, fun=fun, arg=new_arg)
+
+
+P = ParamSpec("P")
+R = TypeVar("R", covariant=True)
+
+
+@overload
+def suppress_warnings(fun: Callable[P, R]) -> Callable[P, R]: ...
+
+
+@overload
+def suppress_warnings(
+    fun: None = None,
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
+
+@overload
+def suppress_warnings(
+    fun: Callable[P, R],
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Callable[P, R]: ...
+
+
+def suppress_warnings(
+    fun: Callable[P, R] | None = None,
+    *,
+    categories: Sequence[Type[Warning]] = (Warning,),
+    flag: str = "",
+) -> Union[Callable[[Callable[P, R]], Callable[P, R]], Callable[P, R]]:
+    """Decorator for class methods to conditionally suppress warnings.
+
+    The decorated method will execute with warnings suppressed for the specified
+    categories. If the instance has the attribute named by `flag`, and it evaluates to
+    `True`, then suppression will be deactivated.
+
+    ??? Example "Suppress all warnings"
+        ```python
+        class A:
+            @suppress_warnings
+            def method(self, ...):
+                ...
+        ```
+    ??? Example "Suppress only `UserWarning`"
+        ```python
+        class A:
+            @suppress_warnings(categories=(UserWarning,))
+            def method(self, ...):
+                ...
+        ```
+    ??? Example "Configuring behaviour at runtime"
+        ```python
+        class A:
+            def __init__(self, warn_enabled: bool):
+                self.warn_enabled = warn_enabled
+
+            @suppress_warnings(flag="warn_enabled")
+            def method(self, ...):
+                ...
+        ```
+
+    Args:
+        fun: Optional callable to decorate. If provided, the decorator is applied inline.
+        categories: Sequence of warning categories to suppress.
+        flag: Name of an instance attribute to check for enabling warnings. If the
+              attribute exists and evaluates to `True`, warnings will **not** be
+              suppressed.
+
+    Returns:
+        Either a decorator (if no function is provided) or the decorated callable.
+    """
+
+    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
+        # Use a simple heuristic: if the first parameter is "self", assume it's a method.
+        sig = inspect.signature(fn)
+        params = list(sig.parameters)
+        if not params or params[0] != "self":
+            if flag:
+                raise ValueError("Cannot use suppress_warnings flag with non-methods")
+
+            @functools.wraps(fn)
+            def wrapper(*args: Any, **kwargs: Any) -> R:
+                with warnings.catch_warnings():
+                    for category in categories:
+                        warnings.simplefilter("ignore", category=category)
+                    return fn(*args, **kwargs)
+
+            return cast(Callable[P, R], wrapper)
+        else:
+
+            @functools.wraps(fn)
+            def wrapper(self, *args: Any, **kwargs: Any) -> R:
+                if flag and not hasattr(self, flag):
+                    raise AttributeError(
+                        f"Instance has no attribute '{flag}' for suppress_warnings"
+                    )
+                if flag and getattr(self, flag, False):
+                    return fn(self, *args, **kwargs)
+                with warnings.catch_warnings():
+                    for category in categories:
+                        warnings.simplefilter("ignore", category=category)
+                    return fn(self, *args, **kwargs)
+
+            return cast(Callable[P, R], wrapper)
+
+    if fun is None:
+        return decorator
+    return decorator(fun)
+
+
+# def suppress_warnings(
+#     categories: Sequence[Type[Warning]] = (Warning,), flag: str = "show_warnings"
+# ) -> Callable[[Callable[P, R]], Callable[P, R]]:
+#     """Decorator for class methods to conditionally suppress warnings.
+#
+#     The decorated method will execute with warnings suppressed for the specified
+#     categories unless the instance attribute (named by `flag`) evaluates to True.
+#
+#     ??? Example "Suppress all warnings"
+#         ```python
+#         class A:
+#             @suppress_warnings()
+#             def method(self, ...):
+#                 ...
+#         ```
+#     ??? Example "Suppress only `UserWarning`"
+#         ```python
+#         class A:
+#             def __init__(self, show_warnings: bool):
+#                 # the decorator will look for this attribute by default
+#                 self.show_warnings = show_warnings
+#
+#             @suppress_warnings(categories=(UserWarning,))
+#             def method(self, ...):
+#                 ...
+#         ```
+#     ??? Example "Configuring behaviour at runtime"
+#         ```python
+#         class A:
+#             def __init__(self, warn_enabled: bool)
+#                 self.warn_enabled = warn_enabled
+#
+#             @suppress_warnings(flag="warn_enabled")
+#             def method(self, ...):
+#                 ....
+#         ```
+#
+#     Args:
+#         categories: Sequence of warning categories to suppress.
+#         flag: Name of the instance attribute to check for enabling warnings. If the
+#             attribute evaluates to `True`, warnings will **not** be suppressed.
+#
+#     """
+#
+#     def decorator(fun: Callable[P, R]) -> Callable[P, R]:
+#         # HACK: Crappy heuristic to check if the function is a method
+#         sig = inspect.signature(fun)
+#         params = list(sig.parameters)
+#         if not params or params[0] != "self":
+#
+#             @functools.wraps(fun)
+#             def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
+#                 with warnings.catch_warnings():
+#                     for category in categories:
+#                         warnings.simplefilter("ignore", category=category)
+#                     return fun(*args, **kwargs)
+#
+#             return inner_wrapper
+#         else:
+#
+#             @functools.wraps(fun)
+#             def wrapper(self, *args, **kwargs):
+#                 if getattr(self, flag, False):
+#                     return fun(self, *args, **kwargs)
+#                 with warnings.catch_warnings():
+#                     for category in categories:
+#                         warnings.simplefilter("ignore", category=category)
+#                     return fun(self, *args, **kwargs)
+#
+#             return wrapper
+#
+#     return decorator
+
+
+class TimedCallable(Protocol[P, R]):
+    execution_time: float
+
+    def __call__(self, *args, **kwargs) -> R: ...
+
+
+@overload
+def timed(fun: Callable[P, R]) -> TimedCallable[P, R]: ...
+
+
+@overload
+def timed(
+    fun: None = None, *, accumulate: bool = False, logger: Logger | None = None
+) -> Callable[[Callable[P, R]], TimedCallable[P, R]]: ...
+
+
+@overload
+def timed(
+    fun: Callable[P, R], *, accumulate: bool = False, logger: Logger | None = None
+) -> TimedCallable[P, R]: ...
+
+
+def timed(
+    fun: Callable[P, R] | None = None,
+    *,
+    accumulate: bool = False,
+    logger: Logger | None = None,
+) -> Union[Callable[[Callable[P, R]], TimedCallable[P, R]], TimedCallable[P, R]]:
+    """A decorator that measures the execution time of the wrapped function.
+    Optionally logs the time taken.
+
+    ??? Example "Decorator usage"
+        ```python
+        @timed
+        def fun(...):
+            ...
+
+        @timed(accumulate=True, logger=getLogger(__name__))
+        def fun(...):
+            ...
+        ```
+
+    ??? Example "Inline usage"
+        ```python
+        timed_fun = timed(fun)
+        fun(...)
+        print(timed_fun.execution_time)
+
+        accum_time = timed(fun, accumulate=True)
+        fun(...)
+        fun(...)
+        print(accum_time.execution_time)
+        ```
+
+    Args:
+        fun:
+        accumulate: If `True`, the total execution time will be accumulated across all
+            calls.
+        logger: If provided, the execution time will be logged at the logger's level.
+
+    Returns:
+        A decorator that wraps a function, measuring and optionally logging its
+        execution time. The function will have an attribute `execution_time` where
+        either the time of the last execution or the accumulated total is stored.
+    """
+
+    if fun is None:
+
+        def decorator(func: Callable[P, R]) -> TimedCallable[P, R]:
+            return timed(func, accumulate=accumulate, logger=logger)
+
+        return decorator
+
+    assert fun is not None
+
+    @functools.wraps(fun)
+    def wrapper(*args, **kwargs) -> R:
+        start = time.perf_counter()
+        try:
+            assert fun is not None
+            result = fun(*args, **kwargs)
+        finally:
+            elapsed = time.perf_counter() - start
+            if accumulate:
+                cast(TimedCallable, wrapper).execution_time += elapsed
+            else:
+                cast(TimedCallable, wrapper).execution_time = elapsed
+            if logger is not None:
+                assert fun is not None
+                logger.log(
+                    logger.level,
+                    f"{fun.__module__}.{fun.__qualname__} took {elapsed:.5f} seconds",
+                )
+        return result
+
+    cast(TimedCallable, wrapper).execution_time = 0.0
+
+    return cast(TimedCallable[P, R], wrapper)

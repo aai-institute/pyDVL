@@ -1,13 +1,19 @@
 from itertools import islice
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
 from pydvl.valuation.methods.gt_shapley import (
-    GTSampler,
     _create_sample_sizes,
     _create_sampling_probabilities,
     compute_n_samples,
+)
+from pydvl.valuation.samplers import (
+    GroupTestingSampleSize,
+    NoIndexIteration,
+    RandomSizeIteration,
+    StratifiedSampler,
 )
 
 
@@ -30,9 +36,14 @@ def test_compute_n_samples_updated():
     assert_allclose(got, expected)
 
 
-def test_gt_sampler():
-    sampler = GTSampler(seed=42)
-
+def test_gt_sampler(seed):
+    sampler = StratifiedSampler(
+        index_iteration=NoIndexIteration,
+        sample_sizes=GroupTestingSampleSize(n_samples=10),
+        sample_sizes_iteration=RandomSizeIteration,
+        batch_size=1,
+        seed=seed,
+    )
     indices = np.arange(10)
 
     n_samples = 5000
@@ -50,3 +61,10 @@ def test_gt_sampler():
     expected = _create_sampling_probabilities(sample_sizes)
 
     assert_allclose(frequencies, expected, atol=0.02)
+
+
+@pytest.mark.parametrize("n_samples", [1, 27])
+def test_gt_setsize_strategy(n_samples):
+    indices = np.arange(10)
+    strategy = GroupTestingSampleSize(n_samples=n_samples)
+    np.testing.assert_allclose(n_samples, strategy.sample_sizes(len(indices)).sum())

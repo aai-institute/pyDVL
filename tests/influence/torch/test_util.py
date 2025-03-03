@@ -230,10 +230,10 @@ def test_torch_dataset_to_dask_array(
                 for k, c in enumerate(x_da[0].chunks[1:])
             ]
         )
-        assert np.allclose(x_torch.numpy(), x_da[0].compute())
+        np.testing.assert_allclose(x_torch.numpy(), x_da[0].compute())
 
     y_da = torch_dataset_to_dask_array(data_set, chunk_size=chunk_size)[1]
-    assert np.allclose(y_torch.numpy(), y_da.compute())
+    np.testing.assert_allclose(y_torch.numpy(), y_da.compute())
     assert y_da.shape == y_torch.shape
     assert sum(y_da.chunks[0]) == total_size
     assert all(

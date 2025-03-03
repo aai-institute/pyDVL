@@ -610,7 +610,11 @@ class ValuationResult(
         except KeyError:
             raise IndexError(f"Index {idx} not found in ValuationResult")
         val, var = running_moments(
-            self._values[pos], self._variances[pos], self._counts[pos], new_value
+            self._values[pos],
+            self._variances[pos],
+            self._counts[pos],
+            new_value,
+            unbiased=False,
         )
         self[pos] = ValueItem(
             index=cast(IndexT, idx),  # FIXME
@@ -680,6 +684,9 @@ class ValuationResult(
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
         df[column + "_updates"] = self.counts[self._sort_positions]
+        # HACK for compatibility with updated support code in the notebooks
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod
