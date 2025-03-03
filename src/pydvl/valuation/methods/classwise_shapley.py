@@ -17,7 +17,7 @@ D_{-y_i}$.
 
 !!! tip "Analysis of Class-wise Shapley"
     For a detailed analysis of the method, with comparison to other valuation
-    techniques, please refer to the [main documentation][class-wise-shapley].
+    techniques, please refer to the [main documentation][intro-to-cw-shapley].
 
 In practice, the quantity above is estimated using Monte Carlo sampling of
 the powerset and the set of index permutations. This results in the estimator

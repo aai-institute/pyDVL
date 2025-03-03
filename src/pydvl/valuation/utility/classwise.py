@@ -17,9 +17,9 @@ class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
     It expects a classwise scorer and a classification task.
 
     Args:
-        model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
-        scorer: A classwise scoring object.
+        model: Any supervised model. Typical choices can be found in the [sci-kit learn
+            documentation](https://scikit-learn.org/stable/supervised_learning.html).
+        scorer: A class-wise scoring object.
         catch_errors: set to `True` to catch the errors when `fit()` fails. This
             could happen in several steps of the pipeline, e.g. when too little
             training data is passed, which happens often during Shapley value

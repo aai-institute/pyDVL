@@ -17,19 +17,15 @@ def compose_score(
     Useful to squash unbounded scores into ranges manageable by data valuation
     methods.
 
-    Example:
-
-    ```python
-    sigmoid = lambda x: 1/(1+np.exp(-x))
-    compose_score(Scorer("r2"), sigmoid, range=(0,1), name="squashed r2")
-    ```
+    ??? Example
+        ```python
+        sigmoid = lambda x: 1/(1+np.exp(-x))
+        compose_score(Scorer("r2"), sigmoid, range=(0,1), name="squashed r2")
+        ```
 
     Args:
         scorer: The object to be composed.
         transformation: A scalar transformation
-        range: The range of the transformation. This will be used e.g. by
-            [Utility][pydvl.valuation.utility.Utility] for the range of the
-            composite scorer.
         name: A string representation for the composition, for `str()`.
 
     Returns:

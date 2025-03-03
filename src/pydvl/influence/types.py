@@ -65,7 +65,7 @@ class InfluenceMode(str, Enum):
 
     Attributes:
         Up: [Approximating the influence of a point]
-            [approximating-the-influence-of-a-point]
+            [influence-of-a-point]
         Perturbation: [Perturbation definition of the influence score]
             [perturbation-definition-of-the-influence-score]
 
@@ -399,7 +399,7 @@ class OperatorGradientComposition(
         left_batch: BatchType,
         right_batch: Optional[BatchType],
         mode: InfluenceMode,
-    ):
+    ) -> TensorType:
         r"""
         Computes the interaction between the gradients on two batches of data based on
         the specified mode weighted by the operator action,
@@ -428,15 +428,19 @@ class OperatorGradientComposition(
         """
         bilinear_form = self.op.as_bilinear_form()
         if mode == InfluenceMode.Up:
-            return bilinear_form.grads_inner_prod(left_batch, right_batch, self.gp)
+            return cast(
+                TensorType,
+                bilinear_form.grads_inner_prod(left_batch, right_batch, self.gp),
+            )
         elif mode == InfluenceMode.Perturbation:
-            return bilinear_form.mixed_grads_inner_prod(
-                left_batch, right_batch, self.gp
+            return cast(
+                TensorType,
+                bilinear_form.mixed_grads_inner_prod(left_batch, right_batch, self.gp),
             )
         else:
             raise UnsupportedInfluenceModeException(mode)
 
-    def transformed_grads(self, batch: BatchType):
+    def transformed_grads(self, batch: BatchType) -> TensorType:
         r"""
         Computes the gradients of a data batch, transformed by the operator application
         , i.e. the expressions
@@ -452,11 +456,11 @@ class OperatorGradientComposition(
 
         """
         grads = self.gp.flat_grads(batch)
-        return self.op.apply(grads)
+        return cast(TensorType, self.op.apply(grads))
 
     def interactions_from_transformed_grads(
         self, left_factors: TensorType, right_batch: BatchType, mode: InfluenceMode
-    ):
+    ) -> TensorType:
         r"""
         Computes the interaction between the transformed gradients on two batches of
         data using pre-computed factors and a batch of data,

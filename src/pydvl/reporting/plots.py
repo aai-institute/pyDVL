@@ -33,7 +33,7 @@ def shaded_mean_std(
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     ax: Optional[Axes] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Axes:
     r"""The usual mean \(\pm\) std deviation plot to aggregate runs of
     experiments.
@@ -88,7 +88,7 @@ def plot_ci_array(
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> plt.Axes:
     """Plot values and a confidence interval from a 2D array.
 
@@ -149,7 +149,7 @@ def plot_ci_values(
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> plt.Axes:
     """Plot values and a confidence interval.
 

@@ -92,7 +92,7 @@ failing pipelines. tox will:
 * generate coverage reports in html, as well as badges.
 
 You can configure pytest, coverage and ruff by adjusting
-[pyproject.toml](pyproject.toml).
+[pyproject.toml](https://github.com/aai-institute/pyDVL/blob/develop/pyproject.toml).
 
 Besides the usual unit tests, most algorithms are tested using pytest. This
 requires ray for the parallelization and Memcached for caching. Please install
@@ -132,11 +132,11 @@ There are a few important arguments:
   of slow tests.
 
 - `--with-cuda` sets the device fixture in [tests/influence/torch/conftest.py](
-  tests/influence/torch/conftest.py) to `cuda` if it is available.
-  Using this fixture within tests, you can run parts of your tests on a `cuda` 
-  device. Be aware, that you still have to take care of the usage of the device
-  manually in a specific test. Setting this flag does not result in
-  running all tests on a GPU.
+  https://github.com/aai-institute/pyDVL/blob/develop/tests/influence/torch/conftest.py)
+  to `cuda` if it is available. Using this fixture within tests, you can run parts
+  of your tests on a `cuda` device. Be aware, that you still have to take care of
+  the usage of the device manually in a specific test. Setting this flag does not
+  result in running all tests on a GPU.
 
 ### Markers
 
@@ -384,7 +384,8 @@ library](https://www.zotero.org/groups/2703043/transferlab/library). All other
 contributors just add the bibtex data, and a maintainer will add it to the group
 library upon merging.
 
-To add a citation inside a markdown file, use the notation `[@citekey]`. Alas,
+To add a citation inside a markdown file, use the notation `[@ citekey]` (with
+no space). Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
 example, in `pydvl.value.shapley.montecarlo` we have:
@@ -440,7 +441,7 @@ use braces for legibility like in the first example.
 ### Abbreviations
 
 We keep the abbreviations used in the documentation inside the
-[docs_include/abbreviations.md](docs_includes%2Fabbreviations.md) file.
+[docs_include/abbreviations.md](https://github.com/aai-institute/pyDVL/blob/develop/docs_includes%2Fabbreviations.md) file.
 
 The syntax for abbreviations is:
 
@@ -569,7 +570,7 @@ act -j lint
 act --artifact-server-path /tmp/artifacts
 
 # Run a job in a specific workflow (useful if you have duplicate job names)
-act -j lint -W .github/workflows/tox.yml
+act -j lint -W .github/workflows/publish.yml
 
 # Run in dry-run mode:
 act -n
@@ -727,9 +728,10 @@ PYPI_PASSWORD
 The first 2 are used after tests run on the develop branch's CI workflow 
 to automatically publish packages to [TestPyPI](https://test.pypi.org/).
 
-The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
-workflow to publish packages to [PyPI](https://pypi.org/) from `develop` after
-a GitHub release.
+The last 2 are used in the
+[publish.yaml](https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml)
+CI workflow to publish packages to [PyPI](https://pypi.org/) from `develop`
+after a GitHub release.
 
 #### Publish to TestPyPI
 
@@ -738,6 +740,5 @@ the build part of the version number without commiting or tagging the change
 and then publish a package to TestPyPI from CI using Twine. The version
 has the GitHub run number appended. 
 
-For more details refer to the files
-[.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
-[.github/workflows/tox.yaml](.github/workflows/tox.yaml).
+For more details refer to the file
+[.github/workflows/publish.yaml](https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml).

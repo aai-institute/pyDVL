@@ -19,7 +19,7 @@ where the coefficients are zero except for $k=|D|-1.$
 [LOOValuation][pydvl.valuation.methods.LOOValuation] is preconfigured to stop once all
 indices have been visited once. In particular, it uses a default
 [LOOSampler][pydvl.valuation.samplers.LOOSampler] with a
-[FiniteSequentialIndexIteration][pydvl.valuation.iteration.FiniteSequentialIndexIteration].
+[FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
 If you want to change this behaviour, the easiest way is to subclass and replace the
 constructor.
 

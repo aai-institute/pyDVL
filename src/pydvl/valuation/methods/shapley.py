@@ -95,10 +95,10 @@ pattern remains the same.
    deterministic sampler with a count-based stopping criterion is likely to yield poor
    results. More importantly, not all samplers, nor sampler configurations, are
    compatible with Shapley value computation. For instance using
-   [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration] with a
-   [PowerSetSampler][pydvl.valuation.samplers.PowerSetSampler] will not work since the
-   evaluation strategy expects samples consisting of an index and a subset of its
-   complement in the whole index set.
+   [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] with a
+   [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] will not work
+   since the evaluation strategy expects samples consisting of an index and a subset of
+   its complement in the whole index set.
 
 ## References
 

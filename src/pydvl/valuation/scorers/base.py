@@ -1,7 +1,8 @@
 """
 Scorers are a fundamental building block of many data valuation methods. They
-are typically used by [Utility][pydvl.valuation.utility.Utility] and its subclasses
-to evaluate the quality of a model when trained on subsets of the training data.
+are typically used by [ModelUtility][pydvl.valuation.utility.modelutility.ModelUtility]
+and its subclasses to evaluate the quality of a model when trained on subsets of the
+training data.
 
 Scorers evaluate trained models in user-defined ways, and provide additional
 information about themselves, like their range and default value, which can be used by

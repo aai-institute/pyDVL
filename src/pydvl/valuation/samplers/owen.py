@@ -156,10 +156,12 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
     The distribution for the outer sampling can be either uniform or deterministic. The
     default is deterministic on a grid, which is the original method described in
     Okhrati and Lipani (2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.
-    This can be achieved by using the [GridOwenStrategy][GridOwenStrategy] strategy.
+    This can be achieved by using the
+    [GridOwenStrategy][pydvl.valuation.samplers.owen.GridOwenStrategy] strategy.
 
     Alternatively, the distribution can be uniform between 0 and 1. This can be achieved
-    by using the [UniformOwenStrategy][UniformOwenStrategy] strategy.
+    by using the [UniformOwenStrategy][pydvl.valuation.samplers.owen.UniformOwenStrategy]
+    strategy.
 
     By combining a [UniformOwenStrategy][pydvl.valuation.samplers.owen.UniformOwenStrategy]
     with an infinite
@@ -202,7 +204,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         self.sampling_probabilities = outer_sampling_strategy
         self.q_stop = 1.0
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             _complement = complement(indices, [idx])
             for prob in self.sampling_probabilities(self.q_stop):
@@ -300,8 +302,8 @@ class AntitheticOwenSampler(OwenSampler):
         )
         self.q_stop = 0.5
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        for sample in super()._generate(indices):
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
+        for sample in super().generate(indices):
             idx, subset = sample
             _exclude = [idx] + subset.tolist()
             _antithetic_subset = complement(indices, _exclude)
