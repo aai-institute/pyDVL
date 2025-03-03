@@ -41,9 +41,10 @@ class ValueUpdate:
     The updates from all workers are converted back to linear space by
     [LogResultUpdater][pydvl.valuation.samplers.base.LogResultUpdater].
 
-    !!! Note
-        The `update` field is kept consistent with `log_update` as `exp(log_update) *
-        sign`, but it's not intended to be used.
+    Attributes:
+        idx: Index of the sample the update corresponds to.
+        log_update: Logarithm of the absolute value of the update.
+        sign: Sign of the update.
     """
 
     idx: IndexT | None
@@ -54,7 +55,6 @@ class ValueUpdate:
         object.__setattr__(self, "idx", idx)
         object.__setattr__(self, "log_update", log_update)
         object.__setattr__(self, "sign", sign)
-        object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
 ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)

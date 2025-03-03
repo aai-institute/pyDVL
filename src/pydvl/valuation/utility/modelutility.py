@@ -29,7 +29,8 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
     An instance of `ModelUtility` holds the tuple of model, and scoring function which
     determines the value of data points. This is used for the computation of [all
     game-theoretic values][game-theoretical-methods] like [Shapley
-    values][pydvl.valuation.shapley] and [the Least Core][pydvl.valuation.least_core].
+    values][pydvl.valuation.methods.shapley] and [the Least
+    Core][pydvl.valuation.methods.least_core].
 
     `ModelUtility` expects the model to fulfill at least the
     [BaseModel][pydvl.utils.types.BaseModel] interface, i.e. to have a `fit()` method
@@ -54,7 +55,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
     Args:
         model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+            [sci-kit learn documentation](https://scikit-learn.org/stable/supervised_learning.html).
         scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [scorers][pydvl.valuation.scorers] for ways to create
             and compose scorers, in particular how to set default values and

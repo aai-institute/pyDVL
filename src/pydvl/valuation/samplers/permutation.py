@@ -111,16 +111,19 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
 
     @skip_indices.setter
     def skip_indices(self, indices: IndexSetT):
+        """Sets the indices to skip when generating permutations. This can be used
+        to avoid updating indices that have already converged, but can lead to biased
+        estimates if not done carefully."""
         self._skip_indices = indices
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
 
         Args:
             indices: The indices to sample from. If empty, no samples are generated. If
-            [skip_indices][pydvl.valuation.samplers.base.IndexSampler.skip_indices]
-            is set, these indices are removed from the set before generating the
-            permutation.
+                [skip_indices][pydvl.valuation.samplers.base.IndexSampler.skip_indices]
+                is set, these indices are removed from the set before generating the
+                permutation.
         """
         if len(indices) == 0:
             return
@@ -140,8 +143,8 @@ class AntitheticPermutationSampler(PermutationSampler):
     !!! tip "New in version 0.7.1"
     """
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        for sample in super()._generate(indices):
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
+        for sample in super().generate(indices):
             permutation = sample.subset
             yield Sample(None, permutation)
             yield Sample(None, permutation[::-1])
@@ -153,7 +156,7 @@ class DeterministicPermutationSampler(PermutationSamplerBase):
     definition of semi-values.
     """
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for permutation in permutations(indices):
             yield Sample(None, np.asarray(permutation))
 

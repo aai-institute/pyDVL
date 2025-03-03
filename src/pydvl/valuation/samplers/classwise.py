@@ -186,7 +186,7 @@ class ClasswiseSampler(IndexSampler):
                     self._n_samples += len(batch)
                     yield batch
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         # This is not needed because this sampler is used
         # by calling the `from_data` method instead of the `generate_batches` method.
         raise AttributeError("Cannot sample from indices directly.")

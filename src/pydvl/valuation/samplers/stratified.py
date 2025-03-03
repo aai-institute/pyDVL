@@ -121,7 +121,7 @@ semi-values which precompute these sizes while still providing reasonable perfor
     training set.
 
 This heuristic is configured with the argument `sample_size_strategy` of
-[StratifiedSampler][pydvl.valuation.samplers.stratifed.StratifiedSampler], which is an
+[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler], which is an
 instance of
 [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
 
@@ -354,7 +354,7 @@ class PowerLawSampleSize(SampleSizeStrategy):
     $$f(k) = (1+k)^a, $$
 
     and some exponent $a.$ With $a=1$ one recovers the
-    [HarmonicSamplesPerSetSize][pydvl.valuation.samplers.stratified.HarmonicSamplesPerSetSize]
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]
     heuristic.
 
     Args:
@@ -387,6 +387,8 @@ class SampleSizeIteration(ABC):
 
 
 class DeterministicSizeIteration(SampleSizeIteration):
+    """Generates exactly $m_k$ samples for each set size $k$ before moving to the next."""
+
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
         counts = self.strategy.sample_sizes(self.n_indices)
         for k, m_k in enumerate(counts):  # type: int, int
@@ -395,9 +397,7 @@ class DeterministicSizeIteration(SampleSizeIteration):
 
 
 class RandomSizeIteration(SampleSizeIteration):
-    """Draws a set size $k$ following the distribution of sizes given by the
-    strategy.
-    """
+    """Draws a set size $k$ following the distribution of sizes given by the strategy."""
 
     def __init__(
         self, strategy: SampleSizeStrategy, n_indices: int, seed: Seed | None = None
@@ -417,11 +417,15 @@ class RandomSizeIteration(SampleSizeIteration):
 
 
 class RoundRobinIteration(SampleSizeIteration):
+    """Generates one sample for each set size $k$ before moving to the next.
+
+    This continues yielding until every size $k$ has been emitted exactly $m_k$ times.
+    For example, if `strategy.sample_sizes() == [2, 3, 1]` then we want the sequence:
+    (0,1), (1,1), (2,1), (0,1), (1,1), (1,1)
+    """
+
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
         counts = self.strategy.sample_sizes(self.n_indices).copy()
-        # Continue yielding until every k has been emitted exactly m_k times.
-        # For example, if counts == [2, 3, 1] then we want the sequence:
-        # (0,1), (1,1), (2,1), (0,1), (1,1), (1,1)
         while any(count > 0 for count in counts):
             for k, count in enumerate(counts):  # type: int, int
                 if count > 0:
@@ -452,7 +456,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     not depend on run-time variance estimates, as an adaptive method might do. Section 4
     of Wu et al. (2023) shows a good default choice is based on the harmonic function
     of the set size $k$ (see
-    [HarmonicSamplesPerSetSize][pydvl.valuation.samplers.stratified.HarmonicSamplesPerSetSize]).
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]).
 
     Args:
         sample_sizes: An object which returns the number of samples to
@@ -492,7 +496,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self.sample_sizes_strategy = sample_sizes
         self.sample_sizes_iteration = sample_sizes_iteration
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)

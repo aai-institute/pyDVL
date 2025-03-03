@@ -1,6 +1,6 @@
 """
 This module provides a
-[SupervisedScorer][pydvl.valuation.scorer.supervised.SupervisedScorer] class that wraps
+[SupervisedScorer][pydvl.valuation.scorers.supervised.SupervisedScorer] class that wraps
 scoring functions for supervised problems with additional information.
 
 Supervised scorers can be constructed in the same way as in scikit-learn: either from

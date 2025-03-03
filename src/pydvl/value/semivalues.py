@@ -785,7 +785,7 @@ def compute_semivalues(
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
 

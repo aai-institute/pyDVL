@@ -18,7 +18,7 @@ using one of Dask, Ray or Joblib. The first is used in
 the [influence][pydvl.influence] package whereas the other two
 are used in the [value][pydvl.value] package.
 
-### Data valuation
+### Data valuation  { #setting-up-parallelization-data-valuation }
 
 For data valuation, pyDVL uses [joblib](https://joblib.readthedocs.io/en/latest/) for local
 parallelization (within one machine) and supports using

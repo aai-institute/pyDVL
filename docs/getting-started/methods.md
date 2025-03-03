@@ -7,44 +7,57 @@ alias:
 
 We currently implement the following methods:
 
-## Data valuation
+## Data valuation  { #implemented-methods-data-valuation }
 
-- [**LOO**][pydvl.value.loo.compute_loo].
+- [**LOO**][pydvl.valuation.methods.loo.LOOValuation].
 
-- [**Permutation Shapley**][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
+- **Permutation Shapley**, via
+  [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+  configured with a 
+  [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
   (also called **ApproxShapley**) [@castro_polynomial_2009].
 
-- [**TMCS**][pydvl.value.shapley.compute_shapley_values]
+- **TMCS** via [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+  configured with
+  [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
+  and
+  [RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation] 
   [@ghorbani_data_2019].
 
-- [**Data Banzhaf**][pydvl.value.semivalues.compute_banzhaf_semivalues]
+- [**Data Banzhaf**][pydvl.valuation.methods.data_banzhaf.DataBanzhafValuation]
   [@wang_data_2023].
 
-- [**Beta Shapley**][pydvl.value.semivalues.compute_beta_shapley_semivalues]
+- [**Beta Shapley**][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]
   [@kwon_beta_2022].
 
-- [**CS-Shapley**][pydvl.value.shapley.classwise.compute_classwise_shapley_values]
+- [**CS-Shapley**][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation]
   [@schoch_csshapley_2022].
 
-- [**Least Core**][pydvl.value.least_core.montecarlo.montecarlo_least_core]
+- [**Least Core**][pydvl.valuation.methods.least_core.LeastCoreValuation]
   [@yan_if_2021].
 
-- [**Owen Sampling**][pydvl.value.shapley.owen.owen_sampling_shapley]
+- **Owen Sampling** with
+  [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+  configured with an [OwenSampler][pydvl.valuation.samplers.owen.OwenSampler]
   [@okhrati_multilinear_2021].
 
-- [**Data Utility Learning**][pydvl.utils.utility.DataUtilityLearning]
-  [@wang_improving_2022].
+- [**Data Utility Learning**][pydvl.valuation.utility.learning.DataUtilityLearning]
+  either with the
+  [IndicatorUtilityModel][pydvl.valuation.utility.learning.IndicatorUtilityModel]
+  from [@wang_improving_2022], or with
+  [DeepSetUtilityModel][pydvl.valuation.utility.deepset.DeepSetUtilityModel]
+  from [@zaheer_deep_2017].
 
-- [**kNN-Shapley**][pydvl.value.shapley.knn.knn_shapley]
-  [@jia_efficient_2019a].
+- [**kNN-Shapley**][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation]
+  (exact only) [@jia_efficient_2019a].
 
-- [**Group Testing**][pydvl.value.shapley.gt.group_testing_shapley]
+- [**Group Testing**][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation]
   [@jia_efficient_2019]
 
-- [**Data-OOB**][pydvl.value.oob.compute_data_oob]
+- [**Data-OOB**][pydvl.valuation.methods.data_oob.DataOOBValuation]
   [@kwon_dataoob_2023].
 
-## Influence functions
+## Influence functions  { #implemented-methods-influence-functions }
 
 - [**CG Influence**][pydvl.influence.torch.CgInfluence].
   [@koh_understanding_2017].

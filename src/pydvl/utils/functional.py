@@ -52,15 +52,15 @@ def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
 
 
 def free_arguments(fun: Union[Callable, functools.partial]) -> Set[str]:
-    """Computes the set of free arguments for a function or
-    [functools.partial][] object.
+    """Computes the set of free arguments for a function or [[functools.partial]]
+    object.
 
     All arguments of a function are considered free unless they are set by a
     partial. For example, if `f = partial(g, a=1)`, then `a` is not a free
     argument of `f`.
 
     Args:
-        fun: A callable or a [partial object][].
+        fun: A callable or a [partial object][functools.partial].
 
     Returns:
         The set of free arguments of `fun`.

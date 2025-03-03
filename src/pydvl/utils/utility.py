@@ -59,7 +59,7 @@ class Utility:
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
-    if it is a Sci-Kit Learn model, otherwise a copy is created using
+    if it is a Scikit-Learn model, otherwise a copy is created using
     [copy.deepcopy][]
 
     Since evaluating the scoring function requires retraining the model and that
@@ -78,7 +78,7 @@ class Utility:
 
     Args:
         model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+            [sci-kit learn documentation](https://scikit-learn.org/stable/supervised_learning.html).
         data: [Dataset][pydvl.utils.dataset.Dataset]
             or [GroupedDataset][pydvl.utils.dataset.GroupedDataset] instance.
         scorer: A scoring object. If None, the `score()` method of the model

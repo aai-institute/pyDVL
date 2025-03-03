@@ -4,7 +4,7 @@ import logging
 from functools import wraps
 from itertools import cycle, takewhile
 from time import time
-from typing import TYPE_CHECKING, Collection, Generic, Iterable, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Collection, Generic, Iterable, Iterator, TypeVar
 
 from deprecate import deprecated
 from tqdm.auto import tqdm
@@ -30,7 +30,7 @@ def repeat_indices(
     indices: Collection[int],
     result: ValuationResult,
     done: StoppingCriterion,
-    **kwargs,
+    **kwargs: Any,
 ) -> Iterator[int]:
     """Helper function to cycle indefinitely over a collection of indices
     until the stopping criterion is satisfied while displaying progress.
@@ -102,7 +102,7 @@ class Progress(Generic[T]):
         self,
         iterable: Iterable[T],
         is_done: StoppingCriterion,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         self.iterable = iterable
         self.is_done = is_done

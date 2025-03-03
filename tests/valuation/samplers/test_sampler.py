@@ -724,7 +724,7 @@ class TestBatchSampler(IndexSampler):
 
     def sample_limit(self, indices: IndexSetT) -> int | None: ...
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         yield from (Sample(idx, np.empty_like(indices)) for idx in indices)
 
     def log_weight(self, n: int, subset_len: int) -> float: ...
