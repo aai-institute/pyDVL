@@ -5030,7 +5030,7 @@ failing pipelines. tox will:
 * build and test installation of the package.
 * generate coverage reports in html, as well as badges.</p>
 <p>You can configure pytest, coverage and ruff by adjusting
-<a href="pyproject.toml">pyproject.toml</a>.</p>
+<a href="https://github.com/aai-institute/pyDVL/blob/develop/pyproject.toml">pyproject.toml</a>.</p>
 <p>Besides the usual unit tests, most algorithms are tested using pytest. This
 requires ray for the parallelization and Memcached for caching. Please install
 both before running the tests. We run <a href="#ci">tests in CI</a> as well.</p>
@@ -5063,11 +5063,11 @@ run only certain tests using patterns (<code>-k</code>) or marker (<code>-m</cod
   of slow tests.</p>
 </li>
 <li>
-<p><code>--with-cuda</code> sets the device fixture in <a href="tests/influence/torch/conftest.py">tests/influence/torch/conftest.py</a> to <code>cuda</code> if it is available.
-  Using this fixture within tests, you can run parts of your tests on a <code>cuda</code> 
-  device. Be aware, that you still have to take care of the usage of the device
-  manually in a specific test. Setting this flag does not result in
-  running all tests on a GPU.</p>
+<p><code>--with-cuda</code> sets the device fixture in <a href="https://github.com/aai-institute/pyDVL/blob/develop/tests/influence/torch/conftest.py">tests/influence/torch/conftest.py</a>
+  to <code>cuda</code> if it is available. Using this fixture within tests, you can run parts
+  of your tests on a <code>cuda</code> device. Be aware, that you still have to take care of
+  the usage of the device manually in a specific test. Setting this flag does not
+  result in running all tests on a GPU.</p>
 </li>
 </ul>
 <h3 id="markers">Markers<a class="headerlink" href="#markers" title="Permanent link">&para;</a></h3>
@@ -5246,7 +5246,8 @@ export of the Zotero folder <code>software/pydvl</code> in the <a href="https://
 library</a>. All other
 contributors just add the bibtex data, and a maintainer will add it to the group
 library upon merging.</p>
-<p>To add a citation inside a markdown file, use the notation <code>[@citekey]</code>. Alas,
+<p>To add a citation inside a markdown file, use the notation <code>[@ citekey]</code> (with
+no space). Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
 example, in <code>pydvl.value.shapley.montecarlo</code> we have:</p>
@@ -5289,7 +5290,7 @@ exceptions). For simplicity, declare the string as "raw" with the prefix <code>r
 use braces for legibility like in the first example.</p>
 <h3 id="abbreviations">Abbreviations<a class="headerlink" href="#abbreviations" title="Permanent link">&para;</a></h3>
 <p>We keep the abbreviations used in the documentation inside the
-<a href="docs_includes%2Fabbreviations.md">docs_include/abbreviations.md</a> file.</p>
+<a href="https://github.com/aai-institute/pyDVL/blob/develop/docs_includes%2Fabbreviations.md">docs_include/abbreviations.md</a> file.</p>
 <p>The syntax for abbreviations is:</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>*[ABBR]: Abbreviation
 </span></code></pre></div>
@@ -5390,7 +5391,7 @@ without that job id).</p>
 </span><span id="__span-33-20"><a id="__codelineno-33-20" name="__codelineno-33-20" href="#__codelineno-33-20"></a>act<span class="w"> </span>--artifact-server-path<span class="w"> </span>/tmp/artifacts
 </span><span id="__span-33-21"><a id="__codelineno-33-21" name="__codelineno-33-21" href="#__codelineno-33-21"></a>
 </span><span id="__span-33-22"><a id="__codelineno-33-22" name="__codelineno-33-22" href="#__codelineno-33-22"></a><span class="c1"># Run a job in a specific workflow (useful if you have duplicate job names)</span>
-</span><span id="__span-33-23"><a id="__codelineno-33-23" name="__codelineno-33-23" href="#__codelineno-33-23"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-W<span class="w"> </span>.github/workflows/tox.yml
+</span><span id="__span-33-23"><a id="__codelineno-33-23" name="__codelineno-33-23" href="#__codelineno-33-23"></a>act<span class="w"> </span>-j<span class="w"> </span>lint<span class="w"> </span>-W<span class="w"> </span>.github/workflows/publish.yml
 </span><span id="__span-33-24"><a id="__codelineno-33-24" name="__codelineno-33-24" href="#__codelineno-33-24"></a>
 </span><span id="__span-33-25"><a id="__codelineno-33-25" name="__codelineno-33-25" href="#__codelineno-33-25"></a><span class="c1"># Run in dry-run mode:</span>
 </span><span id="__span-33-26"><a id="__codelineno-33-26" name="__codelineno-33-26" href="#__codelineno-33-26"></a>act<span class="w"> </span>-n
@@ -5514,17 +5515,17 @@ the CI pipeline requires the following secret variables set up:</p>
 </span></code></pre></div>
 <p>The first 2 are used after tests run on the develop branch's CI workflow 
 to automatically publish packages to <a href="https://test.pypi.org/">TestPyPI</a>.</p>
-<p>The last 2 are used in the <a href=".github/workflows/publish.yaml">publish.yaml</a> CI
-workflow to publish packages to <a href="https://pypi.org/">PyPI</a> from <code>develop</code> after
-a GitHub release.</p>
+<p>The last 2 are used in the
+<a href="https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml">publish.yaml</a>
+CI workflow to publish packages to <a href="https://pypi.org/">PyPI</a> from <code>develop</code>
+after a GitHub release.</p>
 <h4 id="publish-to-testpypi">Publish to TestPyPI<a class="headerlink" href="#publish-to-testpypi" title="Permanent link">&para;</a></h4>
 <p>We use <a href="https://pypi.org/project/bump2version/">bump2version</a> to bump
 the build part of the version number without commiting or tagging the change
 and then publish a package to TestPyPI from CI using Twine. The version
 has the GitHub run number appended. </p>
-<p>For more details refer to the files
-<a href=".github/workflows/publish.yaml">.github/workflows/publish.yaml</a> and
-<a href=".github/workflows/tox.yaml">.github/workflows/tox.yaml</a>.</p>
+<p>For more details refer to the file
+<a href="https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml">.github/workflows/publish.yaml</a>.</p>
 
 
 
@@ -5547,7 +5548,7 @@ has the GitHub run number appended. </p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-01-12</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-03</span>
   </span>
 
     

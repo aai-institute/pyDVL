@@ -143,7 +143,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#data-valuation" class="md-skip">
+        <a href="#implemented-methods-data-valuation" class="md-skip">
           Skip to content
         </a>
       
@@ -642,7 +642,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#data-valuation" class="md-nav__link">
+  <a href="#implemented-methods-data-valuation" class="md-nav__link">
     <span class="md-ellipsis">
       Data valuation
     </span>
@@ -651,7 +651,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#influence-functions" class="md-nav__link">
+  <a href="#implemented-methods-influence-functions" class="md-nav__link">
     <span class="md-ellipsis">
       Influence functions
     </span>
@@ -4487,7 +4487,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#data-valuation" class="md-nav__link">
+  <a href="#implemented-methods-data-valuation" class="md-nav__link">
     <span class="md-ellipsis">
       Data valuation
     </span>
@@ -4496,7 +4496,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#influence-functions" class="md-nav__link">
+  <a href="#implemented-methods-influence-functions" class="md-nav__link">
     <span class="md-ellipsis">
       Influence functions
     </span>
@@ -4525,85 +4525,98 @@
   <h1>Methods</h1>
 
 <p>We currently implement the following methods:</p>
-<h2 id="data-valuation">Data valuation<a class="headerlink" href="#data-valuation" title="Permanent link">&para;</a></h2>
+<h2 id="implemented-methods-data-valuation">Data valuation<a class="headerlink" href="#implemented-methods-data-valuation" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/loo/#pydvl.value.loo.compute_loo"><strong><abbr title="Leave-One-Out">LOO</abbr></strong></a>.</p>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/loo/#pydvl.valuation.methods.loo.LOOValuation"><strong><abbr title="Leave-One-Out">LOO</abbr></strong></a>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/montecarlo/#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><strong>Permutation Shapley</strong></a>
+<p><strong>Permutation Shapley</strong>, via
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/shapley/#pydvl.valuation.methods.shapley.ShapleyValuation">ShapleyValuation</a>
+  configured with a 
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/samplers/permutation/#pydvl.valuation.samplers.permutation.PermutationSampler">PermutationSampler</a>
   (also called <strong>ApproxShapley</strong>) (Castro et al., 2009)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/#pydvl.value.shapley.compute_shapley_values"><strong><abbr title="Truncated Monte Carlo Shapley">TMCS</abbr></strong></a>
+<p><strong><abbr title="Truncated Monte Carlo Shapley">TMCS</abbr></strong> via <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/shapley/#pydvl.valuation.methods.shapley.ShapleyValuation">ShapleyValuation</a>
+  configured with
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/samplers/permutation/#pydvl.valuation.samplers.permutation.PermutationSampler">PermutationSampler</a>
+  and
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/samplers/truncation/#pydvl.valuation.samplers.truncation.RelativeTruncation">RelativeTruncation</a> 
   (Ghorbani and Zou, 2019)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_banzhaf_semivalues"><strong>Data Banzhaf</strong></a>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/data_banzhaf/#pydvl.valuation.methods.data_banzhaf.DataBanzhafValuation"><strong>Data Banzhaf</strong></a>
   (Wang and Jia, 2023)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_beta_shapley_semivalues"><strong>Beta Shapley</strong></a>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/beta_shapley/#pydvl.valuation.methods.beta_shapley.BetaShapleyValuation"><strong>Beta Shapley</strong></a>
   (Kwon and Zou, 2022)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/classwise/#pydvl.value.shapley.classwise.compute_classwise_shapley_values"><strong>CS-Shapley</strong></a>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/classwise_shapley/#pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation"><strong>CS-Shapley</strong></a>
   (Schoch et al., 2022)<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/least_core/montecarlo/#pydvl.value.least_core.montecarlo.montecarlo_least_core"><strong>Least Core</strong></a>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/least_core/#pydvl.valuation.methods.least_core.LeastCoreValuation"><strong>Least Core</strong></a>
   (Yan and Procaccia, 2021)<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/owen/#pydvl.value.shapley.owen.owen_sampling_shapley"><strong>Owen Sampling</strong></a>
+<p><strong>Owen Sampling</strong> with
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/shapley/#pydvl.valuation.methods.shapley.ShapleyValuation">ShapleyValuation</a>
+  configured with an <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/samplers/owen/#pydvl.valuation.samplers.owen.OwenSampler">OwenSampler</a>
   (Okhrati and Lipani, 2021)<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/utils/utility/#pydvl.utils.utility.DataUtilityLearning"><strong>Data Utility Learning</strong></a>
-  (Wang et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>.</p>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/utility/learning/#pydvl.valuation.utility.learning.DataUtilityLearning"><strong>Data Utility Learning</strong></a>
+  either with the
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/utility/learning/#pydvl.valuation.utility.learning.IndicatorUtilityModel">IndicatorUtilityModel</a>
+  from (Wang et al., 2022)<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup>, or with
+  <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/utility/deepset/#pydvl.valuation.utility.deepset.DeepSetUtilityModel">DeepSetUtilityModel</a>
+  from (Zaheer et al., 2017)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/knn/#pydvl.value.shapley.knn.knn_shapley"><strong>kNN-Shapley</strong></a>
-  (Jia et al., 2019)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>.</p>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/knn_shapley/#pydvl.valuation.methods.knn_shapley.KNNShapleyValuation"><strong>kNN-Shapley</strong></a>
+  (exact only) (Jia et al., 2019)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/shapley/gt/#pydvl.value.shapley.gt.group_testing_shapley"><strong>Group Testing</strong></a>
-  (Jia et al., 2019)<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup></p>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/gt_shapley/#pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation"><strong>Group Testing</strong></a>
+  (Jia et al., 2019)<sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup></p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" href="../../api/pydvl/value/oob/#pydvl.value.oob.compute_data_oob"><strong>Data-<abbr title="Out-of-Bag">OOB</abbr></strong></a>
-  (Kwon and Zou, 2023)<sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup>.</p>
+<p><a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/data_oob/#pydvl.valuation.methods.data_oob.DataOOBValuation"><strong>Data-<abbr title="Out-of-Bag">OOB</abbr></strong></a>
+  (Kwon and Zou, 2023)<sup id="fnref:12"><a class="footnote-ref" href="#fn:12">12</a></sup>.</p>
 </li>
 </ul>
-<h2 id="influence-functions">Influence functions<a class="headerlink" href="#influence-functions" title="Permanent link">&para;</a></h2>
+<h2 id="implemented-methods-influence-functions">Influence functions<a class="headerlink" href="#implemented-methods-influence-functions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.CgInfluence"><strong><abbr title="Conjugate Gradient">CG</abbr> Influence</strong></a>.
-  (Koh and Liang, 2017)<sup id="fnref2:12"><a class="footnote-ref" href="#fn:12">12</a></sup>.</p>
+  (Koh and Liang, 2017)<sup id="fnref2:13"><a class="footnote-ref" href="#fn:13">13</a></sup>.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.DirectInfluence"><strong>Direct Influence</strong></a>
-  (Koh and Liang, 2017)<sup id="fnref:12"><a class="footnote-ref" href="#fn:12">12</a></sup>.</p>
+  (Koh and Liang, 2017)<sup id="fnref:13"><a class="footnote-ref" href="#fn:13">13</a></sup>.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.LissaInfluence"><strong><abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr></strong></a>
-  (Agarwal et al., 2017)<sup id="fnref:13"><a class="footnote-ref" href="#fn:13">13</a></sup>.</p>
+  (Agarwal et al., 2017)<sup id="fnref:14"><a class="footnote-ref" href="#fn:14">14</a></sup>.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.ArnoldiInfluence"><strong>Arnoldi Influence</strong></a>
-  (Schioppa et al., 2022)<sup id="fnref:14"><a class="footnote-ref" href="#fn:14">14</a></sup>.</p>
+  (Schioppa et al., 2022)<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">15</a></sup>.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.EkfacInfluence"><strong><abbr title="Eigenvalue-corrected Kronecker-Factored Approximate Curvature">EKFAC</abbr> Influence</strong></a>
-  (George et al., 2018; Martens and Grosse, 2015)<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">15</a></sup><sup id="fnref:16"><a class="footnote-ref" href="#fn:16">16</a></sup>.</p>
+  (George et al., 2018; Martens and Grosse, 2015)<sup id="fnref:16"><a class="footnote-ref" href="#fn:16">16</a></sup><sup id="fnref:17"><a class="footnote-ref" href="#fn:17">17</a></sup>.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.NystroemSketchInfluence"><strong>Nyström Influence</strong></a>, based
-  on the ideas in (Hataya and Yamada, 2023)<sup id="fnref:17"><a class="footnote-ref" href="#fn:17">17</a></sup> for bi-level optimization.</p>
+  on the ideas in (Hataya and Yamada, 2023)<sup id="fnref:18"><a class="footnote-ref" href="#fn:18">18</a></sup> for bi-level optimization.</p>
 </li>
 <li>
 <p><a class="autorefs autorefs-internal" href="../../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model.InverseHarmonicMeanInfluence"><strong>Inverse-harmonic-mean Influence</strong></a>
-  (Kwon et al., 2023)<sup id="fnref:18"><a class="footnote-ref" href="#fn:18">18</a></sup>.</p>
+  (Kwon et al., 2023)<sup id="fnref:19"><a class="footnote-ref" href="#fn:19">19</a></sup>.</p>
 </li>
 </ul>
 <div class="footnote">
@@ -4625,7 +4638,7 @@
 <p>Schoch, S., Xu, H., Ji, Y., 2022. <a href="https://openreview.net/forum?id=KTOcrOR5mQ9">CS-Shapley: <span class="nocase">Class-wise Shapley Values</span> for Data Valuation in Classification</a>, in: Proc. Of the Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS). Presented at the Advances in Neural Information Processing Systems (NeurIPS 2022).&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
 </li>
 <li id="fn:6">
-<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+<p>Yan, T., Procaccia, A.D., 2021. If You Like Shapley Then You’ll Love the Core, in: Proceedings of the 35th AAAI Conference on Artificial Intelligence. Presented at the AAAI Conference on Artificial Intelligence, Association for the Advancement of Artificial Intelligence, pp. 5751–5759. <a href="https://doi.org/10.1609/aaai.v35i6.16721">https://doi.org/10.1609/aaai.v35i6.16721</a>&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 <li id="fn:7">
 <p>Okhrati, R., Lipani, A., 2021. A Multilinear Sampling Algorithm to Estimate Shapley Values, in: 2020 25th International Conference on Pattern Recognition (ICPR). Presented at the 2020 25th International Conference on Pattern Recognition (ICPR), IEEE, pp. 7992–7999. <a href="https://doi.org/10.1109/ICPR48806.2021.9412511">https://doi.org/10.1109/ICPR48806.2021.9412511</a>&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
@@ -4634,34 +4647,37 @@
 <p>Wang, T., Yang, Y., Jia, R., 2022. Improving <span class="nocase">Cooperative Game Theory-based Data Valuation</span> via Data Utility Learning. Presented at the International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning, arXiv. <a href="https://doi.org/10.48550/arXiv.2107.06336">https://doi.org/10.48550/arXiv.2107.06336</a>&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
 </li>
 <li id="fn:9">
-<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Gurel, N.M., Li, B., Zhang, C., Spanos, C., Song, D., 2019. Efficient task-specific data valuation for nearest neighbor algorithms. Proc. VLDB Endow. 12, 1610–1623. <a href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a>&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+<p>Zaheer, M., Kottur, S., Ravanbakhsh, S., Poczos, B., Salakhutdinov, R.R., Smola, A.J., 2017. <a href="https://papers.nips.cc/paper_files/paper/2017/hash/f22e4747da1aa27e363d86d40ff442fe-Abstract.html">Deep Sets</a>, in: Advances in Neural Information Processing Systems. Curran Associates, Inc.&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 <li id="fn:10">
-<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Hynes, N., Gürel, N.M., Li, B., Zhang, C., Song, D., Spanos, C.J., 2019. <a href="https://proceedings.mlr.press/v89/jia19a.html">Towards Efficient Data Valuation Based on the Shapley Value</a>, in: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics (AISTATS), PMLR, pp. 1167–1176.&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Gurel, N.M., Li, B., Zhang, C., Spanos, C., Song, D., 2019. Efficient task-specific data valuation for nearest neighbor algorithms. Proc. VLDB Endow. 12, 1610–1623. <a href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a>&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
 </li>
 <li id="fn:11">
-<p>Kwon, Y., Zou, J., 2023. <a href="https://proceedings.mlr.press/v202/kwon23e.html">Data-<abbr title="Out-of-Bag">OOB</abbr>: <span class="nocase">Out-of-bag Estimate</span> as a Simple and Efficient Data Value</a>, in: Proceedings of the 40th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 18135–18152.&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+<p>Jia, R., Dao, D., Wang, B., Hubis, F.A., Hynes, N., Gürel, N.M., Li, B., Zhang, C., Song, D., Spanos, C.J., 2019. <a href="https://proceedings.mlr.press/v89/jia19a.html">Towards Efficient Data Valuation Based on the Shapley Value</a>, in: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics (AISTATS), PMLR, pp. 1167–1176.&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
 </li>
 <li id="fn:12">
-<p>Koh, P.W., Liang, P., 2017. <a href="https://proceedings.mlr.press/v70/koh17a.html">Understanding <span class="nocase">Black-box Predictions</span> via Influence Functions</a>, in: Proceedings of the 34th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 1885–1894.&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 12 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:12" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+<p>Kwon, Y., Zou, J., 2023. <a href="https://proceedings.mlr.press/v202/kwon23e.html">Data-<abbr title="Out-of-Bag">OOB</abbr>: <span class="nocase">Out-of-bag Estimate</span> as a Simple and Efficient Data Value</a>, in: Proceedings of the 40th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 18135–18152.&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 12 in the text">&#8617;</a></p>
 </li>
 <li id="fn:13">
-<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+<p>Koh, P.W., Liang, P., 2017. <a href="https://proceedings.mlr.press/v70/koh17a.html">Understanding <span class="nocase">Black-box Predictions</span> via Influence Functions</a>, in: Proceedings of the 34th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 1885–1894.&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:13" title="Jump back to footnote 13 in the text">&#8617;</a></p>
 </li>
 <li id="fn:14">
-<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2022. Scaling Up Influence Functions. Proc. AAAI Conf. Artif. Intell. 36, 8179–8186. <a href="https://doi.org/10.1609/aaai.v36i8.20791">https://doi.org/10.1609/aaai.v36i8.20791</a>&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 14 in the text">&#8617;</a></p>
 </li>
 <li id="fn:15">
-<p>George, T., Laurent, C., Bouthillier, X., Ballas, N., Vincent, P., 2018. <a href="https://proceedings.neurips.cc/paper/2018/hash/48000647b315f6f00f913caa757a70b3-Abstract.html">Fast Approximate Natural Gradient Descent in a Kronecker Factored Eigenbasis</a>, in: Advances in Neural Information Processing Systems. Curran Associates, Inc.&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2022. Scaling Up Influence Functions. Proc. AAAI Conf. Artif. Intell. 36, 8179–8186. <a href="https://doi.org/10.1609/aaai.v36i8.20791">https://doi.org/10.1609/aaai.v36i8.20791</a>&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 15 in the text">&#8617;</a></p>
 </li>
 <li id="fn:16">
-<p>Martens, J., Grosse, R., 2015. <a href="https://proceedings.mlr.press/v37/martens15.html">Optimizing Neural Networks with <span class="nocase">Kronecker-factored Approximate Curvature</span></a>, in: Proceedings of the 32nd International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 2408–2417.&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+<p>George, T., Laurent, C., Bouthillier, X., Ballas, N., Vincent, P., 2018. <a href="https://proceedings.neurips.cc/paper/2018/hash/48000647b315f6f00f913caa757a70b3-Abstract.html">Fast Approximate Natural Gradient Descent in a Kronecker Factored Eigenbasis</a>, in: Advances in Neural Information Processing Systems. Curran Associates, Inc.&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 16 in the text">&#8617;</a></p>
 </li>
 <li id="fn:17">
-<p>Hataya, R., Yamada, M., 2023. <a href="https://proceedings.mlr.press/v206/hataya23a.html">Nyström Method for Accurate and Scalable Implicit Differentiation</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 4643–4654.&#160;<a class="footnote-backref" href="#fnref:17" title="Jump back to footnote 17 in the text">&#8617;</a></p>
+<p>Martens, J., Grosse, R., 2015. <a href="https://proceedings.mlr.press/v37/martens15.html">Optimizing Neural Networks with <span class="nocase">Kronecker-factored Approximate Curvature</span></a>, in: Proceedings of the 32nd International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 2408–2417.&#160;<a class="footnote-backref" href="#fnref:17" title="Jump back to footnote 17 in the text">&#8617;</a></p>
 </li>
 <li id="fn:18">
-<p>Kwon, Y., Wu, E., Wu, K., Zou, J., 2023. DataInf: Efficiently Estimating Data Influence in <span class="nocase">LoRA-tuned LLMs</span> and Diffusion Models. Presented at the The Twelfth International Conference on Learning Representations. <a href="https://doi.org/10.48550/arXiv.2310.00902">https://doi.org/10.48550/arXiv.2310.00902</a>&#160;<a class="footnote-backref" href="#fnref:18" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+<p>Hataya, R., Yamada, M., 2023. <a href="https://proceedings.mlr.press/v206/hataya23a.html">Nyström Method for Accurate and Scalable Implicit Differentiation</a>, in: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics. Presented at the International Conference on Artificial Intelligence and Statistics, PMLR, pp. 4643–4654.&#160;<a class="footnote-backref" href="#fnref:18" title="Jump back to footnote 18 in the text">&#8617;</a></p>
+</li>
+<li id="fn:19">
+<p>Kwon, Y., Wu, E., Wu, K., Zou, J., 2023. DataInf: Efficiently Estimating Data Influence in <span class="nocase">LoRA-tuned LLMs</span> and Diffusion Models. Presented at the The Twelfth International Conference on Learning Representations. <a href="https://doi.org/10.48550/arXiv.2310.00902">https://doi.org/10.48550/arXiv.2310.00902</a>&#160;<a class="footnote-backref" href="#fnref:19" title="Jump back to footnote 19 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -4687,7 +4703,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-01-30</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-03</span>
   </span>
 
     

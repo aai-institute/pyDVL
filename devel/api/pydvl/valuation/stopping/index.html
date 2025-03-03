@@ -5607,7 +5607,7 @@ safer to create a new instance.</p>
 </div>
 <h3 id="pydvl.valuation.stopping--interactions-with-sampling-schemes-and-other-pitfalls-of-stopping-criteria">Interactions with sampling schemes and other pitfalls of stopping criteria<a class="headerlink" href="#pydvl.valuation.stopping--interactions-with-sampling-schemes-and-other-pitfalls-of-stopping-criteria" title="Permanent link">&para;</a></h3>
 <p>Different samplers define different "update strategies" for values. For example,
-[MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] updates the <code>counts</code> field
+<a class="autorefs autorefs-internal" href="../samplers/msr/#pydvl.valuation.samplers.msr.MSRSampler">MSRSampler</a> updates the <code>counts</code> field
 of a <a class="autorefs autorefs-internal" href="../result/#pydvl.valuation.result.ValuationResult">ValuationResult</a> only for about half of
 the utility evaluations, because it reuses samples. This means that a stopping criterion
 like <a class="autorefs autorefs-internal" href="#pydvl.valuation.stopping.MaxChecks">MaxChecks</a> will not work as expected, because
@@ -6338,7 +6338,7 @@ computation.</p>
         <p>Terminate as soon as the number of checks exceeds the threshold.</p>
 <p>A "check" is one call to the criterion. Note that this might have different
 interpretations depending on the sampler. For example,
-[MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] performs a single
+<a class="autorefs autorefs-internal" href="../samplers/msr/#pydvl.valuation.samplers.msr.MSRSampler">MSRSampler</a> performs a single
 utility evaluation to update all indices, so that's <code>len(training_data)</code> checks for
 a single training of the model. But it also only changes the <code>counts</code> field of the
 <a class="autorefs autorefs-internal" href="../result/#pydvl.valuation.result.ValuationResult">ValuationResult</a> for about half of the
@@ -8455,7 +8455,7 @@ for each data point.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-03</span>
   </span>
 
     
@@ -8465,7 +8465,7 @@ for each data point.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-03</span>
   </span>
 
     

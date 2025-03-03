@@ -4619,7 +4619,8 @@ the goodness of weak learner <span class="arithmatex">\(\hat{f}_b\)</span> at th
 <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/methods/data_oob/#pydvl.valuation.methods.data_oob.DataOOBValuation">DataOOBValuation</a>. It takes
 a <em>fitted</em> bagged model and uses data precomputed during training to calculate
 the values. It is therefore very fast, and can be used to value large datasets.</p>
-<p>This is how you would use it with a [[RandomForestClassifier]]:</p>
+<p>This is how you would use it with a 
+<a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataOOBValuation</span><span class="p">,</span> <span class="n">Dataset</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -4632,34 +4633,35 @@ the values. It is therefore very fast, and can be used to value large datasets.<
 </span></code></pre></div>
 <p><code>values</code> is then a <a class="autorefs autorefs-internal" href="../../api/pydvl/valuation/result/#pydvl.valuation.result.ValuationResult">ValuationResult</a> to
 be used for data inspection, cleaning, etc.</p>
-<p>Data-<abbr title="Out-of-Bag">OOB</abbr> is not limited to sklearn's [[RandomForest]], but can be used with
+<p>Data-<abbr title="Out-of-Bag">OOB</abbr> is not limited to sklearn's <code>RandomForest</code>, but can be used with
 any bagging model that defines the attribute <code>estimators_</code>  after fitting and
 makes the list of bootstrapped samples available in some way. This includes
-[[BaggingRegressor]], [[BaggingClassifier]], [[ExtraTreesClassifier]],
-[[ExtraTreesRegressor]] and [[IsolationForest]].</p>
+<code>BaggingRegressor</code>, <code>BaggingClassifier</code>, <code>ExtraTreesClassifier</code>,
+<code>ExtraTreesRegressor</code> and <code>IsolationForest</code>.</p>
 <h2 id="bagging-arbitrary-models">Bagging arbitrary models<a class="headerlink" href="#bagging-arbitrary-models" title="Permanent link">&para;</a></h2>
-<p>Through [[BaggingClassifier]] and [[BaggingRegressor]], one can compute values
+<p>Through <code>BaggingClassifier</code> and <code>BaggingRegressor</code>, one can compute values
 for any model that can be bagged. Bagging in itself is not necessarily always
 beneficial, and there are cases where it can be detrimental. However, for data
 valuation we are not interested in the performance of the bagged model, but in
 the valuation coming out of it, which can then be used to work on the original
 model and data.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaggingClassifier</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataOOBValuation</span><span class="p">,</span> <span class="n">Dataset</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">model</span> <span class="o">=</span> <span class="n">BaggingClassifier</span><span class="p">(</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">train</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">valuation</span> <span class="o">=</span> <span class="n">DataOOBValuation</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">valuation</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">values</span> <span class="o">=</span> <span class="n">valuation</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">values</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">low_values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.05</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">))]</span>  <span class="c1"># select lowest 5%</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># Inspect the data with lowest values:</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="o">...</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydvl.valuation</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataOOBValuation</span><span class="p">,</span> <span class="n">Dataset</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">model</span> <span class="o">=</span> <span class="n">BaggingClassifier</span><span class="p">(</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">estimator</span><span class="o">=</span><span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">train</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">valuation</span> <span class="o">=</span> <span class="n">DataOOBValuation</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">valuation</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">values</span> <span class="o">=</span> <span class="n">valuation</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">values</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">low_values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.05</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">))]</span>  <span class="c1"># select lowest 5%</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="c1"># Inspect the data with lowest values:</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="o">...</span>
 </span></code></pre></div>
 <h3 id="off-topic-when-not-to-use-bagging-as-the-main-model">Off-topic: When not to use bagging as the main model<a class="headerlink" href="#off-topic-when-not-to-use-bagging-as-the-main-model" title="Permanent link">&para;</a></h3>
 <p>Here are some guidelines for when bagging might unnecessarily increase
@@ -4758,7 +4760,7 @@ in a bootstrap sample of size <span class="arithmatex">\(m\)</span> as <span cla
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-01-15</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-03-03</span>
   </span>
 
     
