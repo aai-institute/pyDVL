@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 import math
+from abc import ABC
 from copy import copy
 from itertools import permutations
 from typing import Callable
@@ -56,7 +57,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class PermutationSamplerBase(IndexSampler):
+class PermutationSamplerBase(IndexSampler, ABC):
     """Base class for permutation samplers."""
 
     def __init__(
@@ -112,6 +113,11 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
     @skip_indices.setter
     def skip_indices(self, indices: IndexSetT):
         self._skip_indices = indices
+
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        if len(indices) == 0:
+            return 0
+        return None
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.

@@ -496,6 +496,9 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
             subset = random_subset(complement(indices, [idx]), seed=self._rng)
             yield Sample(idx, subset)
 
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        return self._index_iterator_cls.length(len(indices))
+
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     """A sampler that draws samples uniformly and their complements.
@@ -511,3 +514,7 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
             subset = random_subset(_complement, seed=self._rng)
             yield Sample(idx, subset)
             yield Sample(idx, complement(_complement, subset))
+
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        len_outer = self._index_iterator_cls.length(len(indices))
+        return len_outer * 2 if len_outer is not None else None

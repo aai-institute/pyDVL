@@ -203,6 +203,11 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
         """
         return float(-(n - 1) * np.log(2)) if n > 0 else 0.0
 
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        if len(indices) == 0:
+            return 0
+        return None
+
     def make_strategy(
         self,
         utility: UtilityBase,
