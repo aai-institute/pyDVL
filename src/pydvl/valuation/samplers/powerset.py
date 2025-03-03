@@ -4,7 +4,8 @@ This module provides the base implementation for powerset samplers.
 These samplers operate in two loops:
 
 1. Outer iteration over all indices. This is configurable with subclasses of
-   [IndexIteration][]. At each step we fix an index $i \in N$.
+   [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration]. At each step we
+   fix an index $i \in N$.
 2. Inner iteration over subsets of $N_{-i}$. This step can return one or more subsets,
    sampled in different ways: uniformly, with varying probabilities, in tuples of
    complementary sets, etc.
@@ -278,7 +279,7 @@ class PowersetSampler(IndexSampler, ABC):
         return PowersetEvaluationStrategy(self, utility, log_coefficient)
 
     @abstractmethod
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates samples over the powerset of `indices`
 
         Each `PowersetSampler` defines its own way to generate the subsets by
@@ -304,6 +305,16 @@ PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
 class PowersetEvaluationStrategy(
     Generic[PowersetSamplerT], EvaluationStrategy[PowersetSamplerT, ValueUpdate]
 ):
+    """The standard strategy for evaluating the utility of subsets of a set.
+
+    This strategy computes the marginal value of each subset of the complement of an
+    index in the training set. The marginal value is the difference between the utility
+    of the subset and the utility of the subset with the index added back in.
+
+    It is the standard strategy for the direct implementation of semi-values, when
+    sampling is done over the powerset of the complement of an index.
+    """
+
     @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
@@ -351,7 +362,7 @@ class LOOSampler(PowersetSampler):
             raise ValueError("LOO samplers require a proper index iteration strategy")
         self._rng = np.random.default_rng(seed)
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             yield Sample(idx, complement(indices, [idx]))
 
@@ -438,7 +449,7 @@ class DeterministicUniformSampler(PowersetSampler):
     ):
         super().__init__(batch_size=batch_size, index_iteration=index_iteration)
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             for subset in powerset(complement(indices, [idx])):
                 yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
@@ -492,7 +503,7 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
             batch_size=batch_size, index_iteration=index_iteration, seed=seed
         )
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             subset = random_subset(complement(indices, [idx]), seed=self._rng)
             yield Sample(idx, subset)
@@ -506,7 +517,7 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     complement of the set $S$ in the set of indices, excluding $i$.
     """
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             _complement = complement(indices, [idx])
             subset = random_subset(_complement, seed=self._rng)

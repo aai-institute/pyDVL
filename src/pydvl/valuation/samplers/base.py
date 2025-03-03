@@ -61,8 +61,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
 
     Derived samplers must implement
     [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] and
-    [_generate()][pydvl.valuation.samplers.base.IndexSampler._generate]. See the module's
-    documentation for more on these.
+    [generate()][pydvl.valuation.samplers.base.IndexSampler.generate]. See the
+    module's documentation for more on these.
 
     ## Interrupting samplers
 
@@ -147,7 +147,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         """Returns the length of the current sample generation in generate_batches.
 
         Raises:
-            `TypeError` if the sampler is infinite or
+            `TypeError`: if the sampler is infinite or
                 [generate_batches][pydvl.valuation.samplers.IndexSampler.generate_batches]
                 has not been called yet.
         """
@@ -169,7 +169,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
 
         self._interrupted = False
         self._n_samples = 0
-        for batch in chunked(self._generate(indices), self.batch_size):
+        for batch in chunked(self.generate(indices), self.batch_size):
             self._n_samples += len(batch)
             yield batch
             if self._interrupted:
@@ -190,7 +190,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         ...
 
     @abstractmethod
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates single samples.
 
         `IndexSampler.generate_batches()` will batch these samples according to the

@@ -29,7 +29,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
     An instance of `ModelUtility` holds the tuple of model, and scoring function which
     determines the value of data points. This is used for the computation of [all
     game-theoretic values][game-theoretical-methods] like [Shapley
-    values][pydvl.valuation.methods.data_shapley] and [the Least
+    values][pydvl.valuation.methods.shapley] and [the Least
     Core][pydvl.valuation.methods.least_core].
 
     `ModelUtility` expects the model to fulfill at least the

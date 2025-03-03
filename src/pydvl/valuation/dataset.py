@@ -431,7 +431,7 @@ class GroupedDataset(Dataset):
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
         group_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Class for grouping datasets.
 

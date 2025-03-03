@@ -26,7 +26,7 @@ samples per index).
 
 However, some valuation schemes require iteration over subsets of the whole set (as
 opposed to iterating over complements of individual indices). For this purpose, one can
-use [NoIndexIteration][pydvl.valuation.iteration.NoIndexIteration] or its finite
+use [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or its finite
 counterpart.
 
 ## Sampler evaluation
@@ -73,20 +73,20 @@ which returns a callable that updates the result with a single evaluation.
 
 To create a custom sampler, subclass either
 [PowersetSampler][pydvl.valuation.samplers.PowersetSampler]
-or [PermutationSamplerBase][pydvl.valuation.samplers.PermutationSamplerBase], or
+or [PermutationSamplerBase][pydvl.valuation.samplers.permutation.PermutationSamplerBase], or
 implement the [IndexSampler][pydvl.valuation.samplers.IndexSampler] interface directly.
 
 There are three main methods to implement (and others that can be overridden):
 
-* [_generate()][pydvl.valuation.samplers.base.IndexSampler._generate], which yields
+* [generate()][pydvl.valuation.samplers.base.IndexSampler.generate], which yields
   samples of the form $(i, S)$. These will be batched together by `__iter__` for
   parallel processing. Note that, if the index set has size $N$, for
   [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], a
   batch size of $B$ implies $O(B*N)$ evaluations of the utility in one process, since
   single permutations are always processed in one go.
-* [log_weight()][pydvl.valuation.samplers.base.IndexSampler.weight] to provide a factor
-  by which to multiply Monte Carlo samples in stochastic methods, so that the mean
-  converges to the desired expression. This will typically be the logarithm of the
+* [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] to provide a
+  factor by which to multiply Monte Carlo samples in stochastic methods, so that the
+  mean converges to the desired expression. This will typically be the logarithm of the
   inverse probability of sampling a given subset.
 * [make_strategy()][pydvl.valuation.samplers.base.IndexSampler.make_strategy] to create
   an evaluation strategy that processes the samples. This is typically a subclass of

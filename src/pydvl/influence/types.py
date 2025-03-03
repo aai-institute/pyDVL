@@ -65,7 +65,7 @@ class InfluenceMode(str, Enum):
 
     Attributes:
         Up: [Approximating the influence of a point]
-            [approximating-the-influence-of-a-point]
+            [influence-of-a-point]
         Perturbation: [Perturbation definition of the influence score]
             [perturbation-definition-of-the-influence-score]
 

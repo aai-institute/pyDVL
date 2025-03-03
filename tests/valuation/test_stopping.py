@@ -358,7 +358,7 @@ def test_no_stopping_with_finite_sampler():
         def sample_limit(self, indices):
             return self.total_samples
 
-        def _generate(self, indices):
+        def generate(self, indices):
             for i in range(self.total_samples):
                 yield i, set()
 
@@ -401,7 +401,7 @@ def test_no_stopping_infinite_sampler():
         def sample_limit(self, indices):
             return None  # Indicates an infinite sampler.
 
-        def _generate(self, indices):
+        def generate(self, indices):
             while True:
                 yield (0, set())
 

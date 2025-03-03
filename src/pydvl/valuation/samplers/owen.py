@@ -204,7 +204,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         self.sampling_probabilities = outer_sampling_strategy
         self.q_stop = 1.0
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         for idx in self.index_iterator(indices):
             _complement = complement(indices, [idx])
             for prob in self.sampling_probabilities(self.q_stop):
@@ -302,8 +302,8 @@ class AntitheticOwenSampler(OwenSampler):
         )
         self.q_stop = 0.5
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        for sample in super()._generate(indices):
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
+        for sample in super().generate(indices):
             idx, subset = sample
             _exclude = [idx] + subset.tolist()
             _antithetic_subset = complement(indices, _exclude)

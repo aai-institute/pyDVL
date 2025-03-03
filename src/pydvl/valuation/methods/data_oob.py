@@ -79,6 +79,16 @@ class DataOOBValuation(Valuation):
         self.score = score
 
     def fit(self, data: Dataset) -> Self:
+        """ Compute the Data-OOB values.
+
+        This requires the bagging model passed upon construction to be fitted.
+
+        Args:
+            data: Data for which to compute values
+
+        Returns:
+            The fitted object.
+        """
         # TODO: automate str representation for all Valuations
         algorithm_name = f"Data-OOB-{str(self.model)}"
         self.result = ValuationResult.empty(

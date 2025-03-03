@@ -72,7 +72,7 @@ and without re-training the full model.
 pyDVL supports two ways of computing the empirical influence function, namely
 up-weighting of samples and perturbation influences.
 
-### Approximating the influence of a point
+### Approximating the influence of a point  { #influence-of-a-point }
 
 Let's define
 
@@ -139,7 +139,7 @@ $$\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
 Similarly to what was done above, we up-weight point $z_{\delta}$, but then we
 also remove the up-weighting for all the features that are not modified by
 $\delta$. From the calculations in
-[the previous section](#approximating-the-influence-of-a-point),
+[the previous section][influence-of-a-point]
 it is then easy to see that
 
 $$\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
@@ -353,7 +353,7 @@ point.
 ### Influence factors
 
 The influence factors(refer to
-[the previous section](#approximating-the-influence-of-a-point) for a definition)
+[the previous section][influence-of-a-point] for a definition)
 are typically the most computationally demanding part of influence calculation.
 They can be obtained via calling the `influence_factors` method, saved, and later used 
 for influence calculation on different subsets of the training dataset.

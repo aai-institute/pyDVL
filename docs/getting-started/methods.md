@@ -7,7 +7,7 @@ alias:
 
 We currently implement the following methods:
 
-## Data valuation
+## Data valuation  { #implemented-methods-data-valuation }
 
 - [**LOO**][pydvl.valuation.methods.loo.LOOValuation].
 
@@ -57,7 +57,7 @@ We currently implement the following methods:
 - [**Data-OOB**][pydvl.valuation.methods.data_oob.DataOOBValuation]
   [@kwon_dataoob_2023].
 
-## Influence functions
+## Influence functions  { #implemented-methods-influence-functions }
 
 - [**CG Influence**][pydvl.influence.torch.CgInfluence].
   [@koh_understanding_2017].

@@ -13,7 +13,7 @@ Terms in data valuation and influence functions:
 
 The Arnoldi method approximately computes eigenvalue, eigenvector pairs of
 a symmetric matrix. For influence functions, it is used to approximate
-the [iHVP][inverse-hessian-vector-product].
+the [iHVP][glossary-inverse-hessian-vector-product].
 Introduced by [@schioppa_scaling_2022] in the context of influence functions.
 
   * [Implementation (torch)
@@ -22,9 +22,9 @@ Introduced by [@schioppa_scaling_2022] in the context of influence functions.
 
 ### Block Conjugate Gradient { #glossary-block-cg }
 
-A blocked version of [CG][conjugate-gradient], which solves several linear
+A blocked version of [CG][glossary-conjugate-gradient], which solves several linear
 systems simultaneously. For Influence Functions, it is used to
-approximate the [iHVP][inverse-hessian-vector-product].
+approximate the [iHVP][glossary-inverse-hessian-vector-product].
 
  * [Implementation (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -40,17 +40,17 @@ research is needed to confirm this.
 Introduced by [@schoch_csshapley_2022].
 
  * [Implementation
-   ][pydvl.valuation.methods.classwise_shaple.ClasswiseShapleyValuation]
+   ][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation]
  * [Documentation][class-wise-shapley]
 
 ### Conjugate Gradient { #glossary-cg }
 
 CG is an algorithm for solving linear systems with a symmetric and
 positive-definite coefficient matrix. For Influence Functions, it is used to
-approximate the [iHVP][inverse-hessian-vector-product].
+approximate the [iHVP][glossary-inverse-hessian-vector-product].
 
- * [Implementation (torch)
-][pydvl.influence.torch.influence_function_model.CgInfluence]
+ * [Implementation
+   (torch)][pydvl.influence.torch.influence_function_model.CgInfluence]
  * [Documentation (torch)][cg]
 
 ### Data-OOB { #glorssary-data-oob }
@@ -80,8 +80,8 @@ Introduced by [@wang_improving_2022].
 
 ### Eigenvalue-corrected Kronecker-Factored Approximate Curvature
 
-EKFAC builds on [K-FAC][kronecker-factored-approximate-curvature] by correcting
-for the approximation errors in the eigenvalues of the blocks of the
+EKFAC builds on [K-FAC][glossary-kronecker-factored-approximate-curvature] by
+correcting for the approximation errors in the eigenvalues of the blocks of the
 Kronecker-factored approximate curvature matrix. This correction aims to refine
 the accuracy of natural gradient approximations, thus potentially offering
 better training efficiency and stability in neural networks.
@@ -142,7 +142,7 @@ LiSSA is an efficient algorithm for approximating the inverse Hessian-vector
 product, enabling faster computations in large-scale machine learning
 problems, particularly for second-order optimization.
 For Influence Functions, it is used to
-approximate the [iHVP][inverse-hessian-vector-product].
+approximate the [iHVP][glossary-inverse-hessian-vector-product].
 Introduced by [@agarwal_secondorder_2017].
 
  * [Implementation (torch)
@@ -165,7 +165,7 @@ performance when that point is removed from the training set.
 MSR is a sampling method for data valuation that updates the value of every
 data point in one sample. This method can achieve much faster convergence. It
 can be used with any
-[semi-value][pydvl.valuation.methods.semivalue.SemiValueValuation] by setting
+[semi-value][pydvl.valuation.methods.semivalue.SemivalueValuation] by setting
 the sampler to be `MSR`.
 Introduced by [@wang_data_2023]
 
@@ -196,16 +196,16 @@ Introduced into data valuation by [@ghorbani_data_2019].
 
 The Nyström approximation computes a low-rank approximation to a symmetric
 positive-definite matrix via random projections. For influence functions, 
-it is used to approximate the [iHVP][inverse-hessian-vector-product].
+it is used to approximate the [iHVP][glossary-inverse-hessian-vector-product].
 Introduced as sketch and solve algorithm in [@hataya_nystrom_2023], and as
-preconditioner for [PCG][preconditioned-conjugate-gradient] in
+preconditioner for [PCG][glossary-preconditioned-conjugate-gradient] in
 [@frangella_randomized_2023].
 
- * [Implementation Sketch-and-Solve (torch)
-   ][pydvl.influence.torch.influence_function_model.NystroemSketchInfluence]
+ * [Implementation Sketch-and-Solve
+   (torch)][pydvl.influence.torch.influence_function_model.NystroemSketchInfluence]
  * [Documentation Sketch-and-Solve (torch)][nystrom-sketch-and-solve]
- * [Implementation Preconditioner (torch)
-   ][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner]
+ * [Implementation Preconditioner
+   (torch)][pydvl.influence.torch.preconditioner.NystroemPreconditioner]
 
 ### Point removal task  { #glossary-point-removal-task }
 
@@ -218,9 +218,9 @@ performance, where the points are removed in order of their value. See
 
 ### Preconditioned Block Conjugate Gradient  { #glossary-preconditioned-block-cg }
 
-A blocked version of [PCG][preconditioned-conjugate-gradient], which solves 
+A blocked version of [PCG][glossary-preconditioned-conjugate-gradient], which solves 
 several linear systems simultaneously. For Influence Functions, it is used to
-approximate the [iHVP][inverse-hessian-vector-product].
+approximate the [iHVP][glossary-inverse-hessian-vector-product].
 
  * [Implementation CG (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -230,10 +230,10 @@ approximate the [iHVP][inverse-hessian-vector-product].
 
 ### Preconditioned Conjugate Gradient  { #glossary-preconditioned-cg }
 
-A preconditioned version of [CG][conjugate-gradient] for improved
+A preconditioned version of [CG][glossary-conjugate-gradient] for improved
 convergence, depending on the characteristics of the matrix and the
 preconditioner. For Influence Functions, it is used to
-approximate the [iHVP][inverse-hessian-vector-product].
+approximate the [iHVP][glossary-inverse-hessian-vector-product].
 
  * [Implementation CG (torch)
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
@@ -241,7 +241,7 @@ approximate the [iHVP][inverse-hessian-vector-product].
    ][pydvl.influence.torch.pre_conditioner]
  * [Documentation (torch)][cg]
 
-### Shapley Value
+### Shapley Value  { #glossary-shapley-value }
 
 Shapley Value is a concept from cooperative game theory that allocates payouts
 to players based on their contribution to the total payoff. In data valuation,
@@ -252,7 +252,7 @@ $\mathcal{O}(2^{n-1})$ re-trainings of the model, which is infeasible for even
 trivial data set sizes, so one resorts to approximations like TMCS.
 Introduced into data valuation by [@ghorbani_data_2019].
 
- * [Implementation][pydvl.value.shapley.naive]
+ * [Implementation][pydvl.valuation.methods.shapley]
  * [Documentation][shapley-value]
 
 ### Truncated Monte Carlo   { #glossary-tmcs }
