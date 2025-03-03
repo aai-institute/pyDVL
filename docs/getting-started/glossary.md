@@ -9,7 +9,7 @@ information, please refer to the relevant literature or resources.
 
 Terms in data valuation and influence functions:
 
-### Arnoldi Method
+### Arnoldi Method { #glossary-arnoldi }
 
 The Arnoldi method approximately computes eigenvalue, eigenvector pairs of
 a symmetric matrix. For influence functions, it is used to approximate
@@ -20,7 +20,7 @@ Introduced by [@schioppa_scaling_2022] in the context of influence functions.
     ][pydvl.influence.torch.influence_function_model.ArnoldiInfluence]
   * [Documentation (torch)][arnoldi]
 
-### Block Conjugate Gradient
+### Block Conjugate Gradient { #glossary-block-cg }
 
 A blocked version of [CG][conjugate-gradient], which solves several linear
 systems simultaneously. For Influence Functions, it is used to
@@ -30,7 +30,7 @@ approximate the [iHVP][inverse-hessian-vector-product].
    ][pydvl.influence.torch.influence_function_model.CgInfluence]
  * [Documentation (torch)][cg]
 
-### Class-wise Shapley
+### Class-wise Shapley { #glossary-class-wise-shapley }
 
 Class-wise Shapley is a Shapley valuation method which introduces a utility
 function that balances in-class, and out-of-class accuracy, with the goal of
@@ -40,10 +40,10 @@ research is needed to confirm this.
 Introduced by [@schoch_csshapley_2022].
 
  * [Implementation
-   ][pydvl.value.shapley.classwise.compute_classwise_shapley_values]
+   ][pydvl.valuation.methods.classwise_shaple.ClasswiseShapleyValuation]
  * [Documentation][class-wise-shapley]
 
-### Conjugate Gradient
+### Conjugate Gradient { #glossary-cg }
 
 CG is an algorithm for solving linear systems with a symmetric and
 positive-definite coefficient matrix. For Influence Functions, it is used to
@@ -53,7 +53,20 @@ approximate the [iHVP][inverse-hessian-vector-product].
 ][pydvl.influence.torch.influence_function_model.CgInfluence]
  * [Documentation (torch)][cg]
 
-### Data Utility Learning
+### Data-OOB { #glorssary-data-oob }
+
+Data-OOB is a method for valuing data points for a bagged model using its
+out-of-bag performance estimate. It overcomes the computational bottleneck of
+Shapley-based methods by evaluating each weak learner in an ensemble over
+samples it hasn't seen during training, and averaging the performance across
+all weak learners.
+Introduced in [@kwon_dataoob_2023].
+
+ * [Implementation][pydvl.valuation.methods.data_oob.DataOOBValuation]
+ * [Documentation][data-oob]
+
+
+### Data Utility Learning { #glossary-data-utility-learning }
 
 Data Utility Learning is a method that uses an ML model to learn the utility
 function. Essentially, it learns to predict the performance of a model when
@@ -62,7 +75,7 @@ model is quickly amortized by avoiding costly re-evaluations of the original
 utility.
 Introduced by [@wang_improving_2022].
 
- * [Implementation][pydvl.utils.utility.DataUtilityLearning]
+ * [Implementation][pydvl.valuation.utility.learning.DataUtilityLearning]
  * [Documentation][creating-a-utility]
 
 ### Eigenvalue-corrected Kronecker-Factored Approximate Curvature
@@ -78,17 +91,17 @@ better training efficiency and stability in neural networks.
  * [Documentation (torch)][eigenvalue-corrected-k-fac]
 
 
-### Group Testing
+### Group Testing { #glossary-group-testing }
 
 Group Testing is a strategy for identifying characteristics within groups of
 items efficiently, by testing groups rather than individuals to quickly narrow
 down the search for items with specific properties.
 Introduced into data valuation by [@jia_efficient_2019a].
 
- * [Implementation][pydvl.value.shapley.gt.group_testing_shapley]
+ * [Implementation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation]
  * [Documentation][group-testing]
 
-### Influence Function
+### Influence Function { #glossary-influence-function }
 
 The Influence Function measures the impact of a single data point on a
 statistical estimator. In machine learning, it's used to understand how much a
@@ -97,20 +110,20 @@ Introduced into data valuation by [@koh_understanding_2017].
 
  * [[influence-function|Documentation]]
 
-### Inverse Hessian-vector product
+### Inverse Hessian-vector product { #glossary-iHVP }
 
 iHVP is the operation of calculating the product of the inverse Hessian matrix
 of a function and a vector, without explicitly constructing nor inverting the
 full Hessian matrix first. This is essential for influence function computation.
 
-### Kronecker-Factored Approximate Curvature
+### Kronecker-Factored Approximate Curvature { #glossary-k-fac }
 
 K-FAC is an optimization technique that approximates the Fisher Information
 matrix's inverse efficiently. It uses the Kronecker product to factor the
 matrix, significantly speeding up the computation of natural gradient updates
 and potentially improving training efficiency.
 
-### Least Core
+### Least Core { #glossary-least-core }
 
 The Least Core is a solution concept in cooperative game theory, referring to
 the smallest set of payoffs to players that cannot be improved upon by any
@@ -120,10 +133,10 @@ determined by the evaluations of the utility function on every subset of the
 training data.
 Introduced as data valuation method by [@yan_if_2021].
 
- * [Implementation][pydvl.value.least_core.compute_least_core_values]
+ * [Implementation][pydvl.valuation.methods.least_core.LeastCoreValuation]
  * [Documentation][least-core-values]
 
-### Linear-time Stochastic Second-order Algorithm
+### Linear-time Stochastic Second-order Algorithm { #glossary-lissa }
 
 LiSSA is an efficient algorithm for approximating the inverse Hessian-vector
 product, enabling faster computations in large-scale machine learning
@@ -137,35 +150,38 @@ Introduced by [@agarwal_secondorder_2017].
  * [Documentation (torch)
    ][linear-time-stochastic-second-order-approximation-lissa]
 
-### Leave-One-Out
+### Leave-One-Out { #glossary-loo }
 
 LOO in the context of data valuation refers to the process of evaluating the
 impact of removing individual data points on the model's performance. The
 value of a training point is defined as the marginal change in the model's
 performance when that point is removed from the training set.
 
- * [Implementation][pydvl.value.loo.loo.compute_loo]
+ * [Implementation][pydvl.valuation.methods.loo.LOOValuation]
  * [Documentation][leave-one-out-values]
 
-### Maximum Sample Reuse
+### Maximum Sample Reuse  { #glossary-msr }
 
 MSR is a sampling method for data valuation that updates the value of every
-data point in one sample. This method can achieve much faster convergence.
+data point in one sample. This method can achieve much faster convergence. It
+can be used with any
+[semi-value][pydvl.valuation.methods.semivalue.SemiValueValuation] by setting
+the sampler to be `MSR`.
 Introduced by [@wang_data_2023]
 
-* [Implementation][pydvl.value.sampler.MSRSampler]
+* [Implementation][pydvl.valuation.samplers.msr.MSRSampler]
 
 
-### Monte Carlo Least Core
+### Monte Carlo Least Core  { #glossary-mclc }
 
 MCLC is a variation of the Least Core that uses a reduced amount of
 constraints, sampled randomly from the powerset of the training data.
 Introduced by [@yan_if_2021].
 
- * [Implementation][pydvl.value.least_core.compute_least_core_values]
+ * [Implementation][pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation]
  * [Documentation][monte-carlo-least-core]
 
-### Monte Carlo Shapley
+### Monte Carlo Shapley  { #glossary-monte-carlo-shapley }
 
 MCS estimates the Shapley Value using a Monte Carlo approximation to the sum
 over subsets of the training set. This reduces computation to polynomial time
@@ -173,10 +189,10 @@ at the cost of accuracy, but this loss is typically irrelevant for downstream
 applications in ML.
 Introduced into data valuation by [@ghorbani_data_2019].
 
- * [Implementation][pydvl.value.shapley.montecarlo]
+ * [Implementation][pydvl.valuation.methods.shapley.ShapleyValuation]
  * [Documentation][monte-carlo-combinatorial-shapley]
 
-### Nyström Low-Rank Approximation
+### Nyström Low-Rank Approximation  { #glossary-nystroem }
 
 The Nyström approximation computes a low-rank approximation to a symmetric
 positive-definite matrix via random projections. For influence functions, 
@@ -191,15 +207,16 @@ preconditioner for [PCG][preconditioned-conjugate-gradient] in
  * [Implementation Preconditioner (torch)
    ][pydvl.influence.torch.pre_conditioner.NystroemPreConditioner]
 
-### Point removal task
+### Point removal task  { #glossary-point-removal-task }
 
 A task in data valuation where the quality of a valuation method is measured
 through the impact of incrementally removing data points on the model's
 performance, where the points are removed in order of their value. See
 
+ * [Implementation][pydvl.reporting.point_removal.run_removal_experiment]
  * [Benchmarking tasks][benchmarking-tasks]
 
-### Preconditioned Block Conjugate Gradient
+### Preconditioned Block Conjugate Gradient  { #glossary-preconditioned-block-cg }
 
 A blocked version of [PCG][preconditioned-conjugate-gradient], which solves 
 several linear systems simultaneously. For Influence Functions, it is used to
@@ -211,7 +228,7 @@ approximate the [iHVP][inverse-hessian-vector-product].
    ][pydvl.influence.torch.pre_conditioner]
  * [Documentation (torch)][cg]
 
-### Preconditioned Conjugate Gradient
+### Preconditioned Conjugate Gradient  { #glossary-preconditioned-cg }
 
 A preconditioned version of [CG][conjugate-gradient] for improved
 convergence, depending on the characteristics of the matrix and the
@@ -238,18 +255,21 @@ Introduced into data valuation by [@ghorbani_data_2019].
  * [Implementation][pydvl.value.shapley.naive]
  * [Documentation][shapley-value]
 
-### Truncated Monte Carlo Shapley
+### Truncated Monte Carlo   { #glossary-tmcs }
 
 TMCS is an efficient approach to estimating the Shapley Value using a
 truncated version of the Monte Carlo method, reducing computation time while
-maintaining accuracy in large datasets.
+maintaining accuracy in large datasets. Being a heuristic to permutation sampling
+in Shapley valuation, it can be implemented by using a
+[RelativeTruncation ][pydvl.valuation.samplers.truncation.RelativeTruncation]
+for a [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
+when configuring [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation].
 Introduced by [@ghorbani_data_2019].
 
- * [Implementation
-   ][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
+ * [Implementation][pydvl.valuation.methods.shapley.ShapleyValuation]
  * [Documentation][permutation-shapley]
 
-### Weighted Accuracy Drop
+### Weighted Accuracy Drop  { #glossary-wad }
 
 WAD is a metric to evaluate the impact of sequentially removing data points on
 the performance of a machine learning model, weighted by their rank, i.e. by the

@@ -153,8 +153,8 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     The sampling is similar to a
     [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] but without an outer
     index. However,the MSR sampler uses a special evaluation strategy and result updater,
-    as returned by the [make_strategy][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
-    and [result_updater][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
+    as returned by the [make_strategy()][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+    and [result_updater()][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
     respectively.
 
     Two running means are updated separately for positive and negative updates. The two

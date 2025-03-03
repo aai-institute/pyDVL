@@ -261,7 +261,7 @@ class OperatorBilinearForm(
 ):
     r"""
     Base class for bi-linear forms based on an instance of
-    [TensorOperator][pydvl.influence.torch.operator.base.TensorOperator]. This means
+    [TensorOperator][pydvl.influence.torch.base.TensorOperator]. This means
     it computes weighted inner products of the form:
 
     $$ \langle \operatorname{Op}(x), y \rangle $$
@@ -301,7 +301,7 @@ class OperatorBilinearForm(
 
 class DictBilinearForm(OperatorBilinearForm):
     r"""Base class for bi-linear forms based on an instance of
-    [TorchOperator][pydvl.influence.torch.operator.base.TorchOperator]. This means it
+    [TorchOperator][pydvl.influence.torch.base.TensorOperator]. This means it
     computes weighted inner products of the form:
 
     $$ \langle \operatorname{Op}(x), y \rangle $$
@@ -624,9 +624,8 @@ class TorchOperatorGradientComposition(
     ]
 ):
     """Represents a composable block that integrates a
-    [TorchOperator][pydvl.influence.torch.operator.base.TorchOperator] and
-    a
-    [TorchPerSampleGradientProvider][pydvl.influence.torch.operator.gradient_provider.TorchPerSampleGradientProvider]
+    [TorchOperator][pydvl.influence.torch.base.TensorOperator] and
+    a [TorchGradientProvider][pydvl.influence.torch.base.TorchGradientProvider]
 
     This block is designed to be flexible, handling different computational modes via
     an abstract operator and gradient provider.
