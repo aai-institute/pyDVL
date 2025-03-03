@@ -44,7 +44,7 @@ criterion to be used with the valuation method, and thus follows more closely th
 general pattern of the valuation methods. This makes it more adequate for actual use
 since it is no longer required to estimate a number of outer samples required.
 
-!!! Example
+??? Example
     ```python
     from pydvl.valuation import OwenSampler, ShapleyValuation, RankCorrelation
     ...
@@ -61,7 +61,7 @@ probability values $q$ between 0 and 0.5 at random and then generates two sample
 for each index, one using the probability $q$ for index draws, and another with
 probability $1-q$.
 
-!!! Example
+??? Example
     ```python
     from pydvl.valuation import AntitheticOwenSampler, ShapleyValuation, RankCorrelation
     ...

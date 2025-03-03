@@ -210,8 +210,9 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             Because the weight is a probability that can be arbitrarily small, we
             compute it in log-space for numerical stability.
 
-        By the Law of Large Numbers, the sample mean of $f(S_j)$ converges to the
-        expectation under the distribution from which $S_j$ is sampled.
+        By the Law of Large Numbers, the sample mean of the product $f (S_j) w (S_j)$
+        converges to the expectation of $f(S) w(S)$ under the distribution from which
+        $S$ is sampled.
 
         $$
         \begin{eqnarray}
@@ -223,7 +224,9 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         $$
 
         We add the factor $w(S_j)$ in order to have this expectation coincide with the
-        desired expression, by cancelling out $\mathbb{P} (S)$.
+        desired expression, by cancelling out $\mathbb{P}_{\mathcal{D}_{- i}} (S)$. This
+        method implements the logarithm of the weight, i.e. the logarithm of the inverse
+        of the probability of sampling a set of the given size.
 
         Args:
             n: The size of the index set. Note that the actual size of the set being
