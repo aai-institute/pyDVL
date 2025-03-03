@@ -226,7 +226,7 @@ in machine learning training rarely converges to a global minimum of the loss.
 Despite good apparent convergence, $\hat{\theta}$ might be located in a region
 with flat curvature or close to a saddle point. In particular, the Hessian might
 have vanishing eigenvalues making its direct inversion impossible. Certain
-methods, such as the [Arnoldi method](#arnoldi-solver) are robust against these
+methods, such as the [Arnoldi method][arnoldi-method] are robust against these
 problems, but most are not.
 
 To circumvent this problem, many approximate methods can be implemented. The
@@ -249,7 +249,7 @@ not to corrupt the outcome too much, the parameter $\lambda$ should be as small
 as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 \lambda \mathbb{I}$.
 
-### Block-diagonal approximation
+### Block-diagonal approximation { #block-diagonal-approximation }
 
 This implementation is capable of using a block-diagonal approximation.
 The full matrix is approximated by a block-diagonal version, which
@@ -304,7 +304,7 @@ with suffix `_by_block`. By default, `block_structure` is set to
 `BlockMode.FULL` and in this case these methods will return a dictionary
 with the empty string being the only key.
 
-### Gauss-Newton approximation
+### Gauss-Newton approximation { #gauss-newton-approximation }
 
 In the computation of the influence values, the inversion of the Hessian can be
 replaced by the inversion of the Gauss-Newton matrix

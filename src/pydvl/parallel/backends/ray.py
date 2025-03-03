@@ -107,7 +107,7 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, fun: Callable, **kwargs) -> Callable:
+    def wrap(self, fun: Callable, **kwargs: dict[str, Any]) -> Callable:
         """Wraps a function as a ray remote.
 
         Args:

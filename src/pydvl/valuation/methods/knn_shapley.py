@@ -43,10 +43,10 @@ class KNNShapleyValuation(Valuation):
     reducing computation time to $O(n)$.
 
     Args:
-        utility: KNNUtility with a KNN model to extract parameters from. The object
-            will not be modified nor used other than to call [get_params()](
-            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>)
+        model: KNeighborsClassifier model to use for valuation
+        test_data: Dataset containing test data for valuation
         progress: Whether to display a progress bar.
+        clone_before_fit: Whether to clone the model before fitting.
 
     """
 

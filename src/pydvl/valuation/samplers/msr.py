@@ -8,8 +8,8 @@ sample, and negative, if it is not. The two running means are later combined int
 final result.
 
 Note that this requires defining a special evaluation strategy and result updater, as
-returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy] and
-[result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+returned by the [make_strategy][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+and [result_updater][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
 respectively.
 
 For more on the general architecture of samplers see

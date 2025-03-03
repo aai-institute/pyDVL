@@ -79,7 +79,7 @@ class Preconditioner(ABC):
     def _fit(self, operator: "TensorOperator", regularization: Optional[float] = None):
         pass
 
-    def solve(self, rhs: torch.Tensor):
+    def solve(self, rhs: torch.Tensor) -> torch.Tensor:
         r"""
         Solve the equation $M@Z = \operatorname{rhs}$
         Args:

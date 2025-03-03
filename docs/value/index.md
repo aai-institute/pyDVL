@@ -37,7 +37,7 @@ function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the package [[pydvl.value]], with support from modules
+the package [pydvl.value][pydvl.value], with support from modules
 [pydvl.utils.dataset][pydvl.utils.dataset]
 and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 
@@ -53,7 +53,7 @@ we focus on game-theoretic concepts and refer to the main documentation on the
 ## Game theoretical methods
 
 The main contenders in game-theoretic approaches are [Shapley
-values](shapley.md]) [@ghorbani_data_2019], [@kwon_efficient_2021],
+values](shapley.md) [@ghorbani_data_2019], [@kwon_efficient_2021],
 [@schoch_csshapley_2022], their generalization to so-called
 [semi-values](semi-values.md) by [@kwon_beta_2022] and [@wang_data_2023],
 and [the Core](the-core.md) [@yan_if_2021]. All of these are implemented

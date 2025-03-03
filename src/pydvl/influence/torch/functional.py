@@ -460,7 +460,7 @@ def gauss_newton(
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
     restrict_to: Optional[Dict[str, torch.Tensor]] = None,
-):
+) -> torch.Tensor:
     r"""
     Compute the Gauss-Newton matrix, i.e.
 
@@ -859,7 +859,7 @@ def operator_nystroem_approximation(
     operator: "TensorOperator",
     rank: int,
     shift_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-):
+) -> LowRankProductRepresentation:
     r"""
     Given an operator (representing a symmetric positive definite
     matrix $A$ ), computes a random Nyström low rank approximation of
@@ -906,7 +906,7 @@ def operator_spectral_approximation(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
-):
+) -> "LowRankProductRepresentation":
     r"""
     Calculates a low-rank approximation of an operator $H$ using the implicitly
     restarted Lanczos algorithm, i.e.:

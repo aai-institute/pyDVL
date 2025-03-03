@@ -49,7 +49,7 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Sequence, overload
+from typing import Any, Sequence, overload
 
 import numpy as np
 from deprecate import deprecated
@@ -371,7 +371,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> tuple[Dataset, Dataset]:
         """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
@@ -393,8 +393,8 @@ class Dataset:
                 using the y variable as labels. Read more in [sklearn's user
                 guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass e.g. `feature_names`
-                or `target_names`.
+                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass
+                e.g. `feature_names` or `target_names`.
 
         Returns:
             Object with the passed X and y arrays split across training and test sets.
@@ -612,7 +612,7 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
         ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from a
@@ -702,7 +702,7 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
         and an ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from X and y
@@ -776,7 +776,7 @@ class GroupedDataset(Dataset):
         data: Dataset,
         data_groups: Sequence[int] | NDArray[np.int_],
         group_names: Sequence[str] | NDArray[np.str_] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.

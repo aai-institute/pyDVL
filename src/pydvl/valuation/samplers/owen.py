@@ -156,10 +156,12 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
     The distribution for the outer sampling can be either uniform or deterministic. The
     default is deterministic on a grid, which is the original method described in
     Okhrati and Lipani (2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.
-    This can be achieved by using the [GridOwenStrategy][GridOwenStrategy] strategy.
+    This can be achieved by using the
+    [GridOwenStrategy][pydvl.valuation.samplers.owen.GridOwenStrategy] strategy.
 
     Alternatively, the distribution can be uniform between 0 and 1. This can be achieved
-    by using the [UniformOwenStrategy][UniformOwenStrategy] strategy.
+    by using the [UniformOwenStrategy][pydvl.valuation.samplers.owen.UniformOwenStrategy]
+    strategy.
 
     By combining a [UniformOwenStrategy][pydvl.valuation.samplers.owen.UniformOwenStrategy]
     with an infinite

@@ -135,8 +135,6 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
 
         Args:
             model: Model used for computing the score on the validation set.
-            x_test: Array containing the features of the classification problem.
-            y_test: Array containing the labels of the classification problem.
             rescale_scores: If set to True, the scores will be denormalized. This is
                 particularly useful when the inner score function $a_S$ is calculated by
                 an estimator of the form $\frac{1}{N} \sum_i x_i$.

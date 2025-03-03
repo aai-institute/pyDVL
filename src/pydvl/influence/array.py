@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from typing import (
+    Any,
     Callable,
     Generator,
     Generic,
@@ -159,7 +160,7 @@ class LazyChunkSequence(Generic[TensorType]):
         self.len_generator = len_generator
 
     @log_duration(log_level=logging.INFO)
-    def compute(self, aggregator: Optional[SequenceAggregator] = None):
+    def compute(self, aggregator: Optional[SequenceAggregator] = None) -> Any:
         """
         Computes and optionally aggregates the chunks of the array using the provided
         aggregator. This method initiates the generation of chunks and then
@@ -278,7 +279,7 @@ class NestedLazyChunkSequence(Generic[TensorType]):
         self.len_outer_generator = len_outer_generator
 
     @log_duration(log_level=logging.INFO)
-    def compute(self, aggregator: Optional[NestedSequenceAggregator] = None):
+    def compute(self, aggregator: Optional[NestedSequenceAggregator] = None) -> Any:
         """
         Computes and optionally aggregates the chunks of the array using the provided
         aggregator. This method initiates the generation of chunks and then

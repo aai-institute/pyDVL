@@ -112,7 +112,7 @@ class _ModelBasedBatchOperation(ABC):
     def _apply_to_vec(self, batch: TorchBatch, vec: torch.Tensor) -> torch.Tensor:
         pass
 
-    def apply(self, batch: TorchBatch, tensor: torch.Tensor):
+    def apply(self, batch: TorchBatch, tensor: torch.Tensor) -> torch.Tensor:
         """
         Applies the batch operation to a tensor.
         Args:

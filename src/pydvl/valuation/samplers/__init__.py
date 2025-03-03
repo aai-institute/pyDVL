@@ -13,14 +13,14 @@ several strategies to choose when constructing them.
 ## Index iteration
 
 Subclasses of [IndexSampler][pydvl.valuation.samplers.IndexSampler] are iterators
-over **batches** of [Samples][pydvl.valuation.samplers.Sample]. These are typically of
+over **batches** of [Samples][pydvl.valuation.types.Sample]. These are typically of
 the form $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
 is a subset of the complement of $i.$
 
 This type of iteration over indices $i$ and their complements is configured upon
 construction of the sampler with the classes
-[SequentialIndexIteration][pydvl.valuation.iteration.SequentialIndexIteration],
-[RandomIndexIteration][pydvl.valuation.iteration.RandomIndexIteration], or their finite
+[SequentialIndexIteration][pydvl.valuation.samplers.powerset.SequentialIndexIteration],
+[RandomIndexIteration][pydvl.valuation.samplers.powerset.RandomIndexIteration], or their finite
 counterparts, when each index must be visited just once (albeit possibly generating many
 samples per index).
 
@@ -78,17 +78,18 @@ implement the [IndexSampler][pydvl.valuation.samplers.IndexSampler] interface di
 
 There are three main methods to implement (and others that can be overridden):
 
-* [generate()][pydvl.valuation.samplers.IndexSampler.generate], which yields samples of
-  the form $(i, S)$. These will be batched together by `__iter__` for parallel
-  processing. Note that, if the index set has size $N$, for
+* [_generate()][pydvl.valuation.samplers.base.IndexSampler._generate], which yields
+  samples of the form $(i, S)$. These will be batched together by `__iter__` for
+  parallel processing. Note that, if the index set has size $N$, for
   [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], a
   batch size of $B$ implies $O(B*N)$ evaluations of the utility in one process, since
   single permutations are always processed in one go.
-* [weight()][pydvl.valuation.samplers.IndexSampler.weight] to provide a factor by which
-  to multiply Monte Carlo samples in stochastic methods, so that the mean converges to
-  the desired expression.
-* [make_strategy()][pydvl.valuation.samplers.IndexSampler.make_strategy] to create an
-  evaluation strategy that processes the samples. This is typically a subclass of
+* [log_weight()][pydvl.valuation.samplers.base.IndexSampler.weight] to provide a factor
+  by which to multiply Monte Carlo samples in stochastic methods, so that the mean
+  converges to the desired expression. This will typically be the logarithm of the
+  inverse probability of sampling a given subset.
+* [make_strategy()][pydvl.valuation.samplers.base.IndexSampler.make_strategy] to create
+  an evaluation strategy that processes the samples. This is typically a subclass of
   [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] that computes
   utilities and weights them with coefficients and sampler weights.
   One can also use any of the predefined strategies, like the successive marginal
