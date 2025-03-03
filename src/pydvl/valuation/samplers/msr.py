@@ -151,10 +151,10 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
 
     The sampling is similar to a
-    [UniformSampler][pydvl.valuation.samplers.UniformSampler] but without an outer
+    [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] but without an outer
     index. However,the MSR sampler uses a special evaluation strategy and result updater,
-    as returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy]
-    and [result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+    as returned by the [make_strategy][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+    and [result_updater][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
     respectively.
 
     Two running means are updated separately for positive and negative updates. The two

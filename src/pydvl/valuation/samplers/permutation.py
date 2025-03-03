@@ -111,6 +111,9 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
 
     @skip_indices.setter
     def skip_indices(self, indices: IndexSetT):
+        """Sets the indices to skip when generating permutations. This can be used
+        to avoid updating indices that have already converged, but can lead to biased
+        estimates if not done carefully."""
         self._skip_indices = indices
 
     def _generate(self, indices: IndexSetT) -> SampleGenerator:

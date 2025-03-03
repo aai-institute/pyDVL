@@ -246,6 +246,7 @@ class PowersetSampler(IndexSampler, ABC):
 
     @property
     def skip_indices(self):
+        """Set of indices to skip in the outer loop."""
         return self._skip_indices
 
     @skip_indices.setter

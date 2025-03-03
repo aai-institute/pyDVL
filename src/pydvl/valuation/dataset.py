@@ -10,7 +10,7 @@ be used to construct [scorers][pydvl.valuation.scorers] and to fit (most) valuat
 methods.
 
 The underlying data arrays can always be accessed (read-only) via
-[Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
 
 ## Slicing
 
@@ -26,7 +26,7 @@ Slicing with `None`, i.e. `dataset[None]`, will return a copy of the whole datas
 ## Grouped datasets and logical indices
 
 As mentioned above, it is also possible to group data points together with
-[GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
+[GroupedDataset][pydvl.valuation.dataset.GroupedDataset].
 In order to handle groups correctly, Datasets map "logical" indices to "data" indices
 and vice versa. The latter correspond to indices in the data arrays themselves, while
 the former may map to groups of data points.
@@ -95,11 +95,11 @@ class Dataset:
     data names. It is used to pass data around to valuation methods.
 
     The underlying data arrays can be accessed via
-    [Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple
-    `(X, y)` as a [RawData][pydvl.valuation.dataset.RawData] object. The data can be
-    accessed by indexing the object directly, e.g. `dataset[0]` will return the data
-    point corresponding to index 0 in `dataset`. For this base class, this is the same
-    as `dataset.data([0])`, which is the first point in the data array, but derived
+    [Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple
+    `(X, y)` as a read-only [RawData][pydvl.valuation.dataset.RawData] object. The data
+    can be accessed by indexing the object directly, e.g. `dataset[0]` will return the
+    data point corresponding to index 0 in `dataset`. For this base class, this is the
+    same as `dataset.data([0])`, which is the first point in the data array, but derived
     classes can behave differently.
 
     Args:
@@ -195,8 +195,9 @@ class Dataset:
         """Given a set of indices, returns the training data that refer to those
         indices, as a read-only tuple-like structure.
 
-        This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
-        retrieve subsets of the data from indices.
+        This is used mainly by subclasses of
+        [UtilityBase][pydvl.valuation.utility.base.UtilityBase] to retrieve subsets of
+        the data from indices.
 
         Args:
             indices: Optional indices that will be used to select points from

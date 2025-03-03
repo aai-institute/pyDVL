@@ -354,7 +354,7 @@ class PowerLawSampleSize(SampleSizeStrategy):
     $$f(k) = (1+k)^a, $$
 
     and some exponent $a.$ With $a=1$ one recovers the
-    [HarmonicSamplesPerSetSize][pydvl.valuation.samplers.stratified.HarmonicSamplesPerSetSize]
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]
     heuristic.
 
     Args:

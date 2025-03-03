@@ -5,13 +5,13 @@ and second order derivatives of torch models, using functionality from
 To indicate higher-order functions, i.e. functions which return functions,
 we use the naming convention `create_**_function`.
 
-In particular, the module contains functionality for
+Among others, the module contains functionality for
 
 * Sample, batch-wise and empirical loss functions:
     * [create_per_sample_loss_function][pydvl.influence.torch.functional.create_per_sample_loss_function]
     * [create_batch_loss_function][pydvl.influence.torch.functional.create_batch_loss_function]
     * [create_empirical_loss_function][pydvl.influence.torch.functional.create_empirical_loss_function]
-* Per sample gradient and jacobian product functions:
+* Per sample gradient and Jacobian product functions:
     * [create_per_sample_gradient_function][pydvl.influence.torch.functional.create_per_sample_gradient_function]
     * [create_per_sample_mixed_derivative_function][pydvl.influence.torch.functional.create_per_sample_mixed_derivative_function]
     * [create_matrix_jacobian_product_function][pydvl.influence.torch.functional.create_matrix_jacobian_product_function]
@@ -20,7 +20,7 @@ In particular, the module contains functionality for
     * [create_hvp_function][pydvl.influence.torch.functional.create_hvp_function]
     * [create_batch_hvp_function][pydvl.influence.torch.functional.create_batch_hvp_function]
     * [hessian][pydvl.influence.torch.functional.hessian]
-    * [model_hessian_low_rank][pydvl.influence.torch.functional.model_hessian_low_rank]
+    * [model_hessian_nystroem_approximation][pydvl.influence.torch.functional.model_hessian_nystroem_approximation]
 """
 
 from __future__ import annotations
