@@ -29,8 +29,9 @@ __all__ = ["maybe_add_argument", "suppress_warnings", "timed"]
 
 logger = getLogger(__name__)
 
+R = TypeVar("R", contravariant=True)
 
-def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
+def _accept_additional_argument(*args: Any, fun: Callable[..., R], arg: str, **kwargs: Any) -> R:
     """Calls the given function with the given positional and keyword arguments,
     removing `arg` from the keyword arguments.
 
