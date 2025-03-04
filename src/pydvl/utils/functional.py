@@ -29,7 +29,7 @@ __all__ = ["maybe_add_argument", "suppress_warnings", "timed"]
 
 logger = getLogger(__name__)
 
-R = TypeVar("R", contravariant=True)
+R = TypeVar("R", covariant=True)
 
 
 def _accept_additional_argument(
