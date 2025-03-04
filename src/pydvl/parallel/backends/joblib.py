@@ -73,7 +73,8 @@ class JoblibParallelBackend(ParallelBackend, backend_name="joblib"):
                 after exiting an Executor.
 
         Returns:
-            Instance of [_ReusablePoolExecutor][joblib.externals.loky.reusable_executor].
+            Instance of
+                [_ReusablePoolExecutor](https://github.com/joblib/loky/blob/master/loky/reusable_executor.py)
         """
         if config is not None:
             warnings.warn(
