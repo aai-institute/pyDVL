@@ -31,14 +31,14 @@ from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.parallel import (
+    ensure_backend_has_generator_return,
+    make_parallel_flag,
+)
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.utility.base import UtilityBase
-from pydvl.valuation.utils import (
-    ensure_backend_has_generator_return,
-    make_parallel_flag,
-)
 
 __all__ = ["SemivalueValuation"]
 
