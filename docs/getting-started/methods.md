@@ -9,7 +9,8 @@ We currently implement the following methods:
 
 ## Data valuation  { #implemented-methods-data-valuation }
 
-- [**LOO**][pydvl.valuation.methods.loo.LOOValuation].
+- **LOO** implemented via
+  [LOOValuation][pydvl.valuation.methods.loo.LOOValuation].
 
 - **Permutation Shapley**, via
   [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]

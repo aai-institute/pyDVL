@@ -18,11 +18,14 @@ nav:
     - Glossary: getting-started/glossary.md
   - Data Valuation:
     - value/index.md
+    - Leave-One-Out: value/loo.md
     - Shapley values: value/shapley.md
+    - Owen-Shapley values: value/owen.md
     - Semi-values: value/semi-values.md
     - Class-wise Shapley: value/classwise-shapley.md
     - Least Core: value/the-core.md
     - Data-OOB: value/data-oob.md
+    - How sampling weights work: value/sampling-weights.md
   - The Influence Function:
     - influence/index.md
     - Influence Function Model: influence/influence_function_model.md
@@ -73,7 +76,7 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
-  - search
+#  - search
   - autorefs
   - glightbox:
       touchNavigation: true
@@ -146,7 +149,7 @@ plugins:
             signature_crossrefs: true
             merge_init_into_class: true
             docstring_options:
-              ignore_init_summary: true
+              ignore_init_summary: false
             show_symbol_type_toc: true
             show_symbol_type_heading: true
             show_root_full_path: true
@@ -174,7 +177,7 @@ theme:
     - content.code.copy
     - navigation.footer
     - content.tooltips
-#    - navigation.indexes
+    - navigation.indexes
     - navigation.instant
     - navigation.path
     - navigation.sections
