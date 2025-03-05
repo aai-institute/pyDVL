@@ -83,7 +83,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
         >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
-        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"))
+        >>> u = ModelUtility(LogisticRegression(random_state=16), SupervisedScorer("accuracy"))
         >>> u(Sample(subset=dataset.indices))
         0.9
         ```
@@ -98,7 +98,10 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         >>> from sklearn.datasets import load_iris
         >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
         >>> cache_backend = InMemoryCacheBackend()
-        >>> u = ModelUtility(LogisticRegression(random_state=16), Scorer("accuracy"), cache_backend=cache_backend)
+        >>> u = ModelUtility(
+        ...        model=LogisticRegression(random_state=16),
+        ...        scorer=SupervisedScorer("accuracy"),
+        ...        cache_backend=cache_backend)
         >>> u(Sample(subset=train.indices))
         0.9
         ```

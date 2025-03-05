@@ -324,19 +324,19 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
 
     ??? Example "Usage pattern in valuation methods"
         ```python
-            def fit(self, data: Dataset):
-                self.utility = self.utility.with_dataset(data)
-                strategy = self.sampler.strategy(self.utility, self.log_coefficient)
-                delayed_batches = Parallel()(
-                    delayed(strategy.process)(batch=list(batch), is_interrupted=flag)
-                    for batch in self.sampler
-                )
-                for batch in delayed_batches:
-                    for evaluation in batch:
-                        self.result.update(evaluation.idx, evaluation.update)
-                    if self.is_done(self.result):
-                        flag.set()
-                        break
+        def fit(self, data: Dataset):
+            self.utility = self.utility.with_dataset(data)
+            strategy = self.sampler.strategy(self.utility, self.log_coefficient)
+            delayed_batches = Parallel()(
+                delayed(strategy.process)(batch=list(batch), is_interrupted=flag)
+                for batch in self.sampler
+            )
+            for batch in delayed_batches:
+                for evaluation in batch:
+                    self.result.update(evaluation.idx, evaluation.update)
+                if self.is_done(self.result):
+                    flag.set()
+                    break
         ```
 
     Args:
