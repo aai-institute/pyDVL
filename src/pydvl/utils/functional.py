@@ -134,7 +134,6 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
 
 
 P = ParamSpec("P")
-R = TypeVar("R", covariant=True)
 
 
 @overload

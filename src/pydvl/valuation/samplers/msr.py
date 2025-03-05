@@ -1,11 +1,11 @@
 """
 This module implements Maximum Sample Re-use (MSR) sampling for valuation, as described
 in Wang and Jia (2023)[^1], where it was introduced specifically for
-[Data Banhzaf][pydvl.valuation.methods.data_banzhaf].
+[Data Banhzaf][pydvl.valuation.methods.banzhaf].
 
 !!! Warning
     MSR can be very unstable when used with valuation algorithms other than
-    [Data Banzhaf][pydvl.valuation.methods.data_banzhaf]. This is because of the
+    [Data Banzhaf][pydvl.valuation.methods.banzhaf]. This is because of the
     instabilities introduced by the correction coefficients. For more, see Appendix C.1
     of Wang and Jia (2023)[^1].
 
