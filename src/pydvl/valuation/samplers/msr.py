@@ -8,8 +8,8 @@ sample, and negative, if it is not. The two running means are later combined int
 final result.
 
 Note that this requires defining a special evaluation strategy and result updater, as
-returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy] and
-[result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+returned by the [make_strategy][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+and [result_updater][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
 respectively.
 
 For more on the general architecture of samplers see
@@ -58,6 +58,11 @@ __all__ = ["MSRSampler"]
 
 @dataclass(frozen=True)
 class MSRValueUpdate(ValueUpdate):
+    """Update for Maximum Sample Re-use (MSR) valuation (in log space).
+    Attributes:
+        in_sample: Whether the index to be updated was in the sample.
+    """
+
     in_sample: bool
 
     def __init__(self, idx: IndexT, log_update: float, sign: int, in_sample: bool):
@@ -68,7 +73,7 @@ class MSRValueUpdate(ValueUpdate):
         object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
-class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
+class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
     """Update running means for MSR valuation (in log-space).
 
     This class is used to update two running means for positive and negative updates
@@ -151,10 +156,10 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
 
     The sampling is similar to a
-    [UniformSampler][pydvl.valuation.samplers.UniformSampler] but without an outer
+    [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] but without an outer
     index. However,the MSR sampler uses a special evaluation strategy and result updater,
-    as returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy]
-    and [result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+    as returned by the [make_strategy()][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+    and [result_updater()][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
     respectively.
 
     Two running means are updated separately for positive and negative updates. The two
@@ -169,7 +174,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             subset = random_subset(indices, seed=self._rng)
             yield Sample(None, subset)
@@ -213,11 +218,29 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
         utility: UtilityBase,
         coefficient: Callable[[int, int], float] | None = None,
     ) -> MSREvaluationStrategy:
+        """Returns the strategy for this sampler.
+
+        Args:
+            utility: Utility function to evaluate.
+            coefficient: Coefficient function for the utility function.
+        """
         assert coefficient is not None
         return MSREvaluationStrategy(self, utility, coefficient)
 
     def result_updater(self, result: ValuationResult) -> ResultUpdater:
-        return MSRLogResultUpdater(result)
+        """Returns a callable that updates a valuation result with an MSR value update.
+
+        MSR updates two running means for positive and negative updates separately. The
+        two running means are later combined into a final result.
+
+        Args:
+            result: The valuation result to update with each call of the returned
+                callable.
+        Returns:
+            A callable object that updates the valuation result with very
+                [MSRValueUpdate][pydvl.valuation.samplers.msr.MSRValueUpdate].
+        """
+        return MSRResultUpdater(result)
 
 
 class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
@@ -227,7 +250,7 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
     `n_indices` many updates from it. The updates will be used to update two running
     means that will later be combined into a final value. We use the field
     `ValueUpdate.in_sample` field to inform
-    [MSRResultUpdater][pydvl.valuation.samplers.MSRResultUpdater] of which of the two
+    [MSRResultUpdater][pydvl.valuation.samplers.msr.MSRResultUpdater] of which of the two
     running means must be updated.
     """
 

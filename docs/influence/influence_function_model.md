@@ -32,24 +32,25 @@ or a [Nyström approximation based preconditioner
 ][pydvl.influence.torch.preconditioner.NystroemPreconditioner], 
 described in [@frangella_randomized_2023].
 
-```python
-from pydvl.influence.torch import CgInfluence, BlockMode, SecondOrderMode
-from pydvl.influence.torch.preconditioner import NystroemPreconditioner
-
-if_model = CgInfluence(
-    model,
-    loss,
-    regularization=0.0,
-    rtol=1e-7,
-    atol=1e-7,
-    maxiter=None,
-    solve_simultaneously=True,
-    preconditioner=NystroemPreconditioner(rank=10),
-    block_structure=BlockMode.FULL,
-    second_order_mode=SecondOrderMode.HESSIAN
-)
-if_model.fit(train_loader)
-```
+??? Example "Using Conjugate Gradient"
+  ```python
+  from pydvl.influence.torch import CgInfluence, BlockMode, SecondOrderMode
+  from pydvl.influence.torch.preconditioner import NystroemPreconditioner
+  
+  if_model = CgInfluence(
+      model,
+      loss,
+      regularization=0.0,
+      rtol=1e-7,
+      atol=1e-7,
+      maxiter=None,
+      solve_simultaneously=True,
+      preconditioner=NystroemPreconditioner(rank=10),
+      block_structure=BlockMode.FULL,
+      second_order_mode=SecondOrderMode.HESSIAN
+  )
+  if_model.fit(train_loader)
+  ```
 
 The additional optional parameters `rtol`, `atol`, `maxiter`, 
 `solve_simultaneously` and `preconditioner` are respectively, the relative
@@ -60,8 +61,8 @@ preconditioner.
 
 This implementation is capable of using a block-diagonal
 approximation, see
-[Block-diagonal approximation](#block-diagonal-approximation), and can handle
-[Gauss-Newton approximation](#gauss-newton-approximation).
+[Block-diagonal approximation][block-diagonal-approximation], and can handle
+[Gauss-Newton approximation][gauss-newton-approximation].
 
 
 ### Linear time Stochastic Second-Order Approximation (LiSSA)
@@ -80,22 +81,22 @@ for the convergence of the method and they need to be chosen carefully, and I
 is the identity matrix. More info on the theory of LiSSA can be found in the
 original paper [@agarwal_secondorder_2017].
 
-
-```python
-from pydvl.influence.torch import LissaInfluence, BlockMode, SecondOrderMode
-if_model = LissaInfluence(
-   model,
-   loss,
-   regularization=0.0, 
-   maxiter=1000,
-   dampen=0.0,
-   scale=10.0,
-   rtol=1e-4,
-   block_structure=BlockMode.FULL,
-   second_order_mode=SecondOrderMode.GAUSS_NEWTON
-)
-if_model.fit(train_loader)
-```
+??? Example "Using LiSSA"
+  ```python
+  from pydvl.influence.torch import LissaInfluence, BlockMode, SecondOrderMode
+  if_model = LissaInfluence(
+     model,
+     loss,
+     regularization=0.0, 
+     maxiter=1000,
+     dampen=0.0,
+     scale=10.0,
+     rtol=1e-4,
+     block_structure=BlockMode.FULL,
+     second_order_mode=SecondOrderMode.GAUSS_NEWTON
+  )
+  if_model.fit(train_loader)
+  ```
 
 with the additional optional parameters `maxiter`, `dampen`, `scale`, and
 `rtol`,
@@ -103,10 +104,10 @@ being the maximum number of iterations, the dampening factor, the scaling
 factor and the relative tolerance,
 respectively. This implementation is capable of using a block-matrix 
 approximation, see 
-[Block-diagonal approximation](#block-diagonal-approximation), and can handle
-[Gauss-Newton approximation](#gauss-newton-approximation).
+[Block-diagonal approximation][block-diagonal-approximation], and can handle
+[Gauss-Newton approximation][gauss-newton-approximation].
 
-### Arnoldi
+### Arnoldi { #arnoldi-method }
 
 The [Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) is a
 Krylov subspace method for approximating dominating eigenvalues and
@@ -121,23 +122,25 @@ where \(D\) is a diagonal matrix with the top (in absolute value) eigenvalues of
 the Hessian and \(V\) contains the corresponding eigenvectors. See also
 [@schioppa_scaling_2022].
 
-```python
-from pydvl.influence.torch import ArnoldiInfluence, BlockMode, SecondOrderMode
-if_model = ArnoldiInfluence(
-    model,
-    loss,
-    regularization=0.0,
-    rank=10,
-    tol=1e-6,
-    block_structure=BlockMode.FULL,
-    second_order_mode=SecondOrderMode.HESSIAN
-)
-if_model.fit(train_loader)
-```
+??? Example "Using Arnoldi"
+  ```python
+  from pydvl.influence.torch import ArnoldiInfluence, BlockMode, SecondOrderMode
+  if_model = ArnoldiInfluence(
+      model,
+      loss,
+      regularization=0.0,
+      rank=10,
+      tol=1e-6,
+      block_structure=BlockMode.FULL,
+      second_order_mode=SecondOrderMode.HESSIAN
+  )
+  if_model.fit(train_loader)
+  ```
+
 This implementation is capable of using a block-matrix
 approximation, see
-[Block-diagonal approximation](#block-diagonal-approximation), and can handle
-[Gauss-Newton approximation](#gauss-newton-approximation).
+[Block-diagonal approximation][block-diagonal-approximation], and can handle
+[Gauss-Newton approximation][gauss-newton-approximation].
 
 ### Eigenvalue Corrected K-FAC
 
@@ -157,14 +160,16 @@ influence function calculation, K-FAC does not require the loss function as an
 input. This is because the current implementation is only applicable to 
 classification models with a cross entropy loss function. 
 
-```python
-from pydvl.influence.torch import EkfacInfluence
-if_model = EkfacInfluence(
-    model,
-    hessian_regularization=0.0,
-)
-if_model.fit(train_loader)
-```
+??? Example " Using K-FAC"
+    ```python
+    from pydvl.influence.torch import EkfacInfluence
+    if_model = EkfacInfluence(
+        model,
+        hessian_regularization=0.0,
+    )
+    if_model.fit(train_loader)
+    ```
+
 Upon initialization, the K-FAC method will parse the model and extract which 
 layers require grad and which do not. Then it will only calculate the influence 
 scores for the layers that require grad. The current implementation of the 
@@ -178,18 +183,18 @@ eigenvalues of the Hessian, thus providing a more accurate approximation.
 On top of the K-FAC method, the EKFAC method is implemented by setting 
 `update_diagonal=True` when initialising [EkfacInfluence
 ][pydvl.influence.torch.influence_function_model.EkfacInfluence]. 
-The following code snippet shows how to use the EKFAC method to calculate the 
-influence function of a model. 
 
-```python
-from pydvl.influence.torch import EkfacInfluence
-if_model = EkfacInfluence(
-    model,
-    update_diagonal=True,
-    hessian_regularization=0.0,
-)
-if_model.fit(train_loader)
-```
+
+??? Example "Using EKFAC"
+    ```python
+    from pydvl.influence.torch import EkfacInfluence
+    if_model = EkfacInfluence(
+        model,
+        update_diagonal=True,
+        hessian_regularization=0.0,
+    )
+    if_model.fit(train_loader)
+    ```
 
 ### Nyström Sketch-and-Solve
 
@@ -214,22 +219,24 @@ action of its inverse:
 see also [@hataya_nystrom_2023] and [@frangella_randomized_2023]. The essential 
 parameter is the rank of the approximation.
 
-```python
-from pydvl.influence.torch import NystroemSketchInfluence, BlockMode, SecondOrderMode
-if_model = NystroemSketchInfluence(
-    model,
-    loss,
-    rank=10,
-    regularization=0.0,
-    block_structure=BlockMode.FULL,
-    second_order_mode=SecondOrderMode.HESSIAN
-)
-if_model.fit(train_loader)
-```
-This implementation is capable of using a block-matrix
-approximation, see
-[Block-diagonal approximation](#block-diagonal-approximation), and can handle
-[Gauss-Newton approximation](#gauss-newton-approximation).
+
+??? Example "Using Nyström Sketch-and-Solve"
+  ```python
+  from pydvl.influence.torch import NystroemSketchInfluence, BlockMode, SecondOrderMode
+  if_model = NystroemSketchInfluence(
+      model,
+      loss,
+      rank=10,
+      regularization=0.0,
+      block_structure=BlockMode.FULL,
+      second_order_mode=SecondOrderMode.HESSIAN
+  )
+  if_model.fit(train_loader)
+  ```
+
+This implementation is capable of using a block-matrix approximation, see
+[Block-diagonal approximation][block-diagonal-approximation], and can handle
+[Gauss-Newton approximation][gauss-newton-approximation].
 
 ### Inverse Harmonic Mean
 
@@ -319,7 +326,7 @@ if_model = InverseHarmonicMeanInfluence(
 if_model.fit(train_loader)
 ```
 This implementation is capable of using a block-matrix approximation, see
-[Block-diagonal approximation](#block-diagonal-approximation).
+[Block-diagonal approximation][block-diagonal-approximation].
 
 
 These implementations represent the calculation logic on in memory tensors. 

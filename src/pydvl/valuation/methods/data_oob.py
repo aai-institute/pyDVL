@@ -41,6 +41,7 @@ from sklearn.ensemble._forest import (
     _get_n_samples_bootstrap,
 )
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import Self
 
 from pydvl.utils.types import BaggingModel, PointwiseScore
 from pydvl.valuation.base import Valuation
@@ -66,9 +67,6 @@ class DataOOBValuation(Valuation):
         score: A callable for point-wise comparison of true values with the predictions.
             If `None`, uses point-wise accuracy for classifiers and negative $l_2$
             distance for regressors.
-
-    Returns:
-        Object with the data values.
     """
 
     def __init__(
@@ -80,7 +78,17 @@ class DataOOBValuation(Valuation):
         self.model = model
         self.score = score
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset) -> Self:
+        """Compute the Data-OOB values.
+
+        This requires the bagging model passed upon construction to be fitted.
+
+        Args:
+            data: Data for which to compute values
+
+        Returns:
+            The fitted object.
+        """
         # TODO: automate str representation for all Valuations
         algorithm_name = f"Data-OOB-{str(self.model)}"
         self.result = ValuationResult.empty(
@@ -135,6 +143,7 @@ class DataOOBValuation(Valuation):
                 values=score_array,
                 counts=np.ones_like(score_array, dtype=data.indices.dtype),
             )
+        return self
 
 
 def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:

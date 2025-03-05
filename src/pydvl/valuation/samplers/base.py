@@ -51,7 +51,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
     r"""Samplers are custom iterables over batches of subsets of indices.
 
     Calling `from_indices(indexset)` on a sampler returns a generator over **batches**
-    of `Samples`. A [Sample][pydvl.valuation.samplers.Sample] is a tuple of the form
+    of `Samples`. A [Sample][pydvl.valuation.types.Sample] is a tuple of the form
     $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$ is a
     subset of the complement of $i$ in $I$.
 
@@ -60,14 +60,14 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         `from_indices(data)` e.g. in a new for loop creates a new iterator.
 
     Derived samplers must implement
-    [log_weight()][pydvl.valuation.samplers.IndexSampler.log_weight] and
-    [_generate()][pydvl.valuation.samplers.IndexSampler._generate]. See the module's
-    documentation for more on these.
+    [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] and
+    [generate()][pydvl.valuation.samplers.base.IndexSampler.generate]. See the
+    module's documentation for more on these.
 
     ## Interrupting samplers
 
-    Calling [interrupt()][pydvl.valuation.samplers.IndexSampler.interrupt] on a sampler
-    will stop the batched generator after the current batch has been yielded.
+    Calling [interrupt()][pydvl.valuation.samplers.base.IndexSampler.interrupt] on a
+    sampler will stop the batched generator after the current batch has been yielded.
 
     Args:
         batch_size: The number of samples to generate per batch. Batches are
@@ -120,6 +120,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
 
     @property
     def skip_indices(self) -> IndexSetT:
+        """Indices being skipped in the sampler. The exact behaviour will be
+        sampler-dependent, so that setting this property is disabled by default."""
         return self._skip_indices
 
     @skip_indices.setter
@@ -132,6 +134,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         warnings.warn(f"Cannot skip indices in {self.__class__.__name__}.")
 
     def interrupt(self):
+        """Signals the sampler to stop generating samples after the current batch."""
         self._interrupted = True
 
     def __str__(self) -> str:
@@ -144,7 +147,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         """Returns the length of the current sample generation in generate_batches.
 
         Raises:
-            `TypeError` if the sampler is infinite or
+            `TypeError`: if the sampler is infinite or
                 [generate_batches][pydvl.valuation.samplers.IndexSampler.generate_batches]
                 has not been called yet.
         """
@@ -166,7 +169,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
 
         self._interrupted = False
         self._n_samples = 0
-        for batch in chunked(self._generate(indices), self.batch_size):
+        for batch in chunked(self.generate(indices), self.batch_size):
             self._n_samples += len(batch)
             yield batch
             if self._interrupted:
@@ -187,7 +190,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
         ...
 
     @abstractmethod
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates single samples.
 
         `IndexSampler.generate_batches()` will batch these samples according to the

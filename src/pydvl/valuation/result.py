@@ -241,7 +241,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool | None = None,
-        **extra_values,
+        **extra_values: Any,
     ):
         if variances is not None and len(variances) != len(values):
             raise ValueError(
@@ -746,11 +746,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         size: int,
         total: float | None = None,
         seed: Seed | None = None,
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> "ValuationResult":
-        """Creates a [ValuationResult][pydvl.valuation.result.ValuationResult] object and fills it with an array
-        of random values from a uniform distribution in [-1,1]. The values can
-        be made to sum up to a given total number (doing so will change their range).
+        """Creates a [ValuationResult][pydvl.valuation.result.ValuationResult] object
+        and fills it with an array of random values from a uniform distribution in
+        [-1,1]. The values can be made to sum up to a given total number (doing so will
+        change their range).
 
         Args:
             size: Number of values to generate

@@ -35,7 +35,8 @@ The main class is
 a *fitted* bagged model and uses data precomputed during training to calculate
 the values. It is therefore very fast, and can be used to value large datasets.
 
-This is how you would use it with a [[RandomForestClassifier]]:
+This is how you would use it with a 
+[RandomForestClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html):
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
@@ -52,15 +53,15 @@ values = valuation.values()
 `values` is then a [ValuationResult][pydvl.valuation.result.ValuationResult] to
 be used for data inspection, cleaning, etc.
 
-Data-OOB is not limited to sklearn's [[RandomForest]], but can be used with
+Data-OOB is not limited to sklearn's `RandomForest`, but can be used with
 any bagging model that defines the attribute `estimators_`  after fitting and
 makes the list of bootstrapped samples available in some way. This includes
-[[BaggingRegressor]], [[BaggingClassifier]], [[ExtraTreesClassifier]],
-[[ExtraTreesRegressor]] and [[IsolationForest]].
+`BaggingRegressor`, `BaggingClassifier`, `ExtraTreesClassifier`,
+`ExtraTreesRegressor` and `IsolationForest`.
 
 ## Bagging arbitrary models
 
-Through [[BaggingClassifier]] and [[BaggingRegressor]], one can compute values
+Through `BaggingClassifier` and `BaggingRegressor`, one can compute values
 for any model that can be bagged. Bagging in itself is not necessarily always
 beneficial, and there are cases where it can be detrimental. However, for data
 valuation we are not interested in the performance of the bagged model, but in
@@ -69,6 +70,7 @@ model and data.
 
 ```python
 from sklearn.ensemble import BaggingClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from pydvl.valuation import DataOOBValuation, Dataset
 
 train, test = Dataset(...), Dataset(...)

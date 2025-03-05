@@ -130,15 +130,18 @@ class IndicatorUtilityModel(UtilityModel):
 
 
 class DataUtilityLearning(UtilityBase[SampleT]):
-    """This object wraps any [utility][pydvl.valuation.utility] and delegates
-    calls to it, up until a given budget (number of iterations). Every tuple
-    of input and output (a so-called *utility sample*) is stored. Once the
-    budget is exhausted, `DataUtilityLearning` fits the given model to the
-    utility samples. Subsequent calls will use the learned model to predict the
-    utility instead of delegating.
+    """This object wraps any class derived from
+    [UtilityBase][pydvl.valuation.utility.base.UtilityBase] and delegates calls to it,
+    up until a given budget (number of iterations). Every tuple of input and output (a
+    so-called *utility sample*) is stored. Once the budget is exhausted,
+    `DataUtilityLearning` fits the given model to the utility samples. Subsequent
+    calls will use the learned model to predict the utility instead of delegating.
 
     Args:
-        utility: The [Utility][pydvl.valuation.utility.Utility] to learn.
+        utility: The utility to learn. Typically, this will be a
+            [ModelUtility][pydvl.valuation.utility.ModelUtility] object encapsulating
+            a machine learning model which requires fitting on each evaluation of the
+            utility.
         training_budget: Number of utility samples to collect before fitting
             the given model.
         model: A supervised regression model

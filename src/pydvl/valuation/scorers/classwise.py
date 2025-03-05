@@ -1,10 +1,10 @@
 r"""
 This module contains the implementation of the
-[ClasswiseScorer][pydvl.valuation.scorers.classwise.ClasswiseScorer] class for
-[Class-wise Shapley][pydvl.valuation.methods.classwise_shapley] values.
+[ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer]
+class for [Class-wise Shapley][pydvl.valuation.methods.classwise_shapley] values.
 
 Its value is computed from an in-class and an out-of-class "inner score" (Schoch et al.,
-2022) <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the training set and
+2022)<sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the training set and
 $D$ be the valuation set. For each label $c$, $D$ is factorized into two disjoint sets:
 $D_c$ for in-class instances and $D_{-c}$ for out-of-class instances. The score combines
 an in-class metric of performance, adjusted by a discounted out-of-class metric. These
@@ -135,8 +135,6 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
 
         Args:
             model: Model used for computing the score on the validation set.
-            x_test: Array containing the features of the classification problem.
-            y_test: Array containing the labels of the classification problem.
             rescale_scores: If set to True, the scores will be denormalized. This is
                 particularly useful when the inner score function $a_S$ is calculated by
                 an estimator of the form $\frac{1}{N} \sum_i x_i$.

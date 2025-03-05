@@ -126,7 +126,7 @@ as described above for semi-values.
 ## Interactions with sampling schemes and other pitfalls of stopping criteria
 
 Different samplers define different "update strategies" for values. For example,
-[MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] updates the `counts` field
+[MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] updates the `counts` field
 of a [ValuationResult][pydvl.valuation.result.ValuationResult] only for about half of
 the utility evaluations, because it reuses samples. This means that a stopping criterion
 like [MaxChecks][pydvl.valuation.stopping.MaxChecks] will not work as expected, because
@@ -485,7 +485,7 @@ class MaxChecks(StoppingCriterion):
 
     A "check" is one call to the criterion. Note that this might have different
     interpretations depending on the sampler. For example,
-    [MSRSampler][pydvl.valuation.samplers.msrsampler.MSRSampler] performs a single
+    [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] performs a single
     utility evaluation to update all indices, so that's `len(training_data)` checks for
     a single training of the model. But it also only changes the `counts` field of the
     [ValuationResult][pydvl.valuation.result.ValuationResult] for about half of the

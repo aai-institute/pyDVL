@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from typing import (
+    Any,
     Callable,
     Collection,
     Dict,
@@ -200,7 +201,9 @@ def align_structure(
     return tangent_dict
 
 
-def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
+def align_with_model(
+    x: TorchTensorContainerType, model: torch.nn.Module
+) -> Dict[str, torch.Tensor]:
     """
     Aligns an input to the model's parameter structure, i.e. transforms it into a dict
     with the same keys as model.named_parameters() and matching tensor shapes
@@ -423,7 +426,7 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     def __call__(
         self,
         tensor_sequence: LazyChunkSequence[torch.Tensor],
-    ):
+    ) -> torch.Tensor:
         """
         Aggregates tensors from a single-level generator into a single tensor by
         concatenating them. This method is a straightforward way to combine a sequence
@@ -455,7 +458,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
 
     def __call__(
         self, nested_sequence_of_tensors: NestedLazyChunkSequence[torch.Tensor]
-    ):
+    ) -> torch.Tensor:
         """
         Aggregates tensors from a nested generator structure into a single tensor by
         concatenating. Each inner generator is first concatenated along dimension 1 into
@@ -567,7 +570,7 @@ def empirical_cross_entropy_loss_fn(
 
 
 @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
-def safe_torch_linalg_eigh(*args, **kwargs):
+def safe_torch_linalg_eigh(*args: Any, **kwargs: Any) -> torch.Tensor:
     """
     A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
     by raising a custom `TorchLinalgEighException` with more context,
