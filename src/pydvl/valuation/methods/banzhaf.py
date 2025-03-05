@@ -29,10 +29,10 @@ import numpy as np
 
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
-__all__ = ["DataBanzhafValuation"]
+__all__ = ["BanzhafValuation"]
 
 
-class DataBanzhafValuation(SemivalueValuation):
+class BanzhafValuation(SemivalueValuation):
     """Computes Banzhaf values."""
 
     algorithm_name = "Data-Banzhaf"

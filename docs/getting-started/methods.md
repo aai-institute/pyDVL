@@ -24,7 +24,7 @@ We currently implement the following methods:
   [RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation] 
   [@ghorbani_data_2019].
 
-- [**Data Banzhaf**][pydvl.valuation.methods.data_banzhaf.DataBanzhafValuation]
+- [**Data Banzhaf**][pydvl.valuation.methods.banzhaf.BanzhafValuation]
   [@wang_data_2023].
 
 - [**Beta Shapley**][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]

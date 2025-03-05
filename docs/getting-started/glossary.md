@@ -168,7 +168,7 @@ principle, it can be used with any
 [semi-value][pydvl.valuation.methods.semivalue.SemivalueValuation] by setting
 the sampler to be `MSR`, but due to the numerical instabilities introduced by
 the coefficients of e.g. Shapley values, it is mostly useful only with
-[Data Banzhaf][pydvl.valuation.methods.data_banzhaf.DataBanzhafValuation].
+[Data Banzhaf][pydvl.valuation.methods.banzhaf.BanzhafValuation].
 Introduced by [@wang_data_2023]
 
 * [Implementation][pydvl.valuation.samplers.msr.MSRSampler]
