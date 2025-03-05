@@ -76,7 +76,7 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
-#  - search
+  - search
   - autorefs
   - glightbox:
       touchNavigation: true
