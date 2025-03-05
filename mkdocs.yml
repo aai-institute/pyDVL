@@ -44,10 +44,24 @@ nav:
   - Code:
     # We use literate-nav to generate the navigation sidebar for the API
     # by leaving the trailing slash. Do not remove it!
-    - API Reference: api/pydvl/
+    - API Reference:
+      - Intro: api/pydvl/
+      - Data Valuation:
+        - Intro: api/pydvl/valuation/
+        - Datasets: api/pydvl/valuation/dataset/
+        - Methods: api/pydvl/valuation/methods/
+        - Utilities: api/pydvl/valuation/utility/
+        - Scorers: api/pydvl/valuation/scorers/
+        - Samplers: api/pydvl/valuation/samplers/
+        - Stopping criteria: api/pydvl/valuation/stopping/
+      - Influence Function: api/pydvl/influence/
+      - Reporting: api/pydvl/reporting/
     - Changelog: CHANGELOG.md
     - Development Guidelines: CONTRIBUTING.md
-
+    - Deprecated API:
+      - value/deprecation.md
+      - Data Valuation: deprecated/pydvl/value/
+      - Parallelization: deprecated/pydvl/parallel/
 watch:
   - src/pydvl
   - notebooks
