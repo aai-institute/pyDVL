@@ -1,10 +1,9 @@
 """Generate the code reference pages."""
 
+import logging
 from pathlib import Path
 
 import mkdocs_gen_files
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,14 +16,18 @@ for path in sorted(root.rglob("*.py")):
 
     extra_preamble = None
     if parts[:2] == ("pydvl", "value"):
-        extra_preamble = ("!!! Danger \"Deprecation notice\"\n"
-                          "    This module is deprecated since v0.10.0"
-                          "    in favor of [pydvl.valuation][].\n")
+        extra_preamble = (
+            '!!! Danger "Deprecation notice"\n'
+            "    This module is deprecated since v0.10.0"
+            "    in favor of [pydvl.valuation][].\n"
+        )
         full_doc_path = Path("deprecated") / doc_path
     elif parts[:2] == ("pydvl", "parallel"):
-        extra_preamble = ("!!! Danger \"Deprecation notice\"\n"
-                          "    This module is deprecated since v0.10.0 in favor of"
-                          "    joblib's context manager [joblib.parallel_config][].\n")
+        extra_preamble = (
+            '!!! Danger "Deprecation notice"\n'
+            "    This module is deprecated since v0.10.0 in favor of"
+            "    joblib's context manager [joblib.parallel_config][].\n"
+        )
 
         full_doc_path = Path("deprecated") / doc_path
     else:
@@ -32,20 +35,17 @@ for path in sorted(root.rglob("*.py")):
 
     extra_args = ""
     if parts[-1] == "__init__":
-        logger.error(f"Generating API docs for {module_path} with last part {parts[-1]}")
+        logger.error(
+            f"Generating API docs for {module_path} with last part {parts[-1]}"
+        )
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
-        extra_args = (
-                "    selection:\n"
-                "      members: false\n"
-                "      filters: [\"NONE\"]\n"
-        )
+        extra_args = '    selection:\n      members: false\n      filters: ["NONE"]\n'
     elif parts[-1] == "__main__":
         continue
     elif parts[-1].startswith("_"):
         continue
-
 
     nav[parts] = doc_path.as_posix()
 

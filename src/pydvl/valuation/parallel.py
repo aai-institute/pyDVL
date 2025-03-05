@@ -97,7 +97,7 @@ class MultiprocessingFlag(Flag):
 
 @contextmanager
 def make_parallel_flag():
-    """ A context manager that creates a flag for signalling across parallel processes.
+    """A context manager that creates a flag for signalling across parallel processes.
     The type of flag created is based on the active parallel backend."""
     backend = _get_active_backend()[0]
 

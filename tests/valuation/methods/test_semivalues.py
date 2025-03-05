@@ -6,8 +6,8 @@ import pytest
 from pydvl.utils import logcomb
 from pydvl.valuation.games import Game
 from pydvl.valuation.methods import (
-    BetaShapleyValuation,
     BanzhafValuation,
+    BetaShapleyValuation,
     SemivalueValuation,
     ShapleyValuation,
 )
