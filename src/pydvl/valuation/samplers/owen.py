@@ -219,11 +219,10 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         $$ P (| S_{q_j} | = k) = \binom{n}{k} \  q_j^k  (1 - q_j)^{n - k}.$$
 
         So, if each $q_j$ is chosen with equal weight (or more generally with
-        probability $p_j$),then by total probability, the overall probability of
-        obtaining a subset of size $k$ is a mixture of the binomials:
-        $$
-        P (| S | = k) = \sum_{j = 1}^N p_j \ \binom{n}{k} \ q_j^k  (1 - q_j)^{n - k}.
-        $$
+        probability $p_j=P(q_j=q)$ for any $q$),then by total probability, the overall
+        probability of obtaining a subset of size $k$ is a mixture of the binomials:
+
+        $$P(|S| = k) = \sum_{j = 1}^N p_j \ \binom{n}{k} \ q_j^k  (1 - q_j)^{n - k}.$$
 
         In our case $p_j = 1/N$, so that $P(|S|=k) = \frac{1}{N} \sum_{j=1}^N P (|
         S_{q_j} | = k)$. For large enough $N$ this is

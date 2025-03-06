@@ -84,23 +84,16 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         return self._index_iterator_cls.length(len(indices))
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        """
-        Computes the log correction weight for a sample of a given subset size.
+        """Computes the log correction weight for a sample of a given subset size.
 
         For a given index i (with full dataset size n) and a sampled subset S of size k,
         let m = n - 1. The probability of obtaining S under the two-stage scheme is:
-            P(S) = (1/ binom(m, k)) * ∫₀¹ f(p) p^k (1-p)^(m-k) dp.
-        Since each S should contribute with target weight:
-            w_target(S) = 1/( (m+1) * binom(m,k) )   [for the Shapley semivalue],
-        the importance weight is:
-            w(S) = w_target(S) / [P(S)] = 1/(m+1) / ( ∫₀¹ f(p) p^k (1-p)^(m-k) dp ).
-        Taking logs and noting m+1 = n, we have:
-            log_weight(n, k) = -log(n) - log( I ),
-        where
-            I = ∫₀¹ f(p) p^k (1-p)^(n-1-k) dp.
+
+            P(S) = (1 / binom(m, k))  \int_0^1 f(p) p^k (1-p)^{m-k} dp.
 
         This correction ensures that when p_distribution is uniform over (0,1) (f(p)=1),
         we recover the Shapley weighting:
+
             -log(n) - betaln(k+1, n-k).
         """
         m = self._index_iterator_cls.complement_size(n)
