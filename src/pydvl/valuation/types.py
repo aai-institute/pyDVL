@@ -10,6 +10,7 @@ from typing_extensions import Self, TypeAlias
 
 __all__ = [
     "BatchGenerator",
+    "Distribution",
     "IndexT",
     "IndexSetT",
     "LossFunction",
@@ -20,6 +21,7 @@ __all__ = [
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
+    "UniformDistribution",
     "UtilityEvaluation",
 ]
 
@@ -195,3 +197,11 @@ class LossFunction(Protocol):
 class Distribution(Protocol):
     def rvs(self) -> float: ...
     def pdf(self, p: float) -> float: ...
+
+
+class UniformDistribution:
+    def rvs(self):
+        return np.random.default_rng().uniform()
+
+    def pdf(self, p: float):
+        return 1.0 if 0 <= p <= 1 else 0.0

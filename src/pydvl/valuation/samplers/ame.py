@@ -12,29 +12,25 @@ For the uniform case (f(p)=1), one recovers the Shapley weighting:
 
 from __future__ import annotations
 
-from typing import Callable, Type
+from typing import Type
 
 import numpy as np
 from scipy.integrate import quad
 
 from pydvl.utils import Seed, complement, random_subset
-from pydvl.valuation.samplers.base import EvaluationStrategy
 from pydvl.valuation.samplers.powerset import (
     IndexIteration,
     PowersetSampler,
     SequentialIndexIteration,
 )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import Distribution, IndexSetT, Sample, SampleGenerator
-from pydvl.valuation.utility.base import UtilityBase
-
-
-class UniformDistribution:
-    def rvs(self):
-        return np.random.default_rng().uniform()
-
-    def pdf(self, p: float):
-        return 1.0 if 0 <= p <= 1 else 0.0
+from pydvl.valuation.types import (
+    Distribution,
+    IndexSetT,
+    Sample,
+    SampleGenerator,
+    UniformDistribution,
+)
 
 
 class AMESampler(StochasticSamplerMixin, PowersetSampler):
@@ -66,21 +62,19 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         )
         self.p_distribution = p_distribution or UniformDistribution()
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         """
         For each index i, sample p ~ p_distribution and then generate a subset of the complement
         by including each element independently with probability p.
         """
         for idx in self.index_iterator(indices):
-            comp = complement(indices, idx)
+            comp = complement(indices, [idx])
             p = self.p_distribution.rvs()
             subset = random_subset(comp, p, self._rng)
             yield Sample(idx, subset)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        """
-        The sample limit is determined by the outer loop over indices.
-        """
+        """ The sample limit is determined by the outer loop over indices. """
         return self._index_iterator_cls.length(len(indices))
 
     def log_weight(self, n: int, subset_len: int) -> float:
@@ -105,12 +99,4 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         I, abserr = quad(integrand, 0, 1, epsabs=1e-12)  # noqa
         if I <= 0:
             raise ValueError("Computed integral is non-positive.")
-        return -np.log(n) - np.log(I)
-
-    def make_strategy(
-        self,
-        utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
-    ) -> EvaluationStrategy:
-        # Simply use the standard PowersetEvaluationStrategy.
-        return super().make_strategy(utility, log_coefficient)
+        return float(-np.log(n) - np.log(I))
