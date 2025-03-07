@@ -182,12 +182,15 @@ class RandomIndexIteration(
 
 
 class FiniteRandomIndexIteration(FiniteIterationMixin, RandomIndexIteration):
-    """Samples indices at random, once"""
+    """Samples indices at random, once, without replacement.
+
+    Each index is sampled exactly once.
+    """
 
     def __iter__(self) -> Generator[IndexT, None, None]:
         if len(self._indices) == 0:
             return
-        yield from self._rng.choice(self._indices, size=len(self._indices))
+        yield from self._rng.permutation(self._indices)
 
 
 class NoIndexIteration(InfiniteIterationMixin, IndexIteration):
