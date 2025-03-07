@@ -87,7 +87,7 @@ There are three main methods to implement (and others that can be overridden):
 * [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] to provide a
   factor by which to multiply Monte Carlo samples in stochastic methods, so that the
   mean converges to the desired expression. This will typically be the logarithm of the
-  inverse probability of sampling a given subset.
+  probability of sampling a given subset.
 * [make_strategy()][pydvl.valuation.samplers.base.IndexSampler.make_strategy] to create
   an evaluation strategy that processes the samples. This is typically a subclass of
   [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] that computes

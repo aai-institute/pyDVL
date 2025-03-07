@@ -71,6 +71,15 @@ class PermutationSamplerBase(IndexSampler, ABC):
         self.truncation = truncation or NoTruncation()
 
     def log_weight(self, n: int, subset_len: int) -> float:
+        """Probability of sampling a subset of size k from n indices, given k
+
+        !!! info
+            Even though this does not look like P(S|k), some algebra shows that it is.
+            For details, see [the documentation][...]
+        Args:
+            n: Total number of indices.
+            subset_len: Size of the sampled subset.
+        """
         if n > 0:
             return float(-np.log(n) - logcomb(n - 1, subset_len))
         return 0.0

@@ -228,8 +228,8 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
 
         We add the factor $w(S_j)$ in order to have this expectation coincide with the
         desired expression, by cancelling out $\mathbb{P}_{\mathcal{D}_{- i}} (S)$. This
-        method implements the logarithm of the weight, i.e. the logarithm of the inverse
-        of the probability of sampling a set of the given size.
+        method implements the logarithm of the inverse weight, i.e. the logarithm of the
+        probability of sampling a set of the given size.
 
         Args:
             n: The size of the index set. Note that the actual size of the set being

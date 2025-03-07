@@ -43,7 +43,6 @@ class BetaShapleyValuation(SemivalueValuation):
 
         self.alpha = alpha
         self.beta = beta
-        self.const = sp.special.beta(alpha, beta)
         self.log_const = sp.special.betaln(alpha, beta)
 
     def log_coefficient(self, n: int, k: int) -> float:

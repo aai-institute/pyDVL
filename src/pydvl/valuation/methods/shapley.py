@@ -11,8 +11,8 @@ $$
 v(i) = \frac{1}{n} \sum_{S \subset D_{-i}} w(n, |S|) [U(S_{+i}) - U(S)],
 $$
 
-where the coefficient $w(n, k)$ is defined as the inverse probability of sampling a set
-of size $k$ from a set of size $n-1$ in the complement of $\{i\}$
+where the coefficient $w(n, k)$ is defined as the probability of sampling a set of size
+$k$ from a set of size $n-1$ in the complement of $\{i\}$
 
 $$
 w(n, k) = \binom{n-1}{k}^{-1}.
