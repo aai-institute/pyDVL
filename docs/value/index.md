@@ -37,27 +37,28 @@ function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the package [pydvl.valuation][pydvl.valuation], with support from modules
-[pydvl.valuation][pydvl.valuation] (for dataset handling, grouping, etc.)
-and [pydvl.valuation.utility][pydvl.valuation.utility], as detailed below.
+the package [pydvl.valuation.methods][], with support from modules like
+[pydvl.valuation.samplers][] or and [pydvl.valuation.dataset][], as detailed
+below.
 
 !!! Warning
     Be sure to read the section on
     [the difficulties using data values][problems-of-data-values].
 
-There are three main families of methods for data valuation: game-theoretic, 
-influence-based and intrinsic. As of v0.8.1 pyDVL supports the first two. Here,
-we focus on game-theoretic concepts and refer to the main documentation on the
-[influence function][the-influence-function] for the second.
+There are three main families of methods for data valuation: model-based,
+influence-based and model-free. As of v0.10.0 pyDVL supports the first two.
+Here, we focus on model-based (and in particular game-theoretic) concepts and
+refer to the main documentation on the [influence
+function][the-influence-function] for the second.
 
-## Game theoretical methods
+## Game theoretical methods and semi-values
 
 The main contenders in game-theoretic approaches are [Shapley
 values](shapley.md) [@ghorbani_data_2019], [@kwon_efficient_2021],
 [@schoch_csshapley_2022], their generalization to so-called
-[semi-values](semi-values.md) by [@kwon_beta_2022] and [@wang_data_2023],
-and [the Core](the-core.md) [@yan_if_2021]. All of these are implemented
-in pyDVL. For a full list see [[methods]].
+[semi-values](semi-values.md) with some examples being [@kwon_beta_2022] and
+[@wang_data_2023], and [the Core](the-core.md) [@yan_if_2021]. All of these are
+implemented in pyDVL. For a full list see [[methods]].
 
 In these methods, data points are considered players in a cooperative game 
 whose outcome is the performance of the model when trained on subsets 
@@ -107,7 +108,7 @@ necessary:
    [semi-value][semi-values] methods, you will also need to choose a subset
    sampling scheme, e.g. a
    [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
-   or a simple [UniformSampler][pydvl.valuation.samplers.uniform.UniformSampler].
+   or a simple [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler].
 5. For methods that require it, in particular those using infinite subset
    sampling schemes, one must choose a stopping criterion, that is a
    [stopping condition][pydvl.valuation.stopping] that interrupts the
@@ -222,7 +223,7 @@ some (rare) cases this reduces computation times of Monte Carlo methods. Because
 of how caching is implemented, it is important not to reuse `ModelUtility`
 objects for different datasets. You can read more about [setting up the
 cache][getting-started-cache] in the installation guide, and in the
-documentation of the [caching][pydvl.valuation.caching] module.
+documentation of the [caching][pydvl.utils.caching] module.
 
 
 ### Computing some values
@@ -252,7 +253,7 @@ we need to do after the previous steps is to instantiate a
     results = shapley.values()
     ```
 
-Note our use of joblib's [parallel_config][] in the example in order to
+Note our use of [joblib.parallel_config][] in the example in order to
 parallelize the computation of the values. Most valuation methods support this.
 
 The result type of all valuations is an object of type
@@ -306,7 +307,7 @@ nature of every (non-trivial) ML problem can have an effect:
         One workaround in pyDVL is to configure the caching system to allow multiple
         evaluations of the utility for every index set. A moving average is 
         computed and returned once the standard error is small, see
-        [CachedFuncConfig][pydvl.valuation.caching.config.CachedFuncConfig]. Note
+        [CachedFuncConfig][pydvl.utils.caching.config.CachedFuncConfig]. Note
         however that in practice, the likelihood of cache hits is low, so one
         would have to force recomputation manually somehow.
 
@@ -321,9 +322,9 @@ nature of every (non-trivial) ML problem can have an effect:
 
     ??? tip "Squashing scores" 
         pyDVL offers a dedicated [function
-        composition][pydvl.valuation.score.compose_score] for scorer functions which
-        can be used to squash a score. The following is defined in module
-        [score][pydvl.valuation.score]:
+        composition][pydvl.valuation.scorers.utils.compose_score] for scorer functions which
+        can be used to squash a score. The following is defined in the module
+        [scorers][pydvl.valuation.scorers]:
         ```python
         import numpy as np
         from pydvl.valuation.score import compose_score
