@@ -99,8 +99,8 @@ class BetaShapleyValuation(SemivalueValuation):
     def _log_coefficient(self, n: int, k: int) -> float:
         """Beta-Shapley coefficient.
 
-        Defined (up to a constant n) as eq. (5) of Kwon and Zou (2022)<sup><a
-        href="#kwon_data_2022">1</a></sup>.
+        Defined (up to a constant n) as eq. (5) of Kwon and Zou (2023)<sup><a
+        href="#kwon_data_2023">1</a></sup>.
         """
         j = k + 1
         return float(
