@@ -12,7 +12,7 @@ $$v_u(i) = u(D) - u(D_{-i}).$$
 For notational simplicity, we consider the valuation function as defined over
 the indices of the dataset $D$, and $i \in D$ is the index of the sample,
 $D_{-i}$ is the training set without the sample $x_i$, and $u$ is the utility
-function. See [the section on notation][notation-and-nomenclature] for more.
+function.
 
 For the purposes of data valuation, this is rarely useful beyond serving as a
 baseline for benchmarking. Although in some benchmarks it can perform
