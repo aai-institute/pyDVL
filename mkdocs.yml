@@ -13,9 +13,7 @@ nav:
     - First steps: getting-started/first-steps.md
     - Applications: getting-started/applications.md
     - Benchmarking: getting-started/benchmarking.md
-    - Methods: getting-started/methods.md
     - Advanced usage: getting-started/advanced-usage.md
-    - Glossary: getting-started/glossary.md
   - Data Valuation:
     - value/index.md
     - Leave-One-Out: value/loo.md
@@ -65,6 +63,9 @@ nav:
       - value/deprecation.md
       - Data Valuation: deprecated/pydvl/value/
       - Parallelization: deprecated/pydvl/parallel/
+  - Methods: getting-started/methods.md
+  - Glossary: getting-started/glossary.md
+
 watch:
   - src/pydvl
   - notebooks
