@@ -1,3 +1,10 @@
+---
+title: Glossary
+alias:
+  name: glossary
+  text: Glossary
+---
+
 # Glossary
 
 This glossary is meant to provide only brief explanations of each term, helping

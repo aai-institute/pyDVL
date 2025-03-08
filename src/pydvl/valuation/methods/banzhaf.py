@@ -72,7 +72,6 @@ class MSRBanzhafValuation(SemivalueValuation):
 
     @property
     def log_coefficient(self) -> SemivalueCoefficient | None:
-        """ Disable importance sampling for this method since we have a fixed sampler
+        """Disable importance sampling for this method since we have a fixed sampler
         that already provides the correct weights for the Monte Carlo approximation."""
         return None
-

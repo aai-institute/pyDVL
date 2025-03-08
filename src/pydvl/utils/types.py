@@ -45,6 +45,7 @@ class ReduceFunction(Protocol[R]):
 class PointwiseScore(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
 
+
 @runtime_checkable
 class BaseModel(Protocol):
     """This is the minimal model protocol with the method `fit()`"""

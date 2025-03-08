@@ -107,6 +107,7 @@ pattern remains the same.
       Learning](https://proceedings.mlr.press/v97/ghorbani19c.html). In Proceedings of
       the 36th International Conference on Machine Learning, PMLR pp. 2242--2251.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -166,7 +167,7 @@ class TMCShapleyValuation(ShapleyValuation):
     def __init__(
         self,
         utility: UtilityBase,
-        truncation: TruncationPolicy| None = None,
+        truncation: TruncationPolicy | None = None,
         is_done: StoppingCriterion | None = None,
         seed: Seed | None = None,
         skip_converged: bool = False,
@@ -185,4 +186,3 @@ class TMCShapleyValuation(ShapleyValuation):
     @property
     def log_coefficient(self) -> SemivalueCoefficient | None:
         return None
-

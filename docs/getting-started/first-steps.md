@@ -18,9 +18,26 @@ algorithms for data valuation and influence functions. Even though we only
 briefly introduce key concepts in the documentation, the following sections 
 should be enough to get you started.
 
-* [[data-valuation]] for key objects and usage patterns for Shapley value
-  computation and related methods.
-* [[influence-function]] for instructions on how to compute influence functions.
+<div class="grid cards" markdown>
+
+* [[data-valuation]]
+
+  ---
+
+  Key objects and usage patterns for Shapley value computation and related
+  methods.
+
+  [:octicons-arrow-right-24: Data valuation][data-valuation]
+
+* [[influence-function]]
+
+  ---
+
+  Instructions on how to compute influence functions, and many approximations.
+  
+  [:octicons-arrow-right-24: Influence functions][influence-function]
+
+</div>
 
 ## Running the examples
 

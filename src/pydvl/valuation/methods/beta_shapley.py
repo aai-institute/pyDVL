@@ -41,6 +41,7 @@ Beta-Shapley can be seen as a special case of AME, introduced in Lin et al. (202
 
 
 """
+
 import scipy as sp
 
 from pydvl.valuation.methods.semivalue import SemivalueValuation

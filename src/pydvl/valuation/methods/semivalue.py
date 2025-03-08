@@ -21,8 +21,7 @@ point is removed from one or more subsets of the data.
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from typing import Any, Callable
+from typing import Any
 
 from joblib import Parallel, delayed
 from typing_extensions import Self
@@ -118,8 +117,10 @@ class SemivalueValuation(Valuation):
 
         Implementations must provide the semi-value coefficient in log-space.
         """
-        raise NotImplementedError("Subclasses must either implement this method or"
-                                  "override the log_coefficient property")
+        raise NotImplementedError(
+            "Subclasses must either implement this method or"
+            "override the log_coefficient property"
+        )
 
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
