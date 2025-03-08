@@ -14,7 +14,23 @@ higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.
 
 Data Banzhaf proves to outperform many other valuation methods in downstream tasks like
-best point removal, but can show some
+best point removal.
+
+## Maximum Sample Reuse Banzhaf
+
+A special sampling scheme (MSR) that reuses each sample to update every index in the
+dataset is shown by Wang and Jia to be optimal for the Banzhaf valuation: not only does
+it drastically reduce the number of sets needed, but the sampling distribution also
+matches the Banzhaf indices, in the sense explained in [Sampling strategies for
+semi-values][semi-values-sampling].
+
+In order to use for Banzhaf valuation, just use
+[MSRBanzhafValuation][pydvl.valuation.methods.banzhaf.MSRBanzhafValuation]. In
+principle, it is also possible to simply use an
+[MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] with
+[BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation], but this might
+introduce some numerical instability, as explained in the document linked above.
+
 
 ## References
 
