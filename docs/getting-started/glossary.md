@@ -20,6 +20,17 @@ Introduced by [@schioppa_scaling_2022] in the context of influence functions.
     ][pydvl.influence.torch.influence_function_model.ArnoldiInfluence]
   * [Documentation (torch)][arnoldi]
 
+### Beta-Shapley { #glossary-beta-shapley }
+
+Beta-Shapley is a semi-value method that defines weights using a beta
+distribution, thus effectively implementing an importance sampling scheme that
+puts weight on marginal utilities for sets of certain sizes, as a function of
+the parameters of the beta distribution. Introduced in [@kwon_beta_2022].
+
+  * [Implementation
+    ][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]
+  * [Documentation][semi-values]
+
 ### Block Conjugate Gradient { #glossary-block-cg }
 
 A blocked version of [CG][glossary-cg], which solves several linear
@@ -163,13 +174,11 @@ performance when that point is removed from the training set.
 ### Maximum Sample Reuse  { #glossary-msr }
 
 MSR is a sampling method for data valuation that updates the value of every
-data point in one sample. This method can achieve much faster convergence. In
-principle, it can be used with any
+data point in one sample. This method can achieve much faster convergence for
+Data Banzhaf since the sampling distribution "coincides" with the Banzhaf
+coefficients, although in principle, it can be used with any
 [semi-value][pydvl.valuation.methods.semivalue.SemivalueValuation] by setting
-the sampler to be `MSR`, but due to the numerical instabilities introduced by
-the coefficients of e.g. Shapley values, it is mostly useful only with
-[Data Banzhaf][pydvl.valuation.methods.banzhaf.BanzhafValuation].
-Introduced by [@wang_data_2023]
+the sampler to be `MSR`. Introduced by [@wang_data_2023]
 
 * [Implementation][pydvl.valuation.samplers.msr.MSRSampler]
 
