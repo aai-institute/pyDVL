@@ -1,4 +1,4 @@
----
+from tests.utils.test_caching import parallel_config---
 title: Semi-values
 ---
 
@@ -99,25 +99,30 @@ available in pyDVL through
 [BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation]:
 
 ```python
-from pydvl.valuation import ModelUtility, Dataset
-from pydvl.valuation.methods.banzhaf import BanzhafValuation
-from pydvl.valuation.stopping import AbsoluteStandardError
-
-data = Dataset(...)
-utility = ModelUtility(model, data)
-values = compute_banzhaf_semivalues(
-    u=utility, done=AbsoluteStandardError(threshold=1e-4)
+from joblib import parallel_config
+from pydvl.valuation import (
+    ModelUtility, Dataset, SupervisedScorer, PermutationSampler
 )
+from pydvl.valuation.methods.banzhaf import BanzhafValuation
+from pydvl.valuation.stopping import MinUpdates
+
+train, test = Dataset.from_arrays(...)
+model = ...
+utility = ModelUtility(model, SupervisedScorer(model, test, default=0.0))
+sampler = PermutationSampler()
+valuation = BanzhafValuation(utility, sampler, MinUpdates(1000))
+with parallel_config(n_jobs=16):
+    valuation.fit(train)
 ```
 
 ### Banzhaf semi-values with MSR sampling
 
 Wang et al. propose a more sample-efficient method for computing Banzhaf 
-semivalues in their paper *Data Banzhaf: A Robust Data Valuation Framework 
-for Machine Learning* [@wang_data_2023]. This method updates all semivalues
-per evaluation of the utility (i.e. per model training) based on whether a 
+semi-values in their paper *Data Banzhaf: A Robust Data Valuation Framework 
+for Machine Learning* [@wang_data_2023]. This method updates all semi-values
+per each evaluation of the utility (i.e. per model training) based on whether a 
 specific data point was included in the data subset or not. The expression 
-for computing the semivalues is
+for computing the semi-values is
 
 $$
 \hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in 
@@ -125,23 +130,36 @@ $$
 \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)
 $$
 
-where \(\mathbf{S}_{\ni i}\) are the subsets that contain the index \(i\) and 
-\(\mathbf{S}_{\not{\ni} i}\) are the subsets not containing the index \(i\).
+where $\mathbf{S}_{\ni i}$ are the subsets that contain the index $i$ and 
+$\mathbf{S}_{\not{\ni} i}$ are the subsets not containing the index $i$.
 
-The function implementing this method is
-[compute_msr_banzhaf_semivalues][pydvl.valuation.methods.semivalues.compute_msr_banzhaf_semivalues].
+pyDVL provides a sampler for this method, called
+[MSRSampler][pydvl.valuation.samplers.msr.MSRSampler], which can be combined
+with any valuation method, including
+[BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation]. However,
+because the sampling probabilities induced by MSR coincide with Banzhaf indices,
+it is preferred to use the dedicated class
+[MSRBanzhafValuation][pydvl.valuation.methods.banzhaf.MSRBanzhafValuation]. For
+more on this subject see [[semi-values-sampling]].
 
-```python
-from pydvl.valuation import ModelUtility, Dataset
-from pydvl.valuation.methods.semivalues import compute_msr_banzhaf_semivalues
-from pydvl.valuation.stopping import RankCorrelation
+??? Example "MSR Banzhaf values"
 
-data = Dataset(...)
-utility = ModelUtility(model, data)
-values = compute_msr_banzhaf_semivalues(
-    u=utility, done=RankCorrelation(rtol=0.001)
-)
-```
+    ```python
+    from joblib import parallel_config
+    from pydvl.valuation import ModelUtility, Dataset, SupervisedScorer
+    from pydvl.valuation.methods.banzhaf import MSRBanzhafValuation
+    from pydvl.valuation.stopping import MaxSamples
+    
+    train, test = Dataset.from_arrays(...)
+    model = ...
+    utility = ModelUtility(model, SupervisedScorer(model, test, default=0.0))
+    valuation = MSRBanzhafValuation(utility, MaxSamples(1000), batch_size=64)
+    with parallel_config(n_jobs=16):
+        valuation.fit(train)
+    ```
+    Note how we pass batch size directly to the valuation method, which does
+    not take a sampler since it uses MSR sampling internally.
+
 
 ## General semi-values
 
@@ -149,53 +167,22 @@ As explained above, both Beta Shapley and Banzhaf indices are special cases of
 semi-values. In pyDVL we provide a general method for computing these with any
 combination of the three ingredients that define a semi-value:
 
-- A utility function \(u\).
+- A utility function $u$.
 - A sampling method.
-- A weighting scheme \(w\).
+- A weighting scheme $w$.
 
-You can construct any combination of these three ingredients with
-[compute_generic_semivalues][pydvl.valuation.methods.semivalues.compute_generic_semivalues].
-The utility function is the same as for Shapley values, and the sampling method
-can be any of the types defined in [the samplers module][pydvl.valuation.samplers].
-For instance, the following snippet is equivalent to the above:
+You can construct any combination of these three ingredients with subclasses of
+[SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation] and
+any of the samplers defined in [pydvl.valuation.samplers][].
 
-```python
-from pydvl.valuation import ModelUtility, Dataset
-from pydvl.valuation.methods.semivalues import compute_generic_semivalues, beta_coefficient
-from pydvl.valuation.samplers import PermutationSampler
-from pydvl.valuation.stopping import AbsoluteStandardError
+Allowing any combination enables testing different importance-sampling schemes
+and can help when experimenting with models that are more sensitive to changes
+in training set size.[^bzf-stability]
 
-data = Dataset(...)
-utility = ModelUtility(model, data)
-values = compute_generic_semivalues(
-  sampler=PermutationSampler(data.indices),
-  u=utility,
-  coefficient=beta_coefficient(alpha=1, beta=16),
-  done=AbsoluteStandardError(threshold=1e-4),
-)
-```
+For more on this topic and how Monte Carlo sampling interacts with the
+semi-value coefficient and the sampler probabilities, see [[semi-values-sampling]].
 
-Allowing any coefficient can help when experimenting with models that are more
-sensitive to changes in training set size. However, Data Banzhaf indices are
-shown to be the most robust to variance in the utility function, in the sense
-of rank stability, across a range of models and datasets [@wang_data_2023].
 
-!!! warning "Careful with permutation sampling"
-    This generic implementation of semi-values, allowing for any combination of
-    sampling and weighting schemes, is very flexible and, in principle, it
-    recovers the original Shapley value, so that 
-    [compute_shapley_values][pydvl.valuation.methods.shapley.common.compute_shapley_values]
-    is no longer necessary. However, it loses the optimization in permutation
-    sampling that reuses the utility computation from the last iteration when
-    iterating over a permutation. This doubles the computation requirements (and
-    slightly increases variance) when using permutation sampling, unless the cache
-    is enabled (see [getting-started-cache][pydvl.valuation.caching]). In addition,
-    as mentioned above, [truncation policies][pydvl.valuation.methods.shapley.truncated.TruncationPolicy]
-    are not supported by this generic implementation (as of v0.8.1). For these
-    reasons it is preferable to use
-    [compute_shapley_values][pydvl.valuation.methods.shapley.common.compute_shapley_values]
-    whenever not computing other semi-values.
-```
-
-This updated file reflects the new interface changes while preserving the original
-structure and technical content.
+[^bzf-stability]: Note however that Data Banzhaf has shown to be among the most
+    robust to variance in the utility function, in the sense of rank stability,
+    across a range of models and datasets [@wang_data_2023].
