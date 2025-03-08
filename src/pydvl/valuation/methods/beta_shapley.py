@@ -28,16 +28,16 @@ Beta-Shapley can be seen as a special case of AME, introduced in Lin et al. (202
 
 ## References
 
-[^1]: Kwon, Yongchan, and James Zou. [Beta Shapley: A Unified and Noise-Reduced Data
-      Valuation Framework for Machine
+[^1]: <a name="kwon_beta_2022"></a>Kwon, Yongchan, and James Zou. [Beta Shapley: A
+      Unified and Noise-Reduced Data Valuation Framework for Machine
       Learning](https://proceedings.mlr.press/v151/kwon22a.html). In Proceedings of The
       25th International Conference on Artificial Intelligence and Statistics,
       8780–8802. PMLR, 2022.
-[^2]: Lin, Jinkun, Anqi Zhang, Mathias Lécuyer, Jinyang Li, Aurojit Panda, and
-      Siddhartha Sen. [Measuring the Effect of Training Data on Deep Learning Predictions via
-      Randomized Experiments](https://proceedings.mlr.press/v162/lin22h.html). In
-      Proceedings of the 39th International Conference on Machine Learning, 13468–504.
-      PMLR, 2022.
+[^2]: <a name="lin_measuring_2022"></a>Lin, Jinkun, Anqi Zhang, Mathias Lécuyer, Jinyang
+      Li, Aurojit Panda, and Siddhartha Sen. [Measuring the Effect of Training Data on
+      Deep Learning Predictions via Randomized
+      Experiments](https://proceedings.mlr.press/v162/lin22h.html). In Proceedings of
+      the 39th International Conference on Machine Learning, 13468–504. PMLR, 2022.
 
 
 """
@@ -98,7 +98,8 @@ class BetaShapleyValuation(SemivalueValuation):
     def log_coefficient(self, n: int, k: int) -> float:
         """Beta-Shapley coefficient.
 
-        Defined (up to a constant n) as eq. (5) of Kwon and Zou (2022)[^1]
+        Defined (up to a constant n) as eq. (5) of Kwon and Zou (2022)<sup><a
+        href="#kwon_data_2022">1</a></sup>.
         """
         j = k + 1
         return float(
