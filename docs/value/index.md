@@ -51,7 +51,7 @@ Here, we focus on model-based (and in particular game-theoretic) concepts and
 refer to the main documentation on the [influence
 function][the-influence-function] for the second.
 
-## Game theoretical methods and semi-values
+## Game theoretical methods and semi-values { #game-theoretical-methods }
 
 The main contenders in game-theoretic approaches are [Shapley
 values](shapley.md) [@ghorbani_data_2019], [@kwon_efficient_2021],

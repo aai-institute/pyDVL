@@ -52,7 +52,7 @@ Introduced by [@schoch_csshapley_2022].
 
  * [Implementation
    ][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation]
- * [Documentation][classwise-shapley]
+ * [[classwise-shapley|Documentation]]
 
 ### Conjugate Gradient { #glossary-cg }
 
@@ -74,7 +74,7 @@ all weak learners.
 Introduced in [@kwon_dataoob_2023].
 
  * [Implementation][pydvl.valuation.methods.data_oob.DataOOBValuation]
- * [Documentation][data-oob-valuation]
+ * [[data-oob-valuation|Documentation]]
 
 
 ### Data Utility Learning { #glossary-data-utility-learning }
@@ -169,7 +169,7 @@ value of a training point is defined as the marginal change in the model's
 performance when that point is removed from the training set.
 
  * [Implementation][pydvl.valuation.methods.loo.LOOValuation]
- * [Documentation][leave-one-out-values]
+ * [[loo-valuation|Documentation]]
 
 ### Maximum Sample Reuse  { #glossary-msr }
 

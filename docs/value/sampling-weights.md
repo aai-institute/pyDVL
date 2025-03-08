@@ -1,10 +1,10 @@
 ---
-title: Mixing sampling strategies for semi-values
+title: Sampling strategies for semi-values
 alias:
   name: semi-values-sampling
 ---
 
-# Mixing sampling strategies for semi-values
+# Sampling strategies for semi-values { #semi-values-sampling }
 
 This document explains the rationale behind the use of coefficients for the 
 sampling strategy and the method in the semi-value methods. Samplers define 
@@ -53,6 +53,7 @@ marginal utility. The naive Monte Carlo approximation is then to sample $S_{j}
 \sim \mathcal{U} (D_{- i})$ and let
 
 <span id="mc-shapley" class="tm-eqlabel"></span>
+
 $$
 \begin{equation}
   \hat{v}_{\operatorname{sh}, \operatorname{unif}} (i) = \frac{1}{M}  \sum_{j
