@@ -19,10 +19,13 @@ w(n, k) = \binom{n-1}{k}^{-1}.
 $$
 
 An alternative formulation, which has better variance properties, uses permutations. The
-algorithm **Data-Shapley** described in Ghorbani and Zou (2019)[^1] uses this sampling
-technique, together with a heuristic truncation policy to stop the computation early.
-This is implemented in PyDVL via
-[PermutationSampler][pydvl.valuation.samplers.PermutationSampler]
+algorithm **Truncated Monte Carlo Shapley** (TMCS) described in Ghorbani and Zou
+(2019)[^1] uses this sampling technique, together with a heuristic truncation policy to
+stop the computation early. A default configuration for this method is available via
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation],
+which internally uses a [PermutationSampler][pydvl.valuation.samplers.PermutationSampler].
+For finer control instantiate instead
+[ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] as described below.
 
 ## Computing Shapley values
 
@@ -38,14 +41,14 @@ Computing values in PyDVL always follows the same pattern: construct a
         ModelUtility,
         SupervisedScorer,
         PermutationSampler,
-        RankCorrelation
+        MaxSamples
     )
 
     model = SomeSKLearnModel()
     scorer = SupervisedScorer("accuracy", test_data, default=0)
     utility = ModelUtility(model, scorer, ...)
-    sampler = PermutationSampler()
-    stopping = RankCorrelation(rtol=0.01)
+    sampler = UniformSampler(seed=42)
+    stopping = MaxSamples(5000)
     valuation = ShapleyValuation(utility, sampler, is_done=stopping)
     with parallel_config(n_jobs=16):
         valuation.fit(training_data)
@@ -66,15 +69,13 @@ The most common one is [PermutationSampler][pydvl.valuation.samplers.Permutation
 which samples random permutations of the training set. Despite the apparent greater
 complexity of $O(n!)$, the method is much faster to converge in practice, especially
 when using [truncation policies][pydvl.valuation.samplers.truncation] to early-stop the
-processing of each permutation.
-
-Other samplers introduce altogether different ways of computing Shapley values, like
-the [Owen samplers][pydvl.valuation.samplers.owen] or the
-[Maximum-Sample-Reuse sampler][pydvl.valuation.samplers.MSRSampler], but the usage
-pattern remains the same.
+processing of each permutation. As mentioned above, the default configuration of TMCS
+is available via [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation].
 
 ??? Example "Truncated Monte Carlo Data-Shapley"
-    To compute Shapley values as described in Ghobani and Zou (2019)[^1], use this
+    Alternatively to using
+    [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation], in order
+    to compute Shapley values as described in Ghorbani and Zou (2019)[^1], use this
     configuration:
 
     ```python
@@ -83,6 +84,11 @@ pattern remains the same.
     stopping = HistoryDeviation(n_steps=100, rtol=0.05)
     valuation = ShapleyValuation(utility, sampler, stopping, skip_converged, progress)
     ```
+
+Other samplers introduce different importance sampling schemes for the computation of
+Shapley values, like the [Owen samplers][pydvl.valuation.samplers.owen],[^2] or the
+[Maximum-Sample-Reuse sampler][pydvl.valuation.samplers.MSRSampler],[^3] but the usage
+pattern remains the same.
 
 ## Caveats
 
@@ -106,6 +112,16 @@ pattern remains the same.
       Equitable Valuation of Data for Machine
       Learning](https://proceedings.mlr.press/v97/ghorbani19c.html). In Proceedings of
       the 36th International Conference on Machine Learning, PMLR pp. 2242--2251.
+[^2]: <a name="okhrati_multilinear_2021"></a>Okhrati, Ramin, and Aldo Lipani. [A
+      Multilinear Sampling Algorithm to Estimate Shapley
+      Values](https://doi.org/10.1109/ICPR48806.2021.9412511). In 2020 25th
+      International Conference on Pattern Recognition (ICPR), 7992–99. IEEE, 2021.
+[^3]: <a name="wang_data_2023"></a> Wang, Jiachen T., and Ruoxi Jia. [Data Banzhaf: A
+      Robust Data Valuation Framework for Machine
+      Learning](https://proceedings.mlr.press/v206/wang23e.html). In Proceedings of The
+      26th International Conference on Artificial Intelligence and Statistics,
+      6388–6421. PMLR, 2023.
+
 """
 
 from __future__ import annotations

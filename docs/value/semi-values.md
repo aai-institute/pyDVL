@@ -1,5 +1,7 @@
-from tests.utils.test_caching import parallel_config---
+---
 title: Semi-values
+alias:
+  name: semi-values-intro
 ---
 
 # Semi-values
