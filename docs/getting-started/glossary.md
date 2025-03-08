@@ -273,16 +273,19 @@ Introduced into data valuation by [@ghorbani_data_2019].
  * [Implementation][pydvl.valuation.methods.shapley]
  * [Documentation][shapley-value]
 
-### Truncated Monte Carlo   { #glossary-tmcs }
+### Truncated Monte Carlo Shapley  { #glossary-tmcs }
 
 TMCS is an efficient approach to estimating the Shapley Value using a
 truncated version of the Monte Carlo method, reducing computation time while
-maintaining accuracy in large datasets. Being a heuristic to permutation sampling
-in Shapley valuation, it can be implemented by using a
-[RelativeTruncation ][pydvl.valuation.samplers.truncation.RelativeTruncation]
+maintaining accuracy in large datasets. It is available through the class
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation] in
+pyDVL. But being a heuristic to permutation sampling, it can be "manually"
+implemented by choosing a
+[RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation]
 for a [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
-when configuring [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation].
-Introduced by [@ghorbani_data_2019].
+when configuring [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+(note however that this introduces some correcting factors, see 
+[[semi-values-sampling]]). Introduced by [@ghorbani_data_2019].
 
  * [Implementation][pydvl.valuation.methods.shapley.ShapleyValuation]
  * [Documentation][permutation-shapley]
