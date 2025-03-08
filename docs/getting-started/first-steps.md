@@ -7,9 +7,9 @@ alias:
 
 # First steps
 
-!!! Warning
-    Make sure you have read [[getting-started#installation]] before using the library. 
-    In particular read about which extra dependencies you may need.
+!!! info
+    Make sure you have read [[getting-started#installation]] before using the
+    library. In particular read about which extra dependencies you may need.
 
 ## Main concepts
 
@@ -20,22 +20,19 @@ should be enough to get you started.
 
 <div class="grid cards" markdown>
 
-* [[data-valuation]]
-
-  ---
-
-  Key objects and usage patterns for Shapley value computation and related
-  methods.
-
-  [:octicons-arrow-right-24: Data valuation][data-valuation]
-
-* [[influence-function]]
-
-  ---
-
-  Instructions on how to compute influence functions, and many approximations.
+-   [[data-valuation]]
   
-  [:octicons-arrow-right-24: Influence functions][influence-function]
+    ---
+    Key objects and usage patterns for Shapley values and related methods.
+  
+    [[data-valuation|:octicons-arrow-right-24: Data valuation]]
+  
+-   [[influence-function]]
+  
+    ---
+    Instructions on how to compute influence functions, and many approximations.
+    
+    [[influence-function|:octicons-arrow-right-24: Influence functions]]
 
 </div>
 
