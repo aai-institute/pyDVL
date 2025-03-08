@@ -117,11 +117,10 @@ import numpy as np
 from pydvl.utils import SemivalueCoefficient
 from pydvl.utils.numeric import logcomb
 from pydvl.utils.types import Seed
-from pydvl.valuation import HistoryDeviation
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers.permutation import PermutationSampler
 from pydvl.valuation.samplers.truncation import RelativeTruncation, TruncationPolicy
-from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.stopping import HistoryDeviation, StoppingCriterion
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["ShapleyValuation", "TMCShapleyValuation"]

@@ -33,8 +33,9 @@ import numpy as np
 
 from pydvl.utils import SemivalueCoefficient
 from pydvl.utils.types import Seed
-from pydvl.valuation import MSRSampler, StoppingCriterion
 from pydvl.valuation.methods.semivalue import SemivalueValuation
+from pydvl.valuation.samplers.msr import MSRSampler
+from pydvl.valuation.stopping import StoppingCriterion
 
 __all__ = ["BanzhafValuation", "MSRBanzhafValuation"]
 
