@@ -95,7 +95,7 @@ class BetaShapleyValuation(SemivalueValuation):
         self.beta = beta
         self.log_const = sp.special.betaln(alpha, beta)
 
-    def log_coefficient(self, n: int, k: int) -> float:
+    def _log_coefficient(self, n: int, k: int) -> float:
         """Beta-Shapley coefficient.
 
         Defined (up to a constant n) as eq. (5) of Kwon and Zou (2022)<sup><a

@@ -25,11 +25,20 @@ best point removal, but can show some
       6388–6421. PMLR, 2023.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 
+from pydvl.utils import SemivalueCoefficient
+from pydvl.utils.types import Seed
+from pydvl.valuation import MSRSampler, StoppingCriterion
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 
-__all__ = ["BanzhafValuation"]
+__all__ = ["BanzhafValuation", "MSRBanzhafValuation"]
+
+from pydvl.valuation.utility.base import UtilityBase
 
 
 class BanzhafValuation(SemivalueValuation):
@@ -37,5 +46,33 @@ class BanzhafValuation(SemivalueValuation):
 
     algorithm_name = "Data-Banzhaf"
 
-    def log_coefficient(self, n: int, k: int) -> float:
+    def _log_coefficient(self, n: int, k: int) -> float:
         return float(-(n - 1) * np.log(2))
+
+
+class MSRBanzhafValuation(SemivalueValuation):
+    """Computes Banzhaf values with Maximum Sample Reuse."""
+
+    algorithm_name = "Data-Banzhaf-MSR"
+
+    def __init__(
+        self,
+        utility: UtilityBase,
+        is_done: StoppingCriterion,
+        batch_size: int = 1,
+        seed: Seed | None = None,
+        skip_converged: bool = False,
+        show_warnings: bool = True,
+        progress: dict[str, Any] | bool = False,
+    ):
+        sampler = MSRSampler(batch_size=batch_size, seed=seed)
+        super().__init__(
+            utility, sampler, is_done, skip_converged, show_warnings, progress
+        )
+
+    @property
+    def log_coefficient(self) -> SemivalueCoefficient | None:
+        """ Disable importance sampling for this method since we have a fixed sampler
+        that already provides the correct weights for the Monte Carlo approximation."""
+        return None
+
