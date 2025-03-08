@@ -25,7 +25,7 @@ nav:
     - Class-wise Shapley: value/classwise-shapley.md
     - Least Core: value/the-core.md
     - Data-OOB: value/data-oob.md
-    - How sampling weights work: value/sampling-weights.md
+    - Sampling strategies for semi-values: value/sampling-weights.md
   - The Influence Function:
     - influence/index.md
     - Influence Function Model: influence/influence_function_model.md
