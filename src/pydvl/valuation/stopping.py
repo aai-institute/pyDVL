@@ -1,8 +1,6 @@
 """
-Stopping criteria for value computations.
-
-This module provides a basic set of stopping criteria to be used with valuation
-algorithms, in particular all
+This module provides a basic set of **criteria to stop valuation algorithms**, in
+particular all
 [semi-values][pydvl.valuation.methods.semivalue.SemivalueValuation]. Common examples are
 [MinUpdates][pydvl.valuation.stopping.MinUpdates],
 [MaxTime][pydvl.valuation.stopping.MaxTime], or
@@ -14,8 +12,8 @@ values, which depending on the algorithm may mean a different number of utility
 evaluations or imply other computations like solving a linear or quadratic program.
 In the case of [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation],
 the criteria are evaluated once per batch, which might lead to different behavior
-depending on the batch size (e.g. for certain batch_sizes it might happen that the
-number of updates to values after convergence is not exactly was required, since
+depending on the batch size (e.g. for certain batch sizes it might happen that the
+number of updates to values after convergence is not exactly what was required, since
 multiple updates might happen at once).
 
 Stopping criteria are callables that are evaluated on a
