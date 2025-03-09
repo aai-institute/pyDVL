@@ -35,13 +35,11 @@ for path in sorted(root.rglob("*.py")):
 
     extra_args = ""
     if parts[-1] == "__init__":
-        logger.error(
-            f"Generating API docs for {module_path} with last part {parts[-1]}"
-        )
+        logger.info(f"Excluding all members from {module_path}")
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
-        extra_args = '    selection:\n      members: false\n      filters: ["NONE"]\n'
+        extra_args = '    options:\n      members: []\n'
     elif parts[-1] == "__main__":
         continue
     elif parts[-1].startswith("_"):
