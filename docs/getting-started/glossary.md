@@ -48,7 +48,7 @@ contribution of each data point to the model's performance. Its constant weights
 are a somwewhat effective importance sampling scheme that reduces the variance of
 the marginal utility estimates, especially for small subsets. It is most
 efficient when used in conjunction with the [MSR][glossary-msr] sampler.
-Introduced by [@kwon_data_2023].
+Introduced by [@wang_data_2023].
 
 * [Implementation
   ][pydvl.valuation.methods.banzhaf.BanzhafValuation]

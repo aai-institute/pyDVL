@@ -100,7 +100,7 @@ class BetaShapleyValuation(SemivalueValuation):
         """Beta-Shapley coefficient.
 
         Defined (up to a constant n) as eq. (5) of Kwon and Zou (2023)<sup><a
-        href="#kwon_data_2023">1</a></sup>.
+        href="#kwon_beta_2022">1</a></sup>.
         """
         j = k + 1
         return float(

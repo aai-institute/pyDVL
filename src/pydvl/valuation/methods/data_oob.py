@@ -57,7 +57,7 @@ class DataOOBValuation(Valuation):
     """Computes Data Out-Of-Bag values.
 
     This class implements the method described in (Kwon and Zou,
-    2023)<sup><a href="kwon_data_2023">1</a></sup>.
+    2023)<sup><a href="kwon_dataoob_2023">1</a></sup>.
 
     Args:
         model: A fitted bagging model. Bagging models in sklearn include
