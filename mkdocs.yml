@@ -47,16 +47,25 @@ nav:
     # by leaving the trailing slash. Do not remove it!
     - API Reference:
       - Intro: api/pydvl/
-      - Data Valuation:
-        - Intro: api/pydvl/valuation/
-        - Datasets: api/pydvl/valuation/dataset/
-        - Methods: api/pydvl/valuation/methods/
-        - Utilities: api/pydvl/valuation/utility/
-        - Scorers: api/pydvl/valuation/scorers/
-        - Samplers: api/pydvl/valuation/samplers/
-        - Stopping criteria: api/pydvl/valuation/stopping/
+      - Data Valuation: api/pydvl/valuation/
+#        - Intro: api/pydvl/valuation/
+#        - Datasets: api/pydvl/valuation/dataset/
+#        - Methods: api/pydvl/valuation/methods/
+#        - Utilities: api/pydvl/valuation/utility/
+#        - Scorers: api/pydvl/valuation/scorers/
+#        - Samplers: api/pydvl/valuation/samplers/
+#        - Stopping criteria: api/pydvl/valuation/stopping/
       - Influence Function: api/pydvl/influence/
       - Reporting: api/pydvl/reporting/
+      - Utilities:
+        # Manual list to exclude modules deprecated in 0.10.0
+        - Intro: api/pydvl/utils/
+        - Caching: api/pydvl/utils/caching/
+        - Exceptions: api/pydvl/utils/exceptions
+        - Functional: api/pydvl/utils/functional
+        - Numeric: api/pydvl/utils/numeric
+        - Progress: api/pydvl/utils/progress
+        - Status: api/pydvl/utils/status
     - Changelog: CHANGELOG.md
     - Development Guidelines: CONTRIBUTING.md
     - Deprecated API:
