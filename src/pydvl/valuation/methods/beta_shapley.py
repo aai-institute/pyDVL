@@ -1,7 +1,11 @@
 r"""
 This module implements Beta-Shapley valuation as introduced in Kwon and Zou (2022)[^1].
 
-Beta($\alpha$, $\beta$) is a semi-value whose coefficients are given by the Beta
+!!! info "Background on semi-values"
+    Beta-Shapley is a special case of the semi-value valuation method. You can
+    read a short introduction [in the documentation][semi-values].
+
+Beta($\alpha$, $\beta$)-Shapley is a semi-value whose coefficients are given by the Beta
 function. The coefficients are defined as:
 
 $$
