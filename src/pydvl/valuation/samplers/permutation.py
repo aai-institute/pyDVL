@@ -208,5 +208,5 @@ class PermutationEvaluationStrategy(
                 if not truncated and self.truncation(idx, curr, self.n_indices):
                     truncated = True
                 if is_interrupted():
-                    break
+                    return r
         return r
