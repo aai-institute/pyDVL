@@ -1,20 +1,26 @@
 r"""
 This module implements the Banzhaf valuation method, as described in
-Wang and Jia, (2022)<sup><a href="#wang_data_2023">1</a></sup>.
+Wang and Jia, (2022)[^1].
 
 Data Banzhaf was proposed as a means to counteract the inherent stochasticity of the
 utility function in machine learning problems. It chooses the coefficients $w(k)$ of the
-semi-value valuation function to be constant:
+semi-value valuation function to be constant $2^{n-1}$ for all set sizes $k,$ yielding:
 
-$$w(k) := 2^{n-1},$$
+$$
+v_\text{bzf}(i) = \frac{1}{2^{n-1}} \sum_{S \sim P(D_{-i})} [u(S_{+i}) - u(S)],
+$$
 
-for all set sizes $k$. The intuition for picking a constant weight is that for
-any choice of weight function $w$, one can always construct a utility with
-higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
-one can do is to pick a constant weight.
+!!! info "Background on semi-values"
+    The Banzhaf valuation is a special case of the semi-value valuation method. You can
+    read a short introduction [in the documentation][semi-values].
+
+The intuition for picking a constant weight is that for any choice of weight function
+$w$, one can always construct a utility with higher variance where $w$ is greater.
+Therefore, in a worst-case sense, the best one can do is to pick a constant weight.
 
 Data Banzhaf proves to outperform many other valuation methods in downstream tasks like
 best point removal.
+
 
 ## Maximum Sample Reuse Banzhaf
 
@@ -24,10 +30,10 @@ it drastically reduce the number of sets needed, but the sampling distribution a
 matches the Banzhaf indices, in the sense explained in [Sampling strategies for
 semi-values][semi-values-sampling].
 
-In order to use for Banzhaf valuation, just use
+In order to work with this sampler for Banzhaf values, you can use
 [MSRBanzhafValuation][pydvl.valuation.methods.banzhaf.MSRBanzhafValuation]. In
-principle, it is also possible to simply use an
-[MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] with
+principle, it is also possible to select the
+[MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] when instantiating
 [BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation], but this might
 introduce some numerical instability, as explained in the document linked above.
 
@@ -68,7 +74,16 @@ class BanzhafValuation(SemivalueValuation):
 
 
 class MSRBanzhafValuation(SemivalueValuation):
-    """Computes Banzhaf values with Maximum Sample Reuse."""
+    """Computes Banzhaf values with Maximum Sample Reuse.
+
+    This can be seen as a convenience class that wraps the
+    [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] but in fact it also skips
+    importance sampling altogether, since the MSR sampling scheme already provides the
+    correct weights for the Monte Carlo approximation. This can avoid some numerical
+    inaccuracies that can arise, when using an `MSRSampler` with
+    [BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation], despite the
+    fact that the respective coefficients cancel each other out analytically.
+    """
 
     algorithm_name = "Data-Banzhaf-MSR"
 
