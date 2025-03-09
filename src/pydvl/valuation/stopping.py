@@ -878,7 +878,7 @@ class RankCorrelation(StoppingCriterion):
             correlation checks. This is to avoid comparing two results where only one
             value has been updated, which would have almost perfect rank correlation.
         modify_result: If `True`, the status of the input
-            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
             place after the call.
 
     !!! tip "Added in 0.9.0"
