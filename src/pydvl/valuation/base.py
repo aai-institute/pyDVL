@@ -1,3 +1,11 @@
+"""
+This module declares the abstract base classes for all valuation methods.
+A **valuation method** is any function that computes a value for each data point in a
+dataset.
+
+!!! info
+    For information on data valuation, read [the introduction][data-valuation].
+"""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -13,6 +21,7 @@ __all__ = ["Valuation", "ModelFreeValuation"]
 
 
 class Valuation(ABC):
+    """Abstract base class for all valuation methods."""
     def __init__(self) -> None:
         self.result: ValuationResult | None = None
 
