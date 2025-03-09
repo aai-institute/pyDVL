@@ -3,7 +3,7 @@ title: Data-OOB
 alias: data-oob-valuation
 ---
 
-# Data valuation for bagged models with Data-OOB
+# Data valuation for bagged models with Data-OOB  { #data-oob-valuation }
 
 Data-OOB [@kwon_dataoob_2023] is a method for valuing data used to train bagged
 models. It defines value as the out-of-bag (OOB) performance estimate for the
