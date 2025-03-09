@@ -9,14 +9,14 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Protocol, TypeVar
+from typing import Callable, Generic, TypeVar
 
 import numpy as np
 from more_itertools import chunked
 
 from pydvl.utils import log_running_moments
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.result import ValuationResult, ValueItem
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
@@ -36,14 +36,16 @@ __all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]
 logger = logging.getLogger(__name__)
 
 
-class ResultUpdater(Protocol[ValueUpdateT]):
-    """Protocol for result updaters.
+class ResultUpdater(ABC, Generic[ValueUpdateT]):
+    """Base class for result updaters.
 
     A result updater is a strategy to update a valuation result with a value update.
     """
 
-    def __init__(self, result: ValuationResult): ...
+    def __init__(self, result: ValuationResult):
+        self.result = result
 
+    @abstractmethod
     def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
 
 
@@ -270,7 +272,7 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
     """Updates a valuation result with a value update in log-space."""
 
     def __init__(self, result: ValuationResult):
-        self.result = result
+        super().__init__(result)
         self._log_sum_positive = np.full_like(result.values, -np.inf)
         self._log_sum_negative = np.full_like(result.values, -np.inf)
         self._log_sum2 = np.full_like(result.values, -np.inf)
@@ -283,7 +285,7 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
         except KeyError:
             raise IndexError(f"Index {update.idx} not found in ValuationResult")
 
-        item = self.result[loc]
+        item = self.result.get(update.idx)
 
         new_val, new_var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
             self._log_sum_positive[loc],
@@ -298,10 +300,15 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
         self._log_sum_negative[loc] = log_sum_neg
         self._log_sum2[loc] = log_sum2
 
-        item.value = new_val
-        item.variance = new_var
-        item.count = item.count + 1 if item.count is not None else 1
-        self.result[loc] = item
+        updated_item = ValueItem(
+            idx=item.idx,
+            name=item.name,
+            value=new_val,
+            variance=new_var,
+            count=item.count + 1 if item.count is not None else 1,
+        )
+
+        self.result.set(item.idx, updated_item)
         return self.result
 
 
