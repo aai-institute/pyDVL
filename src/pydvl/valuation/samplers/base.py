@@ -304,7 +304,7 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
             name=item.name,
             value=new_val,
             variance=new_var,
-            count=item.count + 1 if item.count is not None else 1
+            count=item.count + 1 if item.count is not None else 1,
         )
 
         self.result.set(item.idx, updated_item)

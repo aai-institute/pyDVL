@@ -2,46 +2,64 @@
 This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
-The most important class is [ValuationResult][pydvl.valuation.result.ValuationResult], which
-provides access to raw values, as well as convenient behaviour as a `Sequence` with
-extended indexing and updating abilities, and conversion to [pandas
+The most important class is [ValuationResult][pydvl.valuation.result.ValuationResult],
+which provides access to raw values, as well as convenient behaviour as a `Sequence`
+with extended indexing and updating abilities, and conversion to [pandas
 DataFrames][pandas.DataFrame].
 
-# Operating on results
+## Indexing and slicing
+
+Indexing and slicing of results is supported in a natural way and
+[ValuationResult][pydvl.valuation.result.ValuationResult] objects are returned. Indexing
+follows the sorting order. See the class documentation for more on this.
+
+Setting items and slices is also possible with other valuation results. Index and name
+clashes are detected and raise an exception. Note that any sorted state is potentially
+lost when setting items or slices.
+
+## Addition
 
 Results can be added together with the standard `+` operator. Because values
 are typically running averages of iterative algorithms, addition behaves like a
 weighted average of the two results, with the weights being the number of
 updates in each result: adding two results is the same as generating one result
 with the mean of the values of the two results as values. The variances are
-updated accordingly. See [ValuationResult][pydvl.valuation.result.ValuationResult] for details.
+updated accordingly. See [ValuationResult][pydvl.valuation.result.ValuationResult] for
+details.
 
-Results can also be sorted by value, variance or number of updates, see
-[sort()][pydvl.valuation.result.ValuationResult.sort]. The arrays of
+## Comparing
+
+Results can be compared with the equality operator. The comparison is "semantic" in the
+sense that it's the valuation for data indices that matters and not the order in which
+they are in the `ValuationResult`. Values, variances and counts are compared.
+
+## Sorting
+
+Results can also be sorted **in place** by value, variance or number of updates, see
+[sort()][pydvl.valuation.result.ValuationResult.sort]. All the properties
 [ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
 [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
 [ValuationResult.counts][pydvl.valuation.result.ValuationResult.counts],
 [ValuationResult.indices][pydvl.valuation.result.ValuationResult.indices],
 [ValuationResult.stderr][pydvl.valuation.result.ValuationResult.stderr],
 [ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
-are sorted in the same way.
+are then sorted according to the same order.
 
-Indexing and slicing of results is supported and
-[ValueItem][pydvl.valuation.result.ValueItem] objects are returned. These objects
-can be compared with the usual operators, which take only the
-[ValueItem.value][pydvl.valuation.result.ValueItem] into account.
 
-# Creating result objects
+## Factories
 
-The most commonly used factory method is
+Besides [copy()][pydvl.valuation.result.ValuationResult.copy],the most commonly used
+factory method is
 [ValuationResult.zeros()][pydvl.valuation.result.ValuationResult.zeros], which
 creates a result object with all values, variances and counts set to zero.
+
 [ValuationResult.empty()][pydvl.valuation.result.ValuationResult.empty] creates an
 empty result object, which can be used as a starting point for adding results
-together. Empty results are discarded when added to other results. Finally,
+together. **Any metadata in empty results is discarded when added to other results.**
+
+Finally,
 [ValuationResult.from_random()][pydvl.valuation.result.ValuationResult.from_random]
 samples random values uniformly.
-
 """
 
 from __future__ import annotations
@@ -140,15 +158,15 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     ## Indexing
 
-    Indexing can be position-based, when accessing any of the attributes
+    Indexing is sort-based, when accessing any of the attributes
     [values][pydvl.valuation.result.ValuationResult.values],
     [variances][pydvl.valuation.result.ValuationResult.variances],
     [counts][pydvl.valuation.result.ValuationResult.counts] and
     [indices][pydvl.valuation.result.ValuationResult.indices], as well as when iterating
     over the object, or using the item access operator, both getter and setter. The
     "position" is either the original sequence in which the data was passed to the
-    constructor, or the sequence in which the object is sorted, see below.
-    One can retrieve the position for a given data index using the method
+    constructor, or the sequence in which the object has been sorted, see below.
+    One can retrieve the sorted position for a given data index using the method
     [positions()][pydvl.valuation.result.ValuationResult.positions].
 
     Some methods use data indices instead. This is the case for
@@ -181,12 +199,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     ## Operating on results
 
-    Results can be added to each other with the `+` operator. Means and
-    variances are correctly updated, using the `counts` attribute.
-
-    Results can also be updated with new values using
-    [update()][pydvl.valuation.result.ValuationResult.update]. Means and variances are
-    updated accordingly using the Welford algorithm.
+    Results can be added to each other with the `+` operator or updated with new values
+    using [update()][pydvl.valuation.result.ValuationResult.update]. Means and variances
+    are correctly updated accordingly using the Welford algorithm.
 
     Empty objects behave in a special way, see
     [empty()][pydvl.valuation.result.ValuationResult.empty].
@@ -216,7 +231,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
          ValueError: If input arrays have mismatching lengths.
 
     ??? tip "Changed in 0.10.0"
-        Changed the behaviour of the `sort` argument.
+        Changed the behaviour of sorting, slicing, and indexing.
     """
 
     _indices: NDArray[IndexT]
