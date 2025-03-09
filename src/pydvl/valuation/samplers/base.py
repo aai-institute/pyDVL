@@ -373,6 +373,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
 
             self.log_correction = correction_fun
         else:
+            # Allow method implementations to disable importance sampling by setting
+            # the log_coefficient to None:
             self.log_correction = lambda n, subset_len: 0.0
 
     @abstractmethod

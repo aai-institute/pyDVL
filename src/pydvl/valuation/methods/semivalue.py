@@ -96,6 +96,17 @@ class SemivalueValuation(Valuation):
 
     @property
     def log_coefficient(self) -> SemivalueCoefficient | None:
+        """This property returns the function computing the semi-value coefficient.
+
+        You can override it to return `None` in subclasses that do not need to correct
+        for the sampling distribution probabilities because of the sampler choice.
+
+        [Evaluation strategies][pydvl.valuation.samplers.base.EvaluationStrategy] will
+        then ignore the sampler coefficients as well.
+        """
+        return self._log_coefficient
+
+    def _log_coefficient(self, n: int, k: int) -> float:
         """The semi-value coefficient in log-space.
 
         The semi-value coefficient is a function of the number of elements in the set,
@@ -109,13 +120,6 @@ class SemivalueValuation(Valuation):
 
         Returns:
             The natural logarithm of the semi-value coefficient.
-        """
-        return self._log_coefficient
-
-    def _log_coefficient(self, n: int, k: int) -> float:
-        """The semi-value coefficient in log-space.
-
-        Implementations must provide the semi-value coefficient in log-space.
         """
         raise NotImplementedError(
             "Subclasses must either implement this method or"
