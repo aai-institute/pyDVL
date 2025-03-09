@@ -1,6 +1,7 @@
 """Generate the code reference pages."""
 
 import logging
+import os
 from pathlib import Path
 
 import mkdocs_gen_files
@@ -8,6 +9,7 @@ import mkdocs_gen_files
 logger = logging.getLogger(__name__)
 
 nav = mkdocs_gen_files.Nav()
+doc_root = Path("docs")
 root = Path("src")  # / Path("pydvl")
 for path in sorted(root.rglob("*.py")):
     module_path = path.relative_to(root).with_suffix("")
@@ -39,13 +41,17 @@ for path in sorted(root.rglob("*.py")):
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
-        extra_args = '    options:\n      members: []\n'
+        extra_args = "    options:\n      members: []\n"
     elif parts[-1] == "__main__":
         continue
     elif parts[-1].startswith("_"):
         continue
 
     nav[parts] = doc_path.as_posix()
+
+    if os.path.exists(doc_root / full_doc_path):
+        logger.info(f"File {full_doc_path} already exists in {doc_root}, skipping.")
+        continue
 
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:
         identifier = ".".join(parts)

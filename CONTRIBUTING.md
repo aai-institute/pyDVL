@@ -309,8 +309,19 @@ navigation is generated for
 [mkdocs-literate-nav](https://github.com/oprypin/mkdocs-literate-nav).
 
 With some renaming and using
-[section-index](https://github.com/oprypin/mkdocs-section-index)
-`__init__.py` files are used as entry points for the documentation of a module.
+[section-index](https://github.com/oprypin/mkdocs-section-index) `__init__.py`
+files are used as entry points for the documentation of a module.
+
+Since very often we re-export symbols in the `__init__.py` files, the automatic
+generation of the documentation skips **all** symbols in those files. If you
+want to document any in particular you can do so by **overriding
+mkdocs_genfiles**: Create a file under `docs/api/pydvl/module/index.md` and add
+your documentation there. For example, to document the whole module and every
+(re-)exported symbol just add this to the file:
+
+```markdown
+::: pydvl.module
+```
 
 
 ### Adding new pages
