@@ -362,23 +362,3 @@ nature of every (non-trivial) ML problem can have an effect:
   but this would incur massive computational cost. As of v0.8.1 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
-
-
-## A comment about sampling
-
-One might fear that there is a problem because the computation of the value
-$\psi_i$ requires at least some bootstrap samples *not* to include the $i$-th
-sample. But we can see that this is rarely an issue, and its probability of
-happening can be easily computed: For a training set of size $n$ and
-bootstrapping sample size $m \le n$, the probability that index $i$ is not
-included in a bootstrap sample is
-
-$$\prod_{j=1}^m \mathbb{P}(i \text{ is not drawn at pos. } j) = (1 - 1/n)^m,$$
-
-i.e. for each of the $m$ draws, the sample is not picked (for $m=n$ this
-converges to $1/e \approx 0.368$). The probability that across $B$ bootstrapped
-samples a point is not included is therefore $(1  - 1/n)^{mB}$, which is
-typically extremely low.
-
-Incidentally, this allows us to estimate the estimated number of unique indices
-in a bootstrap sample of size $m$ as $m(1 - 1/n)^m$.
