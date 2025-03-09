@@ -83,6 +83,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
@@ -124,7 +125,7 @@ class ValueItem:
     def _comparable(self, other: object) -> bool:
         if not isinstance(other, ValueItem):
             raise TypeError(f"Cannot compare ValueItem with {type(other)}")
-        return self.idx == other.idx and self.name == other.name
+        return bool(self.idx == other.idx and self.name == other.name)
 
     def __lt__(self, other: object) -> bool:
         return self._comparable(other) and self.value < other.value  # type: ignore
@@ -448,22 +449,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             A new object containing only the selected items.
         """
 
-        if isinstance(key, slice):
-            positions = [i for i in range(*key.indices(len(self)))]
-        elif isinstance(key, collections.abc.Sequence) and not isinstance(
-            key, (str, bytes)
-        ):
-            positions = list(key)
-        elif isinstance(key, Integral):
-            if key < 0:
-                key += len(self)
-            if key < 0 or int(key) >= len(self):
-                raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            positions = [key]
-        else:
-            raise TypeError(
-                f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
-            )
+        positions = self._key_to_positions(key)
 
         # Convert positions to original indices in the sort order
         sort_indices = self._sort_positions[positions]
@@ -478,6 +464,32 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             status=self._status,
             # sort=self._sort_order,  # makes no sense
             **self._extra_values,
+        )
+
+    def _key_to_positions(self, key: Union[slice, Iterable[int], int]) -> list[int]:
+        if isinstance(key, slice):
+            return [i for i in range(*key.indices(len(self)))]
+
+        if isinstance(key, collections.abc.Sequence) and not isinstance(
+            key, (str, bytes)
+        ):
+            try:
+                return [int(k) for k in key]
+            except TypeError:
+                raise TypeError(
+                    f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
+                )
+
+        if isinstance(key, Integral):
+            idx = int(key)
+            if idx < 0:
+                idx += len(self)
+            if idx < 0 or idx >= len(self):
+                raise IndexError(f"Index {idx} out of range (0, {len(self)}).")
+            return [idx]
+
+        raise TypeError(
+            f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
         )
 
     @overload
@@ -516,22 +528,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 f"To set individual ValueItems, use the set() method instead."
             )
 
-        if isinstance(key, slice):
-            positions = [i for i in range(*key.indices(len(self)))]
-        elif isinstance(key, collections.abc.Sequence) and not isinstance(
-            key, (str, bytes)
-        ):
-            positions = list(key)
-        elif isinstance(key, Integral):
-            if key < 0:
-                key += len(self)
-            if key < 0 or int(key) >= len(self):
-                raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            positions = [key]
-        else:
-            raise TypeError(
-                f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
-            )
+        positions = self._key_to_positions(key)
 
         if len(value) != len(positions):
             raise ValueError(
@@ -566,22 +563,24 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._variances[destination] = value.variances[source]
         self._counts[destination] = value.counts[source]
 
-    def set(self, data_idx: Integral, value: ValueItem) -> ValuationResult:
-        """Set a ValueItem by its data index.
+    def set(self, data_idx: IndexT, value: ValueItem) -> Self:
+        """Set a [ValueItem][pydvl.valuation.result.ValueItem] in the result by its data
+        index.
 
-        This is the complement to the get() method and allows setting individual ValueItems
-        directly by their data index rather than position.
+        This is the complement to the [get()][pydvl.valuation.result.ValuationResult.get]
+        method and allows setting individual `ValueItems` directly by their data index
+        rather than (sort-) position.
 
         Args:
             data_idx: Data index of the value to set
-            value: The ValueItem to set
+            value: The data to set
 
         Returns:
             A reference to self for method chaining
 
         Raises:
             IndexError: If the index is not found
-            ValueError: If the ValueItem's idx doesn't match data_idx
+            ValueError: If the `ValueItem`'s idx doesn't match `data_idx`
         """
         if value.idx != data_idx:
             raise ValueError(
@@ -820,9 +819,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._values[positions] *= factor
         self._variances[positions] *= factor**2
 
-    def get(self, data_idx: Integral) -> ValueItem:
-        """Retrieves a ValueItem by data index, as opposed to sort index, like
-        the indexing operator.
+    def get(self, data_idx: IndexT) -> ValueItem:
+        """Retrieves a [ValueItem][pydvl.valuation.result.ValueItem] object by data
+        index, as opposed to sort index, like the indexing operator.
 
         Args:
             data_idx: Data index of the value to retrieve.
@@ -946,7 +945,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             Object with the results.
         """
         if indices is not None or data_names is not None or n_samples != 0:
-            options = dict(
+            options: dict[str, Any] = dict(
                 algorithm=algorithm,
                 indices=indices,
                 data_names=data_names,
@@ -989,20 +988,16 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         indices = cls._create_indices_array(indices, n_samples)
         data_names = cls._create_names_array(data_names, indices)
 
-        options = (
-            dict(
-                algorithm=algorithm,
-                status=Status.Pending,
-                indices=indices,
-                data_names=data_names,
-                values=np.zeros(len(indices)),
-                variances=np.zeros(len(indices)),
-                counts=np.zeros(len(indices), dtype=np.int_),
-            )
-            | kwargs
+        options: dict[str, Any] = dict(
+            algorithm=algorithm,
+            status=Status.Pending,
+            indices=indices,
+            data_names=data_names,
+            values=np.zeros(len(indices)),
+            variances=np.zeros(len(indices)),
+            counts=np.zeros(len(indices), dtype=np.int_),
         )
-
-        return cls(**options)
+        return cls(**(options | kwargs))
 
     @staticmethod
     def _create_indices_array(

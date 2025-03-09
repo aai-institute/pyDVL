@@ -36,7 +36,7 @@ __all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]
 logger = logging.getLogger(__name__)
 
 
-class ResultUpdater(Generic[ValueUpdateT]):
+class ResultUpdater(ABC, Generic[ValueUpdateT]):
     """Base class for result updaters.
 
     A result updater is a strategy to update a valuation result with a value update.
@@ -45,6 +45,7 @@ class ResultUpdater(Generic[ValueUpdateT]):
     def __init__(self, result: ValuationResult):
         self.result = result
 
+    @abstractmethod
     def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
 
 
