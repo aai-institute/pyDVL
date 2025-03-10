@@ -1,55 +1,23 @@
 """
-This module implements **Data Utility Learning** (Wang et al., 2022)<sup><a
-href="#wang_improving_2022">1</a></sup>.
+This module implements **Data Utility Learning** (Wang et al., 2022).[^1]
 
-Data Utility learning accelerates data valuation by learning the utility function from a
-small number of subsets. The process is as follows:
+DUL uses an ML model to learn the utility function. Essentially, it learns to predict
+the performance of a model when trained on a given set of indices from the dataset. The
+cost of training this model is quickly amortized by avoiding costly re-evaluations of
+the original utility.
 
-1. Collect a small number of so-called _utility samples_ (subsets and their utility
-   values) during the normal course of data valuation.
-2. Fit a model to the utility samples. The model is trained to predict the utility of
-   new subsets.
-3. Continue the valuation process, sampling subsets, but instead of evaluating the
-   original utility function, use the learned model to predict it.
+Usage is through the [DataUtilityLearning] class, which wraps any utility function and
+a [UtilityModel][pydvl.valuation.utility.learning.UtilityModel] to learn it. The
+wrapper collects utility samples until a given budget is reached, and then fits
+the model. After that, it forwards any queries for utility values to this learned model
+to predict the utility of new samples at constant, and low, cost.
 
-## Usage
+See [the documentation][data-utility-learning-intro] for more information.
 
-There are three components (sorry for the confusing naming!):
-
-1. The original utility object to learn, typically (but not necessarily) a
-   [ModelUtility][pydvl.valuation.utility.ModelUtility] object which will be expensive
-   to evaluate.
-2. A [UtilityModel][pydvl.valuation.utility.learning.UtilityModel] which will be trained
-   to predict the utility of subsets.
-3. The [DataUtilityLearning][pydvl.valuation.utility.learning.DataUtilityLearning]
-   object.
-
-Assuming you have some data valuation algorithm and your `Utility` object:
-
-1. Pick the actual machine learning model to use to learn the utility. In most cases
-   the utility takes continuous values, so this should be any regression model, such as
-   a linear regression or a neural network. The input to it will be sets of indices, so
-   one has to encode the data accordingly. For example, an indicator vector of the set
-   as done in Wang et al., (2022)<sup><a href="#wang_improving_2022">1</a></sup>, with
-   [IndicatorUtilityModel][pydvl.valuation.utility.learning.IndicatorUtilityModel]. This
-   wrapper accepts any machine learning model for the actual fitting. An alternative way
-   to encode the data is to use a deep learning model, such as
-   [DeepSet][pydvl.valuation.utility.deepset.DeepSet], which is a simple permutation
-   invariant architecture to learn embeddings for sets of points.
-2. Wrap your `Utility` object within a
-   [DataUtilityLearning][pydvl.valuation.utility.learning.DataUtilityLearning] object
-   and give it the object constructed in the previous point
-3. Use this `DataUtilityLearning` object in your data valuation algorithm instead of the
-   original `Utility` object.
-
-
-!!! fixme "Parallel processing not supported"
-    As of 0.9.0, this method does not support parallel processing. `DataUtilityLearning`
-    would have to collect all utility samples in a single process before fitting the
-    model. Gathering utility samples via custom evaluation strategies and result
-    updaters might be possible, but some IPC mechanism would be required to send the
-    fitted utility model to the workers, and this has to be implemented manually and
-    made to support all backends.
+!!! todo
+    DUL does not support parallel training of the model yet. This is a limitation of the
+    current architecture. Additionally, batching of utility evaluations should be added
+    to really profit from neural network architectures.
 
 ## References
 
@@ -105,6 +73,17 @@ class IndicatorUtilityModel(UtilityModel):
 
     Uses 1-hot encoding of the indices as input for the model, as done in Wang et al.,
     (2022)<sup><a href="#wang_improving_2022">1</a></sup>.
+
+    This encoding can be fed to any regressor. See [the
+    documentation][dul-indicator-encoding-intro] for details.
+
+    Args:
+        predictor: A supervised model that implements the `fit` and `predict` methods.
+            This model will be trained on the encoded utility samples gathered by the
+            [DataUtilityLearning][pydvl.valuation.utility.learning.DataUtilityLearning]
+            object.
+        n_data: Number of indices in the dataset. This is used to create the input
+            matrix for the model.
     """
 
     def __init__(self, predictor: SupervisedModel, n_data: int):
@@ -142,29 +121,10 @@ class DataUtilityLearning(UtilityBase[SampleT]):
             [ModelUtility][pydvl.valuation.utility.ModelUtility] object encapsulating
             a machine learning model which requires fitting on each evaluation of the
             utility.
-        training_budget: Number of utility samples to collect before fitting
-            the given model.
-        model: A supervised regression model
-
-    ??? Example
-        ``` python
-        from pydvl.valuation import Dataset, DataUtilityLearning, ModelUtility, \
-            Sample, SupervisedScorer
-        from sklearn.linear_model import LinearRegression, LogisticRegression
-        from sklearn.datasets import load_iris
-
-        train, test = Dataset.from_sklearn(load_iris())
-        scorer = SupervisedScorer("accuracy", test, 0, (0,1))
-        utility = ModelUtility(LinearRegression(), scorer)
-        utility_model = IndicatorUtilityModel(LinearRegression(), len(train))
-        dul = DataUtilityLearning(utility, 3, utility_model)
-        # First 3 calls will be computed normally
-        for i in range(3):
-            _ = dul(Sample(0, np.array([])))
-        # Subsequent calls will be computed using the fitted utility_model
-        dul(Sample(0, np.array([1, 2, 3])))
-        ```
-
+        training_budget: Number of utility samples to collect before fitting the given
+            model.
+        model: A wrapper for a supervised model that can be trained on a collection of
+            utility samples.
     """
 
     # Attributes that belong to this proxy. All other attributes are forwarded to the
