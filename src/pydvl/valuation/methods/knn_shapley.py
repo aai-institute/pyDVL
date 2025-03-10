@@ -1,6 +1,9 @@
 """
 This module contains Shapley computations for K-Nearest Neighbours.
 
+KNN-Shapley was introduced by Jia et al. (2019).[^1] See [the
+documentation][knn-shapley-intro] or the paper for details.
+
 !!! Todo
     Implement approximate KNN computation for sublinear complexity
 

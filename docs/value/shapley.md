@@ -154,24 +154,6 @@ values = compute_shapley_values(
 You can see this method in action in
 [this example](../../examples/shapley_basic_spotify/) using the Spotify dataset.
 
-### Exact Shapley for KNN
-
-It is possible to exploit the local structure of K-Nearest Neighbours to reduce
-the amount of subsets to consider: because no sample besides the K closest
-affects the score, most are irrelevant and it is possible to compute a value in
-linear time. This method was introduced by [@jia_efficient_2019a], and can be
-used in pyDVL with:
-
-```python
-from pydvl.utils import Dataset, Utility
-from pydvl.value import compute_shapley_values
-from sklearn.neighbors import KNeighborsClassifier
-
-model = KNeighborsClassifier(n_neighbors=5)
-data = Dataset(...)
-utility = Utility(model, data)
-values = compute_shapley_values(u=utility, mode="knn")
-```
 
 ### Group testing
 
