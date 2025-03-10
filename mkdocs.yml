@@ -69,8 +69,9 @@ nav:
         - Numeric: api/pydvl/utils/numeric
         - Progress: api/pydvl/utils/progress
         - Status: api/pydvl/utils/status
-    - Changelog: CHANGELOG.md
-    - Development Guidelines: CONTRIBUTING.md
+    - Contributing:
+      - CONTRIBUTING.md
+      - Changelog: CHANGELOG.md
     - Deprecated API:
       - value/deprecation.md
       - Data Valuation: deprecated/pydvl/value/
