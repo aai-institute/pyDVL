@@ -15,10 +15,10 @@ If you are interested in setting up a similar project, consider the template
 
 ## Local development
 
-This project uses [black](https://github.com/psf/black) to format code and
+This project uses [ruff](https://github.com/astral-sh/ruff) to lint and format code and
 [pre-commit](https://pre-commit.com/) to invoke it as a git pre-commit hook.
-Consider installing any of [black's IDE
-integrations](https://black.readthedocs.io/en/stable/integrations/editors.html)
+Consider installing any of [ruff's IDE
+integrations](https://docs.astral.sh/ruff/editors/setup/)
 to make your life easier.
 
 Run the following to set up the pre-commit git hook to run before pushes:
