@@ -288,7 +288,7 @@ for i in range(training_budget):
 wrapped_u((1, 2, 3))
 ```
 
-## Problems of data values
+## Problems of data values { #problems-of-data-values }
 
 There are a number of factors that affect how useful values can be for your
 project. In particular, regression can be especially tricky, but the particular
