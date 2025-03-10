@@ -1,14 +1,16 @@
 ---
-title: Benchmarking valuation methods
+title: Benchmarking tasks
+alias:
+  name: benchmarking-tasks
 ---
 
-# Benchmarking tasks
+# Benchmarking tasks  { #benchmarking-tasks }
 
 Because the magnitudes of values or influences from different algorithms, or
 datasets, are not comparable to each other, evaluation of the methods is
 typically done with _downstream tasks_.
 
-## Benchmarking valuation methods
+## Benchmarking valuation methods  { #benchmarking-valuation-methods }
 
 Data valuation is particularly useful for data selection, pruning and
 inspection in general. For this reason, the most common benchmarks are
@@ -60,7 +62,7 @@ the values is across runs. Rank stability of a method is necessary but not
 sufficient for good results. Ideally one wants to identify high-value points
 reliably (good precision and recall) and consistently (good rank stability).
 
-## Benchmarking Influence function methods
+## Benchmarking Influence function methods  { #benchmarking-influence-methods }
 
 !!! Todo
     This section is basically a stub

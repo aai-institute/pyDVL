@@ -3,6 +3,8 @@ title: Glossary
 alias:
   name: glossary
   text: Glossary
+search:
+  boost: 10
 ---
 
 # Glossary
@@ -24,7 +26,7 @@ puts weight on marginal utilities for sets of certain sizes, as a function of
 the parameters of the beta distribution. Introduced in [@kwon_beta_2022].
 
   * [Implementation][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]
-  * [Documentation][semi-values]
+  * [Documentation][beta-shapley-intro]
 
 ### Class-wise Shapley { #glossary-class-wise-shapley }
 
@@ -51,7 +53,7 @@ Introduced by [@wang_data_2023].
 
 * [Implementation
   ][pydvl.valuation.methods.banzhaf.BanzhafValuation]
-* [[semi-values-intro#banzhaf-index|Documentation]]
+* [[banzhaf-index-intro|Documentation]]
 
 
 ### Data-OOB { #glossary-data-oob }
@@ -64,7 +66,7 @@ all weak learners.
 Introduced in [@kwon_dataoob_2023].
 
  * [Implementation][pydvl.valuation.methods.data_oob.DataOOBValuation]
- * [[data-oob-valuation|Documentation]]
+ * [[data-oob-intro|Documentation]]
 
 
 ### Data Utility Learning { #glossary-data-utility-learning }
@@ -77,7 +79,16 @@ utility.
 Introduced by [@wang_improving_2022].
 
  * [Implementation][pydvl.valuation.utility.learning.DataUtilityLearning]
- * [Documentation][creating-a-utility]
+ * [Documentation][data-utility-learning-intro]
+
+### Delta-Shapley { #glossary-delta-shapley }
+
+Delta-Shapley is a semi-value that employs a constant sampling probability,
+truncated for sets beyond a certain range. Introduced in
+[@watson_accelerated_2023].
+
+ * [Implementation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation]
+ * [[delta-shapley-intro|Documentation]]
 
 
 ### Group Testing { #glossary-group-testing }
@@ -138,7 +149,26 @@ value of a training point is defined as the marginal change in the model's
 performance when that point is removed from the training set.
 
  * [Implementation][pydvl.valuation.methods.loo.LOOValuation]
- * [[loo-valuation|Documentation]]
+ * [[loo-valuation-intro|Documentation]]
+
+
+### Marginal utility { #glossary-marginal-utility }
+
+In data valuation for ML, _marginal utility_ refers to the change in performance
+of an ML model when a single data point is added to or removed from the training
+set. In our documentation it is often denoted $\delta_i(S) := U(S_{+i}) - U(S),$
+where $S$ is a subset of the training set, $i$ is the index of the data point
+to be added, and $U$ is the [[glossary-utility-function|utility function]].
+
+* [[data-valuation-intro|Introduction to data valuation]]
+
+### Marginal-based methods
+
+Marginal-based methods are a class of data valuation techniques that define
+value in terms of weighted averages of the [[glossary-marginal-utility|marginal
+utility]].
+
+* [[data-valuation-intro|Introduction to data valuation]]
 
 
 ### Maximum Sample Reuse  { #glossary-msr }
@@ -178,6 +208,26 @@ Introduced into data valuation by [@ghorbani_data_2019].
  * [Documentation][monte-carlo-combinatorial-shapley]
 
 
+### Point-removal experiment  { #glossary-point-removal-experiment }
+
+A point-removal experiment is a benchmarking task in data valuation where the
+quality of a valuation method is measured through the impact of incrementally
+removing data points on the model's performance. The points are removed in
+order of their value, and the performance is evaluated on a fixed validation set.
+
+ * [[benchmarking-valuation-methods|Benchmarking valuation methods]].
+
+
+### Rank correlation  { #glossary-rank-correlation }
+
+Rank correlation is a simple way of measuring the stability of estimates for the
+values of a training set. It is computed as the Spearman correlation between the
+values of two different runs of the same method, after changing some
+hyperparameter like random seed, number of samples, etc.
+
+ * [[benchmarking-valuation-methods|Benchmarking valuation methods]].
+
+
 ### Shapley Value  { #glossary-shapley-value }
 
 Shapley Value is a concept from cooperative game theory that allocates payouts
@@ -190,24 +240,35 @@ trivial data set sizes, so one resorts to approximations like TMCS.
 Introduced into data valuation by [@ghorbani_data_2019].
 
  * [Implementation][pydvl.valuation.methods.shapley]
- * [Documentation][shapley-value]
+ * [Documentation][shapley-valuation-intro]
+
 
 ### Truncated Monte Carlo Shapley  { #glossary-tmcs }
 
 TMCS is an efficient approach to estimating the Shapley Value using a
-truncated version of the Monte Carlo method, reducing computation time while
-maintaining accuracy in large datasets. It is available through the class
-[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation] in
-pyDVL. But being a heuristic to permutation sampling, it can be "manually"
-implemented by choosing a
-[RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation]
-for a [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
-when configuring [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
-(note however that this introduces some correcting factors, see 
-[[semi-values-sampling]]). Introduced by [@ghorbani_data_2019].
+truncated version of the Monte Carlo method with permutation sampling.
+Introduced by [@ghorbani_data_2019].
 
  * [Implementation][pydvl.valuation.methods.shapley.ShapleyValuation]
- * [Documentation][permutation-shapley]
+ * [Documentation][permutation-shapley-intro]
+
+
+### Utility function { #glossary-utility-function }
+
+The _utility function_ in ML data valuation is a measure of the performance of a
+model trained on a subset of the training data. This can be a metric like
+accuracy, F1 score, or any other performance measure. It is typically measured
+wrt. to a fixed [[glossary-valuation-set|valuation set]] (sometimes we use the
+terms _test set_ or _validation set_ interchangeably when no confusion is
+possible, but it should be a different, held-out set.
+
+In our documentation the utility is denoted $U$, and is assumed to be a function
+defined over sets (hence invariant wrt. permutation of data indices):
+$U:2^{N} \to \mathbb{R}$, where $N$ is the index set of the training data, which
+we identify with the data themselves.
+
+* [[data-valuation-intro|Introduction to data valuation]]
+
 
 ### Weighted Accuracy Drop  { #glossary-wad }
 

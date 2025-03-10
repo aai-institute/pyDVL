@@ -1,8 +1,10 @@
 ---
 title: Leave-One-Out values
 alias: 
-  name: loo-valuation
+  name: loo-valuation-intro
 ---
+
+# Leave-One-Out values  { #loo-valuation-intro }
 
 LOO is the simplest approach to valuation. It assigns to each sample its
 *marginal utility* as value:

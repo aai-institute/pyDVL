@@ -5,7 +5,7 @@ alias:
   text: Basics of data valuation
 ---
 
-# Data valuation
+# Data valuation { #data-valuation-intro }
 
 !!! Info
     If you want to jump right into it, skip ahead to [Computing data
@@ -109,7 +109,7 @@ necessary:
 4. Computing values with a valuation method of your choice, e.g. via
    [BanzhafValuation][pydvl.valuation.methods.banzhaf.BanzhafValuation]
    or [ShapleyValuation][pydvl.valuation.methods.ShapleyValuation]. For
-   [semi-value][semi-values] methods, you will also need to choose a subset
+   [semi-value][semi-values-intro] methods, you will also need to choose a subset
    sampling scheme, e.g. a
    [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
    or a simple [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler].
@@ -233,8 +233,8 @@ documentation of the [caching][pydvl.utils.caching] module.
 ### Computing some values
 
 By far the most popular concept of value is the Shapley value, a particular case
-of [semi-value][semi-values]. In order to compute them for a training set, all
-we need to do after the previous steps is to instantiate a
+of [semi-value][semi-values-intro]. In order to compute them for a training set,
+all we need to do after the previous steps is to instantiate a
 [ShapleyValuation][pydvl.valuation.methods.ShapleyValuation] object and call its
 `fit()` method.
 

@@ -3,7 +3,7 @@ title: Class-wise Shapley
 alias: classwise-shapley
 ---
 
-# Class-wise Shapley { #intro-to-cw-shapley }
+# Class-wise Shapley { #classwise-shapley-intro }
 
 Class-wise Shapley (CWS) [@schoch_csshapley_2022] offers a Shapley framework
 tailored for classification problems.  Given a sample $x_i$ with label $y_i \in

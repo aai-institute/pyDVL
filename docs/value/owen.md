@@ -1,10 +1,10 @@
 ---
 title: Owen Shapley values
 alias: 
-  name: owen-shapley
+  name: owen-shapley-intro
 ---
 
-# Owen sampling for Shapley values
+# Owen sampling for Shapley values  { #owen-shapley-intro }
 
 Owen sampling schemes are a family of sampling schemes that are used to estimate
 Shapley values. They are based on a multilinear extension technique from game theory,

@@ -8,7 +8,7 @@ is restricted to items of the same class, and vice versa.
 
 !!! tip "Analysis of Class-wise Shapley"
     For a detailed explanation and analysis of the method, with comparison to other
-    valuation techniques, please refer to the [main documentation][intro-to-cw-shapley]
+    valuation techniques, please refer to the [main documentation][classwise-shapley-intro]
     and to Semmler and de Benito Delgado (2024).[^2]
 
 ## References

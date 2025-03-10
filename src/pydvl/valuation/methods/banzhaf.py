@@ -12,7 +12,7 @@ $$
 
 !!! info "Background on semi-values"
     The Banzhaf valuation is a special case of the semi-value valuation method. You can
-    read a short introduction [in the documentation][semi-values].
+    read a short introduction [in the documentation][semi-values-intro].
 
 The intuition for picking a constant weight is that for any choice of weight function
 $w$, one can always construct a utility with higher variance where $w$ is greater.

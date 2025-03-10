@@ -1,5 +1,5 @@
 """
-Class-wise sampler for the [class-wise Shapley][intro-to-cw-shapley] valuation method.
+Class-wise sampler for the [class-wise Shapley][classwise-shapley-intro] valuation method.
 
 The class-wise Shapley method, introduced by Schoch et al., 2022[^1], uses a so-called
 *set-conditional marginal Shapley value* that requires selectively sampling subsets of

@@ -1,14 +1,15 @@
 r"""
-This module implements the method described in Kwon and Zou, (2023)[^1].
+This module implements the method described in Kwon and Zou, (2023).[^1]
 
-Data-OOB value is tailored to bagging models. It defines a data point's value as the
-average loss of the estimators which were not fit on it.
+Data-OOB value is tailored to bagging models. It defines a data point's value as
+the average loss of the estimators which were not fit on it.
 
 As such it is not a semi-value, and it is not based on marginal contributions.
 
 !!! info
-    For details on the method and a discussion on how and whether to use it by bagging
-    models a posteriori, see the [main documentation][data-oob-valuation].
+    For details on the method and a discussion on how and whether to use it by
+    bagging models a posteriori, see the [main
+    documentation][data-oob-intro].
 
 
 ## References
