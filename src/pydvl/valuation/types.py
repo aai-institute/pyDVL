@@ -6,6 +6,7 @@ If you are interested in extending valuation methods, you might need to subclass
 or [ClasswiseSample][pydvl.valuation.types.ClasswiseSample]. These are the data types
 used for communication between the samplers on the main process and the workers.
 """
+
 from __future__ import annotations
 
 import hashlib

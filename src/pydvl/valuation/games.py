@@ -84,6 +84,7 @@ class DummyGameUtility(UtilityBase):
         score: Function to compute the score of a coalition.
         score_range: Minimum and maximum values of the score function.
     """
+
     def __init__(
         self, score: Callable[[NDArray], float], score_range: tuple[float, float]
     ):

@@ -448,14 +448,14 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     The idea of VRDS is to allow per-set-size configuration of the total number of
     samples in order to reduce the variance coming from the marginal utility evaluations.
 
-    It is known (Wu et al. (2023), Theorem 4.2) that a minimum variance estimator of
-    Shapley values samples a number $m_k$ of sets of size $k$ based on the variance of
-    the marginal utility at that set size. However, this quantity is unknown in
-    practice, so the authors propose a simple heuristic. This function
-    (`sample_sizes` in the arguments) is deterministic, and in particular does
-    not depend on run-time variance estimates, as an adaptive method might do. Section 4
-    of Wu et al. (2023) shows a good default choice is based on the harmonic function
-    of the set size $k$ (see
+    It is known (Wu et al. (2023), Theorem 4.2)<sup><a href="#wu_variance_2023">1</a></sup>
+    that a minimum variance estimator of Shapley values samples a number $m_k$ of sets
+    of size $k$ based on the variance of the marginal utility at that set size. However,
+    this quantity is unknown in practice, so the authors propose a simple heuristic.
+    This function (`sample_sizes` in the arguments) is deterministic, and in particular
+    does not depend on run-time variance estimates, as an adaptive method might do.
+    Section 4 of Wu et al. (2023) shows a good default choice is based on the harmonic
+    function of the set size $k$ (see
     [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]).
 
     Args:
@@ -547,10 +547,10 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             The logarithm of the probability of having sampled a set of size `subset_len`.
         """
 
-        n = self._index_iterator_cls.complement_size(n)
+        n_ = self._index_iterator_cls.complement_size(n)
         # Depending on whether we sample from complements or not, the total number of
         # samples passed to the heuristic has a different interpretation.
-        index_iteration_length = self._index_iterator_cls.length(n)  # type: ignore
+        index_iteration_length = self._index_iterator_cls.length(n_)  # type: ignore
         if index_iteration_length is None:
             index_iteration_length = 1
         index_iteration_length = max(1, index_iteration_length)
@@ -566,7 +566,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         total = np.sum(funs)
 
         return float(
-            -logcomb(n, subset_len)
+            -logcomb(n_, subset_len)
             + np.log(index_iteration_length)
             + np.log(funs[subset_len])
             - np.log(total)

@@ -52,6 +52,7 @@ class Flag(ABC):
     To check a flag, call it as a function or check it in a boolean context. This will
     return `True` if the flag is set, and `False` otherwise.
     """
+
     @abstractmethod
     def set(self): ...
 
@@ -70,6 +71,7 @@ class Flag(ABC):
 
 class ThreadingFlag(Flag):
     """A trivial flag for signalling across threads."""
+
     def __init__(self):
         self._flag = False
 
@@ -88,6 +90,7 @@ class ThreadingFlag(Flag):
 
 class MultiprocessingFlag(Flag):
     """A flag for signalling across processes using shared memory."""
+
     def __init__(self, name: str):
         self._flag = shared_memory.SharedMemory(name, create=False, size=1)
 

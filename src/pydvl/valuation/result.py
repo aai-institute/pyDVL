@@ -289,7 +289,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         # Need a "Comparable" type here
         key: Literal["value", "variance", "index", "name"] = "value",
     ) -> None:
-        """Sorts the indices in place by `key`.
+        """Sorts the indices **in place** in ascending order by `key`.
 
         Once sorted, iteration over the results, and indexing of all the
         properties
@@ -302,7 +302,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         will follow the same order.
 
         Args:
-            reverse: Whether to sort in descending order by value.
+            reverse: Whether to sort in descending order.
             key: The key to sort by. Defaults to
                 [ValueItem.value][pydvl.valuation.result.ValueItem].
         """
