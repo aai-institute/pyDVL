@@ -16,7 +16,6 @@ other methods][least-core-comparison] (Benmerzoug and de Benito Delgado, 2023).[
       2 (31 July 2023): #32.
 """
 
-
 from __future__ import annotations
 
 import numpy as np

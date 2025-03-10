@@ -126,9 +126,8 @@ class DeepSet(nn.Module):
 
 
 class SetDatasetRaw(TorchDataset):
-    """
+    """Dataloader compatible dataset for DeepSet."""
 
-    """
     def __init__(
         self,
         samples: dict[Sample, float],
