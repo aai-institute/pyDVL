@@ -1,6 +1,9 @@
 """
 This module implements a trivial random valuation method.
 
+It exists mainly for convenience when running experiments, e.g. when comparing methods
+with [point removal][pydvl.reporting.point_removal], random values are a simple (albeit
+weak) baseline.
 """
 
 import numpy as np
