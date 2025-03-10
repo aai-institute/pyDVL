@@ -19,7 +19,9 @@ to drastically reduce the amount of utility evaluations and bring complexity
 down to $O(n \log n)$ per test point. The key insight is that  because no sample
 besides the $K$ closest affects the score, most can be ignored, allowing for a
 recursive formula of the complexity mentioned. This method was introduced by
-[@jia_efficient_2019a] in two forms, an exact and an approximate one.
+[@jia_efficient_2019a] in two forms, an exact (available with
+[KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation])
+and an approximate one.
 
 
 ## The exact computation
@@ -47,7 +49,7 @@ pyDVL implements the exact method in
 [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation].
 Internally it iterates through each training point with a
 [LOOSampler][pydvl.valuation.samplers.powerset.LOOSampler] and computes the
-recursive formula.
+recursive formula.[^2]
 
 ??? Example "Computing exact KNN-Shapley values"
     ```python
@@ -72,3 +74,7 @@ in pyDVL for this technique.
 [^1]: This is based on a Hoeffding bound and the time complexity of sorting $n$
       points, which is the asymptotic complexity of one utility evaluation of
       KNN [@jia_efficient_2019a].
+[^2]: As already noted, it is possible to use the standard infrastructure instead
+      although this is only useful for testing purposes To this end, we provide
+      an implementation of the formula above in
+      [KNNClassifierUtility][pydvl.valuation.utility.knn.KNNClassifierUtility].

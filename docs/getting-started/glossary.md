@@ -223,7 +223,7 @@ order of their value, and the performance is evaluated on a fixed validation set
 Rank correlation is a simple way of measuring the stability of estimates for the
 values of a training set. It is computed as the Spearman correlation between the
 values of two different runs of the same method, after changing some
-hyperparameter like random seed, number of samples, etc.
+hyperparameter like random seed, number of updates during a single run, etc.
 
  * [[benchmarking-valuation-methods|Benchmarking valuation methods]].
 

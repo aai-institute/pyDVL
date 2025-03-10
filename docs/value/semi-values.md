@@ -27,8 +27,7 @@ With $w(k) = \frac{1}{n} \binom{n-1}{k}^{-1}$, we recover the Shapley value.
 
 Two additional instances of semi-value are [Data Banzhaf][data-banzhaf-intro]
 [@wang_data_2023] and [Beta Shapley][beta-shapley-intro] [@kwon_beta_2022],
-which offer improved numerical and [rank stability][glossary-rank-stability] in
-certain situations.
+which offer improved numerical and rank stability in certain situations.
 
 All semi-values, including those two, are implemented in pyDVL by composing
 different sampling methods and weighting schemes. The abstract class from which
