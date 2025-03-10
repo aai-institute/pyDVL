@@ -71,6 +71,10 @@ Monte Carlo approximations, and sometimes approximate utilities which are
 faster to compute, e.g. proxy models [@wang_improving_2022] or constant-cost
 approximations like Neural Tangent Kernels [@wu_davinz_2022].
 
+!!! info
+    Here is the full list of [valuation methods implemented in 
+    pyDVL][implemented-methods-data-valuation].
+
 The reasoning behind using game theory is that, in order to be useful, an
 assignment of value, dubbed **valuation function**, is usually required to
 fulfil certain requirements of consistency and "fairness". For instance, in some
@@ -283,7 +287,6 @@ for i in range(training_budget):
 # Subsequent calls will be computed using the learned model for DUL
 wrapped_u((1, 2, 3))
 ```
-
 
 ## Problems of data values
 

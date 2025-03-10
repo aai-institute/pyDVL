@@ -165,9 +165,8 @@ more on this subject see [[semi-values-sampling]].
 
 ## General semi-values
 
-As explained above, both Beta Shapley and Banzhaf indices are special cases of
-semi-values. In pyDVL we provide a general method for computing these with any
-combination of the three ingredients that define a semi-value:
+In pyDVL we provide a general method for computing general semi-values with any
+combination of the three ingredients that define them:
 
 - A utility function $u$.
 - A sampling method.

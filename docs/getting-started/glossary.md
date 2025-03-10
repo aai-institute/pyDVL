@@ -23,8 +23,7 @@ distribution, thus effectively implementing an importance sampling scheme that
 puts weight on marginal utilities for sets of certain sizes, as a function of
 the parameters of the beta distribution. Introduced in [@kwon_beta_2022].
 
-  * [Implementation
-    ][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]
+  * [Implementation][pydvl.valuation.methods.beta_shapley.BetaShapleyValuation]
   * [Documentation][semi-values]
 
 ### Class-wise Shapley { #glossary-class-wise-shapley }
@@ -85,11 +84,23 @@ Introduced by [@wang_improving_2022].
 
 Group Testing is a strategy for identifying characteristics within groups of
 items efficiently, by testing groups rather than individuals to quickly narrow
-down the search for items with specific properties.
-Introduced into data valuation by [@jia_efficient_2019a].
+down the search for items with specific properties. The idea was introduced into
+data valuation by [@jia_efficient_2019a], transforming the problem of computing
+Shapley values into one of constraint satisfiability, with constraints given by
+samples of the utility, with a carefully designed sampling distribution.
 
  * [Implementation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation]
- * [Documentation][group-testing]
+ * [[group-testing-shapley-intro|Documentation]]
+
+### KNN-Shapley { #glossary-knn-shapley }
+
+KNN-Shapley is a Shapley value method tailored to KNN models. By exploiting the
+locality of KNN, it can reduce computation drastically wrt. the standard
+Shapley value with Monte Carlo approximation. Introduced in
+[@jia_efficient_2019a].
+
+* [Implementation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation]
+* [[knn-shapley-intro|Documentation]]
 
 
 ### Importance Sampling { #glossary-importance-sampling }

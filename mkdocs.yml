@@ -23,6 +23,9 @@ nav:
     - Class-wise Shapley: value/classwise-shapley.md
     - Least Core: value/the-core.md
     - Data-OOB: value/data-oob.md
+    - KNN-Shapley: value/knn-shapley.md
+    - Group Testing Shapley: value/group-testing-shapley.md
+    - Delta Shapley: value/delta-shapley.md
     - Sampling strategies for semi-values: value/sampling-weights.md
   - The Influence Function:
     - influence/index.md
