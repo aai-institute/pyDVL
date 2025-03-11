@@ -151,18 +151,21 @@ As a scalar summary of this curve, [@schoch_csshapley_2022] define **Weighted
 Accuracy Drop** (WAD) as:
 
 $$
-\text{WAD} =  \sum_{j=1}^{n} \left ( \frac{1}{j} \sum_{i=1}^{j} 
-a_{T_{-\{1 \colon i-1 \}}}(D) - a_{T_{-\{1 \colon i \}}}(D) \right)
-= a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 \colon j \}}}(D)}{j} ,
+\begin{aligned}
+\text{wad} &= \sum_{j=1}^{n} \frac{1}{j} \sum_{i=1}^{j}
+  \left( a_{T_{-\{1 : i-1 \}}}(D) - a_{T_{-\{1 : i \}}}(D) \right) \\
+   &= a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 : j \}}}(D)}{j} ,
+\end{aligned}
 $$
 
+
 where $a_T(D)$ is the accuracy of the model (trained on $T$) evaluated on $D$
-and $T_{-\{1 \colon j \}}$ is the set $T$ without elements from $\{1, \dots , j
+and $T_{-\{1 : j \}}$ is the set $T$ without elements from $\{1, \dots , j
 \}$.
 
 We run the point removal experiment for a logistic regression model five times
-and compute WAD for each run, then report the mean $\mu_\text{WAD}$ and standard
-deviation $\sigma_\text{WAD}$.
+and compute WAD for each run, then report the mean $\mu_\text{wad}$ and standard
+deviation $\sigma_\text{wad}$.
 
 ![Mean WAD for best-point removal on logistic regression. Values
 computed using LOO, CWS, Beta Shapley, and TMCS
