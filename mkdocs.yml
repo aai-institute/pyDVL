@@ -93,6 +93,14 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
+  - pub-debugger:
+      console_log:
+        enabled: true
+        log_level: WARNING
+        show_code_link: false
+        show_entry_time: false
+        show_logger_name: true
+        show_deprecation_warnings: false
   - search
   - autorefs
   - glightbox:
@@ -181,7 +189,6 @@ plugins:
       fallback_to_build_date: true
   - social:
       cards: !ENV [CI, True] # only build in CI
-
 theme:
   name: material
   custom_dir: docs/overrides
