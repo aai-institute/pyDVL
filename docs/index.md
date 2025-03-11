@@ -27,7 +27,7 @@ If you're a first time user of pyDVL, we recommend you to go through
     Notebooks with worked-out examples of data valuation and influence functions
 
 -   :fontawesome-solid-scale-unbalanced:{ .lg .middle }
-    [[data-valuation|__Data valuation__]]
+    [[data-valuation-intro|__Data valuation__]]
 
     ---
     Basics of data valuation and description of the main algorithms

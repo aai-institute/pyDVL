@@ -25,7 +25,7 @@ should be enough to get you started.
     ---
     Key objects and usage patterns for Shapley values and related methods.
   
-    [[data-valuation|:octicons-arrow-right-24: Data valuation]]
+    [[data-valuation-intro|:octicons-arrow-right-24: Data valuation]]
   
 -   [[influence-function]]
   

@@ -111,7 +111,7 @@ $$ y = \rho(\Phi(S)). $$
 
 !!! example "DUL with DeepSets"
     ??? Example
-        This example requires [[torch]].
+        This example requires pytorch installed.
         ``` python
         from pydvl.valuation import Dataset, DataUtilityLearning, ModelUtility, \
             Sample, SupervisedScorer

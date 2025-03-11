@@ -49,7 +49,7 @@ There are three main families of methods for data valuation: model-based,
 influence-based and model-free. As of v0.10.0 pyDVL supports the first two.
 Here, we focus on model-based (and in particular game-theoretic) concepts and
 refer to the main documentation on the [influence
-function][the-influence-function] for the second.
+function][influence-function] for the second.
 
 ## Game theoretical methods and semi-values { #game-theoretical-methods }
 
