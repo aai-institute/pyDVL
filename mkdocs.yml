@@ -18,14 +18,17 @@ nav:
     - value/index.md
     - Leave-One-Out: value/loo.md
     - Shapley values: value/shapley.md
-    - Owen-Shapley values: value/owen.md
-    - Semi-values: value/semi-values.md
     - Class-wise Shapley: value/classwise-shapley.md
-    - Least Core: value/the-core.md
-    - Data-OOB: value/data-oob.md
+    - Semi-values: value/semi-values.md
+    - Beta Shapley: value/beta-shapley.md
+    - Data Banzhaf: value/data-banzhaf.md
+    - Delta Shapley: value/delta-shapley.md
     - KNN-Shapley: value/knn-shapley.md
     - Group Testing Shapley: value/group-testing-shapley.md
-    - Delta Shapley: value/delta-shapley.md
+    - Owen-Shapley values: value/owen.md
+    - Least Core: value/the-core.md
+    - Data-OOB: value/data-oob.md
+    - Data Utility Learning: value/dul.md
     - Sampling strategies for semi-values: value/sampling-weights.md
   - The Influence Function:
     - influence/index.md
@@ -73,7 +76,7 @@ nav:
       - CONTRIBUTING.md
       - Changelog: CHANGELOG.md
     - Deprecated API:
-      - value/deprecation.md
+      - deprecated/index.md
       - Data Valuation: deprecated/pydvl/value/
       - Parallelization: deprecated/pydvl/parallel/
   - Methods: getting-started/methods.md
