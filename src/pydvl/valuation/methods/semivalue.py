@@ -24,7 +24,7 @@ and the utility function.
 For this reason, our implementation allows mix-and-matching of any semi-value coefficient
 with any sampler. For importance sampling, the mechanism is as follows:
 
-* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemiValueValuation]
+* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
   and implement the `_log_coefficient()` method. This method should return the
   coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
   stability. The coefficient is a function of the number of elements in the set $n$ and

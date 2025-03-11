@@ -15,10 +15,8 @@ label. To address this issue, the authors introduced
 
 $$
 v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}}
-\left [
 \frac{1}{|D_{y_i}|}\sum_{S_{y_i}} \binom{|D_{y_i}|-1}{|S_{y_i}|}^{-1}
-\delta(S_{y_i} | S_{-y_i})
-\right ],
+\delta(S_{y_i} | S_{-y_i}),
 $$
 
 where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq

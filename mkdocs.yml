@@ -67,11 +67,11 @@ nav:
         # Manual list to exclude modules deprecated in 0.10.0
         - Intro: api/pydvl/utils/
         - Caching: api/pydvl/utils/caching/
-        - Exceptions: api/pydvl/utils/exceptions
-        - Functional: api/pydvl/utils/functional
-        - Numeric: api/pydvl/utils/numeric
-        - Progress: api/pydvl/utils/progress
-        - Status: api/pydvl/utils/status
+        - Exceptions: api/pydvl/utils/exceptions.md
+        - Functional: api/pydvl/utils/functional.md
+        - Numeric: api/pydvl/utils/numeric.md
+        - Progress: api/pydvl/utils/progress.md
+        - Status: api/pydvl/utils/status.md
     - Contributing:
       - CONTRIBUTING.md
       - Changelog: CHANGELOG.md
@@ -186,7 +186,6 @@ plugins:
   - bibtex:
       bib_file: "docs/assets/pydvl.bib"
       csl_file: "docs/assets/elsevier-harvard.csl"
-      cite_inline: true
   - git-revision-date-localized:
       enable_creation_date: true
       type: iso_date
