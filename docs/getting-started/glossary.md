@@ -39,7 +39,7 @@ Introduced by [@schoch_csshapley_2022].
 
  * [Implementation
    ][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation]
- * [[classwise-shapley|Documentation]]
+ * [Documentation][classwise-shapley-intro]
 
 
 ### Data-Banzhaf { #glossary-data-banzhaf }
@@ -53,7 +53,7 @@ Introduced by [@wang_data_2023].
 
 * [Implementation
   ][pydvl.valuation.methods.banzhaf.BanzhafValuation]
-* [[banzhaf-index-intro|Documentation]]
+* [Documentation][data-banzhaf-intro]
 
 
 ### Data-OOB { #glossary-data-oob }
@@ -66,7 +66,7 @@ all weak learners.
 Introduced in [@kwon_dataoob_2023].
 
  * [Implementation][pydvl.valuation.methods.data_oob.DataOOBValuation]
- * [[data-oob-intro|Documentation]]
+ * [Documentation][data-oob-intro]
 
 
 ### Data Utility Learning { #glossary-data-utility-learning }
@@ -88,7 +88,7 @@ truncated for sets beyond a certain range. Introduced in
 [@watson_accelerated_2023].
 
  * [Implementation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation]
- * [[delta-shapley-intro|Documentation]]
+ * [Documentation][delta-shapley-intro]
 
 
 ### Group Testing { #glossary-group-testing }
@@ -101,7 +101,7 @@ Shapley values into one of constraint satisfiability, with constraints given by
 samples of the utility, with a carefully designed sampling distribution.
 
  * [Implementation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation]
- * [[group-testing-shapley-intro|Documentation]]
+ * [Documentation][group-testing-shapley-intro]
 
 ### KNN-Shapley { #glossary-knn-shapley }
 
@@ -111,7 +111,7 @@ Shapley value with Monte Carlo approximation. Introduced in
 [@jia_efficient_2019a].
 
 * [Implementation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation]
-* [[knn-shapley-intro|Documentation]]
+* [Documentation][knn-shapley-intro]
 
 
 ### Importance Sampling { #glossary-importance-sampling }
@@ -149,7 +149,7 @@ value of a training point is defined as the marginal change in the model's
 performance when that point is removed from the training set.
 
  * [Implementation][pydvl.valuation.methods.loo.LOOValuation]
- * [[loo-valuation-intro|Documentation]]
+ * [Documentation][loo-valuation-intro]
 
 
 ### Marginal utility { #glossary-marginal-utility }
@@ -158,9 +158,9 @@ In data valuation for ML, _marginal utility_ refers to the change in performance
 of an ML model when a single data point is added to or removed from the training
 set. In our documentation it is often denoted $\delta_i(S) := U(S_{+i}) - U(S),$
 where $S$ is a subset of the training set, $i$ is the index of the data point
-to be added, and $U$ is the [[glossary-utility-function|utility function]].
+to be added, and $U$ is the [utility function][glossary-utility-function].
 
-* [[data-valuation-intro|Introduction to data valuation]]
+* [Introduction to data valuation][data-valuation-intro]
 
 ### Marginal-based methods
 
@@ -168,14 +168,14 @@ Marginal-based methods are a class of data valuation techniques that define
 value in terms of weighted averages of the [[glossary-marginal-utility|marginal
 utility]].
 
-* [[data-valuation-intro|Introduction to data valuation]]
+* [Introduction to data valuation][data-valuation-intro]
 
 
 ### Maximum Sample Reuse  { #glossary-msr }
 
 MSR is a sampling method for data valuation that updates the value of every data
 point in one sample. This method can achieve much faster convergence for
-[[glossary-data-banzhaf|Data Banzhaf]] since the sampling distribution
+[Data Banzhaf][glossary-data-banzhaf] since the sampling distribution
 "coincides" with the Banzhaf coefficients. In principle, it can be used
 with any [semi-value][pydvl.valuation.methods.semivalue.SemivalueValuation] by
 setting the sampler to [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler],
@@ -205,7 +205,7 @@ applications in ML.
 Introduced into data valuation by [@ghorbani_data_2019].
 
  * [Implementation][pydvl.valuation.methods.shapley.ShapleyValuation]
- * [Documentation][monte-carlo-combinatorial-shapley]
+ * [Documentation][monte-carlo-combinatorial-shapley-intro]
 
 
 ### Point-removal experiment  { #glossary-point-removal-experiment }
@@ -215,7 +215,7 @@ quality of a valuation method is measured through the impact of incrementally
 removing data points on the model's performance. The points are removed in
 order of their value, and the performance is evaluated on a fixed validation set.
 
- * [[benchmarking-valuation-methods|Benchmarking valuation methods]].
+ * [Benchmarking valuation methods][benchmarking-valuation-methods].
 
 
 ### Rank correlation  { #glossary-rank-correlation }
@@ -225,7 +225,7 @@ values of a training set. It is computed as the Spearman correlation between the
 values of two different runs of the same method, after changing some
 hyperparameter like random seed, number of updates during a single run, etc.
 
- * [[benchmarking-valuation-methods|Benchmarking valuation methods]].
+ * [Benchmarking valuation methods][benchmarking-valuation-methods].
 
 
 ### Shapley Value  { #glossary-shapley-value }
@@ -258,7 +258,7 @@ Introduced by [@ghorbani_data_2019].
 The _utility function_ in ML data valuation is a measure of the performance of a
 model trained on a subset of the training data. This can be a metric like
 accuracy, F1 score, or any other performance measure. It is typically measured
-wrt. to a fixed [[glossary-valuation-set|valuation set]] (sometimes we use the
+wrt. to a fixed [valuation set][glossary-valuation-set] (sometimes we use the
 terms _test set_ or _validation set_ interchangeably when no confusion is
 possible, but it should be a different, held-out set.
 
@@ -267,7 +267,7 @@ defined over sets (hence invariant wrt. permutation of data indices):
 $U:2^{N} \to \mathbb{R}$, where $N$ is the index set of the training data, which
 we identify with the data themselves.
 
-* [[data-valuation-intro|Introduction to data valuation]]
+* [Introduction to data valuation][data-valuation-intro]
 
 
 ### Weighted Accuracy Drop  { #glossary-wad }
@@ -335,7 +335,7 @@ statistical estimator. In machine learning, it's used to understand how much a
 particular data point affects the model's prediction.
 Introduced into data valuation by [@koh_understanding_2017].
 
- * [[influence-function|Documentation]]
+ * [Documentation][influence-function]
 
 ### Inverse Hessian-vector product { #glossary-iHVP }
 

@@ -4,7 +4,7 @@ A **valuation method** is any function that computes a value for each data point
 dataset.
 
 !!! info
-    For information on data valuation, read [the introduction][data-valuation].
+    For information on data valuation, read [the introduction][data-valuation-intro].
 """
 
 from __future__ import annotations

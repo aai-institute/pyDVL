@@ -9,7 +9,7 @@ utilities][pydvl.valuation.utility].
 
 !!! info
     For help on how to use this module, read [the introduction to data
-    valuation][data-valuation].
+    valuation][data-valuation-intro].
 """
 
 from pydvl.valuation.dataset import *

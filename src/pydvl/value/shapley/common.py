@@ -33,7 +33,7 @@ def compute_shapley_values(
     """Umbrella method to compute Shapley values with any of the available
     algorithms.
 
-    See [Data valuation][data-valuation] for an overview.
+    See [Data valuation][data-valuation-intro] for an overview.
 
     The following algorithms are available. Note that the exact methods can only
     work with very small datasets and are thus intended only for testing. Some

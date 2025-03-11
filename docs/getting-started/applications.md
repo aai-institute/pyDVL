@@ -15,8 +15,7 @@ on the training procedure and the performance metric used. For instance,
 accuracy is a poor metric for imbalanced sets and this has a stark effect
 on data values. Some models exhibit great variance in some regimes
 and this again has a detrimental effect on values. See
-[[data-valuation#problems-of-data-values|Problems of data values]] for more on
-this.
+[Problems of data values][problems-of-data-values] for more on this.
 
 Here we quickly enumerate the most common uses of data valuation. For a
 comprehensive overview, along with concrete examples, please refer to the

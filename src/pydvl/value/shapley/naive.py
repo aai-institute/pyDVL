@@ -8,7 +8,7 @@ consider using any of the approximations, such as [Monte
 Carlo][pydvl.value.shapley.montecarlo], or proxy models like
 [kNN][pydvl.value.shapley.knn].
 
-See [Data valuation][data-valuation] for details.
+See [Data valuation][data-valuation-intro] for details.
 """
 
 import math
@@ -40,7 +40,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
     $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1}
     \cup {i}) − u(\sigma_{i})].$$
 
-    See [Data valuation][data-valuation] for details.
+    See [Data valuation][data-valuation-intro] for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
@@ -128,7 +128,7 @@ def combinatorial_exact_shapley(
     $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}}
     \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
 
-    See [Data valuation][data-valuation] for details.
+    See [Data valuation][data-valuation-intro] for details.
 
     !!! Note
         If the length of the training set is > n_jobs*20 this prints a warning

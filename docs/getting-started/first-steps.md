@@ -20,7 +20,7 @@ should be enough to get you started.
 
 <div class="grid cards" markdown>
 
--   [[data-valuation]]
+-   [[data-valuation-intro]]
   
     ---
     Key objects and usage patterns for Shapley values and related methods.
@@ -41,7 +41,7 @@ should be enough to get you started.
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
-- In the examples under [[data-valuation]] and [[influence-function]].
+- In the examples under [[data-valuation-intro]] and [[influence-function]].
 - Using [binder](https://mybinder.org/) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will

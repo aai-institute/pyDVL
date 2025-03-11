@@ -7,7 +7,7 @@ alias:
 
 # Data Utility Learning  { #data-utility-learning-intro }
 
-DUL [@wang_data_2022] uses an ML model $\hat{u}$ to learn the utility function
+DUL [@wang_improving_2022] uses an ML model $\hat{u}$ to learn the utility function
 $u:2^N \to \matbb{R}$ during the fitting phase of any valuation method. This
 _utility model_ is trained with tuples $(S, U(S))$ for a certain warm-up period.
 Then it is used instead of $u$ in the valuation method. The cost of training
@@ -47,7 +47,7 @@ Assuming you have some data valuation algorithm and your `utility` object:
    cases the utility takes continuous values, so this should be any regression
    model, such as a linear regression or a neural network. The input to it will
    be sets of indices, so one has to encode the data accordingly. For example,
-   an indicator vector of the set as done in [@wang_data_2022], with
+   an indicator vector of the set as done in [@wang_improving_2022], with
    [IndicatorUtilityModel][pydvl.valuation.utility.learning.IndicatorUtilityModel].
    This wrapper accepts any machine learning model for the actual fitting.
 
@@ -95,7 +95,7 @@ architecture.
         valuation.fit(train)
         ```
 
-## Deep Sets
+## Deep Sets  { #deep-sets-intro }
 
 Given a set $S= \{x_1, x_2, ..., x_n\},$ Deep Sets [@zaheer_deep_2017] learn a
 representation of the set which is invariant to the order of elements in the

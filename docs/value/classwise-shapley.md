@@ -1,6 +1,6 @@
 ---
 title: Class-wise Shapley
-alias: classwise-shapley
+alias: classwise-shapley-intro
 ---
 
 # Class-wise Shapley { #classwise-shapley-intro }

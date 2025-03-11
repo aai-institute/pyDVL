@@ -5,7 +5,7 @@ will want to use
 [compute_semivalues][pydvl.value.semivalues.compute_semivalues] as interfaces to
 most methods defined in the modules.
 
-Please refer to [the guide on data valuation][data-valuation] for an overview of
+Please refer to [the guide on data valuation][data-valuation-intro] for an overview of
 all methods.
 """
 

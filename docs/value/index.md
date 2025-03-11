@@ -1,7 +1,7 @@
 ---
 title: Data valuation
 alias: 
-  name: data-valuation
+  name: data-valuation-intro
   text: Basics of data valuation
 ---
 

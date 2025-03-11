@@ -13,7 +13,7 @@ guarantees.[^3]
     utility required). We recommend other Monte Carlo methods instead. See [the whole
     list here][implemented-methods-data-valuation].
 
-You can read about data valuation in general [in the documentation][data-valuation].
+You can read about data valuation in general [in the documentation][data-valuation-intro].
 
 ## References
 
@@ -67,7 +67,7 @@ class GroupTestingShapleyValuation(Valuation):
     """Class to calculate the group-testing approximation to shapley values.
 
     See (Jia, R. et al., 2019)<sup><a href="#jia_update_2023">1</a></sup> for a
-    description of the method, and [Data valuation][data-valuation] for an overview of
+    description of the method, and [Data valuation][data-valuation-intro] for an overview of
     data valuation.
 
     !!! Warning
