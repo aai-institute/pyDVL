@@ -94,6 +94,10 @@ hooks:
 
 plugins:
   - pub-debugger:
+      file_log:
+        enabled: false
+      zip_log:
+        enabled: false
       console_log:
         enabled: true
         log_level: WARNING
