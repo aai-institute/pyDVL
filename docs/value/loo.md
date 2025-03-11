@@ -6,25 +6,28 @@ alias:
 
 # Leave-One-Out values  { #loo-valuation-intro }
 
-LOO is the simplest approach to valuation. It assigns to each sample its
-*marginal utility* as value:
+LOO is the simplest approach to valuation. Let $D$ be the training set, and
+$D_{-i}$ be the training set without the sample $x_i$. Assume some utility
+function $u(S)$ that measures the performance of a model trained on 
+$S \subseteq D$.
 
-$$v_u(i) = u(D) - u(D_{-i}).$$
+LOO assigns to each sample its *marginal utility* as value: 
 
-For notational simplicity, we consider the valuation function as defined over
-the indices of the dataset $D$, and $i \in D$ is the index of the sample,
-$D_{-i}$ is the training set without the sample $x_i$, and $u$ is the utility
-function.
+$$v_\text{LOO}(i) = u(D) - u(D_{-i}),$$
+
+and as such is the simplest example of marginal contribution-based valuation
+method.
 
 For the purposes of data valuation, this is rarely useful beyond serving as a
-baseline for benchmarking. Although in some benchmarks it can perform
-astonishingly well on occasion. One particular weakness is that it does not
-necessarily correlate with an intrinsic value of a sample: since it is a
-marginal utility, it is affected by diminishing returns. Often, the training set
-is large enough for a single sample not to have any significant effect on
-training performance, despite any qualities it may possess. Whether this is
-indicative of low value or not depends on one's goals and definitions, but
-other methods are typically preferable.
+baseline for benchmarking. Although it can perform astonishingly well on
+occasion.
+
+One particular weakness is that it does not necessarily correlate with an
+intrinsic value of a sample: since it is a marginal utility, it is affected by
+_diminishing returns_. Often, the training set is large enough for a single sample
+not to have any significant effect on training performance, despite any
+qualities it may possess. Whether this is indicative of low value or not depends
+on one's goals and definitions, but other methods are typically preferable.
 
 ??? Example "Leave-One-Out values"
     ```python
@@ -39,3 +42,6 @@ other methods are typically preferable.
         val_loo.fit(train)
     result = val_loo.values(sort=True)
     ```
+
+Strictly speaking, LOO can be seen as a [semivalue][semi-values-intro] where
+all the coefficients are zero except for $k=|D|-1.$

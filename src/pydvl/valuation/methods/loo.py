@@ -1,8 +1,7 @@
 r"""
 This module implements Leave-One-Out (LOO) valuation.
 
-This is the simplest example of marginal-contribution-based valuation method. It is
-defined as:
+It is defined as:
 
 $$
 v_\text{LOO}(i) = U(N) - U(N_{-i}),
@@ -10,9 +9,6 @@ $$
 
 where $U$ is the utility function, $N$ is the set of all indices, and $i$ is the index
 of interest.
-
-Strictly speaking, LOO can be seen as a [semivalue][pydvl.valuation.methods.semivalue]
-where the coefficients are zero except for $k=|D|-1.$
 
 ## Changing LOO
 
