@@ -165,8 +165,8 @@ to be added, and $U$ is the [utility function][glossary-utility-function].
 ### Marginal-based methods
 
 Marginal-based methods are a class of data valuation techniques that define
-value in terms of weighted averages of the [[glossary-marginal-utility|marginal
-utility]].
+value in terms of weighted averages of the [marginal 
+utility][glossary-marginal-utility].
 
 * [Introduction to data valuation][data-valuation-intro]
 
@@ -268,6 +268,18 @@ $U:2^{N} \to \mathbb{R}$, where $N$ is the index set of the training data, which
 we identify with the data themselves.
 
 * [Introduction to data valuation][data-valuation-intro]
+
+### Valuation set { #glossary-valuation-set }
+
+The _valuation set_ is a held-out subset of data used to evaluate the utility of
+a model trained on the training set. Sometimes, when there is no confusion, we
+use the terms _test set_ or _validation set_ interchangeably, but it should be
+a different, held-out set.
+
+Note that computing a score (loss) over a fixed set is typically a poor
+approximation to the true score of the model, i.e. to its expected score on
+unseen data. This problem might be alleviated with some form of cross-validation,
+but we haven't explored this possibility in pyDVL.
 
 
 ### Weighted Accuracy Drop  { #glossary-wad }
