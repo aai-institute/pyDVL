@@ -35,7 +35,7 @@ For more on the general architecture of samplers see
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import List
 
 import numpy as np
 
@@ -57,6 +57,7 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
@@ -220,7 +221,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None = None,
     ) -> MSREvaluationStrategy:
         """Returns the strategy for this sampler.
 

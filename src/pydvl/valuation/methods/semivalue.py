@@ -49,12 +49,12 @@ absence of an underscore) to return `None`.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
-from pydvl.utils import SemivalueCoefficient
 from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
@@ -66,15 +66,16 @@ from pydvl.valuation.parallel import (
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["SemivalueValuation"]
 
 
 class SemivalueValuation(Valuation):
-    r"""Abstract class to define semi-values.
+    """Abstract class to define semi-values.
 
-    Implementations must only provide the `log_coefficient()` method, corresponding
+    Implementations must only provide the `log_coefficient()` property, corresponding
     to the semi-value coefficient.
 
     !!! Note
@@ -123,36 +124,16 @@ class SemivalueValuation(Valuation):
             raise TypeError(f"Invalid type for progress: {type(progress)}")
 
     @property
+    @abstractmethod
     def log_coefficient(self) -> SemivalueCoefficient | None:
         """This property returns the function computing the semi-value coefficient.
 
-        You can override it to return `None` in subclasses that do not need to correct
-        for the sampling distribution probabilities because of the sampler choice.
-
+        Return `None` in subclasses that do not need to correct for the sampling
+        distribution probabilities because of a specific, fixed sampler choice.
         [Evaluation strategies][pydvl.valuation.samplers.base.EvaluationStrategy] will
         then ignore the sampler coefficients as well.
         """
-        return self._log_coefficient
-
-    def _log_coefficient(self, n: int, k: int) -> float:
-        """The semi-value coefficient in log-space.
-
-        The semi-value coefficient is a function of the number of elements in the set,
-        and the size of the subset for which the coefficient is being computed.
-        Because both coefficients and sampler weights can be very large or very small,
-        we perform all computations in log-space to avoid numerical issues.
-
-        Args:
-            n: Total number of elements in the set.
-            k: Size of the subset for which the coefficient is being computed
-
-        Returns:
-            The natural logarithm of the semi-value coefficient.
-        """
-        raise NotImplementedError(
-            "Subclasses must either implement this method or"
-            "override the log_coefficient property"
-        )
+        ...
 
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:

@@ -130,13 +130,13 @@ from typing import Any
 
 import numpy as np
 
-from pydvl.utils import SemivalueCoefficient
 from pydvl.utils.numeric import logcomb
 from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers.permutation import PermutationSampler
 from pydvl.valuation.samplers.truncation import RelativeTruncation, TruncationPolicy
 from pydvl.valuation.stopping import HistoryDeviation, StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["ShapleyValuation", "TMCShapleyValuation"]
@@ -151,8 +151,11 @@ class ShapleyValuation(SemivalueValuation):
 
     algorithm_name = "Shapley"
 
-    def _log_coefficient(self, n: int, k: int) -> float:
-        return float(-np.log(n) - logcomb(n - 1, k))
+    @property
+    def log_coefficient(self) -> SemivalueCoefficient | None:
+        def _log_coefficient(n: int, k: int) -> float:
+            return float(-np.log(n) - logcomb(n - 1, k))
+        return _log_coefficient
 
 
 class TMCShapleyValuation(ShapleyValuation):

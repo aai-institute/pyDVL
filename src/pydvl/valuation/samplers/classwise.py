@@ -25,7 +25,7 @@ is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], t
 from __future__ import annotations
 
 from itertools import cycle, islice
-from typing import Callable, Generator, Iterable, Mapping, TypeVar, cast
+from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -37,11 +37,12 @@ from pydvl.valuation.types import (
     ClasswiseSample,
     IndexSetT,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["ClasswiseSampler", "get_unique_labels"]
+__all__ = ["ClasswiseSampler", "get_unique_labels", "roundrobin"]
 
 U = TypeVar("U")
 V = TypeVar("V")
@@ -207,6 +208,6 @@ class ClasswiseSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None = None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
         return self.in_class.make_strategy(utility, log_coefficient)

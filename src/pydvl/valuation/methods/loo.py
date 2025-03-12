@@ -23,11 +23,11 @@ constructor.
 
 from __future__ import annotations
 
-from pydvl.utils import SemivalueCoefficient
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import FiniteSequentialIndexIteration, LOOSampler
 from pydvl.valuation.stopping import MinUpdates
+from pydvl.valuation.types import SemivalueCoefficient
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["LOOValuation"]

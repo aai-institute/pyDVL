@@ -53,11 +53,11 @@ from typing import Any
 
 import numpy as np
 
-from pydvl.utils import SemivalueCoefficient
 from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers.msr import MSRSampler
 from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
 
 __all__ = ["BanzhafValuation", "MSRBanzhafValuation"]
 
@@ -69,8 +69,12 @@ class BanzhafValuation(SemivalueValuation):
 
     algorithm_name = "Data-Banzhaf"
 
-    def _log_coefficient(self, n: int, k: int) -> float:
-        return float(-(n - 1) * np.log(2))
+    @property
+    def log_coefficient(self) -> SemivalueCoefficient | None:
+        """Returns the log-coefficient of the Banzhaf valuation."""
+        def _log_coefficient(n: int, k: int) -> float:
+            return float(-(n - 1) * np.log(2))
+        return _log_coefficient
 
 
 class MSRBanzhafValuation(SemivalueValuation):

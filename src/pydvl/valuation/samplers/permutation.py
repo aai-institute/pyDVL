@@ -20,9 +20,9 @@ from __future__ import annotations
 
 import logging
 import math
+from abc import ABC
 from copy import copy
 from itertools import permutations
-from typing import Callable
 
 import numpy as np
 
@@ -32,7 +32,7 @@ from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import (
     EvaluationStrategy,
     IndexSampler,
-)
+    )
 from pydvl.valuation.samplers.truncation import NoTruncation, TruncationPolicy
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
@@ -41,8 +41,9 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
-)
+    )
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -77,7 +78,7 @@ class PermutationSamplerBase(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None = None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -179,7 +180,7 @@ class PermutationEvaluationStrategy(
         self,
         sampler: PermutationSamplerBase,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         self.truncation = copy(sampler.truncation)

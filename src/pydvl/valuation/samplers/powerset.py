@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Generic, Type, TypeVar
+from typing import Generator, Generic, Type, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,12 +47,12 @@ from pydvl.utils.numeric import (
     complement,
     powerset,
     random_subset,
-)
+    )
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import (
     EvaluationStrategy,
     IndexSampler,
-)
+    )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -61,8 +61,9 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
-)
+    )
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -274,7 +275,7 @@ class PowersetSampler(IndexSampler, ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None = None,
     ) -> PowersetEvaluationStrategy:
         return PowersetEvaluationStrategy(self, utility, log_coefficient)
 
@@ -374,7 +375,7 @@ class LOOSampler(PowersetSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None = None,
     ) -> PowersetEvaluationStrategy[LOOSampler]:
         return LOOEvaluationStrategy(self, utility, log_coefficient)
 
@@ -389,7 +390,7 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
         self,
         sampler: LOOSampler,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None = None,
     ):
         super().__init__(sampler, utility, coefficient)
         assert utility.training_data is not None

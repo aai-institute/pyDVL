@@ -13,12 +13,12 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Protocol, TypeVar
+from typing import Generic, Protocol, TypeVar
 
 import numpy as np
 from more_itertools import chunked
 
-from pydvl.utils import log_running_moments
+from pydvl.utils.numeric import log_running_moments
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import (
@@ -27,9 +27,10 @@ from pydvl.valuation.types import (
     NullaryPredicate,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
     ValueUpdateT,
-)
+    )
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]
@@ -238,7 +239,7 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None = None,
     ) -> EvaluationStrategy:
         """Returns the strategy for this sampler.
 
@@ -355,7 +356,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         self,
         sampler: SamplerT,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None = None,
     ):
         self.utility = utility
         # Used by the decorator suppress_warnings:

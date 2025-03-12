@@ -45,12 +45,14 @@ Beta-Shapley can be seen as a special case of AME, introduced in Lin et al. (202
 
 
 """
+from __future__ import annotations
 
 import scipy as sp
 
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers.base import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
 
 __all__ = ["BetaShapleyValuation"]
 
@@ -98,15 +100,20 @@ class BetaShapleyValuation(SemivalueValuation):
 
         self.alpha = alpha
         self.beta = beta
-        self.log_const = sp.special.betaln(alpha, beta)
 
-    def _log_coefficient(self, n: int, k: int) -> float:
+    @property
+    def log_coefficient(self) -> SemivalueCoefficient | None:
         """Beta-Shapley coefficient.
 
         Defined (up to a constant n) as eq. (5) of Kwon and Zou (2023)<sup><a
         href="#kwon_beta_2022">1</a></sup>.
         """
-        j = k + 1
-        return float(
-            sp.special.betaln(j + self.beta - 1, n - j + self.alpha) - self.log_const
-        )
+        log_const = sp.special.betaln(self.alpha, self.beta)
+
+        def _log_coefficient(n: int, k: int) -> float:
+            j = k + 1
+            return float(
+                sp.special.betaln(j + self.beta - 1, n - j + self.alpha) - log_const
+            )
+
+        return _log_coefficient
