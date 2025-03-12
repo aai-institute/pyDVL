@@ -57,7 +57,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class PermutationSamplerBase(IndexSampler):
+class PermutationSamplerBase(IndexSampler, ABC):
     """Base class for permutation samplers."""
 
     def __init__(
@@ -71,8 +71,14 @@ class PermutationSamplerBase(IndexSampler):
         self.truncation = truncation or NoTruncation()
 
     def log_weight(self, n: int, subset_len: int) -> float:
+        r"""Log probability of sampling a set S from a set of size n.
+
+        Returns $p(S) = p(S|k) p(k)$, where $p(S|k)$ is the probability of sampling a
+        set of size k. See [the module's
+        documentation][pydvl.valuation.samplers.permutation] for details.
+        """
         if n > 0:
-            return float(-np.log(n) - logcomb(n - 1, subset_len))
+            return float(-np.log(n) - logcomb(n, subset_len))
         return 0.0
 
     def make_strategy(
@@ -203,8 +209,10 @@ class PermutationEvaluationStrategy(
                 marginal = curr - prev
                 sign = np.sign(marginal)
                 log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-                update = self.log_correction(self.n_indices, i) + log_marginal
-                r.append(ValueUpdate(idx, update, sign))
+                log_marginal += self.valuation_coefficient(self.n_indices, i)
+                # Note the -1, see the discussion in PermutationSamplerBase.log_weight
+                log_marginal -= self.sampler_weight(self.n_indices - 1, i)
+                r.append(ValueUpdate(idx, log_marginal, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):
                     truncated = True

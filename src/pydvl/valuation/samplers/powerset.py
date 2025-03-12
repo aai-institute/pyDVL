@@ -293,11 +293,42 @@ class PowersetSampler(IndexSampler, ABC):
         ...
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        """Correction coming from Monte Carlo integration so that the mean of
-        the marginals converges to the value: the uniform distribution over the
-        powerset of a set with n-1 elements has mass 1/2^{n-1} over each subset."""
+        """Probability of sampling a set S as a function of total number of indices and
+         set size.
+
+        The uniform distribution over the powerset of a set with n elements has mass
+        1/2^{n} over each subset.
+
+        Args:
+            n: The size of the index set. Note that the actual size of the set being
+                sampled will often be n-1, as one index might be removed from the set.
+                See [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration]
+                for more.
+            subset_len: The size of the subset being sampled
+
+        Returns:
+            The natural logarithm of the probability of sampling a set of the given
+                size, when the index set has size `n`, under the
+                [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration] given
+                upon construction.
+
+        """
         m = self._index_iterator_cls.complement_size(n)
         return float(-m * np.log(2))
+
+    @abstractmethod
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        """Returns the number of samples that can be generated from the index set.
+
+        This will depend, among other things, on the type of
+        [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration].
+
+        Args:
+            indices: The set of indices to sample from.
+        Returns:
+            The number of samples that can be generated from the index set.
+        """
+        ...
 
 
 PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
@@ -327,7 +358,10 @@ class PowersetEvaluationStrategy(
             marginal = u_i - u
             sign = np.sign(marginal)
             log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
+            log_marginal += self.valuation_coefficient(
+                self.n_indices, len(sample.subset)
+            )
+            log_marginal -= self.sampler_weight(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
@@ -370,7 +404,7 @@ class LOOSampler(PowersetSampler):
     def log_weight(self, n: int, subset_len: int) -> float:
         """This sampler returns only sets of size n-1. There are n such sets, so the
         probability of drawing one is 1/n, or 0 if subset_len != n-1."""
-        return float(-np.log(n if subset_len == n - 1 else 0))
+        return float(-np.log(n) if subset_len == n - 1 else -np.inf)
 
     def make_strategy(
         self,
@@ -406,7 +440,10 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
             marginal = self.total_utility - self.utility(sample)
             sign = np.sign(marginal)
             log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
+            log_marginal += self.valuation_coefficient(
+                self.n_indices, len(sample.subset)
+            )
+            log_marginal -= self.sampler_weight(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break

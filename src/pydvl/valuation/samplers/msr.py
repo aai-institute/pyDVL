@@ -280,6 +280,7 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
         for i, in_sample in enumerate(mask):  # type: int, bool
             k = len(sample.subset) - int(in_sample)
             update = -np.inf if u == 0 else np.log(u * sign)
-            update += self.log_correction(self.n_indices, k)
+            update += self.valuation_coefficient(self.n_indices, k)
+            update -= self.sampler_weight(self.n_indices, k)
             updates.append(MSRValueUpdate(np.int_(i), update, sign, in_sample))
         return updates
