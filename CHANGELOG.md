@@ -83,6 +83,9 @@
 
 ### Changed
 
+- Slicing, comparing and setting of `ValuationResult` behave in a more 
+  natural way
+  [PR #660](https://github.com/aai-institute/pyDVL/pull/660)
 - Switched all semi-value coefficients and sampler weights to log-space in
   order to avoid overflows
   [PR #643](https://github.com/aai-institute/pyDVL/pull/643)
