@@ -33,7 +33,7 @@ v(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
 \binom{n-1}{ | S | }^{-1} [u(S_{+i}) − u(S)],
 $$
 
-where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i$, and $S_{+i}$
+where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i,$ and $S_{+i}$
 denotes the set $S$ with $x_i$ added.
 
 ??? example "Computing exact Shapley values"
@@ -63,9 +63,9 @@ information.
 
 ## Monte Carlo Combinatorial Shapley  { #monte-carlo-combinatorial-shapley-intro }
 
-Because the number of subsets $S \subseteq D_{-i}$ is $2^{ | D | - 1 }$, one
+Because the number of subsets $S \subseteq D_{-i}$ is $2^{ | D | - 1 },$ one
 must typically resort to approximations. The simplest one is done via Monte
-Carlo sampling of the powerset $\mathcal{P}(D)$. In pyDVL this simple technique
+Carlo sampling of the powerset $\mathcal{P}(D).$ In pyDVL this simple technique
 is called "Monte Carlo Combinatorial". The method has very poor converge rate
 and others are preferred, but if desired, usage follows the same pattern:
 
@@ -176,7 +176,7 @@ As already mentioned, with the architecture of
 possible to try different importance-sampling schemes by swapping the sampler.
 Besides TMCS we also have [Owen sampling][owen-shapley-intro]
 [@okhrati_multilinear_2021], and [Beta
-Shapley][beta-shapley-intro] [@kwon_beta_2022] when $\alpha = \beta = 1$.
+Shapley][beta-shapley-intro] [@kwon_beta_2022] when $\alpha = \beta = 1.$
 
 A different approach is via a SAT problem, as done in [Group Testing
 Shapley][group-testing-shapley-intro] [@jia_efficient_2019].
@@ -193,7 +193,7 @@ computations.
 Shapley values can have a closed form expression or a simpler approximation
 scheme when the model class is restricted. The prime example is
 [kNN-Shapley][knn-shapley-intro] [@jia_efficient_2019a], which is exact for the
-kNN model, and is $O(n_test n \log n)$.
+kNN model, and is $O(n_test n \log n).$
 
 
 

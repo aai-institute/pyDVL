@@ -197,7 +197,7 @@ Beta-Shapley. For all the choices, and for the approximate AME method using
 sparse regression to estimate values from fewer utility evaluations, consult 
 the documentation.
 
-### Sampling permutations
+### Sampling permutations  { #sampling-strategies-permutations }
 
 Consider now the alternative choice of uniformly sampling permutations
 $\sigma_{j} \sim \mathcal{U} (\Pi (D)).$ Recall that we let $S_{i}^{\sigma}$ be
