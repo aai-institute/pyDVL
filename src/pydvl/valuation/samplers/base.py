@@ -30,7 +30,7 @@ from pydvl.valuation.types import (
     SemivalueCoefficient,
     ValueUpdate,
     ValueUpdateT,
-    )
+)
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]

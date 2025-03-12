@@ -205,7 +205,7 @@ class LossFunction(Protocol):
 
 class SemivalueCoefficient(Protocol):
     def __call__(self, n: int, k: int) -> float:
-        """ A semi-value coefficient is a function of the number of elements in the set,
+        """A semi-value coefficient is a function of the number of elements in the set,
         and the size of the subset for which the coefficient is being computed.
         Because both coefficients and sampler weights can be very large or very small,
         we perform all computations in log-space to avoid numerical issues.

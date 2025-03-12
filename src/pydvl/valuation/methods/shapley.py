@@ -150,6 +150,7 @@ class ShapleyValuation(SemivalueValuation):
     def log_coefficient(self) -> SemivalueCoefficient | None:
         def _log_coefficient(n: int, k: int) -> float:
             return float(-np.log(n) - logcomb(n - 1, k))
+
         return _log_coefficient
 
 

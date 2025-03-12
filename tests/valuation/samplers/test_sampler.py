@@ -625,7 +625,6 @@ def test_sampler_weights(
     sampling process.
     """
 
-
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler only samples sets of size n-1")
 
@@ -636,14 +635,12 @@ def test_sampler_weights(
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
 
     # These samplers return samples up to the size of the whole index set
-    if issubclass(sampler_cls, (MSRSampler, PermutationSamplerBase)) or issubclass(
+    if issubclass(sampler_cls, MSRSampler) or issubclass(
         getattr(sampler, "_index_iterator_cls", IndexIteration), NoIndexIteration
     ):
         effective_n = n
     else:
         effective_n = n - 1
-
-    first_n = 1 if issubclass(sampler_cls, PermutationSamplerBase) else 0
 
     # HACK: MSR actually has same distribution as uniform over 2^(N-i)
     fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
@@ -652,13 +649,13 @@ def test_sampler_weights(
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
             if issubclass(sampler_cls, PermutationSamplerBase):
-                subset_len_probs[1:] += 1
+                subset_len_probs += 1
             else:
                 subset_len_probs[len(sample.subset)] += 1
     subset_len_probs /= subset_len_probs.sum()
 
     expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
-    for k in range(first_n, effective_n + 1):
+    for k in range(effective_n + 1):
         try:
             # log_weight = log probability of sampling
             # So: no. of sets of size k in the powerset, times. prob of sampling size k

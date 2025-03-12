@@ -90,7 +90,6 @@ class DeltaShapleyValuation(SemivalueValuation):
 
     @property
     def log_coefficient(self) -> SemivalueCoefficient | None:
-
         def _log_coefficient(n: int, k: int) -> float:
             if not self.lower_bound <= k <= self.upper_bound:
                 return -np.inf

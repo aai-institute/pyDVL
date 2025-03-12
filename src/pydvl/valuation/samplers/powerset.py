@@ -47,12 +47,12 @@ from pydvl.utils.numeric import (
     complement,
     powerset,
     random_subset,
-    )
+)
 from pydvl.utils.types import Seed
 from pydvl.valuation.samplers.base import (
     EvaluationStrategy,
     IndexSampler,
-    )
+)
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -63,7 +63,7 @@ from pydvl.valuation.types import (
     SampleGenerator,
     SemivalueCoefficient,
     ValueUpdate,
-    )
+)
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
