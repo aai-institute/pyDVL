@@ -1,38 +1,26 @@
 r"""
 This module implements the Shapley valuation method.
 
-The (Data-)Shapley method, introduced in Ghorbani and Zou (2019)[^1] is a method to
-compute data values by sampling sets of training points and averaging the change in
-performance of a model by adding individual points to these sets. The average is done
-using the Shapley coefficients, which correspond to the sampling probabilities of the
-subsets used:
+!!! info
+    See the [main documentation][shapley-valuation-intro] for a description of the
+    algorithm and its properties.
 
-$$
-v(i) = \frac{1}{n} \sum_{S \subset D_{-i}} w(n, |S|) [U(S_{+i}) - U(S)],
-$$
+We provide two main ways of computing Shapley values:
 
-where the coefficient $w(n, k)$ is defined as the inverse probability of sampling a set
-of size $k$ from a set of size $n-1$ in the complement of $\{i\}$
+1. A general approach that allows for **any** sampling scheme, including deterministic,
+   uniform, permutations, and so on. This is implemented in
+   [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+2. A default configuration for the **Truncated Monte Carlo Shapley** (TMCS) method,
+   described in Ghorbani and Zou (2019)[^1]. This is basically a wrapper to the more
+   general class, but with a permutation sampler by default. Besides being convenient,
+   it allows deactivating importance sampling internally (see [Sampling strategies for
+   semi-values][semi-values-sampling]).
 
-$$
-w(n, k) = \binom{n-1}{k}^{-1}.
-$$
-
-An alternative formulation, which has better variance properties, uses permutations. The
-algorithm **Truncated Monte Carlo Shapley** (TMCS) described in Ghorbani and Zou
-(2019)[^1] uses this sampling technique, together with a heuristic truncation policy to
-stop the computation early. A default configuration for this method is available via
-[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation],
-which internally uses a [PermutationSampler][pydvl.valuation.samplers.PermutationSampler].
-For finer control instantiate instead
-[ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] as described below.
-
-## Computing Shapley values
-
-Computing values in PyDVL always follows the same pattern: construct a
+Computing values in PyDVL typically follows the following pattern: construct a
 [ModelUtility][pydvl.valuation.utility.modelutility.ModelUtility], a
 [sampler][pydvl.valuation.samplers], and a
-[stopping criterion][pydvl.valuation.stopping].
+[stopping criterion][pydvl.valuation.stopping], then pass them to the valuation and fit
+it.
 
 ??? Example "General usage pattern"
     ```python
@@ -57,7 +45,9 @@ Computing values in PyDVL always follows the same pattern: construct a
 
 ## Choosing samplers
 
-Different choices of sampler yield different qualities of approximation.
+Different choices of sampler yield different qualities of approximation, see
+[Sampling strategies for semi-values][semi-values-sampling] for a discussion of
+the internals.
 
 The most basic one is
 [DeterministicUniformSampler][pydvl.valuation.samplers.DeterministicUniformSampler],
@@ -65,14 +55,15 @@ which iterates over all possible subsets of the training set. This is the most a
 but also the most computationally expensive method (with complexity $O(2^n)$), so it is
 never used in practice.
 
-The most common one is [PermutationSampler][pydvl.valuation.samplers.PermutationSampler],
-which samples random permutations of the training set. Despite the apparent greater
-complexity of $O(n!)$, the method is much faster to converge in practice, especially
-when using [truncation policies][pydvl.valuation.samplers.truncation] to early-stop the
-processing of each permutation. As mentioned above, the default configuration of TMCS
-is available via [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation].
+However, the most common one is
+[PermutationSampler][pydvl.valuation.samplers.PermutationSampler], which samples random
+permutations of the training set. Despite the apparent greater complexity of $O(n!)$,
+the method is much faster to converge in practice, especially when using [truncation
+policies][pydvl.valuation.samplers.truncation] to early-stop the processing of each
+permutation. As mentioned above, the default configuration of TMCS is available via
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation].
 
-??? Example "Truncated Monte Carlo Data-Shapley"
+??? Example "Manually instantiating TMCS"
     Alternatively to using
     [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation], in order
     to compute Shapley values as described in Ghorbani and Zou (2019)[^1], use this
@@ -87,24 +78,25 @@ is available via [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShaple
 
 Other samplers introduce different importance sampling schemes for the computation of
 Shapley values, like the [Owen samplers][pydvl.valuation.samplers.owen],[^2] or the
-[Maximum-Sample-Reuse sampler][pydvl.valuation.samplers.MSRSampler],[^3] but the usage
-pattern remains the same.
+[Maximum-Sample-Reuse sampler][pydvl.valuation.samplers.MSRSampler],[^3] these can be
+both beneficial and detrimental, but the usage pattern remains the same.
 
-## Caveats
+!!! warning "Choosing stopping criteria"
+    As mentioned, computing Shapley values can be computationally expensive, especially
+    for large datasets. Some samplers yield better convergence, but not in all cases.
+    Proper choice of a stopping criterion is crucial to obtain useful results, while
+    avoiding unnecessary computation.
 
-1. As mentioned, computing Shapley values can be computationally expensive, especially
-   for large datasets. Some samplers yield better convergence, but not in all cases.
-   Proper choice of a stopping criterion is crucial to obtain useful results, while
-   avoiding unnecessary computation.
-2. While it is possible to mix-and-match different components of the valuation method,
-   it is not always advisable, and it can sometimes be incorrect. For example, using a
-   deterministic sampler with a count-based stopping criterion is likely to yield poor
-   results. More importantly, not all samplers, nor sampler configurations, are
-   compatible with Shapley value computation. For instance using
-   [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] with a
-   [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] will not work
-   since the evaluation strategy expects samples consisting of an index and a subset of
-   its complement in the whole index set.
+!!! warning "Bogus configurations"
+    While it is possible to mix-and-match different components of the valuation method,
+    it is not always advisable, and it can sometimes be incorrect. For example, using a
+    deterministic sampler with a count-based stopping criterion is likely to yield poor
+    results. More importantly, not all samplers, nor sampler configurations, are
+    compatible with Shapley value computation. For instance using
+    [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] with a
+    [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] will not work
+    since the evaluation strategy expects samples consisting of an index and a subset of
+    its complement in the whole index set.
 
 ## References
 
@@ -147,6 +139,9 @@ class ShapleyValuation(SemivalueValuation):
 
     Use this class to test different sampling schemes. For a default configuration, use
     [TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation].
+
+    For an introduction to the algorithm, see the [main
+    documentation][shapley-valuation-intro].
     """
 
     algorithm_name = "Shapley"
