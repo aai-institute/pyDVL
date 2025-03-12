@@ -8,6 +8,8 @@ import mkdocs_gen_files
 
 logger = logging.getLogger(__name__)
 
+EXCLUDES = [("pydvl", "valuation", "methods", "twodshapley")]
+
 nav = mkdocs_gen_files.Nav()
 doc_root = Path("docs")
 root = Path("src")  # / Path("pydvl")
@@ -30,8 +32,10 @@ for path in sorted(root.rglob("*.py")):
             "    This module is deprecated since v0.10.0 in favor of"
             "    joblib's context manager [joblib.parallel_config][].\n"
         )
-
         full_doc_path = Path("deprecated") / doc_path
+    elif parts in EXCLUDES:
+        logger.info(f"Excluding {module_path}")
+        continue
     else:
         full_doc_path = Path("api") / doc_path
 
