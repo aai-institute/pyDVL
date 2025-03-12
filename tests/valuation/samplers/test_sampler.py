@@ -625,10 +625,9 @@ def test_sampler_weights(
     sampling process.
     """
 
+
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler only samples sets of size n-1")
-    if issubclass(sampler_cls, PermutationSamplerBase):
-        pytest.skip("Permutation samplers only sample full sets")
 
     # Sample and count the number of subsets of each size
     n = len(indices)
@@ -637,32 +636,34 @@ def test_sampler_weights(
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
 
     # These samplers return samples up to the size of the whole index set
-    if issubclass(sampler_cls, MSRSampler) or issubclass(
+    if issubclass(sampler_cls, (MSRSampler, PermutationSamplerBase)) or issubclass(
         getattr(sampler, "_index_iterator_cls", IndexIteration), NoIndexIteration
     ):
-        complement_size = n
-        max_size = n + 1
-        subset_len_probs = np.zeros(n + 1)
+        effective_n = n
     else:
-        complement_size = n - 1
-        max_size = n
-        subset_len_probs = np.zeros(n)
+        effective_n = n - 1
+
+    first_n = 1 if issubclass(sampler_cls, PermutationSamplerBase) else 0
 
     # HACK: MSR actually has same distribution as uniform over 2^(N-i)
     fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
 
+    subset_len_probs = np.zeros(effective_n + 1)
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
-            subset_len_probs[len(sample.subset)] += 1
+            if issubclass(sampler_cls, PermutationSamplerBase):
+                subset_len_probs[1:] += 1
+            else:
+                subset_len_probs[len(sample.subset)] += 1
     subset_len_probs /= subset_len_probs.sum()
 
-    expected_log_subset_len_probs = np.full(max_size, -np.inf)
-    for k in range(max_size):
+    expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
+    for k in range(first_n, effective_n + 1):
         try:
             # log_weight = log probability of sampling
             # So: no. of sets of size k in the powerset, times. prob of sampling size k
             expected_log_subset_len_probs[k] = (
-                logcomb(complement_size, k) + sampler.log_weight(n, k) + math.log(fudge)
+                logcomb(effective_n, k) + sampler.log_weight(n, k) + math.log(fudge)
             )
         except ValueError:  # out of bounds in stratified samplers
             pass
