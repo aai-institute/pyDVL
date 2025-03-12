@@ -4,10 +4,10 @@ This module implements Leave-One-Out (LOO) valuation.
 It is defined as:
 
 $$
-v_\text{loo}(i) = U(N) - U(N_{-i}),
+v_\text{LOO}(i) = u(N) - u(N_{-i}),
 $$
 
-where $U$ is the utility function, $N$ is the set of all indices, and $i$ is the index
+where $u$ is the utility function, $N$ is the set of all indices, and $i$ is the index
 of interest.
 
 ## Changing LOO
