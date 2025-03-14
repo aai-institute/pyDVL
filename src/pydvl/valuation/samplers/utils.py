@@ -1,3 +1,9 @@
+"""
+This module contains mixin classes.
+
+Currently only one for samplers which use a random number generator.
+"""
+
 from __future__ import annotations
 
 import numpy as np
