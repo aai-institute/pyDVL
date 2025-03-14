@@ -25,6 +25,7 @@ from pydvl.valuation.types import (
     NullaryPredicate,
     SampleBatch,
     SampleGenerator,
+    SampleT,
     SemivalueCoefficient,
     ValueUpdateT,
 )
@@ -38,7 +39,7 @@ __all__ = ["EvaluationStrategy", "IndexSampler"]
 logger = logging.getLogger(__name__)
 
 
-class IndexSampler(ABC, Generic[ValueUpdateT]):
+class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
     r"""Samplers are custom iterables over batches of subsets of indices.
 
     Calling [generate_batches(indices)][pydvl.valuation.samplers.base.IndexSampler.generate_batches]

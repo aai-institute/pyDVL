@@ -185,9 +185,9 @@ class ClasswiseSample(Sample):
 
 SampleT = TypeVar("SampleT", bound=Sample)
 
-SampleBatch = Iterable[Sample]
-SampleGenerator = Generator[Sample, None, None]
-BatchGenerator = Generator[SampleBatch, None, None]
+SampleBatch = Iterable[SampleT]
+SampleGenerator = Generator[SampleT, None, None]
+BatchGenerator = Generator[SampleBatch[SampleT], None, None]
 
 
 @dataclass(frozen=True)

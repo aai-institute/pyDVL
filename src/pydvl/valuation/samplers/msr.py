@@ -160,7 +160,7 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
         return self.result
 
 
-class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
+class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
     """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
 
     The sampling is similar to a
