@@ -8,6 +8,7 @@ import pytest
 from pydvl.utils import Status
 from pydvl.valuation import IndexSampler
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers.base import LogResultUpdater
 from pydvl.valuation.stopping import (
     AbsoluteStandardError,
     HistoryDeviation,
@@ -20,6 +21,7 @@ from pydvl.valuation.stopping import (
     RollingMemory,
     StoppingCriterion,
 )
+from pydvl.valuation.types import ValueUpdate
 
 
 def test_stopping_criterion():
@@ -220,17 +222,18 @@ def test_standard_error():
 
     # Reduce the variance until the criterion is triggered.
     v = ValuationResult(values=np.ones(n), variances=np.ones(n))
+    updater = LogResultUpdater(v)
     assert not done(v)
 
     # One value is being left out
     for _ in range(10):
         for idx in range(1, n):
-            v.update(idx, 1)
+            updater(ValueUpdate(idx, np.log(1.0), 1))
     assert not done(v)
 
     # Update the final value
     for _ in range(10):
-        v.update(0, 1)
+        updater(ValueUpdate(0, np.log(1.0), 1))
     assert done(v)
     assert done.completion() == 1.0
     assert done.converged.all()
@@ -263,11 +266,12 @@ def test_rank_correlation():
     n = 5
     burn_factor = 4
     v = ValuationResult.zeros(indices=range(n))
+    updater = LogResultUpdater(v)
     arr = np.arange(n)
 
     def update_all():
         for j in range(n):
-            v.update(j, float(arr[j] + 0.01 * j))
+            updater(ValueUpdate(j, np.log(arr[j]+0.01*j), 1))
 
     done = RankCorrelation(rtol=0.1, burn_in=n * burn_factor, fraction=1)
     for i in range(n * burn_factor):

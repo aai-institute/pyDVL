@@ -282,14 +282,18 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
     def __init__(self, result: ValuationResult):
         super().__init__(result)
         self._log_sum_positive = np.full_like(result.values, -np.inf)
+        self._log_sum_positive[result.values > 0] = np.log(result.values[result.values > 0])
         self._log_sum_negative = np.full_like(result.values, -np.inf)
-        self._log_sum2 = np.full_like(result.values, -np.inf)
+        self._log_sum_negative[result.values < 0] = np.log(-result.values[result.values < 0])
+        self._log_sum2 = np.log(result.values**2)
 
     def __call__(self, update: ValueUpdate) -> ValuationResult:
         assert update.idx is not None
 
         try:
-            loc = self.result.positions([update.idx]).item()
+            # FIXME: need data index -> fixed index mapping => maybe we need to expose
+            #  this in ValuationResult?
+            loc = self.result._positions[update.idx]
         except KeyError:
             raise IndexError(f"Index {update.idx} not found in ValuationResult")
 
