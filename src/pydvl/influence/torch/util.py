@@ -589,7 +589,7 @@ def safe_torch_linalg_eigh(*args: Any, **kwargs: Any) -> tuple[torch.Tensor, tor
         TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
             `torch.linalg.eigh`.
     """
-    return torch.linalg.eigh(*args, **kwargs)
+    return cast(tuple[torch.Tensor, torch.Tensor], torch.linalg.eigh(*args, **kwargs))
 
 
 class TorchLinalgEighException(Exception):
