@@ -29,6 +29,7 @@ __all__ = [
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
+    "SemivalueCoefficient",
     "UtilityEvaluation",
     "ValueUpdate",
     "ValueUpdateT",

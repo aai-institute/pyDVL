@@ -85,7 +85,6 @@ import pandas as pd
 from numpy.typing import NDArray
 from typing_extensions import Self
 
-from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.dataset import Dataset
@@ -428,6 +427,32 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 f"{self.__class__.__name__} object has no attribute {attr}"
             ) from e
 
+    def _key_to_positions(self, key: Union[slice, Iterable[int], int]) -> list[int]:
+        if isinstance(key, slice):
+            return [i for i in range(*key.indices(len(self)))]
+
+        if isinstance(key, collections.abc.Sequence) and not isinstance(
+            key, (str, bytes)
+        ):
+            try:
+                return [int(k) for k in key]
+            except TypeError:
+                raise TypeError(
+                    f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
+                )
+
+        if isinstance(key, Integral):
+            idx = int(key)
+            if idx < 0:
+                idx += len(self)
+            if idx < 0 or idx >= len(self):
+                raise IndexError(f"Index {idx} out of range (0, {len(self)}).")
+            return [idx]
+
+        raise TypeError(
+            f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
+        )
+
     @overload
     def __getitem__(self, key: int) -> ValuationResult: ...
 
@@ -464,32 +489,6 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             status=self._status,
             # sort=self._sort_order,  # makes no sense
             **self._extra_values,
-        )
-
-    def _key_to_positions(self, key: Union[slice, Iterable[int], int]) -> list[int]:
-        if isinstance(key, slice):
-            return [i for i in range(*key.indices(len(self)))]
-
-        if isinstance(key, collections.abc.Sequence) and not isinstance(
-            key, (str, bytes)
-        ):
-            try:
-                return [int(k) for k in key]
-            except TypeError:
-                raise TypeError(
-                    f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
-                )
-
-        if isinstance(key, Integral):
-            idx = int(key)
-            if idx < 0:
-                idx += len(self)
-            if idx < 0 or idx >= len(self):
-                raise IndexError(f"Index {idx} out of range (0, {len(self)}).")
-            return [idx]
-
-        raise TypeError(
-            f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
         )
 
     @overload
@@ -775,35 +774,6 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, data_idx: int | IndexT, new_value: float) -> ValuationResult:
-        """Updates the result in place with a new value, using running mean
-        and variance.
-
-        The variance computation uses Bessel's correction for sample estimates of the
-        variance.
-
-        Args:
-            data_idx: Data index of the value to update.
-            new_value: New value to add to the result.
-
-        Returns:
-            A reference to the same, modified result.
-
-        Raises:
-            IndexError: If the index is not found.
-        """
-        try:
-            pos = self._positions[data_idx]
-        except KeyError:
-            raise IndexError(f"Index {data_idx} not found in ValuationResult")
-        val, var = running_moments(
-            self._values[pos], self._variances[pos], self._counts[pos], new_value
-        )
-        self._values[pos] = val
-        self._counts[pos] += 1
-        self._variances[pos] = var
-        return self
-
     def scale(self, factor: float, data_indices: NDArray[IndexT] | None = None):
         """
         Scales the values and variances of the result by a coefficient.
@@ -835,7 +805,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise IndexError(f"Index {data_idx} not found in ValuationResult")
 
         return ValueItem(
-            self._indices[pos],
+            data_idx,
             self._names[pos],
             self._values[pos],
             self._variances[pos],
