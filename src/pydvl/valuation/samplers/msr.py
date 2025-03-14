@@ -3,7 +3,9 @@ This module implements Maximum Sample Re-use (MSR) sampling for valuation, as de
 in Wang and Jia (2023)[^1], where it was introduced specifically for
 [Data Banhzaf][pydvl.valuation.methods.banzhaf].
 
-!!! Warning
+When used with this method, sample complexity is reduced by a factor of $O(n)$.
+
+!!! warning
     MSR can be very unstable when used with valuation algorithms other than
     [Data Banzhaf][pydvl.valuation.methods.banzhaf]. This is because of the
     instabilities introduced by the correction coefficients. For more, see Appendix C.1
@@ -15,8 +17,8 @@ sample, and negative, if it is not. The two running means are later combined int
 final result.
 
 Note that this requires defining a special evaluation strategy and result updater, as
-returned by the [make_strategy][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
-and [result_updater][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
+returned by the [make_strategy()][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+and [result_updater()][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
 respectively.
 
 For more on the general architecture of samplers see
@@ -188,7 +190,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
             yield Sample(None, subset)
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        r"""Probability of sampling a set of size k.
+        r"""Probability of sampling a set under MSR.
 
         In the **MSR scheme**, the sampling is done from the full power set $2^N$ (each
         set $S \subseteq N$ with probability $1 / 2^n$), and then for each data point
@@ -197,14 +199,14 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
             * $\mathcal{S}_{\ni i} = \{S \in \mathcal{S}: i \in S\},$ and
             * $\mathcal{S}_{\nni i} = \{S \in \mathcal{S}: i \nin S\}.$.
 
-        When we condition on the event $i \in S$, the remaining part $S_{- i}$ is
-        uniformly distributed over $2^{N_{- i}}$. In other words, the act of
-        partitioning recovers the uniform distribution on $2^{N_{- i}}$ "for free"
+        When we condition on the event $i \in S$, the remaining part $S_{-i}$ is
+        uniformly distributed over $2^{N_{-i}}$. In other words, the act of
+        partitioning recovers the uniform distribution on $2^{N_{-i}}$ "for free"
         because
 
-        $$P (S_{- i} = T \mid i \in S) = \frac{1}{2^{n - 1}},$$
+        $$P (S_{-i} = T \mid i \in S) = \frac{1}{2^{n - 1}},$$
 
-        for each $T \subseteq N_{- i}$.
+        for every $T \subseteq N_{-i}$.
 
         Args:
             n: Size of the index set.
@@ -253,8 +255,8 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
     `n_indices` many updates from it. The updates will be used to update two running
     means that will later be combined into a final value. We use the field
     `ValueUpdate.in_sample` field to inform
-    [MSRResultUpdater][pydvl.valuation.samplers.msr.MSRResultUpdater] of which of the two
-    running means must be updated.
+    [MSRResultUpdater][pydvl.valuation.samplers.msr.MSRResultUpdater] of which of the
+    two running means must be updated.
     """
 
     @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
