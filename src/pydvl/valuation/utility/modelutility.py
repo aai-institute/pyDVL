@@ -1,3 +1,34 @@
+"""
+This module implements a utility function for supervised models.
+
+It is mostly geared towards sci-kit-learn models, but can be used with any object
+that implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has a
+`fit()` method.
+
+## Data type of the underlying data arrays
+
+In principle, very few to no assumptions are made about the data type. As long as it is
+contained in a [Dataset][pydvl.valuation.dataset.Dataset] object, it should work. If
+your data needs special handling before being fed to the model from the `Dataset`, you
+can override the
+[sample_to_data()][pydvl.valuation.utility.modelutility.ModelUtility.sample_to_data]
+method.
+
+
+!!! warning "Caveats with parallel computation in one machine"
+    When running in parallel, the utility is copied to each worker, and this can have
+    different consequences:
+
+    1. When working with numpy arrays, joblib will automagically memmap the data if it's
+       beyond a certain size (typically 1MB), and working with backend="loky" or
+       "multiprocessing".
+    2. When working with torch tensors this will have to be [done
+       manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
+       but it hasn't been tested.
+
+...
+
+"""
 from __future__ import annotations
 
 import logging
@@ -80,11 +111,12 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         ``` pycon
         >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
         >>> from pydvl.valuation.dataset import Dataset
+        >>> from pydvl.valuation.scorers import SupervisedScorer
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
         >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
         >>> u = ModelUtility(LogisticRegression(random_state=16), SupervisedScorer("accuracy"))
-        >>> u(Sample(subset=dataset.indices))
+        >>> u(Sample(None, subset=train.indices))
         0.9
         ```
 
@@ -102,7 +134,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         ...        model=LogisticRegression(random_state=16),
         ...        scorer=SupervisedScorer("accuracy"),
         ...        cache_backend=cache_backend)
-        >>> u(Sample(subset=train.indices))
+        >>> u(Sample(None, subset=train.indices))
         0.9
         ```
 
@@ -178,6 +210,23 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             raise
         return score
 
+    def sample_to_data(self, sample: SampleT) -> tuple:
+        """Returns the raw data corresponding to a sample.
+
+        Subclasses can override this e.g. to do reshaping of tensors.
+
+        Args:
+            sample: contains a subset of valid indices for the
+                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+        Returns:
+            Tuple of the training data and labels corresponding to the sample indices.
+        """
+        if self.training_data is None:
+            raise ValueError("No training data provided")
+
+        x_train, y_train = self.training_data.data(sample.subset)
+        return x_train, y_train
+
     @suppress_warnings(flag="show_warnings")
     def _utility(self, sample: SampleT) -> float:
         """Clones the model, fits it on a subset of the training data
@@ -192,10 +241,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                 model or the scorer returns [numpy.nan][]. Otherwise, the score
                 of the model.
         """
-        if self.training_data is None:
-            raise ValueError("No training data provided")
-
-        x_train, y_train = self.training_data.data(sample.subset)
+        x_train, y_train = self.sample_to_data(sample)
 
         try:
             model = self._maybe_clone_model(self.model, self.clone_before_fit)
