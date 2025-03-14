@@ -7,8 +7,7 @@ import pytest
 
 from pydvl.utils import Status
 from pydvl.valuation import IndexSampler
-from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import LogResultUpdater
+from pydvl.valuation.result import LogResultUpdater, ValuationResult
 from pydvl.valuation.stopping import (
     AbsoluteStandardError,
     HistoryDeviation,

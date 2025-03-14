@@ -12,8 +12,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
 from pydvl.valuation import ValuationResult
-from pydvl.valuation.result import ValueItem
-from pydvl.valuation.samplers.base import LogResultUpdater
+from pydvl.valuation.result import LogResultUpdater, ValueItem
 from pydvl.valuation.types import ValueUpdate
 
 

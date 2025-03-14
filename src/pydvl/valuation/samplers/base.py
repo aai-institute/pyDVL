@@ -18,9 +18,7 @@ from typing import Generic, TypeVar
 import numpy as np
 from more_itertools import chunked
 
-from pydvl.utils.numeric import log_running_moments
-from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.result import ValuationResult, ValueItem
+from pydvl.valuation.result import LogResultUpdater, ResultUpdater, ValuationResult
 from pydvl.valuation.types import (
     BatchGenerator,
     IndexSetT,
@@ -28,30 +26,16 @@ from pydvl.valuation.types import (
     SampleBatch,
     SampleGenerator,
     SemivalueCoefficient,
-    ValueUpdate,
     ValueUpdateT,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["EvaluationStrategy", "IndexSampler", "ResultUpdater"]
+__all__ = ["EvaluationStrategy", "IndexSampler"]
 
 
 # Sequence.register(np.ndarray)  # <- Doesn't seem to work
 
 logger = logging.getLogger(__name__)
-
-
-class ResultUpdater(ABC, Generic[ValueUpdateT]):
-    """Base class for result updaters.
-
-    A result updater is a strategy to update a valuation result with a value update.
-    """
-
-    def __init__(self, result: ValuationResult):
-        self.result = result
-
-    @abstractmethod
-    def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
 
 
 class IndexSampler(ABC, Generic[ValueUpdateT]):
@@ -274,54 +258,6 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             A callable object that updates the result with a value update
         """
         return LogResultUpdater(result)
-
-
-class LogResultUpdater(ResultUpdater[ValueUpdateT]):
-    """Updates a valuation result with a value update in log-space."""
-
-    def __init__(self, result: ValuationResult):
-        super().__init__(result)
-        self._log_sum_positive = np.full_like(result.values, -np.inf)
-        self._log_sum_positive[result.values > 0] = np.log(result.values[result.values > 0])
-        self._log_sum_negative = np.full_like(result.values, -np.inf)
-        self._log_sum_negative[result.values < 0] = np.log(-result.values[result.values < 0])
-        self._log_sum2 = np.log(result.values**2)
-
-    def __call__(self, update: ValueUpdate) -> ValuationResult:
-        assert update.idx is not None
-
-        try:
-            # FIXME: need data index -> fixed index mapping => maybe we need to expose
-            #  this in ValuationResult?
-            loc = self.result._positions[update.idx]
-        except KeyError:
-            raise IndexError(f"Index {update.idx} not found in ValuationResult")
-
-        item = self.result.get(update.idx)
-
-        new_val, new_var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
-            self._log_sum_positive[loc],
-            self._log_sum_negative[loc],
-            self._log_sum2[loc],
-            item.count or 0,
-            update.log_update,
-            new_sign=update.sign,
-            unbiased=True,
-        )
-        self._log_sum_positive[loc] = log_sum_pos
-        self._log_sum_negative[loc] = log_sum_neg
-        self._log_sum2[loc] = log_sum2
-
-        updated_item = ValueItem(
-            idx=item.idx,
-            name=item.name,
-            value=new_val,
-            variance=new_var,
-            count=item.count + 1 if item.count is not None else 1,
-        )
-
-        self.result.set(item.idx, updated_item)
-        return self.result
 
 
 SamplerT = TypeVar("SamplerT", bound=IndexSampler)

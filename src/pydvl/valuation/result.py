@@ -45,6 +45,18 @@ Results can also be sorted **in place** by value, variance or number of updates,
 [ValuationResult.names][pydvl.valuation.result.ValuationResult.names]
 are then sorted according to the same order.
 
+## Updating
+
+Updating results as new values arrive from workers in valuation algorithms can depend on
+the algorithm used. The most common case is to use the
+[LogResultUpdater][pydvl.valuation.result.LogResultUpdater] class, which uses the
+log-sum-exp trick to update the values and variances for better numerical stability.
+This is the default behaviour with the base
+[IndexSampler][pydvl.valuation.samplers.base.IndexSampler], but other sampling schemes
+might require different ones. In particular,
+[MSRResultUpdater][pydvl.valuation.samplers.msr.MSRResultUpdater] must keep track of
+separate positive and negative updates.
+
 
 ## Factories
 
@@ -66,11 +78,13 @@ from __future__ import annotations
 
 import collections.abc
 import logging
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
 from numbers import Integral
 from typing import (
     Any,
+    Generic,
     Iterable,
     Iterator,
     Literal,
@@ -78,19 +92,20 @@ from typing import (
     Union,
     cast,
     overload,
-)
+    )
 
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pydvl.utils import log_running_moments
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.types import IndexSetT, IndexT, NameT
+from pydvl.valuation.types import IndexSetT, IndexT, NameT, ValueUpdate, ValueUpdateT
 
-__all__ = ["ValuationResult", "ValueItem"]
+__all__ = ["LogResultUpdater", "ResultUpdater", "ValuationResult", "ValueItem"]
 
 logger = logging.getLogger(__name__)
 
@@ -170,8 +185,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     [positions()][pydvl.valuation.result.ValuationResult.positions].
 
     Some methods use data indices instead. This is the case for
-    [get()][pydvl.valuation.result.ValuationResult.get] and
-    [update()][pydvl.valuation.result.ValuationResult.update].
+    [get()][pydvl.valuation.result.ValuationResult.get].
 
     ## Sorting
 
@@ -199,8 +213,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     ## Operating on results
 
-    Results can be added to each other with the `+` operator or updated with new values
-    using [update()][pydvl.valuation.result.ValuationResult.update]. Means and variances
+    Results can be added to each other with the `+` operator. Means and variances
     are correctly updated accordingly using the Welford algorithm.
 
     Empty objects behave in a special way, see
@@ -669,7 +682,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         to this is if one argument has empty values, in which case the other
         argument is returned.
 
-        !!! Warning
+        !!! danger
             Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
@@ -995,3 +1008,76 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise ValueError("Data names must be unique")
 
         return names
+
+
+class ResultUpdater(ABC, Generic[ValueUpdateT]):
+    """Base class for result updaters.
+
+    A result updater is a strategy to update a valuation result with a value update. It
+    is used by the valuation methods to process the
+    [ValueUpdates][pydvl.valuation.types.ValueUpdate] emitted by the
+    [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] corresponding
+    to the sampler.
+    """
+
+    def __init__(self, result: ValuationResult):
+        self.result = result
+
+    @abstractmethod
+    def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
+
+
+class LogResultUpdater(ResultUpdater[ValueUpdateT]):
+    """A callable that a valuation result with a value update in log-space.
+
+    This updater keeps track of several quantities required to maintain accurate running
+    1st and 2nd moments. It also uses the log-sum-exp trick for numerical stability.
+    """
+
+    def __init__(self, result: ValuationResult):
+        super().__init__(result)
+        self._log_sum_positive = np.full_like(result.values, -np.inf)
+        self._log_sum_positive[result.values > 0] = np.log(
+            result.values[result.values > 0]
+        )
+        self._log_sum_negative = np.full_like(result.values, -np.inf)
+        self._log_sum_negative[result.values < 0] = np.log(
+            -result.values[result.values < 0]
+        )
+        self._log_sum2 = np.log(result.values**2)
+
+    def __call__(self, update: ValueUpdate) -> ValuationResult:
+        assert update.idx is not None
+
+        try:
+            # FIXME: need data index -> fixed index mapping => maybe we need to expose
+            #  this in ValuationResult?
+            loc: int = self.result._positions[update.idx]
+        except KeyError:
+            raise IndexError(f"Index {update.idx} not found in ValuationResult")
+
+        item = self.result.get(update.idx)
+
+        new_val, new_var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(
+            self._log_sum_positive[loc].item(),
+            self._log_sum_negative[loc].item(),
+            self._log_sum2[loc].item(),
+            item.count or 0,
+            update.log_update,
+            new_sign=update.sign,
+            unbiased=True,
+        )
+        self._log_sum_positive[loc] = log_sum_pos
+        self._log_sum_negative[loc] = log_sum_neg
+        self._log_sum2[loc] = log_sum2
+
+        updated_item = ValueItem(
+            idx=item.idx,
+            name=item.name,
+            value=new_val,
+            variance=new_var,
+            count=item.count + 1 if item.count is not None else 1,
+        )
+
+        self.result.set(item.idx, updated_item)
+        return self.result

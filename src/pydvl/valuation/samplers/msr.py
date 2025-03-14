@@ -42,13 +42,11 @@ import numpy as np
 from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
-from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.result import LogResultUpdater, ResultUpdater, ValuationResult
 from pydvl.valuation.samplers.base import (
     EvaluationStrategy,
     IndexSampler,
-    LogResultUpdater,
-    ResultUpdater,
-)
+    )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
