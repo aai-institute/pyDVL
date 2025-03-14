@@ -1,9 +1,10 @@
 """
 Truncation policies for the interruption of batched computations.
 
-When estimating marginal contribution-based values with permutation sampling, the
-computation can be interrupted early. A naive approach is to stop after a fixed number
-of updates, using
+When estimating values with a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], it is
+possible to interrupt the marginal utility updates for one permutation based on
+different heuristics. A naive approach is to stop after a fixed number of updates, using
 [FixedTruncation][pydvl.valuation.samplers.truncation.FixedTruncation].
 
 However, a more successful one is to stop if the utility of the current batch of samples
