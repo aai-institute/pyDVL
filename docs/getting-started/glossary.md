@@ -90,6 +90,14 @@ truncated for sets beyond a certain range. Introduced in
  * [Implementation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation]
  * [Documentation][delta-shapley-intro]
 
+### Game-theoretic Methods { #glossary-game-theoretic-methods }
+
+Game-theoretic methods for data valuation are a class of techniques that
+leverage concepts from cooperative game theory to assign values to data points
+based on their contributions to the overall performance of an ML model. Salient
+examples are [Shapley value][glossary-shapley-value], [Data
+Banzhaf][glossary-data-banzhaf], and [Least Core][glossary-least-core].
+
 
 ### Group Testing { #glossary-group-testing }
 
