@@ -12,23 +12,29 @@ contained in a [Dataset][pydvl.valuation.dataset.Dataset] object, it should work
 your data needs special handling before being fed to the model from the `Dataset`, you
 can override the
 [sample_to_data()][pydvl.valuation.utility.modelutility.ModelUtility.sample_to_data]
-method.
+method. Be sure not to rely on the data being static for this. If you need to transform
+it once before fitting, then override
+[with_dataset()][pydvl.valuation.utility.base.UtilityBase.with_dataset].
 
+## Caveats with parallel computation
 
-!!! warning "Caveats with parallel computation in one machine"
-    When running in parallel, the utility is copied to each worker, and this can have
-    different consequences:
+!!! warning "Read this if your models are minimally large"
 
-    1. When working with numpy arrays, joblib will automagically memmap the data if it's
-       beyond a certain size (typically 1MB), and working with backend="loky" or
-       "multiprocessing".
-    2. When working with torch tensors this will have to be [done
-       manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
-       but it hasn't been tested.
+When running in parallel, the utility is copied to each worker, and this can have
+different consequences. Assuming you are working on one machine:
 
-...
+1. When working with numpy arrays, joblib will automagically memmap the data if it's
+   beyond a certain size (typically 1MB), and working with backend="loky" or
+   "multiprocessing".
+2. When working with torch tensors this will have to be [done
+   manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
+   but it hasn't been tested.
 
+If you are working on a cluster, the data will be copied to each worker, and this can
+be very expensive. In this case, more subclassing of `Dataset` and `Utility` might be
+necessary. Feel free to open an issue if you need help with this.
 """
+
 from __future__ import annotations
 
 import logging
@@ -213,7 +219,9 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
     def sample_to_data(self, sample: SampleT) -> tuple:
         """Returns the raw data corresponding to a sample.
 
-        Subclasses can override this e.g. to do reshaping of tensors.
+        Subclasses can override this e.g. to do reshaping of tensors. Be careful not to
+        rely on `self.training_data` not changing between calls to this method. For
+        manipulations to it, use the `with_dataset()` method.
 
         Args:
             sample: contains a subset of valid indices for the
