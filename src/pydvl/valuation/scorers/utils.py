@@ -42,8 +42,8 @@ def compose_score(
         test_data=scorer.test_data,
         default=transformation(scorer.default),
         range=(
-            transformation(scorer.range[0].item()),
-            transformation(scorer.range[1].item()),
+            transformation(scorer.range[0]),
+            transformation(scorer.range[1]),
         ),
         name=name,
     )

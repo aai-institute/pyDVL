@@ -13,9 +13,6 @@ for a certain quality of approximation.
 
 from abc import ABC, abstractmethod
 
-import numpy as np
-from numpy.typing import NDArray
-
 
 class Scorer(ABC):
     """
@@ -27,7 +24,7 @@ class Scorer(ABC):
 
     default: float
     name: str
-    range: NDArray[np.float64]
+    range: tuple[float, float]
 
     @abstractmethod
     def __call__(self, model) -> float: ...

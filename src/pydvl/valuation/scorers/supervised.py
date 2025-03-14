@@ -94,7 +94,7 @@ class SupervisedScorer(Generic[SupervisedModelT], Scorer):
         self.test_data = test_data
         self.default = default
         # TODO: auto-fill from known scorers ?
-        self.range = np.array(range, dtype=np.float64)
+        self.range = range
         self.name = name
 
     def __call__(self, model: SupervisedModelT) -> float:
