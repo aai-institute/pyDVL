@@ -1,8 +1,8 @@
 """
 Base classes for samplers and evaluation strategies.
 
-Read [here][pydvl.valuation.samplers] for an architectural overview of the
-samplers and their evaluation strategies.
+Read [pydvl.valuation.samplers][] for an architectural overview of the samplers and
+their evaluation strategies.
 
 For an explanation of the interactions between sampler weights, semi-value coefficients
 and importance sampling, read [[semi-values-sampling]].
@@ -41,19 +41,21 @@ logger = logging.getLogger(__name__)
 class IndexSampler(ABC, Generic[ValueUpdateT]):
     r"""Samplers are custom iterables over batches of subsets of indices.
 
-    Calling `from_indices(indexset)` on a sampler returns a generator over **batches**
-    of `Samples`. A [Sample][pydvl.valuation.types.Sample] is a tuple of the form
-    $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$ is a
-    subset of the complement of $i$ in $I$.
+    Calling [generate_batches(indices)][pydvl.valuation.samplers.base.IndexSampler.generate_batches]
+    on a sampler returns a generator over **batches** of
+    [Samples][pydvl.valuation.types.Sample]. Each batch is a list of samples, and each
+    `Sample` is a tuple of the form $(i, S)$, where $i$ is an index of interest, and $S
+    \subset I \setminus \{i\}$ is a subset of the complement of $i$ in $I$.
 
-    !!! Note
+    !!! warning
         Samplers are **not** iterators themselves, so that each call to
-        `from_indices(data)` e.g. in a new for loop creates a new iterator.
+        `generate_batches()` e.g. in a new for loop creates a new iterator.
 
-    Derived samplers must implement
-    [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] and
-    [generate()][pydvl.valuation.samplers.base.IndexSampler.generate]. See the
-    module's documentation for more on these.
+    !!! info "Subclassing IndexSampler"
+        Derived samplers must implement several methods, most importantly
+        [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] and
+        [generate()][pydvl.valuation.samplers.base.IndexSampler.generate]. See [the
+        module's documentation][pydvl.valuation.samplers] for more details.
 
     ## Interrupting samplers
 
@@ -146,9 +148,6 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             raise TypeError(f"This {self.__class__.__name__} has no length")
         return self._len
 
-    def from_data(self, data: Dataset) -> BatchGenerator:
-        return self.generate_batches(data.indices)
-
     def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         """Batches the samples and yields them."""
         self._len = self.sample_limit(indices)
@@ -211,16 +210,12 @@ class IndexSampler(ABC, Generic[ValueUpdateT]):
             compute it in log-space for numerical stability.
 
         Args:
-            n: The size of the index set. Note that the actual size of the set being
-                sampled will often be n-1, as one index might be removed from the set.
-                See [IndexIteration][pydvl.valuation.samplers.IndexIteration] for more.
+            n: The size of the index set.
             subset_len: The size of the subset being sampled
 
         Returns:
             The natural logarithm of the probability of sampling a set of the given
-                size, when the index set has size `n`, under the
-                [IndexIteration][pydvl.valuation.samplers.IndexIteration] given upon
-                construction.
+                size, when the index set has size `n`.
         """
         ...
 
