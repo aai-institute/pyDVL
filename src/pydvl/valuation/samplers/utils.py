@@ -13,7 +13,11 @@ from pydvl.valuation.types import IndexSetT
 
 
 class StochasticSamplerMixin:
-    """Mixin class for samplers which use a random number generator."""
+    """Mixin class for samplers which use a random number generator.
+    Args:
+        seed: Seed for the random number generator. Passed to
+            [numpy.random.default_rng][].
+    """
 
     def __init__(self, *args, seed: Seed | None = None, **kwargs):
         super().__init__(*args, **kwargs)
