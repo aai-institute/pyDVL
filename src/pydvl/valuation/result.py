@@ -1037,14 +1037,21 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
     def __init__(self, result: ValuationResult):
         super().__init__(result)
         self._log_sum_positive = np.full_like(result.values, -np.inf)
-        self._log_sum_positive[result.values > 0] = np.log(
-            result.values[result.values > 0]
-        )
+
+        pos = result.values > 0
+        self._log_sum_positive[pos] = np.log(result.values[pos] * result.counts[pos])
         self._log_sum_negative = np.full_like(result.values, -np.inf)
-        self._log_sum_negative[result.values < 0] = np.log(
-            -result.values[result.values < 0]
+
+        neg = result.values < 0
+        self._log_sum_negative[neg] = np.log(-result.values[neg] * result.counts[neg])
+        self._log_sum2 = np.full_like(result.values, -np.inf)
+
+        nz = result.values != 0
+        x2 = (
+            result.variances[nz] * np.maximum(1, result.counts[nz]-1) ** 2
+            + result.values[nz] ** 2 * result.counts[nz]
         )
-        self._log_sum2 = np.log(result.values**2)
+        self._log_sum2[nz] = np.log(x2)
 
     def __call__(self, update: ValueUpdate) -> ValuationResult:
         assert update.idx is not None

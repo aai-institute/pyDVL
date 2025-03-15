@@ -234,7 +234,7 @@ def test_updating():
     np.testing.assert_allclose(v.values, [1, 2])
     np.testing.assert_allclose(v.variances, [0.0, 0.0])
 
-    updater(ValueUpdate(1, np.log(4.0), 1))
+    saved = updater(ValueUpdate(1, np.log(4.0), 1)).copy()
     np.testing.assert_allclose(v.counts, [2, 2])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 2.0])
@@ -243,6 +243,13 @@ def test_updating():
     np.testing.assert_allclose(v.counts, [2, 3])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 1])
+
+    # Test init updater with counts and variances already set
+    other_updater = LogResultUpdater(saved)
+    other_updater(ValueUpdate(1, np.log(3.0), 1))
+    np.testing.assert_allclose(saved.values, [1, 3])
+    np.testing.assert_allclose(saved.counts, [2, 3])
+    np.testing.assert_allclose(saved.variances, [0.0, 1])
 
     # Test after sorting
     v.sort(reverse=True, key="value")
