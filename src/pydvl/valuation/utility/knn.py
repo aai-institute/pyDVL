@@ -104,7 +104,7 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
         model: KNeighborsClassifier,
         test_data: Dataset,
         *,
-        catch_errors: bool = True,
+        catch_errors: bool = False,
         show_warnings: bool = False,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,

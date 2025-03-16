@@ -24,8 +24,8 @@ When running in parallel, the utility is copied to each worker, and this can hav
 different consequences. Assuming you are working on one machine:
 
 1. When working with numpy arrays, joblib will automagically memmap the data if it's
-   beyond a certain size (typically 1MB), and working with backend="loky" or
-   "multiprocessing".
+   beyond a certain size (typically 1MB), and working with `backend="loky"` or
+   `"multiprocessing"`.
 2. When working with torch tensors this will have to be [done
    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
    but it hasn't been tested.
@@ -154,7 +154,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         model: ModelT,
         scorer: Scorer,
         *,
-        catch_errors: bool = True,
+        catch_errors: bool = False,
         show_warnings: bool = False,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,
