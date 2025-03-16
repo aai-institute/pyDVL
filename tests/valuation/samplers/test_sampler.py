@@ -55,15 +55,8 @@ def deterministic_samplers():
     ]
 
 
-def random_samplers(proper: bool = False):
-    """Use this as parameter values in pytest.mark.parametrize for parameters
-    "sampler_cls, sampler_kwargs"
-
-    Build the objects with recursive_make(sampler_cls, sampler_kwargs, **lambda_args)
-    where lambda args are named as the key in the dictionary that contains the lambda.
-    """
-
-    improper_samplers = [
+def improper_samplers():
+    return [
         (
             OwenSampler,
             {
@@ -146,12 +139,16 @@ def random_samplers(proper: bool = False):
         ),
     ]
 
-    permutation_samplers = [
+
+def permutation_samplers():
+    return [
         (PermutationSampler, {"seed": lambda seed: seed}),
         (AntitheticPermutationSampler, {"seed": lambda seed: seed}),
     ]
 
-    powerset_samplers = [
+
+def powerset_samplers():
+    return [
         (
             UniformSampler,
             {"index_iteration": RandomIndexIteration, "seed": lambda seed: seed},
@@ -170,14 +167,16 @@ def random_samplers(proper: bool = False):
         ),
     ]
 
-    stratified_samplers = [
+
+def stratified_samplers(n_samples_per_index: int = 32):
+    return [
         (
             StratifiedSampler,
             {
                 "sample_sizes": (
                     ConstantSampleSize,
                     {
-                        "n_samples": lambda n=32: n,
+                        "n_samples": lambda n=n_samples_per_index: n,
                         "lower_bound": lambda l=2: l,
                         "upper_bound": lambda u=3: u,
                     },
@@ -189,7 +188,10 @@ def random_samplers(proper: bool = False):
         (
             StratifiedSampler,
             {
-                "sample_sizes": (ConstantSampleSize, {"n_samples": lambda n=32: n}),
+                "sample_sizes": (
+                    ConstantSampleSize,
+                    {"n_samples": lambda n=n_samples_per_index: n},
+                ),
                 "sample_sizes_iteration": RandomSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
@@ -197,7 +199,10 @@ def random_samplers(proper: bool = False):
         (
             StratifiedSampler,
             {
-                "sample_sizes": (HarmonicSampleSize, {"n_samples": lambda n=32: n}),
+                "sample_sizes": (
+                    HarmonicSampleSize,
+                    {"n_samples": lambda n=n_samples_per_index: n},
+                ),
                 "sample_sizes_iteration": DeterministicSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
@@ -205,7 +210,10 @@ def random_samplers(proper: bool = False):
         (
             StratifiedSampler,
             {
-                "sample_sizes": (HarmonicSampleSize, {"n_samples": lambda n=32: n}),
+                "sample_sizes": (
+                    HarmonicSampleSize,
+                    {"n_samples": lambda n=n_samples_per_index: n},
+                ),
                 "sample_sizes_iteration": RandomSizeIteration,
                 "index_iteration": SequentialIndexIteration,
             },
@@ -215,7 +223,10 @@ def random_samplers(proper: bool = False):
             {
                 "sample_sizes": (
                     PowerLawSampleSize,
-                    {"n_samples": lambda n=32: n, "exponent": lambda e=0.5: e},
+                    {
+                        "n_samples": lambda n=n_samples_per_index: n,
+                        "exponent": lambda e=0.5: e,
+                    },
                 ),
                 "index_iteration": RandomIndexIteration,
             },
@@ -225,14 +236,19 @@ def random_samplers(proper: bool = False):
             {
                 "sample_sizes": (
                     PowerLawSampleSize,
-                    {"n_samples": lambda n=32: n, "exponent": lambda e=0.5: e},
+                    {
+                        "n_samples": lambda n=n_samples_per_index: n,
+                        "exponent": lambda e=0.5: e,
+                    },
                 ),
                 "index_iteration": SequentialIndexIteration,
             },
         ),
     ]
 
-    owen_samplers = [
+
+def owen_samplers():
+    return [
         (
             OwenSampler,
             {
@@ -279,12 +295,20 @@ def random_samplers(proper: bool = False):
         (MSRSampler, {"seed": lambda seed: seed}),
     ]
 
+
+def random_samplers(proper: bool = False):
+    """Use this as parameter values in pytest.mark.parametrize for parameters
+    "sampler_cls, sampler_kwargs"
+
+    Build the objects with recursive_make(sampler_cls, sampler_kwargs, **lambda_args)
+    where lambda args are named as the key in the dictionary that contains the lambda.
+    """
     return (
-        permutation_samplers
-        + powerset_samplers
-        + stratified_samplers
-        + owen_samplers
-        + (improper_samplers if not proper else [])
+        permutation_samplers()
+        + powerset_samplers()
+        + stratified_samplers()
+        + owen_samplers()
+        + (improper_samplers() if not proper else [])
     )
 
 
