@@ -652,6 +652,11 @@ class MaxSamples(StoppingCriterion):
     def completion(self) -> float:
         return self._completion
 
+    def __str__(self) -> str:
+        return (
+            f"MaxSamples({self.sampler.__class__.__name__}, n_samples={self.n_samples})"
+        )
+
 
 class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
