@@ -188,6 +188,7 @@ __all__ = [
     "HistoryDeviation",
     "MaxChecks",
     "MaxUpdates",
+    "MaxSamples",
     "MinUpdates",
     "MaxTime",
     "NoStopping",
@@ -615,6 +616,39 @@ class NoStopping(StoppingCriterion):
 
     def __str__(self) -> str:
         return "NoStopping()"
+
+
+class MaxSamples(StoppingCriterion):
+    """Run until the sampler has sampled the given number of samples.
+
+    Args:
+        sampler: The sampler to check.
+        n_samples: The number of samples to run until. If the sampler is batched, and
+            the method runs in parallel, the check might be off by the batch size.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
+    """
+
+    def __init__(
+        self, sampler: IndexSampler, n_samples: int, modify_result: bool = True
+    ):
+        if n_samples <= 0:
+            raise ValueError("n_samples must be positive")
+        super().__init__(modify_result=modify_result)
+        self.sampler = sampler
+        self.n_samples = n_samples
+        self._completion = 0.0
+
+    def _check(self, result: ValuationResult) -> Status:
+        self._completion = np.clip(self.sampler.n_samples / self.n_samples, 0.0, 1.0)
+        if self.sampler.n_samples >= self.n_samples:
+            self._converged = np.full_like(result.indices, True, dtype=bool)
+            return Status.Converged
+        return Status.Pending
+
+    def completion(self) -> float:
+        return self._completion
 
 
 class MinUpdates(StoppingCriterion):
