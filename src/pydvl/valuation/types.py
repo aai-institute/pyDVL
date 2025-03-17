@@ -10,7 +10,6 @@ from typing_extensions import Self, TypeAlias
 
 __all__ = [
     "BatchGenerator",
-    "Distribution",
     "IndexT",
     "IndexSetT",
     "LossFunction",
@@ -21,9 +20,9 @@ __all__ = [
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
-    "UniformDistribution",
     "UtilityEvaluation",
 ]
+
 
 IndexT: TypeAlias = np.int_
 IndexSetT: TypeAlias = NDArray[IndexT]
@@ -192,16 +191,3 @@ class UtilityEvaluation:
 
 class LossFunction(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
-
-
-class Distribution(Protocol):
-    def rvs(self) -> float: ...
-    def pdf(self, p: float) -> float: ...
-
-
-class UniformDistribution:
-    def rvs(self):
-        return np.random.default_rng().uniform()
-
-    def pdf(self, p: float):
-        return 1.0 if 0 <= p <= 1 else 0.0
