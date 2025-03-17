@@ -615,6 +615,8 @@ class NoStopping(StoppingCriterion):
             return 0.0
 
     def __str__(self) -> str:
+        if self.sampler is not None:
+            return f"NoStopping({self.sampler.__class__.__name__})"
         return "NoStopping()"
 
 
