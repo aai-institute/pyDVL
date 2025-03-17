@@ -161,10 +161,28 @@ class Dataset(Generic[ArrayT]):
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
         multi_output: bool = False,
+        mmap: bool = False,
     ):
-        self._x, self._y = check_X_y(
-            x, y, multi_output=multi_output, estimator="Dataset"
-        )
+        if mmap:
+            if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray):
+                raise TypeError("x and y must be numpy arrays in order to use mmap")
+            _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
+            tmpdir = mkdtemp()
+            logger.debug(f"Using temporary directory {tmpdir} for mmap files")
+            path_x = Path(tmpdir) / "dataset-x.mmap"
+            path_y = Path(tmpdir) / "dataset-y.mmap"
+            fp_x = np.memmap(path_x, dtype=_x.dtype, mode="w+", shape=_x.shape)
+            fp_y = np.memmap(path_y, dtype=_y.dtype, mode="w+", shape=_y.shape)
+            fp_x[:] = _x[:]
+            fp_y[:] = _y[:]
+            self._x = np.memmap(path_x, dtype=_x.dtype, mode="readonly", shape=_x.shape)  # type: ignore
+            self._y = np.memmap(path_y, dtype=_y.dtype, mode="readonly", shape=_y.shape)  # type: ignore
+            del fp_x, fp_y  # note this does not close the mmaps
+            del _x, _y
+        else:
+            self._x, self._y = check_X_y(
+                x, y, multi_output=multi_output, estimator="Dataset"
+            )
 
         def make_names(s: str, a: ArrayT) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
