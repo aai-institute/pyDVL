@@ -417,13 +417,13 @@ def test_no_stopping_infinite_sampler():
     sampler = DummyInfiniteSampler(batch_size=1)
     no_stop = NoStopping(sampler=sampler)
 
-    batches = list(islice(sampler.generate_batches(np.array([0])), 10))
-    assert sampler.n_samples == len(batches)
+    _ = list(islice(sampler.generate_batches(np.array([0])), 10))
 
     # Verify that calling the criterion still returns Pending and marks no index as converged.
     result = ValuationResult.from_random(5)
     status = no_stop(result)
     assert status == Status.Pending
+    assert no_stop.completion() == 0.0
     np.testing.assert_equal(no_stop.converged, False)
 
 
