@@ -45,8 +45,7 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 
-from pydvl.utils import torch_tensor_check
-from pydvl.utils.types import Array
+from pydvl.utils.types import Array, try_torch_import
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
@@ -99,13 +98,13 @@ def roundrobin(
             remaining_generators = cycle(islice(remaining_generators, n_active))
 
 
-def get_unique_labels(array: Array[int]) -> Array[int]:
+def get_unique_labels(arr: Array[int]) -> Array[int]:
     """Returns unique labels in a categorical dataset.
 
     Args:
-        array: The input array to find unique labels from. It should be of
-               categorical types such as Object, String, Unicode, Unsigned
-               integer, Signed integer, or Boolean.
+        arr: The input array to find unique labels from. It should be of
+             categorical types such as Object, String, Unicode, Unsigned
+             integer, Signed integer, or Boolean.
 
     Returns:
         An array of unique labels.
@@ -114,13 +113,12 @@ def get_unique_labels(array: Array[int]) -> Array[int]:
         ValueError: If the input array is not of a categorical type.
     """
     # Object, String, Unicode, Unsigned integer, Signed integer, boolean
-    if array.dtype.kind in "OSUiub":
-        with torch_tensor_check(array) as t:
-            if t is not None:
-                return t.unique()  # type: ignore
-            return cast(Array, np.unique(array))
+    if arr.dtype.kind in "OSUiub":
+        if (torch := try_torch_import()) and isinstance(arr, torch.Tensor):
+            return arr.unique()  # type: ignore
+        return cast(Array, np.unique(arr))
     raise ValueError(
-        f"Input array has an unsupported data type for categorical labels: {array.dtype}. "
+        f"Input array has an unsupported data type for categorical labels: {arr.dtype}. "
         "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
     )
 

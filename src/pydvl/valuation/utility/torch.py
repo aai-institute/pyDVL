@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import torch
 from torch import Tensor
@@ -48,6 +49,8 @@ class TorchUtility(ModelUtility[Sample, TorchSupervisedModel]):
 
     def sample_to_data(self, sample: Sample) -> tuple[Tensor, ...]:
         if getattr(self, "_torch_dataset", None) is None:
+            if self.training_data is None:
+                raise ValueError("No training data set for utility")
             logger.info(
                 f"Moving {len(self.training_data)} training data points to {self.model.device}"
             )
@@ -58,4 +61,5 @@ class TorchUtility(ModelUtility[Sample, TorchSupervisedModel]):
             del self._training_data
             self._torch_dataset = TensorDataset(x, y)
 
-        return self._torch_dataset[sample.subset]
+        assert self._torch_dataset is not None
+        return cast(tuple[Tensor, Tensor], self._torch_dataset[sample.subset])
