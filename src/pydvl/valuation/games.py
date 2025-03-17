@@ -114,16 +114,16 @@ class DummyGameUtility(UtilityBase):
         return utility
 
 
-class DummyModel(SupervisedModel):
+class DummyModel(SupervisedModel[NDArray, NDArray]):
     """Dummy model class.
 
     A dummy supervised model used for testing purposes only.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         pass
 
-    def fit(self, x: NDArray, y: NDArray | None) -> None:
+    def fit(self, x: NDArray, y: NDArray | None):
         pass
 
     def predict(self, x: NDArray) -> NDArray:  # type: ignore

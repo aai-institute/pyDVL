@@ -14,33 +14,32 @@ evaluate the model.
 
 from __future__ import annotations
 
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Generic, Protocol, TypeVar
 
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.metrics import get_scorer
 
-from pydvl.utils.types import SupervisedModel
+from pydvl.utils.types import ArrayT, SupervisedModel
+from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.scorers.base import Scorer
 
 __all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
 
-from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.scorers.base import Scorer
 
 SupervisedModelT = TypeVar(
     "SupervisedModelT", bound=SupervisedModel, contravariant=True
 )
 
 
-class SupervisedScorerCallable(Protocol[SupervisedModelT]):
+class SupervisedScorerCallable(Protocol[SupervisedModelT, ArrayT]):
     """Signature for a scorer"""
 
     def __call__(
-        self, model: SupervisedModelT, X: NDArray[Any], y: NDArray[Any]
+        self, model: SupervisedModelT, X: ArrayT, y: ArrayT
     ) -> float: ...
 
 
-class SupervisedScorer(Generic[SupervisedModelT], Scorer):
+class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
     """A scoring callable that takes a model, data, and labels and returns a
     scalar.
 
@@ -66,11 +65,11 @@ class SupervisedScorer(Generic[SupervisedModelT], Scorer):
 
     """
 
-    _scorer: SupervisedScorerCallable[SupervisedModelT]
+    _scorer: SupervisedScorerCallable[SupervisedModelT, ArrayT]
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT, ArrayT] | SupervisedModelT,
         test_data: Dataset,
         default: float,
         range: tuple[float, float] = (-np.inf, np.inf),

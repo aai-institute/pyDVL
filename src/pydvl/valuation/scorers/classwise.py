@@ -26,6 +26,7 @@ from typing import Callable
 
 import numpy as np
 
+from pydvl.utils.types import ArrayT
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import (
     SupervisedModelT,
@@ -34,7 +35,7 @@ from pydvl.valuation.scorers.supervised import (
 )
 
 
-class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
+class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
     """A Scorer designed for evaluation in classification problems.
 
     The final score is the combination of the in-class and out-of-class scores, which
@@ -77,7 +78,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT]):
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT, ArrayT] | SupervisedModelT,
         test_data: Dataset,
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),

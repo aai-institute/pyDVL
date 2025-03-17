@@ -66,46 +66,53 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Sequence, overload
+from pathlib import Path
+from tempfile import mkdtemp
+from typing import Any, Generic, Sequence, overload
 
 import numpy as np
 from deprecate import deprecated
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
-from sklearn.utils import Bunch, check_X_y
+from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
+from pydvl.utils.types import ArrayT, atleast1d, check_X_y, torch_tensor_check
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class RawData:
+class RawData(Generic[ArrayT]):
     """A view on a dataset's raw data. This is not a copy."""
 
-    x: NDArray
-    y: NDArray
+    x: ArrayT
+    y: ArrayT
 
     def __post_init__(self):
+        if not (isinstance(self.x, np.ndarray) and isinstance(self.y, np.ndarray)):
+            with torch_tensor_check(self.x, self.y) as t:
+                if t is None:
+                    raise TypeError("x and y must be valid arrays")
         try:
-            if len(self.x) != len(self.y):
+            if self.x.shape[0] != self.y.shape[0]:
                 raise ValueError("x and y must have the same length")
-        except TypeError as e:
-            raise TypeError("x and y must be numpy arrays") from e
+        except (TypeError, AttributeError) as e:
+            raise TypeError("x and y must be valid arrays") from e
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
 
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
-        return RawData(np.atleast_1d(self.x[item]), np.atleast_1d(self.y[item]))
+        return RawData(atleast1d(self.x[item]), atleast1d(self.y[item]))
 
     def __len__(self):
         return len(self.x)
 
 
-class Dataset:
+class Dataset(Generic[ArrayT]):
     """A convenience class to handle datasets.
 
     It holds a dataset, together with info on feature names, target names, and
@@ -142,11 +149,13 @@ class Dataset:
     _data_names: NDArray[np.str_]
     feature_names: list[str]
     target_names: list[str]
+    _x: ArrayT
+    _y: ArrayT
 
     def __init__(
         self,
-        x: NDArray,
-        y: NDArray,
+        x: ArrayT,
+        y: ArrayT,
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -157,7 +166,7 @@ class Dataset:
             x, y, multi_output=multi_output, estimator="Dataset"
         )
 
-        def make_names(s: str, a: np.ndarray) -> list[str]:
+        def make_names(s: str, a: ArrayT) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
             return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
 
@@ -169,10 +178,10 @@ class Dataset:
         )
 
         if len(self._x.shape) > 1:
-            if len(self.feature_names) != self._x.shape[-1]:
+            if len(self.feature_names) != self._x.shape[1]:
                 raise ValueError("Mismatching number of features and names")
         if len(self._y.shape) > 1:
-            if len(self.target_names) != self._y.shape[-1]:
+            if len(self.target_names) != self._y.shape[1]:
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
@@ -384,8 +393,8 @@ class Dataset:
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -440,8 +449,8 @@ class GroupedDataset(Dataset):
 
     def __init__(
         self,
-        x: NDArray,
-        y: NDArray,
+        x: ArrayT,
+        y: ArrayT,
         data_groups: Sequence[int] | NDArray[np.int_],
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -690,8 +699,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -702,8 +711,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -714,8 +723,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,

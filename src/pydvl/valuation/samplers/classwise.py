@@ -44,8 +44,9 @@ from itertools import cycle, islice
 from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
-from numpy.typing import NDArray
 
+from pydvl.utils import torch_tensor_check
+from pydvl.utils.types import Array
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
@@ -98,7 +99,7 @@ def roundrobin(
             remaining_generators = cycle(islice(remaining_generators, n_active))
 
 
-def get_unique_labels(array: NDArray) -> NDArray:
+def get_unique_labels(array: Array[int]) -> Array[int]:
     """Returns unique labels in a categorical dataset.
 
     Args:
@@ -114,7 +115,10 @@ def get_unique_labels(array: NDArray) -> NDArray:
     """
     # Object, String, Unicode, Unsigned integer, Signed integer, boolean
     if array.dtype.kind in "OSUiub":
-        return cast(NDArray, np.unique(array))
+        with torch_tensor_check(array) as t:
+            if t is not None:
+                return t.unique()  # type: ignore
+            return cast(Array, np.unique(array))
     raise ValueError(
         f"Input array has an unsupported data type for categorical labels: {array.dtype}. "
         "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
