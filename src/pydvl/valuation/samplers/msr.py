@@ -37,7 +37,6 @@ For more on the general architecture of samplers see
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
 
 import numpy as np
 
@@ -45,10 +44,7 @@ from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
 from pydvl.valuation.result import LogResultUpdater, ResultUpdater, ValuationResult
-from pydvl.valuation.samplers.base import (
-    EvaluationStrategy,
-    IndexSampler,
-    )
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -262,7 +258,7 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
     @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
-    ) -> List[MSRValueUpdate]:
+    ) -> list[MSRValueUpdate]:
         updates = []
         for sample in batch:
             updates.extend(self._process_sample(sample))
@@ -270,17 +266,29 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
                 break
         return updates
 
-    def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
+    def _process_sample(self, sample: Sample) -> list[MSRValueUpdate]:
         u = self.utility(sample)
         sign = np.sign(u)
         mask = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True
-
         updates = []
-        for i, in_sample in enumerate(mask):  # type: int, bool
-            k = len(sample.subset) - int(in_sample)
-            update = -np.inf if u == 0 else np.log(u * sign)
-            update += self.valuation_coefficient(self.n_indices, k)
-            update -= self.sampler_weight(self.n_indices, k)
-            updates.append(MSRValueUpdate(np.int_(i), update, sign, in_sample))
+        k = len(sample.subset)
+        log_abs_u = -np.inf if u == 0 else np.log(u * sign)
+
+        if k > 0:  # Sample was not empty => there are in-sample indices
+            in_sample_coefficient = self.valuation_coefficient(self.n_indices, k - 1)
+            in_sample_weight = self.sampler_weight(self.n_indices, k - 1)
+            update = log_abs_u + in_sample_coefficient - in_sample_weight
+            for i in sample.subset:
+                updates.append(MSRValueUpdate(np.int_(i), update, sign, True))
+
+        if k < self.n_indices:  # Sample != full set => there are out-of-sample indices
+            out_sample_coefficient = self.valuation_coefficient(self.n_indices, k)
+            out_sample_weight = self.sampler_weight(self.n_indices, k)
+            update = log_abs_u + out_sample_coefficient - out_sample_weight
+            for i in range(self.n_indices):
+                if not mask[i]:
+                    updates.append(MSRValueUpdate(np.int_(i), update, sign, False))
+
         return updates
+
