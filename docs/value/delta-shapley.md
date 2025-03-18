@@ -17,7 +17,7 @@ many models.[@watson_accelerated_2023]
 The value of a point $i$ is defined as:
 
 $$
-v_\delta(i) = \sum_{k=l}^u w(k) \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i}) - U(S)],
+v_\delta(i) = \sum_{k=0}^{n-1} w(k) \sum_{S \subseteq D_{-i}^{(k)}} [U(S_{+i}) - U(S)],
 $$
 
 where $l$ and $u$ are the lower and upper bounds of the size of the subsets to
