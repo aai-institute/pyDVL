@@ -5,6 +5,8 @@
 
 ### Added
 
+- New stopping criterion `MaxSamples`
+  [PR #661](https://github.com/aai-institute/pyDVL/pull/661)
 - Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
   and `DeepSetsUtilityModel` for data utility learning
   [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
