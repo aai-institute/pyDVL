@@ -3,25 +3,67 @@ This module implements stratified samplers.
 
 Stratified samplers change the subset sampling distribution to be a function of set size
 with the goal of reducing the variance of the Monte Carlo estimate of the marginal
-utility. This is essentially importance sampling, with the heuristic that the utility's
-variance is a function of the training set size.
+utility. They key assumption / heuristic is that the utility's variance is a function of
+the training set size.
+
+Stratified sampling was introduced at least as early as Maleki et al. (2014)[^3]. Later
+on, Wu et al. 2023[^2], extended these heuristics and proposed some for ML tasks, which
+they called VRDS (see below). Watson et al. (2023)[^1] used error estimates for certain
+model classes to propose a different heuristic. See [below](#other-known-strategies) and
+[$\delta$-Shapley][delta-shapley-intro].
+
+All stratified samplers in pyDVL are implemented by configuring (or subclassing) the
+class [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler].
 
 In the simplest case,
-[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] takes a
+[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] employs some
 strategy with a fixed number of samples $m_k$ for each set size $k \in [0, n],$ where
 $n$ is the total number of indices in the index set $N.$ It iterates through all indices
-exactly once (using
+exactly (e.g. exactly once, if using
 [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration])
 and for each index $i \in N$, iterates through all set sizes $k$, then samples exactly
-$m_k$ subsets $S \subset N_{-i}$ of size $k$.
+$m_k$ subsets $S \subset N_{-i}$ of size $k$. The iteration over set sizes is configured
+with [SampleSizeIteration][pydvl.valuation.samplers.stratified.SampleSizeIteration].
 
-This is the procedure used e.g. in Variance Reduced Stratified Sampling (VRDS),
-introduced by Wu et al. (2023)[^2], with a simple heuristic setting $m_k$ to a
-decreasing function of $k.$ Their heuristic is a generalization of the ideas in Maleki
-et al. (2014)[^3].
+## Choosing set size heuristics
+
+Optimal sampling (leading to minimal variance estimators) involves a dynamic choice of
+the number $m_k$ of samples at size $k$ based on the variance of the Monte Carlo
+integrand, but Wu et al. (2023)[^2] show that there exist methods applicable to
+semi-values which precompute these sizes while still providing reasonable performance.
+
+??? Note "The number of sets of size $k$"
+    Recall that uniform sampling from the powerset $2^{N_{-i}}$ produces a binomial
+    distribution of set sizes: the number of sets of size $k$ is $m_k = \binom{n-1}{k},$
+    which is the (inverse of the) Shapley coefficient. Therefore, setting for instance
+    $m_k = C$ for some constant will drastically reduce the number of sets of size
+    $\sym n/2$ while increasing the number of sets of size 1 or $n-1.$ This will then
+    have stark implications on the Monte Carlo estimate of semi-values, depending on how
+    the marginal utility (i.e. the training of the model) is affected by the size of the
+    training set.
+
+This heuristic is configured with the argument `sample_size` of
+[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler], which is an
+instance of
+[SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
+
+
+## Variance Reduced Stratified Sampler (VRDS)
+
+It is known (Wu et al. (2023), Theorem 4.2)[^2] that a minimum variance estimator of
+Shapley values samples $m_k$ sets of size $k$ based on the variance of the marginal
+utility at that set size. However, this quantity is unknown in practice, so the authors
+propose a simple deterministic heuristic, which in particular does not depend on
+run-time variance estimates, as an adaptive method might do. Section 4 of Wu et al.
+(2023)[^2] shows a good default choice is based on the harmonic function of the set size
+$k$.
+
+This sampler is available through
+[VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
 
 ??? Example "Constructing a VRDS"
-    To create a sampler as in Wu et al. (2023)[^2], one would use the following code:
+    It is possible to "manually" repllicate
+    [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler] with:
 
     ```python
     n_samples_per_index = 1000  # Total number of samples is: n_indices times this
@@ -31,41 +73,6 @@ et al. (2014)[^3].
         index_iteration=FiniteSequentialIndexIteration,
         )
     ```
-
-## Available strategies
-
-All components described below can be mixed in most ways, but some specific
-configurations appear in the literature as follows:
-
-* Constant sample sizes $m_k = c$, but restricting $m_k = 0$ if $k \notin [l_n, u_n]$
-  for lower and upper bounds $l_n$ and $u_n$ determined as functions of $n,$ the total
-  number of indices. This sampling method was introduced by Watson et al. (2023)[^1] for
-  the computation of Shapley values as $\delta$-Shapley.
-  ??? Example "Constructing a sampler for $\delta$-Shapley"
-      ```python
-      sampler = StratifiedSampler(
-          sample_sizes=ConstantSampleSize(n_samples=10, lower_bound=1, upper_bound=2),
-          sample_sizes_iteration=DeterministicSizeIteration,
-          index_iteration=SequentialIndexIteration,
-          )
-      ```
-
-* Sample sizes decreasing with a power law. Use
-  [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] for the
-  strategy. This was also proposed in Wu et al. (2023)[^2]. Empirically they found
-  an exponent between -1 and -0.5 to perform well.
-  ??? Example "Power law heuristic"
-      ```python
-      sampler = StratifiedSampler(
-            sample_sizes=PowerLawSampleSize(n_samples=1000, exponent=-0.5),
-            sample_sizes_iteration=RandomSizeIteration,
-            index_iteration=RandomIndexIteration,
-            )
-
-* Group Testing Sample Size. This heuristic is used for the stratified sampling
-  required by
-  [GroupTestingShapleyValuation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation].
-
 
 ## Iterating over indices and its effect on `n_samples`
 
@@ -103,27 +110,40 @@ configured via subclasses of
 * [RoundRobinIteration][pydvl.valuation.samplers.stratified.RoundRobinIteration] will
   iterate over set sizes $k$ and generate one sample each time, until reaching $m_k.$
 
-## Choosing set size heuristics
+## Other known strategies
 
-Optimal sampling (leading to minimal variance estimators) involves a dynamic choice of
-the number $m_k$ of samples at size $k$ based on the variance of the Monte Carlo
-integrand, but Wu et al. (2023)[^2] show that there exist methods applicable to
-semi-values which precompute these sizes while still providing reasonable performance.
+All components described above can be mixed in most ways, but some specific
+configurations besides VRDS appear in the literature as follows:
 
-??? Note "The number of sets of size $k$"
-    Recall that uniform sampling from the powerset $2^{N_{-i}}$ produces a binomial
-    distribution of set sizes: the number of sets of size $k$ is $m_k = \binom{n-1}{k},$
-    which is the (inverse of the) Shapley coefficient. Therefore, setting for instance
-    $m_k = C$ for some constant will drastically reduce the number of sets of size
-    $\sym n/2$ while increasing the number of sets of size 1 or $n-1.$ This will then
-    have stark implications on the Monte Carlo estimate of semi-values, depending on how
-    the marginal utility (i.e. the training of the model) is affected by the size of the
-    training set.
+* Constant sample sizes $m_k = c$, but restricting $m_k = 0$ if $k \notin [l_n, u_n]$
+  for lower and upper bounds $l_n$ and $u_n$ determined as functions of $n,$ the total
+  number of indices. This sampling method was introduced by Watson et al. (2023)[^1] for
+  the computation of Shapley values as $\delta$-Shapley.
+  ??? Example "Constructing a sampler for $\delta$-Shapley"
+      ```python
+      sampler = StratifiedSampler(
+          sample_sizes=ConstantSampleSize(n_samples=10, lower_bound=1, upper_bound=2),
+          sample_sizes_iteration=DeterministicSizeIteration,
+          index_iteration=SequentialIndexIteration,
+          )
+      ```
 
-This heuristic is configured with the argument `sample_size_strategy` of
-[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler], which is an
-instance of
-[SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
+* Sample sizes decreasing with a power law. Use
+  [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] for the
+  strategy. This was also proposed in Wu et al. (2023)[^2]. Empirically they found
+  an exponent between -1 and -0.5 to perform well.
+  ??? Example "Power law heuristic"
+      ```python
+      sampler = StratifiedSampler(
+            sample_sizes=PowerLawSampleSize(n_samples=1000, exponent=-0.5),
+            sample_sizes_iteration=RandomSizeIteration,
+            index_iteration=RandomIndexIteration,
+            )
+      ```
+
+* Group Testing Sample Size. This heuristic is used for the stratified sampling
+  required by
+  [GroupTestingShapleyValuation][pydvl.valuation.methods.gt_shapley.GroupTestingShapleyValuation].
 
 
 ## References
@@ -151,12 +171,18 @@ from typing import Generator, Type
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Seed, complement, logcomb, random_subset_of_size
+from pydvl.utils import (
+    Seed,
+    complement,
+    logcomb,
+    maybe_add_argument,
+    random_subset_of_size,
+    )
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
-)
+    )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 
@@ -171,12 +197,13 @@ __all__ = [
     "RandomSizeIteration",
     "RoundRobinIteration",
     "SampleSizeIteration",
+    "VRDSSampler",
 ]
 
 
 class SampleSizeStrategy(ABC):
     r"""An object to compute the number of samples to take for a given set size.
-    Based on Wu et al. (2023)<sup><a href="#wu_variance_2023">1</a></sup>, Theorem 4.2.
+    Based on Wu et al. (2023)<sup><a href="#wu_variance_2023">2</a></sup>, Theorem 4.2.
 
     To be used with [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler].
 
@@ -437,26 +464,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     """A sampler stratified by coalition size with variable number of samples per set
     size.
 
-    ## Variance Reduced Stratified Sampler (VRDS)
-
-    Stratified sampling was introduced at least as early as Maleki et al. (2014)<sup><a
-    href="#maleki_bounding_2014">3</a></sup>. Wu et al. 2023<sup><a
-    href="#wu_variance_2023">2</a></sup>, introduced heuristics adequate for ML tasks.
-
-    ## Choosing the number of samples per set size
-
-    The idea of VRDS is to allow per-set-size configuration of the total number of
-    samples in order to reduce the variance coming from the marginal utility evaluations.
-
-    It is known (Wu et al. (2023), Theorem 4.2)<sup><a href="#wu_variance_2023">1</a></sup>
-    that a minimum variance estimator of Shapley values samples a number $m_k$ of sets
-    of size $k$ based on the variance of the marginal utility at that set size. However,
-    this quantity is unknown in practice, so the authors propose a simple heuristic.
-    This function (`sample_sizes` in the arguments) is deterministic, and in particular
-    does not depend on run-time variance estimates, as an adaptive method might do.
-    Section 4 of Wu et al. (2023) shows a good default choice is based on the harmonic
-    function of the set size $k$ (see
-    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]).
 
     Args:
         sample_sizes: An object which returns the number of samples to
@@ -500,18 +507,12 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         for idx in self.index_iterator(indices):
             from_set = complement(indices, [idx])
             n_indices = len(from_set)
-            try:
-                # TODO: move this out of the loop since n_indices is constant
-                sample_sizes = self.sample_sizes_iteration(  # type: ignore
-                    self.sample_sizes_strategy,
-                    n_indices,
-                    seed=self._rng,
-                )
-            except TypeError:
-                sample_sizes = self.sample_sizes_iteration(
-                    self.sample_sizes_strategy, n_indices
-                )
-            for k, m_k in sample_sizes:
+            wrapper = maybe_add_argument(self.sample_sizes_iteration, "seed")
+            # TODO: move this out of the loop since n_indices is constant
+            sample_sizes_iterable = wrapper(
+                self.sample_sizes_strategy, n_indices, seed=self._rng
+            )
+            for k, m_k in sample_sizes_iterable:
                 for _ in range(m_k):
                     subset = random_subset_of_size(from_set, size=k, seed=self._rng)
                     yield Sample(idx, subset)
@@ -547,10 +548,10 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             The logarithm of the probability of having sampled a set of size `subset_len`.
         """
 
-        n_ = self._index_iterator_cls.complement_size(n)
+        effective_n = self._index_iterator_cls.complement_size(n)
         # Depending on whether we sample from complements or not, the total number of
         # samples passed to the heuristic has a different interpretation.
-        index_iteration_length = self._index_iterator_cls.length(n_)  # type: ignore
+        index_iteration_length = self._index_iterator_cls.length(effective_n)  # type: ignore
         if index_iteration_length is None:
             index_iteration_length = 1
         index_iteration_length = max(1, index_iteration_length)
@@ -560,15 +561,57 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         #    \frac{m \frac{f (k)}{\sum_j f (j)}}{m} = \frac{f(k)}{\sum_j f (j)} $$
         # so that in the weight computation we can use the function $f$ directly from
         # the strategy, or equivalently, call `sample_sizes(n, quantize=False)`.
-        # This is useful for the stochastic iteration, where we have frequencies
-        # and m is possibly 1, so that quantization would yield a bunch of zeros.
-        funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
-        funs = self.sample_sizes_strategy.sample_sizes(n_, quantize=False)
+        # This is useful for the stochastic iteration, where we are given sampling
+        # frequencies for each size instead of counts, and the total number of samples
+        # m is 1, so that quantization would yield a bunch of zeros.
+        funs = self.sample_sizes_strategy.sample_sizes(effective_n, quantize=False)
         total = np.sum(funs)
 
         return float(
-            -logcomb(n_, subset_len)
+            -logcomb(effective_n, subset_len)
             + np.log(index_iteration_length)
             + np.log(funs[subset_len])
             - np.log(total)
+        )
+
+
+class VRDSSampler(StratifiedSampler):
+    """A sampler stratified by coalition size with variable number of samples per set
+    size.
+
+    This sampler iterates once per index and generates a fixed mount of subsets of each
+    size in its complement.
+
+    This is a convenience subclass of
+    [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler]
+    which implements the VRDS heuristic from Wu et al. (2023)<sup><a
+    href="#wu_variance_2023">2</a></sup>.
+
+    It is functionally equivalent to a
+    [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler] with
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize],
+    [DeterministicSizeIteration][pydvl.valuation.samplers.stratified.DeterministicSizeIteration], and
+    [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
+
+    Args:
+        n_samples_per_index: The number of samples to generate **per index**. The
+            distribution per set size will follow a harmonic function, as defined in
+            [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize].
+        batch_size: The number of samples to generate per batch. Batches are processed
+            together by each subprocess when working in parallel.
+        seed: The seed for the random number generator.
+    """
+
+    def __init__(
+        self,
+        n_samples_per_index: int,
+        batch_size: int = 1,
+        seed: Seed | None = None,
+    ):
+        super().__init__(
+            sample_sizes=HarmonicSampleSize(n_samples=n_samples_per_index),
+            sample_sizes_iteration=DeterministicSizeIteration,
+            batch_size=batch_size,
+            index_iteration=FiniteSequentialIndexIteration,
+            seed=seed,
         )
