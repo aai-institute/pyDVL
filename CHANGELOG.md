@@ -5,6 +5,8 @@
 
 ### Added
 
+- New stopping criterion `MaxSamples`
+  [PR #661](https://github.com/aai-institute/pyDVL/pull/661)
 - Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
   and `DeepSetsUtilityModel` for data utility learning
   [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
@@ -56,8 +58,10 @@
 
 ### Fixed
 
-- Fixed `show_warnings=False` not being respected in subprocesses
+- Fixed `show_warnings=False` not being respected in subprocesses. Introduced
+  `suppress_warninigs` decorator for more flexibility
   [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
+  [PR #662](https://github.com/aai-institute/pyDVL/pull/662)
 - Fixed several bugs in diverse stopping criteria, including: iteration counts,
   computing completion, resetting, nested composition
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -83,6 +87,9 @@
 
 ### Changed
 
+- Slicing, comparing and setting of `ValuationResult` behave in a more 
+  natural way
+  [PR #660](https://github.com/aai-institute/pyDVL/pull/660)
 - Switched all semi-value coefficients and sampler weights to log-space in
   order to avoid overflows
   [PR #643](https://github.com/aai-institute/pyDVL/pull/643)
