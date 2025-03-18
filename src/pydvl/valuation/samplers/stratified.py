@@ -563,6 +563,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # This is useful for the stochastic iteration, where we have frequencies
         # and m is possibly 1, so that quantization would yield a bunch of zeros.
         funs = self.sample_sizes_strategy.sample_sizes(n, quantize=False)
+        funs = self.sample_sizes_strategy.sample_sizes(n_, quantize=False)
         total = np.sum(funs)
 
         return float(
