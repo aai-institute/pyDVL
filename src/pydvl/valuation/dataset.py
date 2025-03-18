@@ -78,7 +78,8 @@ from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
-from pydvl.utils.types import ArrayT, atleast1d, check_X_y, torch_tensor_check
+from pydvl.utils import try_torch_import
+from pydvl.utils.types import ArrayT, atleast1d, check_X_y
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +93,8 @@ class RawData(Generic[ArrayT]):
 
     def __post_init__(self):
         if not (isinstance(self.x, np.ndarray) and isinstance(self.y, np.ndarray)):
-            with torch_tensor_check(self.x, self.y) as t:
-                if t is None:
+            if torch := try_torch_import():
+                if not (isinstance(self.x, torch.Tensor) and isinstance(self.y, torch.Tensor)):
                     raise TypeError("x and y must be valid arrays")
         try:
             if self.x.shape[0] != self.y.shape[0]:
