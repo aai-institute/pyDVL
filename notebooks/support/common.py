@@ -21,6 +21,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn.preprocessing import TargetEncoder
 
+from pydvl.utils.types import try_torch_import
 from pydvl.valuation.dataset import Dataset
 
 from .influence import Losses
@@ -840,3 +841,23 @@ class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
 
     def __getattr__(self, item):
         return getattr(self.base_estimator, item)
+
+
+if torch := try_torch_import():
+    from pydvl.utils.types import TorchSupervisedModel
+
+    def profile_torch_fit(
+        model: TorchSupervisedModel, train: Dataset, test: Dataset, device: str
+    ):
+        import torch.autograd.profiler as profiler
+
+        _model = model.make_model()
+        _model.to(device=device)
+        print(f"Model has {_model.n_params()} parameters")
+        with profiler.profile(record_shapes=False, use_cuda=True) as prof:
+            with profiler.record_function("model_forward"):
+                model.fit(*train.data())
+                print(f"Training accuracy: {model.score(*train.data()):.3f}")
+                print(f"Test accuracy: {model.score(*test.data()):.3f}")
+        torch.cuda.synchronize()
+        print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))
