@@ -187,10 +187,10 @@ __all__ = [
     "AbsoluteStandardError",
     "HistoryDeviation",
     "MaxChecks",
-    "MaxUpdates",
     "MaxSamples",
-    "MinUpdates",
     "MaxTime",
+    "MaxUpdates",
+    "MinUpdates",
     "NoStopping",
     "RankCorrelation",
     "StoppingCriterion",
@@ -623,10 +623,13 @@ class NoStopping(StoppingCriterion):
 class MaxSamples(StoppingCriterion):
     """Run until the sampler has sampled the given number of samples.
 
+    !!! warning
+        If the sampler is batched, and the valuation method runs in parallel, the check
+        might be off by the sampler's batch size.
+
     Args:
         sampler: The sampler to check.
-        n_samples: The number of samples to run until. If the sampler is batched, and
-            the method runs in parallel, the check might be off by the batch size.
+        n_samples: The number of samples to run until.
         modify_result: If `True` the status of the input
             [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
             place after the call.
@@ -1006,4 +1009,4 @@ class RankCorrelation(StoppingCriterion):
         return super().reset()
 
     def __str__(self):
-        return f"RankCorrelation({self.rtol=}, {self.burn_in=}, {self.fraction=})"
+        return f"RankCorrelation(rtol={self.rtol}, burn_in={self.burn_in}, fraction={self.fraction})"
