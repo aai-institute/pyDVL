@@ -17,7 +17,7 @@ from sklearn.ensemble import (
     StackingRegressor,
     VotingClassifier,
     VotingRegressor,
-)
+    )
 
 from pydvl.utils.types import BaggingModel
 

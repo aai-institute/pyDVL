@@ -185,9 +185,10 @@ __all__ = [
     "AbsoluteStandardError",
     "HistoryDeviation",
     "MaxChecks",
+    "MaxSamples",
+    "MaxTime",
     "MaxUpdates",
     "MinUpdates",
-    "MaxTime",
     "NoStopping",
     "RankCorrelation",
     "StoppingCriterion",
@@ -612,7 +613,50 @@ class NoStopping(StoppingCriterion):
             return 0.0
 
     def __str__(self) -> str:
+        if self.sampler is not None:
+            return f"NoStopping({self.sampler.__class__.__name__})"
         return "NoStopping()"
+
+
+class MaxSamples(StoppingCriterion):
+    """Run until the sampler has sampled the given number of samples.
+
+    !!! warning
+        If the sampler is batched, and the valuation method runs in parallel, the check
+        might be off by the sampler's batch size.
+
+    Args:
+        sampler: The sampler to check.
+        n_samples: The number of samples to run until.
+        modify_result: If `True` the status of the input
+            [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
+            place after the call.
+    """
+
+    def __init__(
+        self, sampler: IndexSampler, n_samples: int, modify_result: bool = True
+    ):
+        if n_samples <= 0:
+            raise ValueError("n_samples must be positive")
+        super().__init__(modify_result=modify_result)
+        self.sampler = sampler
+        self.n_samples = n_samples
+        self._completion = 0.0
+
+    def _check(self, result: ValuationResult) -> Status:
+        self._completion = np.clip(self.sampler.n_samples / self.n_samples, 0.0, 1.0)
+        if self.sampler.n_samples >= self.n_samples:
+            self._converged = np.full_like(result.indices, True, dtype=bool)
+            return Status.Converged
+        return Status.Pending
+
+    def completion(self) -> float:
+        return self._completion
+
+    def __str__(self) -> str:
+        return (
+            f"MaxSamples({self.sampler.__class__.__name__}, n_samples={self.n_samples})"
+        )
 
 
 class MinUpdates(StoppingCriterion):
@@ -963,4 +1007,4 @@ class RankCorrelation(StoppingCriterion):
         return super().reset()
 
     def __str__(self):
-        return f"RankCorrelation({self.rtol=}, {self.burn_in=}, {self.fraction=})"
+        return f"RankCorrelation(rtol={self.rtol}, burn_in={self.burn_in}, fraction={self.fraction})"
