@@ -12,6 +12,7 @@ from pydvl.valuation.stopping import (
     AbsoluteStandardError,
     HistoryDeviation,
     MaxChecks,
+    MaxSamples,
     MaxTime,
     MaxUpdates,
     MinUpdates,
@@ -349,25 +350,41 @@ def test_no_stopping_without_sampler():
     assert str(no_stop) == "NoStopping()"
 
 
+class DummyFiniteSampler(IndexSampler):
+    def __init__(self, total_samples: int = 10, batch_size: int = 1):
+        super().__init__(batch_size=batch_size)
+        self.total_samples = total_samples
+
+    def sample_limit(self, indices):
+        return self.total_samples
+
+    def generate(self, indices):
+        for i in range(self.total_samples):
+            yield i, set()
+
+    def log_weight(self, n, subset_len):
+        return 0.0
+
+    def make_strategy(self, utility, log_coefficient=None):
+        return None
+
+
+class DummyInfiniteSampler(IndexSampler):
+    def sample_limit(self, indices):
+        return None  # Indicates an infinite sampler.
+
+    def generate(self, indices):
+        while True:
+            yield (0, set())
+
+    def log_weight(self, n, subset_len):
+        return 0.0
+
+    def make_strategy(self, utility, log_coefficient=None):
+        return None
+
+
 def test_no_stopping_with_finite_sampler():
-    class DummyFiniteSampler(IndexSampler):
-        def __init__(self, total_samples: int = 10, batch_size: int = 1):
-            super().__init__(batch_size=batch_size)
-            self.total_samples = total_samples
-
-        def sample_limit(self, indices):
-            return self.total_samples
-
-        def generate(self, indices):
-            for i in range(self.total_samples):
-                yield i, set()
-
-        def log_weight(self, n, subset_len):
-            return 0.0
-
-        def make_strategy(self, utility, log_coefficient=None):
-            return None
-
     r = ValuationResult.from_random(5)
     total_samples = 10
     batch_size = 3
@@ -397,28 +414,59 @@ def test_no_stopping_with_finite_sampler():
 
 
 def test_no_stopping_infinite_sampler():
-    class DummyInfiniteSampler(IndexSampler):
-        def sample_limit(self, indices):
-            return None  # Indicates an infinite sampler.
-
-        def generate(self, indices):
-            while True:
-                yield (0, set())
-
-        def log_weight(self, n, subset_len):
-            return 0.0
-
-        def make_strategy(self, utility, log_coefficient=None):
-            return None
-
     sampler = DummyInfiniteSampler(batch_size=1)
     no_stop = NoStopping(sampler=sampler)
 
-    batches = list(islice(sampler.generate_batches(np.array([0])), 10))
-    assert sampler.n_samples == len(batches)
+    _ = list(islice(sampler.generate_batches(np.array([0])), 10))
 
     # Verify that calling the criterion still returns Pending and marks no index as converged.
     result = ValuationResult.from_random(5)
     status = no_stop(result)
     assert status == Status.Pending
+    assert no_stop.completion() == 0.0
     np.testing.assert_equal(no_stop.converged, False)
+
+
+def test_max_samples_pending_and_convergence():
+    sampler = DummyInfiniteSampler(batch_size=1)
+    threshold = 10
+    max_samples = MaxSamples(sampler, n_samples=threshold)
+    result = ValuationResult.from_random(5)  # Create a result with 5 indices
+
+    status = max_samples(result)
+    assert status == Status.Pending
+    np.testing.assert_allclose(max_samples.completion(), 0.0)
+    assert not max_samples.converged.all()
+
+    # Set sampler.n_samples below threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 5))
+    status = max_samples(result)
+    assert status == Status.Pending
+    np.testing.assert_allclose(max_samples.completion(), 5 / threshold)
+    assert not max_samples.converged.all()
+
+    # Set sampler.n_samples exactly equal to threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 10))
+    status = max_samples(result)
+    assert status == Status.Converged
+    np.testing.assert_allclose(max_samples.completion(), 1.0)
+    assert max_samples.converged.all()
+
+    # Set sampler.n_samples above threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 15))
+    status = max_samples(result)
+    assert status == Status.Converged
+    np.testing.assert_allclose(max_samples.completion(), 1.0)
+    assert max_samples.converged.all()
+
+
+def test_max_samples_str_and_invalid():
+    sampler = DummyFiniteSampler(total_samples=0)
+    max_samples = MaxSamples(sampler, 10)
+    expected_str = f"MaxSamples({sampler.__class__.__name__}, n_samples=10)"
+    assert str(max_samples) == expected_str
+
+    with pytest.raises(ValueError):
+        MaxSamples(sampler, 0)
+    with pytest.raises(ValueError):
+        MaxSamples(sampler, -5)
