@@ -1,4 +1,5 @@
-import gc
+from __future__ import annotations
+
 import inspect
 import logging
 import time
@@ -13,7 +14,7 @@ from pydvl.utils.functional import suppress_warnings, timed
 
 
 class WarningsClass:
-    def __init__(self, show_warnings: bool = True):
+    def __init__(self, show_warnings: str | bool = True):
         self.show_warnings = show_warnings
 
     @suppress_warnings(categories=(UserWarning,), flag="show_warnings")
@@ -97,6 +98,18 @@ def test_different_categories(
     assert result == "done"
     w = recwarn.pop(category)
     assert warning_message in str(w.message)
+
+
+def test_raises_on_flag_error():
+    obj = WarningsClass(show_warnings="error")
+    with pytest.raises(UserWarning):
+        obj.method_warn()
+
+
+def test_invalid_flag_type():
+    obj = WarningsClass(show_warnings=42)
+    with pytest.raises(TypeError):
+        obj.method_warn()
 
 
 def test_nonmethod_decorator_usage():
