@@ -39,7 +39,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 __state_lock = threading.Lock()
-__memory_usage = defaultdict(int)  # pid -> bytes
+__memory_usage: defaultdict[int, int] = defaultdict(int)  # pid -> bytes
 __peak_memory_usage = 0  # (in bytes)
 __monitoring_enabled = threading.Event()
 __memory_monitor_thread: threading.Thread | None = None
@@ -163,6 +163,7 @@ def end_memory_monitoring(log_level=logging.DEBUG) -> tuple[int, dict[int, int]]
         return 0, {}
 
     __monitoring_enabled.clear()
+    assert __memory_monitor_thread is not None
     __memory_monitor_thread.join()
 
     with __state_lock:
