@@ -34,7 +34,7 @@ v(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
 $$
 
 where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i,$ and $S_{+i}$
-denotes the set $S$ with $x_i$ added.
+denotes the set $S$ with $x_i$ added.[^not1]
 
 ??? example "Computing exact Shapley values"
     ```python
@@ -107,17 +107,30 @@ An equivalent way of computing Shapley values (`ApproShapley`) appeared in
 practice. It uses permutations over indices instead of subsets:
 
 $$
-v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{:i} \cup \{x_i\}) − u(\sigma_{:i})],
+v_u(i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+[u(S_{i}^{\sigma} \cup \{i\}) − u(S_{i}^{\sigma})],
 $$
 
-where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+where $S_{i}^{\sigma}$ denotes the set of indices in permutation sigma before the
 position where $i$ appears. To approximate this sum (which has $\mathcal{O}(n!)$
 terms!) one uses Monte Carlo sampling of permutations, something which has
 surprisingly low sample complexity. One notable difference wrt. the
 combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
 [@castro_polynomial_2009], Proposition 3.2).
+
+??? info "A note about implementation"
+    The definition above uses all permutations to update one datapoint $i$.
+    However, in practice, instead of searching for the position of a fixed index
+    in every permutation, one can use a single permutation to update all
+    datapoints, by iterating through it and updating the value for the index at
+    the current position. This has the added benefit of allowing to use the
+    utility for the previous index to compute the marginal utility for the
+    current one, thus halving the number of utility calls. This strategy is
+    implemented in
+    [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy],
+    and is automatically selected when using any of the permutation samplers.
+
 
 ## Truncated Monte Carlo Shapley { #tmcs-intro }
 
@@ -195,6 +208,7 @@ scheme when the model class is restricted. The prime example is
 [kNN-Shapley][knn-shapley-intro] [@jia_efficient_2019a], which is exact for the
 kNN model, and is $O(n_test n \log n).$
 
-
-
-
+[^not1]: The quantity $u(S_{+i}) − u(S)$ is called the
+  [marginal utility][glossary-marginal-utility] of the sample $x_i$ (with
+  respect to $S$), and we will often denote it by $\delta_i(S, u),$ or, when no
+  confusion is possible, simply $\delta_i(S).$
