@@ -542,8 +542,8 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
 
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
-        probability of choosing size k, which is the number of samples for that size
-        divided by the total number of samples for all sizes:
+        probability of the set having size k, which is the number of samples for that
+        size divided by the total number of samples for all sizes:
 
         $$P(S) = \binom{n}{k}^{-1} \ \frac{m_k}{m},$$
 
@@ -573,13 +573,14 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # This is useful for the stochastic iteration, where we are given sampling
         # frequencies for each size instead of counts, and the total number of samples
         # m is 1, so that quantization would yield a bunch of zeros.
-        funs = self.sample_sizes_strategy.sample_sizes(effective_n, quantize=False)
-        total = np.sum(funs)
+        f = self.sample_sizes_strategy.sample_sizes(effective_n, quantize=False)
+        f_k = f[subset_len]
+        total = self.sample_sizes_strategy.n_samples
 
         return float(
             -logcomb(effective_n, subset_len)
             + np.log(index_iteration_length)
-            + np.log(funs[subset_len])
+            + (np.log(f_k) if f_k > 0 else 0)
             - np.log(total)
         )
 
