@@ -519,35 +519,26 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             batch_size=batch_size, index_iteration=index_iteration, seed=seed
         )
         self.sample_sizes_strategy = sample_sizes
-        self.sample_sizes_iteration = sample_sizes_iteration
+        self.sample_sizes_iteration = maybe_add_argument(sample_sizes_iteration, "seed")
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
+        m = self._index_iterator_cls.complement_size(len(indices))
+        sample_sizes_iterable = self.sample_sizes_iteration(
+            self.sample_sizes_strategy, m, seed=self._rng
+        )
         for idx in self.index_iterator(indices):
             from_set = complement(indices, [idx])
-            n_indices = len(from_set)
-            wrapper = maybe_add_argument(self.sample_sizes_iteration, "seed")
-            # TODO: move this out of the loop since n_indices is constant
-            sample_sizes_iterable = wrapper(
-                self.sample_sizes_strategy, n_indices, seed=self._rng
-            )
             for k, m_k in sample_sizes_iterable:
                 for _ in range(m_k):
                     subset = random_subset_of_size(from_set, size=k, seed=self._rng)
                     yield Sample(idx, subset)
 
-    @lru_cache
-    def total_samples(self, n_indices: int) -> int:
-        index_iteration_length = self._index_iterator_cls.length(n_indices)
-
-        # For infinite iterations, we consider the total of samples after a single whole
-        # loop over all indices. For random iterations this will introduce some variance
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        index_iteration_length = self._index_iterator_cls.length(len(indices))
         if index_iteration_length is None:
-            index_iteration_length = 1
+            return None
 
         return index_iteration_length * self.sample_sizes_strategy.n_samples
-
-    def sample_limit(self, indices: IndexSetT) -> int | None:
-        return self.total_samples(len(indices))
 
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
