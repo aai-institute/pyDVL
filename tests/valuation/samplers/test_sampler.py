@@ -673,6 +673,8 @@ def test_sampler_weights(
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
             if issubclass(sampler_cls, PermutationSamplerBase):
+                # The eval strategy iterates through the whole permutation, which is
+                # effectively equivalent to yielding every subset size, for each sample.
                 subset_len_probs += 1
             else:
                 subset_len_probs[len(sample.subset)] += 1
@@ -680,14 +682,11 @@ def test_sampler_weights(
 
     expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
     for k in range(effective_n + 1):
-        try:
-            # log_weight = log probability of sampling
-            # So: no. of sets of size k in the powerset, times. prob of sampling size k
-            expected_log_subset_len_probs[k] = (
-                logcomb(effective_n, k) + sampler.log_weight(n, k) + math.log(fudge)
-            )
-        except ValueError:  # out of bounds in stratified samplers
-            pass
+        # log_weight = log probability of sampling
+        # So: no. of sets of size k in the powerset, times. prob of sampling size k
+        expected_log_subset_len_probs[k] = (
+            logcomb(effective_n, k) + sampler.log_weight(n, k) + math.log(fudge)
+        )
 
     np.testing.assert_allclose(
         subset_len_probs, np.exp(expected_log_subset_len_probs), atol=0.05
