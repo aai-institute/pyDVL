@@ -8,9 +8,14 @@ from numpy.typing import NDArray
 from pydvl.valuation import (
     ConstantSampleSize,
     DeterministicSizeIteration,
+    GroupTestingSampleSize,
+    HarmonicSampleSize,
+    PowerLawSampleSize,
+    RandomSizeIteration,
     RoundRobinIteration,
     SampleSizeStrategy,
 )
+from tests.valuation import recursive_make
 
 
 class MockSampleSizeStrategy(SampleSizeStrategy):
@@ -18,7 +23,7 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
         super().__init__(n_samples=sum(sample_sizes))
         self._sample_sizes = np.array(sample_sizes, dtype=int)
 
-    def sample_sizes(self, n_indices: int, quantize: bool = True) -> NDArray[np.int_]:
+    def sample_sizes(self, n_indices: int, quantize: bool = True) -> NDArray[np.int64]:
         return self._sample_sizes
 
     def fun(self, n_indices: int, subset_len: int) -> float:
@@ -26,38 +31,43 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
 
 
 @pytest.mark.parametrize(
-    "sample_sizes, expected_output",
+    "iteration_cls, sample_sizes, expected_output",
     [
-        ([], []),
-        ([1], [(0, 1)]),
-        ([0, 1], [(1, 1)]),
-        ([2, 3, 1], [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)]),
+        (RoundRobinIteration, [], []),
+        (RoundRobinIteration, [1], [(0, 1)]),
+        (RoundRobinIteration, [0, 1], [(1, 1)]),
+        (
+            RoundRobinIteration,
+            [2, 3, 1],
+            [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
+        ),
+        (DeterministicSizeIteration, [], []),
+        (DeterministicSizeIteration, [1], [(0, 1)]),
+        (DeterministicSizeIteration, [0, 1], [(1, 1)]),
+        (DeterministicSizeIteration, [2, 3, 1], [(0, 2), (1, 3), (2, 1)]),
     ],
 )
-def test_round_robin_mode(sample_sizes, expected_output):
+def test_deterministic_iterations(iteration_cls, sample_sizes, expected_output):
     n_indices = len(sample_sizes)
     strategy = MockSampleSizeStrategy(sample_sizes)
-    round_robin_mode = RoundRobinIteration(strategy, n_indices)
-    output = list(iter(round_robin_mode))
+    iterable = iteration_cls(strategy, n_indices)
+    output = list(iter(iterable))
     assert output == expected_output
 
 
-@pytest.mark.parametrize(
-    "sample_sizes, expected_output",
-    [
-        ([], []),
-        ([1], [(0, 1)]),
-        ([0, 1], [(1, 1)]),
-        ([2, 3, 1], [(0, 2), (1, 3), (2, 1)]),
-    ],
-)
-def test_deterministic_mode(sample_sizes, expected_output):
-    n_indices = len(sample_sizes)
+@pytest.mark.parametrize("sample_sizes", [[1], [0, 1], [2, 3, 1]])
+def test_random_iteration(sample_sizes, seed):
+    n_indices = len(sample_sizes)-1
     strategy = MockSampleSizeStrategy(sample_sizes)
-    deterministic_mode = DeterministicSizeIteration(strategy, n_indices)
-    output = list(iter(deterministic_mode))
+    iterable = RandomSizeIteration(strategy, n_indices, seed)
+    counts = np.zeros(n_indices + 1, dtype=float)
+    sizes = strategy.sample_sizes(n_indices)
+    for _ in range(100*(n_indices+1)):
+        for size, n_samples in iterable:
+            counts[size] += n_samples
 
-    assert output == expected_output
+    counts /= max(1, counts.sum())
+    np.testing.assert_allclose(counts, sizes/sum(sizes), rtol=0.1, atol=0.1)
 
 
 @pytest.mark.parametrize(
@@ -84,17 +94,40 @@ def test_constant_sample_size_fun(
 class LinearSampleSize(SampleSizeStrategy):
     def __init__(self, n_samples: int, scale: float):
         super().__init__(n_samples)
-        self.scale = scale
+        self.scale = np.abs(scale)
 
     def fun(self, n_indices: int, subset_len: int) -> float:
         return int(subset_len * self.scale)
 
 
-@pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7)])
+@pytest.mark.parametrize(
+    "strategy_cls, strategy_kwargs",
+    [
+        (LinearSampleSize, {"scale": 1}),
+        (
+            ConstantSampleSize,
+            {"lower_bound": lambda n: n // 3, "upper_bound": lambda n: 2 * n // 3},
+        ),
+        (GroupTestingSampleSize, {}),
+        (HarmonicSampleSize, {}),
+        (PowerLawSampleSize, {"exponent": lambda e: e}),
+    ],
+)
+@pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7), (0, 10)])
 @pytest.mark.parametrize("quantize", [True, False])
-@pytest.mark.parametrize("scale", [1 / 3, 1.0, np.pi])
-def test_sample_sizes_sum(n_samples, n_indices, quantize, scale):
-    strategy = LinearSampleSize(n_samples, scale)
+@pytest.mark.parametrize("scale", [-1 / 3, -1.0, -np.pi])
+def test_sample_sizes_sum(
+    strategy_cls, strategy_kwargs, n_samples, n_indices, quantize, scale
+):
+    strategy_kwargs["n_samples"] = n_samples
+    strategy = recursive_make(
+        strategy_cls,
+        strategy_kwargs,
+        lower_bound=n_indices,  # all these are fed to the respective lambdas above
+        upper_bound=n_indices,
+        exponent=scale,
+        scale=scale,
+    )
     sizes = strategy.sample_sizes(n_indices, quantize=quantize)
     np.testing.assert_allclose(sum(sizes), n_samples)
 
