@@ -229,6 +229,8 @@ class SampleSizeStrategy(ABC):
                 [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration], then this
                 will coincide with the total number of samples.
         """
+        if n_samples < 0:
+            raise ValueError(f"Number of samples must be non-negative, got {n_samples=}")
         self.n_samples = n_samples
 
     @abstractmethod
@@ -446,9 +448,9 @@ class RandomSizeIteration(SampleSizeIteration):
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
         # In stochastic mode we interpret the counts as weights to sample one k.
         counts = self.strategy.sample_sizes(self.n_indices, quantize=False)
-        total = counts.sum()
+        total = self.strategy.n_samples
         if total == 0:
-            raise ValueError("Total sample count is 0; cannot sample stochastically.")
+            yield 0, 0
         probs = counts / total
         k = self._rng.choice(np.arange(self.n_indices + 1), p=probs)
         yield k, 1
@@ -468,7 +470,7 @@ class RoundRobinIteration(SampleSizeIteration):
     """
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
-        counts = self.strategy.sample_sizes(self.n_indices).copy()
+        counts = self.strategy.sample_sizes(self.n_indices, quantize=True).copy()
         while any(count > 0 for count in counts):
             for k, count in enumerate(counts):  # type: int, int
                 if count > 0:
