@@ -219,6 +219,10 @@ class SampleSizeStrategy(ABC):
     def __init__(self, n_samples: int):
         """Construct a heuristic for the given number of samples.
 
+        The number of samples can be 1 if the sampler uses
+        [RandomSizeIteration][pydvl.valuation.samplers.RandomSizeIteration], in which
+        case the sample sizes are interpreted as probabilities.
+
         Args:
             n_samples: Number of samples for the stratified sampler to generate,
                 **per index**. If the sampler uses
@@ -239,22 +243,22 @@ class SampleSizeStrategy(ABC):
     @lru_cache
     def sample_sizes(
         self, n_indices: int, quantize: bool = True
-    ) -> NDArray[np.int_] | NDArray[np.float_]:
+    ) -> NDArray[np.int64] | NDArray[np.float64]:
         """Precomputes the number of samples to take for each set size, from 0 up to
         `n_indices` inclusive.
 
-        This method corrects rounding errors taking into account the fractional parts
-        so that the total number of samples is respected, while allocating remainders
-        in a way that follows the relative sizes of the fractional parts.
+        If `quantize` is `True`, the result is a vector of integers, where each
+        element $k$ is the number of samples to take for set size $k.$ The sum of all
+        elements is equal to `n_samples`.
 
-        ??? Note
-            A naive implementation with e.g.
-            ```python
-            m_k = [max(1, int(round(m * f(k)/sum(f(j) for j in range(n)), 0)))
-                    for k in range(n)]
-            ```
-            would not respect the total number of samples, and would not distribute
-            remainders correctly.
+        If `quantize` is `False`, then the result is a vector of floats, where each
+        element $k$ is the probability of sampling a set of size $k.$ In this case,
+        `n_samples` should be 1, and the sum of all elements is equal to 1.
+
+        When `quantize` is `True`,this method corrects rounding errors taking into
+        account the fractional parts so that the total number of samples is respected,
+        while allocating remainders in a way that follows the relative sizes of the
+        fractional parts.
 
         Args:
             n_indices: number of indices in the index set from which to sample. This is
@@ -262,28 +266,35 @@ class SampleSizeStrategy(ABC):
             quantize: Whether to perform the remainder distribution. If `False`, the raw
                 floating point values are returned. Useful e.g. for
                 [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration]
-                where one needs frequencies. In this case `n_samples` can
-                be 1.
+                where one needs frequencies. In this case `n_samples` can be 1.
         Returns:
             The exact (integer) number of samples to take for each set size, if
             `quantize` is `True`. Otherwise, the fractional number of samples.
         """
 
         # m_k = m * f(k) / sum_j f(j)
-        values = np.empty(n_indices + 1, dtype=float)
+        values = np.zeros(n_indices + 1, dtype=float)
         s = 0.0
 
         for k in range(n_indices + 1):
             val = self.fun(n_indices, k)
             values[k] = val
             s += val
-
+        assert s > 0, "Sum of sample sizes must be positive"
         values *= self.n_samples / s
         if not quantize:
             return values
 
         # Round down and distribute remainder by adjusting the largest fractional parts
-        int_values: NDArray[np.int_] = np.floor(values).astype(np.int_)
+        # A naive implementation with e.g.
+        #
+        # m_k = [max(1, int(round(m * f(k)/sum(f(j) for j in range(n)), 0)))
+        #         for k in range(n)]
+        #
+        # would not respect the total number of samples, and would not distribute
+        # remainders correctly
+
+        int_values: NDArray[np.int64] = np.floor(values).astype(np.int64)
         remainder = self.n_samples - np.sum(int_values)
         fractional_parts = values - int_values
         fractional_parts_indices = np.argsort(-fractional_parts)[:remainder]
@@ -380,7 +391,7 @@ class PowerLawSampleSize(SampleSizeStrategy):
 
     $$f(k) = (1+k)^a, $$
 
-    and some exponent $a.$ With $a=1$ one recovers the
+    and some exponent $a.$ With $a=-1$ one recovers the
     [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]
     heuristic.
 
@@ -420,7 +431,7 @@ class DeterministicSizeIteration(SampleSizeIteration):
         counts = self.strategy.sample_sizes(self.n_indices)
         for k, m_k in enumerate(counts):  # type: int, int
             if m_k > 0:
-                yield k, m_k
+                yield k, max(1, m_k)
 
 
 class RandomSizeIteration(SampleSizeIteration):
@@ -449,6 +460,11 @@ class RoundRobinIteration(SampleSizeIteration):
     This continues yielding until every size $k$ has been emitted exactly $m_k$ times.
     For example, if `strategy.sample_sizes() == [2, 3, 1]` then we want the sequence:
     (0,1), (1,1), (2,1), (0,1), (1,1), (1,1)
+
+    !!! warning "Only for deterministic sample sizes"
+        This iteration is only valid for deterministic sample sizes. In particular, the
+        strategy must support `quantize=True` and `n_samples` must be set to the total
+        number of samples.
     """
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
