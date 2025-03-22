@@ -106,7 +106,7 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
     """
 
     def __init__(self, result: ValuationResult):
-        self.result = result
+        super().__init__(result)
         self.in_sample = ValuationResult.zeros(
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
@@ -114,15 +114,16 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
 
-        self.update_in_sample = LogResultUpdater[MSRValueUpdate](self.in_sample)
-        self.update_out_of_sample = LogResultUpdater[MSRValueUpdate](self.out_of_sample)
+        self.in_sample_updater = LogResultUpdater[MSRValueUpdate](self.in_sample)
+        self.out_of_sample_updater = LogResultUpdater[MSRValueUpdate](self.out_of_sample)
 
-    def __call__(self, update: MSRValueUpdate) -> ValuationResult:
+    def process(self, update: MSRValueUpdate) -> ValuationResult:
         assert update.idx is not None
+        self.n_updates += 1
         if update.in_sample:
-            self.update_in_sample(update)
+            self.in_sample_updater.process(update)
         else:
-            self.update_out_of_sample(update)
+            self.out_of_sample_updater.process(update)
         return self.combine_results()
 
     def combine_results(self) -> ValuationResult:

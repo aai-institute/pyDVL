@@ -160,7 +160,7 @@ class SemivalueValuation(Valuation):
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
-                        self.result = updater(update)
+                        self.result = updater.process(update)
                     if self.is_done(self.result):
                         flag.set()
                         self.sampler.interrupt()

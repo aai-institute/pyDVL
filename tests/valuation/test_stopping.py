@@ -228,12 +228,12 @@ def test_standard_error():
     # One value is being left out
     for _ in range(10):
         for idx in range(1, n):
-            updater(ValueUpdate(idx, np.log(1.0), 1))
+            updater.process(ValueUpdate(idx, np.log(1.0), 1))
     assert not done(v)
 
     # Update the final value
     for _ in range(10):
-        updater(ValueUpdate(0, np.log(1.0), 1))
+        updater.process(ValueUpdate(0, np.log(1.0), 1))
     assert done(v)
     assert done.completion() == 1.0
     assert done.converged.all()
@@ -271,7 +271,7 @@ def test_rank_correlation():
 
     def update_all():
         for j in range(n):
-            updater(ValueUpdate(j, np.log(arr[j]+0.01*j), 1))
+            updater.process(ValueUpdate(j, np.log(arr[j]+0.01*j), 1))
 
     done = RankCorrelation(rtol=0.1, burn_in=n * burn_factor, fraction=1)
     for i in range(n * burn_factor):

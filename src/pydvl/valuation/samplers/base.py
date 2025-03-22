@@ -242,7 +242,7 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
         ...  # return SomeEvaluationStrategy(self)
 
     def result_updater(self, result: ValuationResult) -> ResultUpdater[ValueUpdateT]:
-        """Returns a callable that updates a valuation result with a value update.
+        """Returns an object that updates a valuation result with a value update.
 
         Because we use log-space computation for numerical stability, the default result
         updater keeps track of several quantities required to maintain accurate running
