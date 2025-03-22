@@ -93,10 +93,11 @@ from pydvl.valuation.types import (
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
-    "PermutationSampler",
     "AntitheticPermutationSampler",
     "DeterministicPermutationSampler",
+    "PermutationSampler",
     "PermutationEvaluationStrategy",
+    "TruncationPolicy",
 ]
 
 
