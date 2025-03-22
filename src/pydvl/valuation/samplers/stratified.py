@@ -165,8 +165,9 @@ configurations besides VRDS appear in the literature as follows:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Generator, Type
+from typing import Generator, Literal, Type
 
 import numpy as np
 from numpy.typing import NDArray
@@ -178,60 +179,101 @@ from pydvl.utils import (
     maybe_add_argument,
     random_subset_of_size,
     )
+    suppress_warnings,
+)
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
-    )
+)
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
-from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
+from pydvl.valuation.types import (
+    IndexSetT,
+    NullaryPredicate,
+    Sample,
+    SampleBatch,
+    SampleGenerator,
+    SemivalueCoefficient,
+    ValueUpdate,
+)
 
 __all__ = [
-    "StratifiedSampler",
+    "ConstantSampleSize",
+    "FiniteSequentialSizeIteration",
+    "DeltaShapleyNCSGDConfig",
+    "DeltaShapleyNCSGDSampleSize",
+    "GroupTestingSampleSize",
     "HarmonicSampleSize",
     "PowerLawSampleSize",
-    "GroupTestingSampleSize",
-    "ConstantSampleSize",
-    "SampleSizeStrategy",
-    "DeterministicSizeIteration",
     "RandomSizeIteration",
     "RoundRobinIteration",
     "SampleSizeIteration",
+    "SampleSizeStrategy",
+    "StratifiedSampler",
     "VRDSSampler",
 ]
+
+from pydvl.valuation.utility.base import UtilityBase
 
 
 class SampleSizeStrategy(ABC):
     r"""An object to compute the number of samples to take for a given set size.
-    Based on Wu et al. (2023)<sup><a href="#wu_variance_2023">2</a></sup>, Theorem 4.2.
 
     To be used with [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler].
 
-    Sets the number of sets at size $k$ to be
+    Following the structure proposed in Wu et al.
+    (2023),<sup><a href="#wu_variance_2023">2</a></sup> this sets the number of sets at
+    size $k$ to be:
 
     $$m(k) = m \frac{f(k)}{\sum_{j=0}^{n} f(j)},$$
 
     for some choice of $f.$ Implementations of this base class must override the
-    method `fun()`. It is provided both the size $k$ and the total number of indices $n$
-    as arguments.
+    method `fun()` implementing $f$. It is provided both the size $k$ and the total
+    number of indices $n$ as arguments.
+
+    The argument `n_samples` can be fixed, or it can be set to `None` to indicate that
+    it should be left to the strategy to compute. For strategies producing sampling
+    probabilities, `n_samples` will be set to 1. For strategies producing integer
+    sample sizes, `n_samples` will be set to the total number of samples generated per
+    index.
+
+    Args:
+        n_samples: Number of samples for the stratified sampler to generate,
+            **per index**, i.e. if the sampler iterates over each index exactly
+            once, e.g.
+            [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration],
+            then the total number of samples will be `n_samples * n_indices`. Leave
+            as `None` to let the strategy compute it whenever possible.
+        lower_bound: Lower bound for the set sizes. If the set size is smaller than this,
+            the probability of sampling is 0. If `None`, the lower bound is set to 0.
+        upper_bound: Upper bound for the set size. If the set size is larger than this,
+            the probability of sampling is 0. If `None`, the upper bound is set to the
+            number of indices.
     """
 
-    def __init__(self, n_samples: int):
-        """Construct a heuristic for the given number of samples.
-
-        The number of samples can be 1 if the sampler uses
-        [RandomSizeIteration][pydvl.valuation.samplers.RandomSizeIteration], in which
-        case the sample sizes are interpreted as probabilities.
-
-        Args:
-            n_samples: Number of samples for the stratified sampler to generate,
-                **per index**. If the sampler uses
-                [NoIndexIteration][pydvl.valuation.samplers.NoIndexIteration], then this
-                will coincide with the total number of samples.
-        """
-        if n_samples < 0:
-            raise ValueError(f"Number of samples must be non-negative, got {n_samples=}")
+    def __init__(
+        self,
+        n_samples: int | None = None,
+        lower_bound: int | None = None,
+        upper_bound: int | None = None,
+    ):
+        if n_samples is not None and n_samples < 0:
+            raise ValueError(
+                f"Number of samples must be non-negative, got {n_samples=}"
+            )
         self.n_samples = n_samples
+        if lower_bound is not None and lower_bound < 0:
+            raise ValueError(f"Lower bound must be non-negative, got {lower_bound=}")
+        if upper_bound is not None and upper_bound < 0:
+            raise ValueError(f"Upper bound must be non-negative, got {upper_bound=}")
+        if lower_bound is not None and upper_bound is not None:
+            if lower_bound > upper_bound:
+                raise ValueError(
+                    f"Lower bound must be smaller than upper bound, got "
+                    f"{lower_bound=}, {upper_bound=}"
+                )
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
 
     @abstractmethod
     def fun(self, n_indices: int, subset_len: int) -> float:
@@ -244,49 +286,67 @@ class SampleSizeStrategy(ABC):
 
     @lru_cache
     def sample_sizes(
-        self, n_indices: int, quantize: bool = True
+        self, n_indices: int, probs: bool = True
     ) -> NDArray[np.int64] | NDArray[np.float64]:
         """Precomputes the number of samples to take for each set size, from 0 up to
         `n_indices` inclusive.
 
-        If `quantize` is `True`, the result is a vector of integers, where each
+        If `probs` is `True`, the result is a vector of floats, where each element
+        is the probability of sampling a set of size $k.$ This is useful e.g. for
+        [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration]
+        where one needs frequencies. In this case `n_samples` can be `None`.
+
+        If `probs` is `False`, the result is a vector of integers, where each
         element $k$ is the number of samples to take for set size $k.$ The sum of all
-        elements is equal to `n_samples`.
+        elements is equal to `self.n_samples` if provided upon construction, or the sum
+        of the values of `fun` for all set sizes if `self.n_samples` is `None`.
 
-        If `quantize` is `False`, then the result is a vector of floats, where each
-        element $k$ is the probability of sampling a set of size $k.$ In this case,
-        `n_samples` should be 1, and the sum of all elements is equal to 1.
-
-        When `quantize` is `True`,this method corrects rounding errors taking into
+        When `probs` is `False`, this method corrects rounding errors taking into
         account the fractional parts so that the total number of samples is respected,
         while allocating remainders in a way that follows the relative sizes of the
         fractional parts.
 
+        !!! warning "Ugly reliance on side effect"
+            This method changes `n_samples` if it was `None` to the total number of
+            samples computed. We rely on this in some places. It's ugly. (FIXME)
+
         Args:
             n_indices: number of indices in the index set from which to sample. This is
                 typically `len(dataset) - 1` with the usual index iterations.
-            quantize: Whether to perform the remainder distribution. If `False`, the raw
-                floating point values are returned. Useful e.g. for
-                [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration]
-                where one needs frequencies. In this case `n_samples` can be 1.
+            probs: Whether to perform the remainder distribution. If `True`, sampling
+                probabilities are returned. If `False`, then `n_samples` is used to
+                compute the actual number of samples and the values are rounded
+                down to the nearest integer, and the remainder is distributed to
+                maintain the relative frequencies.
         Returns:
             The exact (integer) number of samples to take for each set size, if
-            `quantize` is `True`. Otherwise, the fractional number of samples.
+            `probs` is `False`. Otherwise, the fractional number of samples.
         """
 
         # m_k = m * f(k) / sum_j f(j)
         values = np.zeros(n_indices + 1, dtype=float)
         s = 0.0
+        lower = self.lower_bound if self.lower_bound is not None else 0
+        upper = self.upper_bound if self.upper_bound is not None else n_indices
+        lower = min(lower, n_indices)
+        upper = min(upper, n_indices)
 
-        for k in range(n_indices + 1):
+        for k in range(lower, upper + 1):
             val = self.fun(n_indices, k)
             values[k] = val
             s += val
-        assert s > 0, "Sum of sample sizes must be positive"
-        values *= self.n_samples / s
-        if not quantize:
+
+        assert n_indices == 0 or s > 0, "Sum of sample sizes must be positive"
+        values /= s
+
+        # FIXME: make this hack more explicit
+        if self.n_samples is None:
+            self.n_samples = int(np.ceil(s))
+
+        if probs:
             return values
 
+        values *= self.n_samples
         # Round down and distribute remainder by adjusting the largest fractional parts
         # A naive implementation with e.g.
         #
@@ -307,32 +367,119 @@ class SampleSizeStrategy(ABC):
 class ConstantSampleSize(SampleSizeStrategy):
     r"""Use a constant number of samples for each set size between two (optional)
     bounds. The total number of samples (per index) is respected.
+    """
+
+    def fun(self, n_indices: int, subset_len: int) -> float:
+        if self.lower_bound is not None and subset_len < self.lower_bound:
+            return 0.0
+        if self.upper_bound is not None and subset_len > self.upper_bound:
+            return 0.0
+        return 1.0
+
+
+@dataclass
+class DeltaShapleyNCSGDConfig:
+    """Configuration for Delta-Shapley non-convex SGD sampling.
+
+    This is quite redundant, but convenient for passing around and storing all the
+    parameters.
 
     Args:
-        n_samples: Total number of samples to generate **per index**.
-        lower_bound: Lower bound for the set size. If the set size is smaller than this,
-            the probability of sampling is 0.
-        upper_bound: Upper bound for the set size. If the set size is larger than this,
-            the probability of sampling is 0. If `None`, the upper bound is set to the
-            number of indices.
+        max_loss: Maximum loss.
+        lipschitz_loss: Lipschitz constant of the loss
+        lipschitz_grad: Lipschitz constant of the gradient of the loss
+        lr_factor: Learning rate factor c, assuming $\alpha_t = c/t.$
+        n_sgd_iter: Number of SGD iterations.
+        n_val: Number of test samples.
+        n_train: Number of training samples.
+        eps: Epsilon value.
+        delta: Delta value.
+        version: Version of the bound to use: either the one from the paper or the one
+            in the code.
+    """
+
+    max_loss: float
+    lipschitz_loss: float
+    lipschitz_grad: float
+    lr_factor: float
+    n_sgd_iter: int
+    n_val: int
+    n_train: int
+    eps: float = 0.01
+    delta: float = 0.05
+    version: Literal["theorem7", "code"] = "theorem7"
+
+    def __post_init__(self):
+        assert self.eps > 0
+        assert self.delta > 0
+        assert self.lipschitz_grad > 0
+        assert self.lr_factor > 0
+        assert self.max_loss > 0
+        assert self.lipschitz_loss > 0
+        assert self.n_sgd_iter > 0
+
+
+# TODO: implement the other bounds?
+class DeltaShapleyNCSGDSampleSize(SampleSizeStrategy):
+    r"""Heuristic choice of samples per set size for $\delta$-Shapley.
+
+    This implements the non-convex SGD bound from Watson et al.
+    (2023)<sup><a href="#watson_accelerated_2023">1</a></sup>.
     """
 
     def __init__(
         self,
-        n_samples: int,
-        lower_bound: int = 0,
+        config: DeltaShapleyNCSGDConfig,
+        lower_bound: int | None = None,
         upper_bound: int | None = None,
     ):
-        super().__init__(n_samples)
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
+        super().__init__(
+            n_samples=None, lower_bound=lower_bound, upper_bound=upper_bound
+        )
+        self.config = config
 
-    def fun(self, n_indices: int, subset_len: int) -> float:
-        if (self.lower_bound is None or self.lower_bound <= subset_len) and (
-            self.upper_bound is None or subset_len <= self.upper_bound
-        ):
-            return 1.0
-        return 0.0
+    def fun(self, n_indices: int, subset_size: int) -> int:
+        """Computes the number of samples for the non-convex SGD bound."""
+        q = self.config.lipschitz_grad * self.config.lr_factor
+        H_1 = self.config.max_loss ** (q / (q + 1))
+        H_2 = (2 * self.config.lr_factor * (self.config.lipschitz_loss**2)) ** (
+            1 / (q + 1)
+        )
+        H_3 = self.config.n_sgd_iter ** (q / (q + 1))
+        H_4 = (1 + (1 / q)) / (max(subset_size - 1, 1))
+        H = H_1 * H_2 * H_3 * H_4
+
+        if self.config.version == "code":
+            return int(
+                np.ceil(
+                    2
+                    * np.log((2 * n_indices) / self.config.delta)
+                    * (
+                        (
+                            (H**2 / self.config.n_val)
+                            + 2 * self.config.max_loss * self.config.eps / 3
+                        )
+                        / self.config.eps**2
+                    )
+                )
+            )
+        elif self.config.version == "theorem7":
+            return int(
+                np.ceil(
+                    2
+                    * np.log((2 * n_indices) / self.config.delta)
+                    * (
+                        (
+                            2 * H**2
+                            + 2 * self.config.max_loss * H
+                            + 4 * self.config.max_loss * self.config.eps / 3
+                        )
+                        / self.config.eps**2
+                    )
+                )
+            )
+        else:
+            raise ValueError(f"Unknown version: {self.config.version}")
 
 
 class GroupTestingSampleSize(SampleSizeStrategy):
@@ -354,13 +501,7 @@ class GroupTestingSampleSize(SampleSizeStrategy):
     $k.$
     """
 
-    def __init__(self, n_samples: int = 1):
-        super().__init__(n_samples)
-
     def fun(self, n_indices: int, subset_len: int) -> float:
-        if subset_len < 0 or subset_len > n_indices:
-            raise ValueError(f"{subset_len=} out of bounds (0, {n_indices=})")
-
         if subset_len == 0 or subset_len == n_indices:
             return 0
         return 1 / subset_len + 1 / (n_indices - subset_len)
@@ -395,15 +536,22 @@ class PowerLawSampleSize(SampleSizeStrategy):
 
     and some exponent $a.$ With $a=-1$ one recovers the
     [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize]
-    heuristic.
+    heuristic. With $a=-2$ one has the same asymptotic behaviour as the
+    $\delta$-Shapley strategies.
 
     Args:
         n_samples: Total number of samples to generate **per index**.
         exponent: The exponent to use. Recommended values are between -1 and -0.5.
     """
 
-    def __init__(self, n_samples: int, exponent: float):
-        super().__init__(n_samples)
+    def __init__(
+        self,
+        exponent: float,
+        n_samples: int | None = None,
+        lower_bound: int | None = None,
+        upper_bound: int | None = None,
+    ):
+        super().__init__(n_samples, lower_bound, upper_bound)
         self.exponent = exponent
 
     def fun(self, n_indices: int, subset_len: int):
@@ -426,11 +574,18 @@ class SampleSizeIteration(ABC):
     def __iter__(self) -> Generator[tuple[int, int], None, None]: ...
 
 
-class DeterministicSizeIteration(SampleSizeIteration):
+class FiniteSequentialSizeIteration(SampleSizeIteration):
     """Generates exactly $m_k$ samples for each set size $k$ before moving to the next."""
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
-        counts = self.strategy.sample_sizes(self.n_indices)
+        counts = self.strategy.sample_sizes(self.n_indices, probs=False)
+        if self.n_indices > 1 and np.sum(counts) <= 1:
+            raise ValueError(
+                f"{self.strategy.__class__.__name__} seems to only provide "
+                f"probabilities. Ensure you set up the strategy with a fixed "
+                f"number of samples per index greater than 1."
+            )
+
         for k, m_k in enumerate(counts):  # type: int, int
             if m_k > 0:
                 yield k, max(1, m_k)
@@ -447,11 +602,9 @@ class RandomSizeIteration(SampleSizeIteration):
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
         # In stochastic mode we interpret the counts as weights to sample one k.
-        counts = self.strategy.sample_sizes(self.n_indices, quantize=False)
-        total = self.strategy.n_samples
-        if total == 0:
+        probs = self.strategy.sample_sizes(self.n_indices, probs=True)
+        if np.sum(probs) == 0:
             yield 0, 0
-        probs = counts / total
         k = self._rng.choice(np.arange(self.n_indices + 1), p=probs)
         yield k, 1
 
@@ -470,7 +623,13 @@ class RoundRobinIteration(SampleSizeIteration):
     """
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
-        counts = self.strategy.sample_sizes(self.n_indices, quantize=True).copy()
+        counts = self.strategy.sample_sizes(self.n_indices, probs=False).copy()
+        if self.n_indices > 1 and np.sum(counts) <= 1:
+            raise ValueError(
+                f"{self.strategy.__class__.__name__} seems to only provide "
+                f"probabilities. Ensure you set up the strategy with a fixed "
+                f"number of samples per index greater than 1."
+            )
         while any(count > 0 for count in counts):
             for k, count in enumerate(counts):  # type: int, int
                 if count > 0:
@@ -510,7 +669,9 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     def __init__(
         self,
         sample_sizes: SampleSizeStrategy,
-        sample_sizes_iteration: Type[SampleSizeIteration] = DeterministicSizeIteration,
+        sample_sizes_iteration: Type[
+            SampleSizeIteration
+        ] = FiniteSequentialSizeIteration,
         batch_size: int = 1,
         index_iteration: Type[IndexIteration] = FiniteSequentialIndexIteration,
         seed: Seed | None = None,
@@ -537,7 +698,9 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         index_iteration_length = self._index_iterator_cls.length(len(indices))
         if index_iteration_length is None:
             return None
-
+        # Compute n_samples as side effect (yuk!):
+        _ = self.sample_sizes_strategy.sample_sizes(len(indices))
+        assert self.sample_sizes_strategy.n_samples is not None
         return index_iteration_length * self.sample_sizes_strategy.n_samples
 
     def log_weight(self, n: int, subset_len: int) -> float:
@@ -569,19 +732,23 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # $$ \frac{m_k}{m} =
         #    \frac{m \frac{f (k)}{\sum_j f (j)}}{m} = \frac{f(k)}{\sum_j f (j)} $$
         # so that in the weight computation we can use the function $f$ directly from
-        # the strategy, or equivalently, call `sample_sizes(n, quantize=False)`.
+        # the strategy, or equivalently, call `sample_sizes(n, probs=True)`.
         # This is useful for the stochastic iteration, where we are given sampling
         # frequencies for each size instead of counts, and the total number of samples
         # m is 1, so that quantization would yield a bunch of zeros.
-        f = self.sample_sizes_strategy.sample_sizes(effective_n, quantize=False)
+        f = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
         f_k = f[subset_len]
-        total = self.sample_sizes_strategy.n_samples
+        assert np.isclose(np.sum(f), 1.0), (
+            f"Strategy returned invalid probabilities, adding to {np.sum(f)=}"
+        )
+
+        if f_k == 0:
+            return -np.inf
 
         return float(
             -logcomb(effective_n, subset_len)
             + np.log(index_iteration_length)
-            + (np.log(f_k) if f_k > 0 else 0)
-            - np.log(total)
+            + np.log(f_k)
         )
 
 
@@ -620,7 +787,7 @@ class VRDSSampler(StratifiedSampler):
     ):
         super().__init__(
             sample_sizes=HarmonicSampleSize(n_samples=n_samples_per_index),
-            sample_sizes_iteration=DeterministicSizeIteration,
+            sample_sizes_iteration=FiniteSequentialSizeIteration,
             batch_size=batch_size,
             index_iteration=FiniteSequentialIndexIteration,
             seed=seed,
