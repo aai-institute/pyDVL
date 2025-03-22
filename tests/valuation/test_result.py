@@ -229,24 +229,24 @@ def test_updating():
 
     v = ValuationResult(values=np.array([1.0, 2.0]))
     updater = LogResultUpdater(v)
-    updater(ValueUpdate(0, np.log(1.0), 1))
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [2, 1])
     np.testing.assert_allclose(v.values, [1, 2])
     np.testing.assert_allclose(v.variances, [0.0, 0.0])
 
-    saved = updater(ValueUpdate(1, np.log(4.0), 1)).copy()
+    saved = updater.process(ValueUpdate(1, np.log(4.0), 1)).copy()
     np.testing.assert_allclose(v.counts, [2, 2])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 2.0])
 
-    updater(ValueUpdate(1, np.log(3.0), 1))
+    updater.process(ValueUpdate(1, np.log(3.0), 1))
     np.testing.assert_allclose(v.counts, [2, 3])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 1])
 
     # Test init updater with counts and variances already set
     other_updater = LogResultUpdater(saved)
-    other_updater(ValueUpdate(1, np.log(3.0), 1))
+    other_updater.process(ValueUpdate(1, np.log(3.0), 1))
     np.testing.assert_allclose(saved.values, [1, 3])
     np.testing.assert_allclose(saved.counts, [2, 3])
     np.testing.assert_allclose(saved.variances, [0.0, 1])
@@ -257,7 +257,7 @@ def test_updating():
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0.0])
 
-    updater(ValueUpdate(0, np.log(1.0), 1))
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [3, 3])
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0])
@@ -265,13 +265,13 @@ def test_updating():
     # Test data indexing
     v = ValuationResult(values=np.array([3.0, 0.0]), indices=np.array([3, 4]))
     updater = LogResultUpdater(v)
-    updater(ValueUpdate(4, np.log(1.0), 1))
+    updater.process(ValueUpdate(4, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [1, 2])
     np.testing.assert_allclose(v.values, [3, 0.5])
     np.testing.assert_allclose(v.variances, [0.0, 0.5])
 
     with pytest.raises(IndexError, match="not found in ValuationResult"):
-        updater(ValueUpdate(5, np.log(1.0), 1))
+        updater.process(ValueUpdate(5, np.log(1.0), 1))
 
 
 def test_updating_order_invariance():
@@ -281,7 +281,7 @@ def test_updating_order_invariance():
         v = ValuationResult.zeros(indices=np.array([0]))
         updater = LogResultUpdater(v)
         for update in permutation:
-            updater(ValueUpdate(0, update, 1))
+            updater.process(ValueUpdate(0, update, 1))
         values.append(v)
 
     v1 = values[0]

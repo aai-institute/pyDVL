@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from pydvl.valuation import (
     ConstantSampleSize,
-    DeterministicSizeIteration,
+    FiniteSequentialSizeIteration,
     GroupTestingSampleSize,
     HarmonicSampleSize,
     PowerLawSampleSize,
@@ -23,7 +23,9 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
         super().__init__(n_samples=sum(sample_sizes))
         self._sample_sizes = np.array(sample_sizes, dtype=int)
 
-    def sample_sizes(self, n_indices: int, quantize: bool = True) -> NDArray[np.int64]:
+    def sample_sizes(self, n_indices: int, probs: bool = True) -> NDArray[np.int64]:
+        if probs:
+            return self._sample_sizes / np.sum(self._sample_sizes)
         return self._sample_sizes
 
     def fun(self, n_indices: int, subset_len: int) -> float:
@@ -34,17 +36,17 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
     "iteration_cls, sample_sizes, expected_output",
     [
         (RoundRobinIteration, [], []),
-        (RoundRobinIteration, [1], [(0, 1)]),
-        (RoundRobinIteration, [0, 1], [(1, 1)]),
+        (RoundRobinIteration, [2], [(0, 1), (0, 1)]),
+        (RoundRobinIteration, [0, 2], [(1, 1), (1, 1)]),
         (
             RoundRobinIteration,
             [2, 3, 1],
             [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
         ),
-        (DeterministicSizeIteration, [], []),
-        (DeterministicSizeIteration, [1], [(0, 1)]),
-        (DeterministicSizeIteration, [0, 1], [(1, 1)]),
-        (DeterministicSizeIteration, [2, 3, 1], [(0, 2), (1, 3), (2, 1)]),
+        (FiniteSequentialSizeIteration, [], []),
+        (FiniteSequentialSizeIteration, [2], [(0, 2)]),
+        (FiniteSequentialSizeIteration, [0, 2], [(1, 2)]),
+        (FiniteSequentialSizeIteration, [2, 3, 1], [(0, 2), (1, 3), (2, 1)]),
     ],
 )
 def test_deterministic_iterations(iteration_cls, sample_sizes, expected_output):
@@ -114,10 +116,10 @@ class LinearSampleSize(SampleSizeStrategy):
     ],
 )
 @pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7), (0, 10)])
-@pytest.mark.parametrize("quantize", [True, False])
+@pytest.mark.parametrize("probs", [True, False])
 @pytest.mark.parametrize("scale", [-1 / 3, -1.0, -np.pi])
 def test_sample_sizes_sum(
-    strategy_cls, strategy_kwargs, n_samples, n_indices, quantize, scale
+    strategy_cls, strategy_kwargs, n_samples, n_indices, probs, scale
 ):
     strategy_kwargs["n_samples"] = n_samples
     strategy = recursive_make(
@@ -128,13 +130,16 @@ def test_sample_sizes_sum(
         exponent=scale,
         scale=scale,
     )
-    sizes = strategy.sample_sizes(n_indices, quantize=quantize)
-    np.testing.assert_allclose(sum(sizes), n_samples)
+    sizes = strategy.sample_sizes(n_indices, probs=probs)
+    if probs:
+        np.testing.assert_allclose(sum(sizes), 1.0)
+    else:
+        np.testing.assert_allclose(sum(sizes), n_samples)
 
 
 @pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7)])
 @pytest.mark.parametrize("scale", [1 / 3, 1.0, np.pi])
 def test_sample_sizes_quantization(n_samples, n_indices, scale):
     strategy = LinearSampleSize(n_samples, scale)
-    sizes = strategy.sample_sizes(n_indices, quantize=True)
+    sizes = strategy.sample_sizes(n_indices, probs=False)
     assert np.all(np.floor(sizes) == sizes), "Quantized sizes must be integers"

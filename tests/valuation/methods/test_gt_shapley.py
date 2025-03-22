@@ -67,4 +67,6 @@ def test_gt_sampler(seed):
 def test_gt_setsize_strategy(n_samples):
     indices = np.arange(10)
     strategy = GroupTestingSampleSize(n_samples=n_samples)
-    np.testing.assert_allclose(n_samples, strategy.sample_sizes(len(indices)).sum())
+    np.testing.assert_allclose(
+        n_samples, strategy.sample_sizes(len(indices), probs=False).sum()
+    )
