@@ -21,6 +21,20 @@ Stopping criteria are callables that are evaluated on a
 [Status][pydvl.utils.status.Status] object. They can be combined using boolean
 operators.
 
+??? tip "Saving a history of values"
+    The special stopping criterion [History][pydvl.valuation.stopping.History] can be
+    used to store a rolling history of the values, e.g. for comparing methods as they
+    evolve.
+    ```python
+    from pydvl.valuation import ShapleyValuation, History
+    history = History(n_steps=1000)
+    stopping = MaxUpdates(10000) | history
+    valuation = ShapleyValuation(utility=utility, sampler=sampler, is_done=stopping)
+    valuation.fit(training_data)
+    history.data[0]  # The last update
+    history.data[-1]  # The 1000th update before last
+    ```
+
 ## Combining stopping criteria
 
 Objects of type [StoppingCriterion][pydvl.valuation.stopping.StoppingCriterion] can
@@ -60,7 +74,7 @@ check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
 `skip_converged=True` this check can still take less time than the first one,
 despite requiring more iterations for some indices.
 
-??? Tip "Stoppig criterion for finite samplers"
+??? Tip "Stopping criterion for finite samplers"
     Using a finite sampler naturally defines when the valuation algorithm terminates.
     However, in order to properly report progress, we need to use a stopping criterion
     that keeps track of the number of iterations. In this case, one can use
@@ -160,9 +174,10 @@ implementation attempts to compute the mean of `_converged`.
 
 ## References
 
-[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
-    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019. [Data Shapley:
+      Equitable Valuation of Data for Machine
+      Learning](https://proceedings.mlr.press/v97/ghorbani19c.html). In: Proceedings of
+      the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 """
 
 from __future__ import annotations
@@ -183,6 +198,7 @@ from pydvl.valuation.samplers.base import IndexSampler
 
 __all__ = [
     "AbsoluteStandardError",
+    "History",
     "HistoryDeviation",
     "MaxChecks",
     "MaxSamples",
@@ -758,6 +774,11 @@ class RollingMemory(Generic[DT]):
     Updating the memory results in new values are copied to the last column of the
     matrix and old ones removed from the first.
 
+    The `len()` of a rolling memory is the number of steps that have been added to the
+    memory since it rolled over. It is the number of updates which is `n_updates`,
+    modulo the size of the memory, which is `n_steps` (plus a shift so it makes sense
+    as a length).
+
     Args:
         n_steps: The number of steps to remember.
         default: The default value to use when the memory is empty.
@@ -777,22 +798,25 @@ class RollingMemory(Generic[DT]):
         if n_steps < 1:
             raise ValueError("n_steps must be at least 1")
         self.n_steps = n_steps
-        self._count = 0
+        self._n_updates = 0
         self._default = cast(DT, default)
         self._data: NDArray[DT] = np.full(0, default, dtype=type(default))
 
     @property
-    def count(self) -> int:
-        return self._count
+    def n_updates(self) -> int:
+        return self._n_updates
 
     @property
     def data(self) -> NDArray[DT]:
+        """A view on the data. Rows are the steps, columns are the indices"""
         view = self._data.view()
         view.setflags(write=False)
         return view.T
 
     def reset(self) -> Self:
+        """Empty the memory"""
         self._data = np.full(0, self._default, dtype=type(self._default))
+        self._n_updates = 0
         return self
 
     def update(self, values: NDArray[DT]) -> Self:
@@ -808,14 +832,65 @@ class RollingMemory(Generic[DT]):
                 dtype=type(self._default),
             )
         self._data = np.concatenate([self._data[:, 1:], values.reshape(-1, 1)], axis=1)
-        self._count += 1
+        self._n_updates += 1
         return self
 
     def __getitem__(self, item):
         return self.data[item]
 
     def __len__(self) -> int:
-        return self._data.shape[1] if self._data.size > 0 else 0
+        if self.n_updates == 0:
+            return 0
+        return 1 + ((self.n_updates - 1) % self.n_steps)
+
+
+class History(StoppingCriterion):
+    """A non-check that stores the last `steps` values in a rolling memory.
+
+    You can access the values with the attribute `memory`, which is of type
+    [RollingMemory][pydvl.valuation.stopping.RollingMemory]. The values are stored in
+    the `data` attribute.
+
+    ??? Example
+        ```python
+        result = ValuationResult.from_random(size=7)
+        history = History(n_steps=5)
+        history(result)
+        assert all(history.data[-1] == result)
+        ```
+
+    Args:
+        n_steps: The number of steps to remember.
+        modify_result: Ignored.
+    """
+
+    memory: RollingMemory
+
+    def __init__(self, n_steps: int, modify_result: bool = False):
+        super().__init__(modify_result=False)
+        self.memory = RollingMemory(n_steps, default=np.inf, dtype=np.float64)
+
+    def _check(self, result: ValuationResult) -> Status:
+        self.memory.update(result.values)
+        return Status.Pending
+
+    # Forward some methods for convenience
+
+    @property
+    def n_updates(self) -> int:
+        """Number of updates to the memory"""
+        return self.memory.n_updates
+
+    @property
+    def data(self) -> NDArray[np.float64]:
+        """A view on the data. Rows are the steps, columns are the indices"""
+        return self.memory.data
+
+    def __getitem__(self, item):
+        return self.memory[item]
+
+    def __len__(self) -> int:
+        return len(self.memory)
 
 
 class HistoryDeviation(StoppingCriterion):
@@ -865,7 +940,7 @@ class HistoryDeviation(StoppingCriterion):
         if r.values.size == 0:
             return Status.Pending
         self.memory.update(r.values)
-        if self.memory.count < self.memory.n_steps:  # Memory not full yet
+        if self.memory.n_updates < self.memory.n_steps:  # Memory not full yet
             return Status.Pending
 
         # Look at indices that have been updated more than n_steps times
@@ -955,7 +1030,7 @@ class RankCorrelation(StoppingCriterion):
             return Status.Pending
         # The first update is typically of constant values, so that the Spearman
         # correlation is undefined. We need to wait for the second update.
-        if self.memory.count < 1:
+        if self.memory.n_updates < 1:
             self.memory.update(r.values)
             self.count_memory.update(r.counts)
             self._converged = np.full_like(r.indices, False, dtype=bool)

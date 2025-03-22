@@ -10,6 +10,7 @@ from pydvl.valuation import IndexSampler
 from pydvl.valuation.result import LogResultUpdater, ValuationResult
 from pydvl.valuation.stopping import (
     AbsoluteStandardError,
+    History,
     HistoryDeviation,
     MaxChecks,
     MaxSamples,
@@ -20,7 +21,7 @@ from pydvl.valuation.stopping import (
     RankCorrelation,
     RollingMemory,
     StoppingCriterion,
-)
+    )
 from pydvl.valuation.types import ValueUpdate
 
 
@@ -176,6 +177,7 @@ def test_max_time():
     done.reset()
     np.testing.assert_allclose(done.completion(), 0, atol=0.01)
     assert not done.converged.any()
+    assert str(done) == "MaxTime(seconds=0.3)"
 
 
 @pytest.mark.parametrize("n_steps", [1, 42])
@@ -206,9 +208,14 @@ def test_history_deviation(n_steps, rtol):
     assert done.completion() == 0.0
     assert not done.converged.any()
 
+    with pytest.raises(ValueError, match="rtol"):
+        HistoryDeviation(n_steps=n_steps, rtol=0.0)
+
+    with pytest.raises(ValueError, match="rtol"):
+        HistoryDeviation(n_steps=n_steps, rtol=1.0)
+
 
 def test_standard_error():
-    """Test the AbsoluteStandardError stopping criterion."""
     eps = 0.1
     n = 5
 
@@ -247,6 +254,7 @@ def test_max_checks():
     v = ValuationResult.from_random(size=5)
 
     done = MaxChecks(None)
+    assert done.completion() == 0.0
     for _ in range(10):
         assert not done(v)
     assert done.completion() == 0.0
@@ -271,7 +279,7 @@ def test_rank_correlation():
 
     def update_all():
         for j in range(n):
-            updater.process(ValueUpdate(j, np.log(arr[j]+0.01*j), 1))
+            updater.process(ValueUpdate(j, np.log(arr[j] + 0.01 * j), 1))
 
     done = RankCorrelation(rtol=0.1, burn_in=n * burn_factor, fraction=1)
     for i in range(n * burn_factor):
@@ -307,7 +315,6 @@ def test_rank_correlation():
     ],
 )
 def test_count(criterion):
-    """Test that the _count attribute and count property of stoppingcriteria are properly updated"""
     assert criterion.count == 0
     criterion(ValuationResult.empty())
     assert criterion.count == 1
@@ -325,22 +332,26 @@ def test_memory():
     r1 = ValuationResult.from_random(5)
     r2 = ValuationResult.from_random(5)
     memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
+    assert len(memory) == 0
 
     assert np.all(memory.data == [])
     memory.update(r1.values)
     np.testing.assert_equal(memory.data[-1], r1.values)
     np.testing.assert_equal(memory[-1], r1.values)
+    assert len(memory) == 1
 
     memory.update(r2.values)
     tmp = np.vstack((r1.values, r2.values))
     np.testing.assert_equal(memory.data[-2:], tmp)
     np.testing.assert_equal(memory[-2:], tmp)
+    assert len(memory) == 2
 
     r3 = ValuationResult.from_random(5)
     memory.update(r3.values)
     tmp = np.vstack((r2.values, r3.values))
     np.testing.assert_equal(memory.data[-2:], tmp)
     np.testing.assert_equal(memory[-2:], tmp)
+    assert len(memory) == 1
 
 
 def test_no_stopping_without_sampler():
@@ -351,6 +362,22 @@ def test_no_stopping_without_sampler():
     assert no_stop.completion() == 0.0
     np.testing.assert_equal(no_stop.converged, False)
     assert str(no_stop) == "NoStopping()"
+
+
+def test_history():
+    n_steps = 4
+    size = 5
+    history = History(n_steps=n_steps)
+    for i in range(1, n_steps+1):
+        result = ValuationResult.from_random(size=size)
+        status = history(result)
+        assert status == Status.Pending
+        assert history.completion() == 0.0
+        np.testing.assert_equal(history.converged, False)
+        assert all(history.data[-1] == result.values)
+        assert len(history) == i
+    assert history.n_updates == n_steps
+    assert history.data.shape == (n_steps, size)
 
 
 class DummyFiniteSampler(IndexSampler):
