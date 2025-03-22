@@ -13,7 +13,8 @@ model classes to propose a different heuristic. See [below](#other-known-strateg
 [$\delta$-Shapley][delta-shapley-intro].
 
 All stratified samplers in pyDVL are implemented by configuring (or subclassing) the
-class [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler].
+classes [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] and
+[StratifiedPermutationSampler][pydvl.valuation.samplers.stratified.StratifiedPermutationSampler].
 
 In the simplest case,
 [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] employs some
@@ -37,7 +38,7 @@ semi-values which precompute these sizes while still providing reasonable perfor
     distribution of set sizes: the number of sets of size $k$ is $m_k = \binom{n-1}{k},$
     which is the (inverse of the) Shapley coefficient. Therefore, setting for instance
     $m_k = C$ for some constant will drastically reduce the number of sets of size
-    $\sym n/2$ while increasing the number of sets of size 1 or $n-1.$ This will then
+    $\sim n/2$ while increasing the number of sets of size 1 or $n-1.$ This will then
     have stark implications on the Monte Carlo estimate of semi-values, depending on how
     the marginal utility (i.e. the training of the model) is affected by the size of the
     training set.
@@ -62,19 +63,19 @@ This sampler is available through
 [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
 
 ??? Example "Constructing a VRDS"
-    It is possible to "manually" repllicate
+    It is possible to "manually" replicate
     [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler] with:
 
     ```python
     n_samples_per_index = 1000  # Total number of samples is: n_indices times this
     sampler = StratifiedSampler(
         sample_sizes=HarmonicSampleSize(n_samples=1000),
-        sample_sizes_iteration=DeterministicSizeIteration,
+        sample_sizes_iteration=FiniteSequentialSizeIteration,
         index_iteration=FiniteSequentialIndexIteration,
         )
     ```
 
-## Iterating over indices and its effect on `n_samples`
+## Iterating over indices and its effect on 'n_samples'
 
 As any other sampler,
 [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] can iterate
@@ -100,13 +101,16 @@ must iterate over sample sizes $k \in [0, n]$, and this can be done in multiple 
 configured via subclasses of
 [SampleSizeIteration][pydvl.valuation.samplers.stratified.SampleSizeIteration].
 
-* [DeterministicSizeIteration][pydvl.valuation.samplers.stratified.DeterministicSizeIteration]
+* [FiniteSequentialSizeIteration][pydvl.valuation.samplers.stratified.FiniteSequentialSizeIteration]
   will generate exactly $m_k$ samples for each $k$ before moving to the next $k.$ This
   implies that `n_samples` must be large enough for the computed $m_k$ to be valid.
+  Alternatively, and preferably, some strategies allow `n_samples = None` to signal them
+  to compute the total number of samples.
 * [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration] will
   sample a set size $k$ according to the distribution of sizes given by the strategy.
   When using this in conjunction with an infinite index iteration for the sampler,
-  `n_samples` can be safely set to 1 since $m_k$ will be interpreted as a probability.
+  `n_samples` can be safely left to its default `None` since $m_k$ will be interpreted
+  as a probability.
 * [RoundRobinIteration][pydvl.valuation.samplers.stratified.RoundRobinIteration] will
   iterate over set sizes $k$ and generate one sample each time, until reaching $m_k.$
 
@@ -115,31 +119,41 @@ configured via subclasses of
 All components described above can be mixed in most ways, but some specific
 configurations besides VRDS appear in the literature as follows:
 
-* Constant sample sizes $m_k = c$, but restricting $m_k = 0$ if $k \notin [l_n, u_n]$
-  for lower and upper bounds $l_n$ and $u_n$ determined as functions of $n,$ the total
-  number of indices. This sampling method was introduced by Watson et al. (2023)[^1] for
-  the computation of Shapley values as $\delta$-Shapley.
-  ??? Example "Constructing a sampler for $\delta$-Shapley"
-      ```python
-      sampler = StratifiedSampler(
-          sample_sizes=ConstantSampleSize(n_samples=10, lower_bound=1, upper_bound=2),
-          sample_sizes_iteration=DeterministicSizeIteration,
-          index_iteration=SequentialIndexIteration,
-          )
-      ```
+* Sample sizes given by stability bounds related to the algorithm, to ensure good
+  approximation of per-set-size marginal utilities. This sampling method was introduced
+  by Watson et al. (2023)[^1] for the computation of Shapley values as
+  [$\delta$-Shapley][delta-shapley-intro].
+
+  [DeltaShapleyNSGDSampleSize][pydvl.valuation.samplers.stratified.DeltaShapleyNCSGDSampleSize]
+  implements the choice of $m_k$ corresponding to non-convex losses minimized with SGD.
+  Alas, it requires many parameters to be set which are hard to estimate in practice. An
+  alternative is to use
+  [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] (see
+  below) with an exponent of -2, which is the order of $m_k$ in $\delta$-Shapley.
+
+    ??? Example "Constructing an alternative sampler for $\delta$-Shapley"
+        ```python
+        config = DeltaShapleyNCSGDConfig(...)  # See the docs / paper
+        sampler = StratifiedSampler(
+            sample_sizes=DeltaShapleyNSGDSampleSize(config, lower_bound, upper_bound),
+            sample_sizes_iteration=FiniteSequentialSizeIteration,
+            index_iteration=SequentialIndexIteration,
+            )
+        ```
 
 * Sample sizes decreasing with a power law. Use
   [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] for the
   strategy. This was also proposed in Wu et al. (2023)[^2]. Empirically they found
   an exponent between -1 and -0.5 to perform well.
-  ??? Example "Power law heuristic"
-      ```python
-      sampler = StratifiedSampler(
-            sample_sizes=PowerLawSampleSize(n_samples=1000, exponent=-0.5),
-            sample_sizes_iteration=RandomSizeIteration,
-            index_iteration=RandomIndexIteration,
-            )
-      ```
+
+    ??? Example "Power law heuristic"
+        ```python
+        sampler = StratifiedSampler(
+              sample_sizes=PowerLawSampleSize(exponent=-0.5),
+              sample_sizes_iteration=RandomSizeIteration,
+              index_iteration=RandomIndexIteration,
+              )
+        ```
 
 * Group Testing Sample Size. This heuristic is used for the stratified sampling
   required by
@@ -178,8 +192,12 @@ from pydvl.utils import (
     logcomb,
     maybe_add_argument,
     random_subset_of_size,
-    )
     suppress_warnings,
+)
+from pydvl.valuation.samplers.permutation import (
+    PermutationEvaluationStrategy,
+    PermutationSampler,
+    TruncationPolicy,
 )
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
@@ -209,6 +227,8 @@ __all__ = [
     "RoundRobinIteration",
     "SampleSizeIteration",
     "SampleSizeStrategy",
+    "StratifiedPermutationSampler",
+    "StratifiedPermutationEvaluationStrategy",
     "StratifiedSampler",
     "VRDSSampler",
 ]
@@ -377,23 +397,30 @@ class ConstantSampleSize(SampleSizeStrategy):
         return 1.0
 
 
+# This otherwise unnecessary class can be convenient for passing around and storing
+# all the parameters.
 @dataclass
 class DeltaShapleyNCSGDConfig:
     """Configuration for Delta-Shapley non-convex SGD sampling.
 
-    This is quite redundant, but convenient for passing around and storing all the
-    parameters.
+    See Watson et al. (2023)<sup><a href="#watson_accelerated_2023">1</a></sup> for
+    details. Given that it can be difficult to estimate these constants, an alternative
+    which has a similar decay rate of $O(1/k^2)$ is to use a
+    [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize]
+    strategy.
 
     Args:
-        max_loss: Maximum loss.
+        max_loss: Maximum of the loss.
         lipschitz_loss: Lipschitz constant of the loss
         lipschitz_grad: Lipschitz constant of the gradient of the loss
-        lr_factor: Learning rate factor c, assuming $\alpha_t = c/t.$
+        lr_factor: Learning rate factor c, assuming it has the form $\alpha_t = c/t.$
         n_sgd_iter: Number of SGD iterations.
         n_val: Number of test samples.
         n_train: Number of training samples.
-        eps: Epsilon value.
-        delta: Delta value.
+        eps: Epsilon value in the epsilon-delta guarantee, i.e. the distance to the
+            true value.
+        delta: Delta value in the epsilon-delta guarantee, i.e. the probability of
+            failure.
         version: Version of the bound to use: either the one from the paper or the one
             in the code.
     """
@@ -767,7 +794,8 @@ class VRDSSampler(StratifiedSampler):
     It is functionally equivalent to a
     [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler] with
     [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize],
-    [DeterministicSizeIteration][pydvl.valuation.samplers.stratified.DeterministicSizeIteration], and
+    [FiniteSequentialSizeIteration][pydvl.valuation.samplers.stratified.FiniteSequentialSizeIteration],
+    and
     [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
 
     Args:
