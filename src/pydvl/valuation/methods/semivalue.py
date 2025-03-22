@@ -49,6 +49,7 @@ absence of an underscore) to return `None`.
 
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import Any
 
@@ -62,7 +63,7 @@ from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.parallel import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
-)
+    )
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
@@ -70,6 +71,9 @@ from pydvl.valuation.types import SemivalueCoefficient
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["SemivalueValuation"]
+
+
+logger = logging.getLogger(__name__)
 
 
 class SemivalueValuation(Valuation):
@@ -164,7 +168,8 @@ class SemivalueValuation(Valuation):
                     if self.is_done(self.result):
                         flag.set()
                         self.sampler.interrupt()
-                        return self
+                        break
                     if self.skip_converged:
                         self.sampler.skip_indices = data.indices[self.is_done.converged]
+        logger.debug(f"Fitting done after {updater.n_updates} value updates.")
         return self
