@@ -115,9 +115,7 @@ class SemivalueValuation(Valuation):
         self.is_done = is_done
         self.skip_converged = skip_converged
         self.show_warnings = show_warnings
-        self.tqdm_args: dict[str, Any] = {
-            "desc": f"{self.__class__.__name__}: {str(is_done)}"
-        }
+        self.tqdm_args: dict[str, Any] = {"desc": str(self)}
         # HACK: parse additional args for the progress bar if any (we probably want
         #  something better)
         if isinstance(progress, bool):
@@ -126,6 +124,13 @@ class SemivalueValuation(Valuation):
             self.tqdm_args.update(progress)
         else:
             raise TypeError(f"Invalid type for progress: {type(progress)}")
+
+    # TODO: automate str representation for all Valuations (and find something better)
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}-{self.utility.__class__.__name__}-"
+            f"{self.sampler.__class__.__name__}-{self.is_done}"
+        )
 
     @property
     @abstractmethod
@@ -142,8 +147,7 @@ class SemivalueValuation(Valuation):
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
-            # TODO: automate str representation for all Valuations (and find something better)
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
+            algorithm=str(self),
             indices=data.indices,
             data_names=data.names,
         )
