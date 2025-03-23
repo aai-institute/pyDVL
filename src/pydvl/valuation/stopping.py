@@ -137,6 +137,22 @@ as described above for semi-values.
 
 ## Interactions with sampling schemes and other pitfalls of stopping criteria
 
+When sampling over powersets with a [sequential index
+iteration][pydvl.valuation.samplers.powerset.SequentialIndexIteration], indices' values
+are updated sequentially, as expected. Now, if the number of samples per index is high,
+it might be a long while until the next index is updated. In this case, criteria like
+[MinUpdates][pydvl.valuation.stopping.MinUpdates] will seem to stall after each index
+has reached the specified number of updates, even though the computation is still
+ongoing. A "fix" is to set the `skip_converged` parameter of [Semi-value
+methods][pydvl.valuation.methods.semivalue.SemivalueValuation] to `True`, so that as
+soon as the stopping criterion is fulfilled for an index, the computation continues.
+Note that this will probably break any desirable properties of certain samplers, for
+instance the [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler].
+
+??? bug "Problem with 'skip_converged'"
+    Alas, the above will fail under some circumstances, until we fix [this
+    bug](https://github.com/aai-institute/pyDVL/issues/664)
+
 Different samplers define different "update strategies" for values. For example,
 [MSRSampler][pydvl.valuation.samplers.msr.MSRSampler] updates the `counts` field
 of a [ValuationResult][pydvl.valuation.result.ValuationResult] only for about half of
@@ -145,10 +161,6 @@ like [MaxChecks][pydvl.valuation.stopping.MaxChecks] will not work as expected, 
 it will count the number of calls to the criterion, not the number of updates to the
 values. In this case, one should use [MaxUpdates][pydvl.valuation.stopping.MaxUpdates]
 or, more likely, [MinUpdates][pydvl.valuation.stopping.MinUpdates] instead.
-
-Another pitfall is the interaction with the `skip_converged` parameter of
-[Semi-value methods][pydvl.valuation.methods.semivalue.SemivalueValuation]. If this is
-set to `True`, the stopping criterion should probably be more stringent.
 
 Finally, stopping criteria that rely on the standard error of the values, like
 [AbsoluteStandardError][pydvl.valuation.stopping.AbsoluteStandardError], should be
