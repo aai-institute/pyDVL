@@ -714,7 +714,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         sample_sizes_iterable = self.sample_sizes_iteration(
             self.sample_sizes_strategy, m, seed=self._rng
         )
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             from_set = complement(indices, [idx])
             for k, m_k in sample_sizes_iterable:
                 for _ in range(m_k):

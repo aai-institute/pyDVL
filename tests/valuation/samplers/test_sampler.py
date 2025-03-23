@@ -720,8 +720,8 @@ def test_skip_indices(
     sampler.skip_indices = skip
 
     # Check that the outer iteration skips indices:
-    if hasattr(sampler, "index_iterator"):
-        outer_indices = list(islice(sampler.index_iterator(indices), len(indices)))
+    if hasattr(sampler, "index_iterable"):
+        outer_indices = list(islice(sampler.index_iterable(indices), len(indices)))
         assert set(outer_indices) == set(expected)
 
     # Check that the generated samples skip indices...
