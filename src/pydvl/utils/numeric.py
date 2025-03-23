@@ -410,6 +410,8 @@ def logsumexp_two(log_a: float, log_b: float) -> float:
     Returns:
         The log of the sum of the exponentials
     """
+    assert log_a < np.inf and log_b < np.inf, f"log_a={log_a}, log_b={log_b}"
+
     if log_a == -np.inf:
         return log_b
     if log_b == -np.inf:
