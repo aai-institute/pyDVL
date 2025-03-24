@@ -205,7 +205,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         self.q_stop = 1.0
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             _complement = complement(indices, [idx])
             for prob in self.sampling_probabilities(self.q_stop):
                 for _ in range(self.n_samples_inner):
