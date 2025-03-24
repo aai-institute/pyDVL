@@ -195,9 +195,11 @@ implementation attempts to compute the mean of `_converged`.
 from __future__ import annotations
 
 import abc
+import collections
 import logging
+from numbers import Integral
 from time import time
-from typing import Callable, Generic, Type, TypeVar, Union, cast
+from typing import Callable, Generic, Iterable, Type, TypeVar, Union, cast, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -781,25 +783,26 @@ DT = TypeVar("DT", bound=np.generic)
 
 
 class RollingMemory(Generic[DT]):
-    """A simple rolling memory for the last `n_steps` values of each index.
+    """A simple rolling memory for the last `size` values of each index.
 
-    Updating the memory results in new values are copied to the last column of the
+    Updating the memory results in new values being copied to the last column of the
     matrix and old ones removed from the first.
 
-    The `len()` of a rolling memory is the number of steps that have been added to the
-    memory since it rolled over. It is the number of updates which is `n_updates`,
-    modulo the size of the memory, which is `n_steps` (plus a shift so it makes sense
-    as a length).
-
     Args:
-        n_steps: The number of steps to remember.
+        size: The number of steps to remember. The internal buffer will have shape
+            `(size, n_indices)`, where `n_indices` is the number of indices in the
+            [ValuationResult][pydvl.valuation.result.ValuationResult].
+        skip_steps: The number of steps to skip between updates. If `0`, the memory
+            is updated at every step. If `1`, the memory is updated every other step,
+            and so on.
         default: The default value to use when the memory is empty.
     """
 
     def __init__(
         self,
-        n_steps: int,
-        default: Union[DT, int, float],
+        size: int,
+        skip_steps: int = 0,
+        default: Union[DT, int, float] = np.inf,
         *,
         dtype: Type[DT] | None = None,
     ):
@@ -807,16 +810,19 @@ class RollingMemory(Generic[DT]):
             default = cast(DT, np.array(default, dtype=np.result_type(default))[()])
         if dtype is not None:  # user forced conversion
             default = dtype(default)
-        if n_steps < 1:
+        if size < 1:
             raise ValueError("n_steps must be at least 1")
-        self.n_steps = n_steps
-        self._n_updates = 0
+        if skip_steps < 0:
+            raise ValueError("skip_steps must be at least 0")
+        self.size = size
+        self._skip_steps = skip_steps
+        self._count = 0
         self._default = cast(DT, default)
         self._data: NDArray[DT] = np.full(0, default, dtype=type(default))
 
     @property
-    def n_updates(self) -> int:
-        return self._n_updates
+    def count(self) -> int:
+        return self._count
 
     @property
     def data(self) -> NDArray[DT]:
@@ -828,8 +834,12 @@ class RollingMemory(Generic[DT]):
     def reset(self) -> Self:
         """Empty the memory"""
         self._data = np.full(0, self._default, dtype=type(self._default))
-        self._n_updates = 0
+        self._count = 0
         return self
+
+    def must_skip(self):
+        """Check if the memory must skip the current update"""
+        return self._count % (1 + self._skip_steps) > 0
 
     def update(self, values: NDArray[DT]) -> Self:
         """Update the memory with the values of the current result.
@@ -839,59 +849,144 @@ class RollingMemory(Generic[DT]):
         """
         if len(self._data) == 0:
             self._data = np.full(
-                (len(values), self.n_steps),
+                (len(values), self.size),
                 self._default,
                 dtype=type(self._default),
             )
+        self._count += 1
+        if self.must_skip():
+            return self
         self._data = np.concatenate([self._data[:, 1:], values.reshape(-1, 1)], axis=1)
-        self._n_updates += 1
         return self
 
-    def __getitem__(self, item):
-        return self.data[item]
+    @overload
+    def _validate_key(self, key: int) -> int: ...
+
+    @overload
+    def _validate_key(self, key: slice) -> slice: ...
+
+    @overload
+    def _validate_key(self, key: Iterable[int | bool]) -> list[int | bool]: ...
+
+    def _validate_key(
+        self, key: Union[slice, Iterable[int], int]
+    ) -> Union[slice, list[int | bool], int]:
+        if isinstance(key, (bool, np.bool_)):
+            return key
+        elif isinstance(key, Integral):
+            key = int(key)
+            if key >= 0:
+                raise IndexError("Positive indices are not allowed")
+            if abs(key) > self.size:
+                raise IndexError(
+                    f"Attempt to access step {key} beyond "
+                    f"memory with size={self.size} (count={self._count})"
+                )
+            if abs(key) > self._count:
+                raise IndexError(
+                    f"Attempt to access step {key} beyond "
+                    f"number of updates {self._count} (size={self.size})"
+                )
+            return key
+        elif isinstance(key, slice):
+            start, stop, step = key.indices(self.size)
+            free = self.size - self._count
+            if (start < stop and start < free) or (start >= stop and stop < free):
+                raise IndexError(
+                    f"Attempt to access step {key} beyond "
+                    f"number of updates {self._count}"
+                )
+            return key
+        elif isinstance(key, collections.abc.Iterable) and not isinstance(
+            key, (str, bytes)
+        ):
+            keys = [self._validate_key(k) for k in key]
+            if len(keys) > 0 and not isinstance(keys[0], (Integral, bool, np.bool_)):
+                raise TypeError(f"Invalid key type in sequence: {type(keys[0])}")
+            return keys
+        raise TypeError(f"Invalid key type: {type(key)}")
+
+    def __getitem__(self, key: Union[slice, Iterable[int], int]) -> NDArray:
+        """Get items from the memory, properly handling temporal sequence."""
+        key = self._validate_key(key)
+        return cast(NDArray, self.data[key])
 
     def __len__(self) -> int:
-        if self.n_updates == 0:
-            return 0
-        return 1 + ((self.n_updates - 1) % self.n_steps)
+        """The number of steps that the memory has saved. This is guaranteed to be
+        between 0 and `size`, inclusive."""
+        return min(self.size, self._count // (1 + self._skip_steps))
 
 
 class History(StoppingCriterion):
-    """A non-check that stores the last `steps` values in a rolling memory.
+    """A dummy stopping criterion that stores the last `steps` values in a rolling
+    memory.
 
-    You can access the values with the attribute `memory`, which is of type
-    [RollingMemory][pydvl.valuation.stopping.RollingMemory]. The values are stored in
-    the `data` attribute.
+    You can access the values via indexing with the `[]` operator. Indices should always
+    be negative, with the most recent value being `-1`, the second most recent being
+    `-2`, and so on.
+
+    ??? example "Typical usage"
+        ```python
+        stopping = MaxSamples(5000) | (history := History(5000))
+        valuation = TMCShapleyValuation(utility, sampler, is_done=stopping)
+        with parallel_config(n_jobs=-1):
+            valuation.fit(training_data)
+        # history[-10:]  # contains the last 10 steps
+        ```
+
+    ??? warning "Comparing histories across valuation methods"
+        Care must be taken when comparing the histories saved while fitting different
+        methods. The rate at which stopping criteria are checked, and hence a `History`
+        is updated is not guaranteed to be the same, due to differences in sampling and
+        batching. For instance, a deterministic powerset sampler with a
+        [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration]
+        with a `batch_size=2**(n-1)` will update the history exactly `n` times (if given
+        enough iterations by other stopping criteria), where `n` is the number of
+        indices. If instead the batch size is `1`, the history will be updated `2**n`
+        times, but all the values except for one index will remain constant during
+        `2**(n-1)` iterations. Comparing any of these to, say, a
+        [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
+        which results in one update to the history per permutation, requires setting
+        the parameter `skip_steps` adequately in the respective `History` objects.
 
     ??? Example
         ```python
         result = ValuationResult.from_random(size=7)
         history = History(n_steps=5)
         history(result)
-        assert all(history.data[-1] == result)
+        assert all(history[-1] == result)
         ```
-
     Args:
         n_steps: The number of steps to remember.
+        skip_steps: The number of steps to skip between updates. If `0`, the memory
+            is updated at every check of the criterion. If `1`, the memory is updated
+            every other step, and so on. This is useful to synchronize the memory of
+            methods with different update rates.
         modify_result: Ignored.
     """
 
     memory: RollingMemory
 
-    def __init__(self, n_steps: int, modify_result: bool = False):
+    def __init__(self, n_steps: int, skip_steps: int = 0, modify_result: bool = False):
         super().__init__(modify_result=False)
-        self.memory = RollingMemory(n_steps, default=np.inf, dtype=np.float64)
+        self.memory = RollingMemory(
+            n_steps, skip_steps=skip_steps, default=np.inf, dtype=np.float64
+        )
 
     def _check(self, result: ValuationResult) -> Status:
+        if self._converged.size == 0:
+            self._converged = np.full_like(result.indices, False, dtype=bool)
         self.memory.update(result.values)
         return Status.Pending
 
-    # Forward some methods for convenience
+    def completion(self) -> float:
+        return 0.0
 
-    @property
-    def n_updates(self) -> int:
-        """Number of updates to the memory"""
-        return self.memory.n_updates
+    def reset(self) -> Self:
+        self.memory.reset()
+        return super().reset()
+
+    # Forward some methods for convenience
 
     @property
     def data(self) -> NDArray[np.float64]:
@@ -902,6 +997,8 @@ class History(StoppingCriterion):
         return self.memory[item]
 
     def __len__(self) -> int:
+        """The number of steps that the memory has saved. This is guaranteed to be
+        between 0 and `n_steps`, inclusive."""
         return len(self.memory)
 
 
@@ -952,11 +1049,11 @@ class HistoryDeviation(StoppingCriterion):
         if r.values.size == 0:
             return Status.Pending
         self.memory.update(r.values)
-        if self.memory.n_updates < self.memory.n_steps:  # Memory not full yet
+        if self.memory.count < self.memory.size:  # Memory not full yet
             return Status.Pending
 
         # Look at indices that have been updated more than n_steps times
-        ii = r.counts > self.memory.n_steps
+        ii = r.counts > self.memory.size
         if sum(ii) > 0:
             curr = self.memory[-1]
             saved = self.memory[0]
@@ -968,7 +1065,7 @@ class HistoryDeviation(StoppingCriterion):
             # the absolute difference, which is just the memory, otherwise.
             if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
-                    self._converged, r.counts > self.memory.n_steps
+                    self._converged, r.counts > self.memory.size
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
@@ -979,7 +1076,7 @@ class HistoryDeviation(StoppingCriterion):
         return super().reset()
 
     def __str__(self) -> str:
-        return f"HistoryDeviation(n_steps={self.memory.n_steps}, rtol={self.rtol})"
+        return f"HistoryDeviation(n_steps={self.memory.size}, rtol={self.rtol})"
 
 
 class RankCorrelation(StoppingCriterion):
@@ -1032,8 +1129,8 @@ class RankCorrelation(StoppingCriterion):
         self.rtol = rtol
         self.burn_in = burn_in
         self.fraction = fraction
-        self.memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
-        self.count_memory = RollingMemory(n_steps=2, default=0, dtype=np.int_)
+        self.memory = RollingMemory(size=2, default=np.nan, dtype=np.float64)
+        self.count_memory = RollingMemory(size=2, default=0, dtype=np.int_)
         self._corr = np.nan
         self._completion = 0.0
 
@@ -1042,7 +1139,7 @@ class RankCorrelation(StoppingCriterion):
             return Status.Pending
         # The first update is typically of constant values, so that the Spearman
         # correlation is undefined. We need to wait for the second update.
-        if self.memory.n_updates < 1:
+        if self.memory.count < 1:
             self.memory.update(r.values)
             self.count_memory.update(r.counts)
             self._converged = np.full_like(r.indices, False, dtype=bool)

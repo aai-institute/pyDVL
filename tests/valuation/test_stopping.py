@@ -329,29 +329,56 @@ def test_count(criterion):
 
 
 def test_memory():
-    r1 = ValuationResult.from_random(5)
-    r2 = ValuationResult.from_random(5)
-    memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
+    r1 = np.arange(5)
+    r2 = np.arange(5,10)
+    r3 = np.arange(10, 15)
+
+    memory = RollingMemory(size=3, default=np.nan, dtype=np.float64)
     assert len(memory) == 0
 
     assert np.all(memory.data == [])
-    memory.update(r1.values)
-    np.testing.assert_equal(memory.data[-1], r1.values)
-    np.testing.assert_equal(memory[-1], r1.values)
+    memory.update(r1)
     assert len(memory) == 1
+    np.testing.assert_equal(memory.data[-1], r1)
+    np.testing.assert_equal(memory[-1], r1)
 
-    memory.update(r2.values)
-    tmp = np.vstack((r1.values, r2.values))
-    np.testing.assert_equal(memory.data[-2:], tmp)
-    np.testing.assert_equal(memory[-2:], tmp)
+    memory.update(r2)
     assert len(memory) == 2
-
-    r3 = ValuationResult.from_random(5)
-    memory.update(r3.values)
-    tmp = np.vstack((r2.values, r3.values))
+    tmp = np.vstack((r1, r2))
     np.testing.assert_equal(memory.data[-2:], tmp)
     np.testing.assert_equal(memory[-2:], tmp)
-    assert len(memory) == 1
+
+    memory.update(r3)
+    assert len(memory) == 3
+    tmp2 = np.vstack((r2, r3))
+    np.testing.assert_equal(memory.data[-2:], tmp2)
+    np.testing.assert_equal(memory[-2:], tmp2)
+    np.testing.assert_equal(memory.data[-3:-1], tmp)
+    np.testing.assert_equal(memory[-3:-1], tmp)
+    np.testing.assert_equal(memory.data[-1:-3:-1], tmp2[::-1])
+    np.testing.assert_equal(memory[-1:-3:-1], tmp2[::-1])
+    np.testing.assert_equal(memory[[-1, -2]], tmp2[::-1])
+    np.testing.assert_equal(memory[[-2, -1]], tmp2)
+
+    mask = np.array([True, False, True])
+    np.testing.assert_array_equal(memory[mask], np.vstack((r1, r3)))
+
+    with pytest.raises(IndexError, match="Positive indices are not allowed"):
+        memory[0]  # noqa
+    with pytest.raises(IndexError, match="Positive indices are not allowed"):
+        memory[1]  # noqa
+    with pytest.raises(IndexError):
+        memory[-4]  # noqa
+    with pytest.raises(IndexError):
+        memory[[-1, -6]]  # noqa
+    with pytest.raises(IndexError):
+        memory[[-1, 2]]  # noqa
+    with pytest.raises(TypeError):
+        memory["invalid"]  # noqa
+    with pytest.raises(TypeError):
+        memory[object()]  # noqa
+    with pytest.raises(TypeError):
+        memory[["string"]]  # noqa
 
 
 def test_no_stopping_without_sampler():
@@ -368,7 +395,7 @@ def test_history():
     n_steps = 4
     size = 5
     history = History(n_steps=n_steps)
-    for i in range(1, n_steps+1):
+    for i in range(1, n_steps + 1):
         result = ValuationResult.from_random(size=size)
         status = history(result)
         assert status == Status.Pending
