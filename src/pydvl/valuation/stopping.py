@@ -875,14 +875,13 @@ class RollingMemory(Generic[DT]):
             return key
         elif isinstance(key, Integral):
             key = int(key)
-            if key >= 0:
-                raise IndexError("Positive indices are not allowed")
+            free = self.size - self._count
             if abs(key) > self.size:
                 raise IndexError(
                     f"Attempt to access step {key} beyond "
                     f"memory with size={self.size} (count={self._count})"
                 )
-            if abs(key) > self._count:
+            if key < - self._count or 0 <= key < free:
                 raise IndexError(
                     f"Attempt to access step {key} beyond "
                     f"number of updates {self._count} (size={self.size})"
@@ -915,6 +914,9 @@ class RollingMemory(Generic[DT]):
         """The number of steps that the memory has saved. This is guaranteed to be
         between 0 and `size`, inclusive."""
         return min(self.size, self._count // (1 + self._skip_steps))
+
+    def __sizeof__(self) -> int:
+        return object.__sizeof__(self) + self._data.nbytes
 
 
 class History(StoppingCriterion):
@@ -992,6 +994,10 @@ class History(StoppingCriterion):
     def data(self) -> NDArray[np.float64]:
         """A view on the data. Rows are the steps, columns are the indices"""
         return self.memory.data
+
+    @property
+    def size(self) -> int:
+        return self.memory.size
 
     def __getitem__(self, item):
         return self.memory[item]

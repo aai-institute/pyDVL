@@ -333,7 +333,7 @@ def test_memory():
     r2 = np.arange(5,10)
     r3 = np.arange(10, 15)
 
-    memory = RollingMemory(size=3, default=np.nan, dtype=np.float64)
+    memory = RollingMemory(size=4, default=np.nan, dtype=np.float64)
     assert len(memory) == 0
 
     assert np.all(memory.data == [])
@@ -360,19 +360,17 @@ def test_memory():
     np.testing.assert_equal(memory[[-1, -2]], tmp2[::-1])
     np.testing.assert_equal(memory[[-2, -1]], tmp2)
 
-    mask = np.array([True, False, True])
+    mask = np.array([False, True, False, True])
     np.testing.assert_array_equal(memory[mask], np.vstack((r1, r3)))
 
-    with pytest.raises(IndexError, match="Positive indices are not allowed"):
+    with pytest.raises(IndexError):
         memory[0]  # noqa
-    with pytest.raises(IndexError, match="Positive indices are not allowed"):
-        memory[1]  # noqa
     with pytest.raises(IndexError):
         memory[-4]  # noqa
     with pytest.raises(IndexError):
         memory[[-1, -6]]  # noqa
     with pytest.raises(IndexError):
-        memory[[-1, 2]]  # noqa
+        memory[[-1, 0]]  # noqa
     with pytest.raises(TypeError):
         memory["invalid"]  # noqa
     with pytest.raises(TypeError):
@@ -401,9 +399,9 @@ def test_history():
         assert status == Status.Pending
         assert history.completion() == 0.0
         np.testing.assert_equal(history.converged, False)
-        assert all(history.data[-1] == result.values)
+        assert all(history[-1] == result.values)
         assert len(history) == i
-    assert history.n_updates == n_steps
+    assert history.count == n_steps
     assert history.data.shape == (n_steps, size)
 
 
