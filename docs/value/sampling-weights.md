@@ -118,10 +118,11 @@ alleviating the problem that is employed in pyDVL is to perform all
 computations in log space and use the log-sum-exp trick for numerical 
 stability.
 
-However, while this greatly increases numerical range and accuracy, it remains 
-suboptimal. What if one chose instead the sampling procedure such that $p (S) = 
-w_{\operatorname{sh}} (S)$? This is the main contribution of several works in 
-the area, like TMCS, AME or Owen-Shapley.
+However, while this greatly increases numerical range and accuracy, it remains
+suboptimal. What if one chose instead the sampling distribution $\mathcal{L}$
+such that $p_\mathcal{L} (S) = w_{\operatorname{sh}} (S)$? This is the main
+contribution of several works in the area, like [TMCS][tmcs-intro], AME or
+[Owen-Shapley][owen-shapley-intro].
 
 ### An introductory example
 
@@ -147,7 +148,7 @@ sampling procedure which first samples $q \in (0, 1)$ according to some
 distribution $\mathcal{Q}$ and then samples sets $S \subseteq D_{- i}$ as 
 above, with an i.i.d. process using a Bernoulli of parameter $q$: $X_{1}, 
 \ldots, X_{n} \sim \operatorname{Ber} (q)$ and $S := \lbrace j : X_{j} = 1, j 
-\neq i \rbrace.$ With this method we have
+\neq i \rbrace.$ For each $q,$ we have:
 
 $$ p (S|q) = q^k  (1 - q)^{m - k}, $$
 
@@ -164,9 +165,10 @@ $$
 \end{eqnarray*}
 $$
 
-Now a Monte Carlo approximation $\hat{v}_{\operatorname{shap}, 
-\operatorname{ame} (\mathcal{U})}$ like that of [(1)](#mc-shapley) converges 
-exactly to $v_{\operatorname{shap}}$ **without any correcting factors**.
+If we sample following this scheme, and define a Monte Carlo approximation
+$\hat{v}_{\operatorname{ame} (\mathcal{U})}$ like that of [(1)](#mc-shapley), it
+will converge exactly to $v_{\operatorname{shap}}$ **without any correcting
+factors**.
 
 Formally, AME is defined as the expected marginal utility over the joint 
 distribution. Let $f$ be the density of $\mathcal{Q},$ and let $\mathcal{L} (q, 
@@ -176,7 +178,7 @@ By total expectation:
 
 $$
 \begin{eqnarray*}
-  v_{\operatorname{ame}, \mathcal{Q}} (i) & := & \mathbb{E}_{S \sim
+  v_{\operatorname{ame}(\mathcal{Q})} (i) & := & \mathbb{E}_{S \sim
   \mathcal{L}_{\mathcal{Q}} (D_{- i})} [\delta_{i} (S)]\\\
   & = & \mathbb{E}_{q \sim \mathcal{Q}}  [\mathbb{E}_{S \sim \mathcal{L} (q,
   D_{- i})} [\delta_{i} (S) |q]]\\\
