@@ -748,12 +748,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         """
 
         effective_n = self._index_iterator_cls.complement_size(n)
-        # Depending on whether we sample from complements or not, the total number of
-        # samples passed to the heuristic has a different interpretation.
-        index_iteration_length = self._index_iterator_cls.length(effective_n)  # type: ignore
-        if index_iteration_length is None:
-            index_iteration_length = 1
-        index_iteration_length = max(1, index_iteration_length)
 
         # Note that we can simplify the quotient
         # $$ \frac{m_k}{m} =
@@ -772,11 +766,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         if p_k == 0:
             return -np.inf
 
-        return float(
-            np.log(p_k)
-            - logcomb(effective_n, subset_len)
-            + np.log(index_iteration_length)
-        )
+        return float(np.log(p_k) - logcomb(effective_n, subset_len))
 
 
 class VRDSSampler(StratifiedSampler):

@@ -192,8 +192,8 @@ def stratified_samplers(n_samples_per_index: int = 32):
                     ConstantSampleSize,
                     {"n_samples": lambda n=n_samples_per_index: n},
                 ),
-                "sample_sizes_iteration": RandomSizeIteration,
-                "index_iteration": RandomIndexIteration,
+                "sample_sizes_iteration": FiniteSequentialSizeIteration,
+                "index_iteration": FiniteSequentialIndexIteration,
             },
         ),
         (
@@ -228,6 +228,7 @@ def stratified_samplers(n_samples_per_index: int = 32):
                         "exponent": lambda e=0.5: e,
                     },
                 ),
+                "sample_sizes_iteration": FiniteSequentialSizeIteration,
                 "index_iteration": RandomIndexIteration,
             },
         ),
@@ -241,7 +242,8 @@ def stratified_samplers(n_samples_per_index: int = 32):
                         "exponent": lambda e=0.5: e,
                     },
                 ),
-                "index_iteration": SequentialIndexIteration,
+                "sample_sizes_iteration": FiniteSequentialSizeIteration,
+                "index_iteration": FiniteSequentialIndexIteration,
             },
         ),
     ]
@@ -667,7 +669,7 @@ def test_sampler_weights(
         effective_n = n - 1
 
     # HACK: MSR actually has same distribution as uniform over 2^(N-i)
-    fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
+    log_fudge = -math.log(2) if issubclass(sampler_cls, MSRSampler) else 0.0
 
     subset_len_probs = np.zeros(effective_n + 1)
     for batch in islice(sampler.generate_batches(indices), n_batches):
@@ -685,7 +687,7 @@ def test_sampler_weights(
         # log_weight = log probability of sampling
         # So: no. of sets of size k in the powerset, times. prob of sampling size k
         expected_log_subset_len_probs[k] = (
-            logcomb(effective_n, k) + sampler.log_weight(n, k) + math.log(fudge)
+            logcomb(effective_n, k) + sampler.log_weight(n, k) + log_fudge
         )
 
     np.testing.assert_allclose(
