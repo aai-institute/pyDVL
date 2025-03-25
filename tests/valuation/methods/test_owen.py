@@ -34,9 +34,9 @@ def test_owen_weight(sampler_cls, sampler_kwargs, dummy_utility):
     valuation = ShapleyValuation(utility, sampler, is_done=NoStopping())
 
     results = []
+    coeff = valuation.log_coefficient
     for n in np.random.randint(1000, 100000, size=4):  # type: int
         for k in np.random.randint(0, n, size=4):  # type: int
-            result = valuation.log_coefficient(n, k) - sampler.log_weight(n, k)
-            results.append(result)  # noqa: F821
+            results.append(coeff(n, k))  # noqa: F821
 
     np.testing.assert_allclose(np.exp(results), 1.0)

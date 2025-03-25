@@ -112,7 +112,7 @@ class ClasswiseShapleyValuation(Valuation):
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
-        strategy = self.sampler.make_strategy(self.utility)
+        strategy = self.sampler.make_strategy(self.utility, None)
         updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
 

@@ -114,7 +114,9 @@ class BetaShapleyValuation(SemivalueValuation):
         def _log_coefficient(n: int, k: int) -> float:
             j = k + 1
             return float(
-                sp.special.betaln(j + self.beta - 1, n - j + self.alpha) - log_const
+                sp.special.betaln(j + self.beta - 1, n - j + self.alpha)
+                - log_const
+                - self.sampler.log_weight(n, k)
             )
 
         return _log_coefficient

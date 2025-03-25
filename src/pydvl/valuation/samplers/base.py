@@ -224,7 +224,7 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: SemivalueCoefficient | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> EvaluationStrategy:
         """Returns the strategy for this sampler.
 
@@ -279,7 +279,7 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         ```python
         def fit(self, data: Dataset):
             self.utility = self.utility.with_dataset(data)
-            strategy = self.sampler.strategy(self.utility, self.log_coefficient)
+            strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
             delayed_batches = Parallel()(
                 delayed(strategy.process)(batch=list(batch), is_interrupted=flag)
                 for batch in self.sampler
@@ -293,7 +293,6 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
         ```
 
     Args:
-        sampler: Required to set up some strategies.
         utility: Required to set up some strategies and to process the samples. Since
             this contains the training data, it is expensive to pickle and send to
             workers.
@@ -305,9 +304,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
 
     def __init__(
         self,
-        sampler: SamplerT,
         utility: UtilityBase,
-        log_coefficient: SemivalueCoefficient | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ):
         self.utility = utility
         # Used by the decorator suppress_warnings:
@@ -316,14 +314,12 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
             len(utility.training_data) if utility.training_data is not None else 0
         )
         if log_coefficient is not None:
-            self.sampler_weight = sampler.log_weight
             self.valuation_coefficient = log_coefficient
         else:
             # Allow method implementations to disable importance sampling by setting
             # the log_coefficient to None.
             # Note that being in logspace, we are adding and subtracting 0s, so that
             # this is not a problem.
-            self.sampler_weight = lambda n, subset_len: 0.0
             self.valuation_coefficient = lambda n, subset_len: 0.0
 
     @abstractmethod

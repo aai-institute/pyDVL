@@ -130,7 +130,7 @@ class PermutationSamplerBase(IndexSampler, ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: SemivalueCoefficient | None = None,
+        coefficient: SemivalueCoefficient | None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -248,9 +248,9 @@ class PermutationEvaluationStrategy(
         self,
         sampler: PermutationSamplerBase,
         utility: UtilityBase,
-        coefficient: SemivalueCoefficient | None = None,
+        coefficient: SemivalueCoefficient | None,
     ):
-        super().__init__(sampler, utility, coefficient)
+        super().__init__(utility, coefficient)
         self.truncation = copy(sampler.truncation)
         self.truncation.reset(utility)  # Perform initial setup (e.g. total_utility)
 
@@ -272,7 +272,6 @@ class PermutationEvaluationStrategy(
                 sign = np.sign(marginal)
                 log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
                 log_marginal += self.valuation_coefficient(self.n_indices, i)
-                log_marginal -= self.sampler_weight(self.n_indices, i)
                 r.append(ValueUpdate(idx, log_marginal, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):

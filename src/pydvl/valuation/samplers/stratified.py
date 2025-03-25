@@ -131,7 +131,7 @@ configurations besides VRDS appear in the literature as follows:
   [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] (see
   below) with an exponent of -2, which is the order of $m_k$ in $\delta$-Shapley.
 
-    ??? Example "Constructing an alternative sampler for $\delta$-Shapley"
+    ??? Example "Constructing an alternative sampler for DeltaShapley"
         ```python
         config = DeltaShapleyNCSGDConfig(...)  # See the docs / paper
         sampler = StratifiedSampler(
@@ -364,7 +364,7 @@ class SampleSizeStrategy(ABC):
             self.n_samples = int(np.ceil(s))
 
         if probs:
-            return values
+            return values  # m_k / m
 
         values *= self.n_samples
         # Round down and distribute remainder by adjusting the largest fractional parts
@@ -763,19 +763,20 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # This is useful for the stochastic iteration, where we are given sampling
         # frequencies for each size instead of counts, and the total number of samples
         # m is 1, so that quantization would yield a bunch of zeros.
-        f = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
-        f_k = f[subset_len]
-        assert np.isclose(np.sum(f), 1.0), (
-            f"Strategy returned invalid probabilities, adding to {np.sum(f)=}"
+        p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
+        p_k = p[subset_len]  # also m_k / m
+        assert np.isclose(np.sum(p), 1.0), (
+            f"Strategy returned invalid probabilities, adding to {np.sum(p)=}"
         )
 
-        if f_k == 0:
+        if p_k == 0:
             return -np.inf
 
         return float(
             -logcomb(effective_n, subset_len)
             + np.log(index_iteration_length)
             + np.log(f_k)
+            + np.log(p_k)
         )
 
 

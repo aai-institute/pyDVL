@@ -13,7 +13,7 @@ details, please refer to the [introduction to semi-values][semi-values-intro].
     read [Sampling strategies for semi-values][semi-values-sampling].
 
 Because almost every method employs Monte Carlo sampling of subsets, our architecture
-allows for implicit importance sampling. Early valuation methods chose samplers to
+allows for importance sampling. Early valuation methods chose samplers to
 implicitly provide the weights $w(k)$ as exactly the sampling probabilities of sets
 $p(S|k)$, e.g. [permutation Shapley][permutation-shapley-intro].
 
@@ -24,25 +24,26 @@ and the utility function.
 For this reason, our implementation allows mix-and-matching of any semi-value coefficient
 with any sampler. For importance sampling, the mechanism is as follows:
 
-* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
-  and implement the `_log_coefficient()` method. This method should return the
-  coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
-  stability. The coefficient is a function of the number of elements in the set $n$ and
-  the size of the subset $k$ for which the coefficient is being computed.
-
 * Choose a sampler to go with the semi-value. The sampler must implement the
-  `log_weight()` method, which returns the logarithm of the sampling probability of a
+  `log_weight()` property, which returns the logarithm of the sampling probability of a
   subset $S$ of size $k$, i.e. $p(S|k).$ Note that this is **not** p(|S|=k).$ The sampler
   also implements an [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]
-  which is used to compute the utility of the sampled subsets in subprocesses. This
-  strategy chooses how to combine the coefficient and the weight, typically by
-  subtracting the log-weights from the log-coefficient.
+  which is used to compute the utility of the sampled subsets in subprocesses.
+
+* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
+  and implement the `log_coefficient()` method. This method should return the final
+  coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
+  stability. The coefficient is a function of the number of elements in the set $n$ and
+  the size of the subset $k$ for which the coefficient is being computed, and of the
+  sampler's weight. You can combin combine the method's coefficient and the weight, in
+  any way. For instance, in order to entirely compensate for the sampling distribution
+  one simply subtracts the log-weights from the log-coefficient.
 
 ## Disabling importance sampling
 
 In case you have a sampler that already provides the coefficients you need implicitly
-as the sampling probabilities, you can override the `log_coefficient` property (note the
-absence of an underscore) to return `None`.
+as the sampling probabilities, you can override the `log_coefficient` property to
+return `None`.
 
 
 """

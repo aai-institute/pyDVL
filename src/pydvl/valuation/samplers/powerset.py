@@ -296,9 +296,9 @@ class PowersetSampler(IndexSampler, ABC):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: SemivalueCoefficient | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> PowersetEvaluationStrategy:
-        return PowersetEvaluationStrategy(self, utility, log_coefficient)
+        return PowersetEvaluationStrategy(utility, log_coefficient)
 
     @abstractmethod
     def generate(self, indices: IndexSetT) -> SampleGenerator:
@@ -387,7 +387,6 @@ class PowersetEvaluationStrategy(
             log_marginal += self.valuation_coefficient(
                 self.n_indices, len(sample.subset)
             )
-            log_marginal -= self.sampler_weight(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
@@ -435,9 +434,9 @@ class LOOSampler(PowersetSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: SemivalueCoefficient | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> PowersetEvaluationStrategy[LOOSampler]:
-        return LOOEvaluationStrategy(self, utility, log_coefficient)
+        return LOOEvaluationStrategy(utility, log_coefficient)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self._index_iterator_cls.length(len(indices))
@@ -450,8 +449,6 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
     sample processed in [process()] is subtracted from it and returned as value update.
 
     Args:
-        sampler: The sampler to use. Must be a
-            [LOOSampler][pydvl.valuation.samplers.LOOSampler].
         utility: The utility function to use.
         coefficient: The coefficient to use. If `None`, the correction of importance
             sampling is disabled.
@@ -459,11 +456,10 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
 
     def __init__(
         self,
-        sampler: LOOSampler,
         utility: UtilityBase,
-        coefficient: SemivalueCoefficient | None = None,
+        coefficient: SemivalueCoefficient | None,
     ):
-        super().__init__(sampler, utility, coefficient)
+        super().__init__(utility, coefficient)
         assert utility.training_data is not None
         self.total_utility = utility(Sample(None, utility.training_data.indices))
 
@@ -480,7 +476,6 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
             log_marginal += self.valuation_coefficient(
                 self.n_indices, len(sample.subset)
             )
-            log_marginal -= self.sampler_weight(self.n_indices, len(sample.subset))
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break

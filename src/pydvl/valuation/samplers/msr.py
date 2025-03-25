@@ -227,7 +227,7 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
             coefficient: Coefficient function for the utility function.
         """
         assert coefficient is not None
-        return MSREvaluationStrategy(self, utility, coefficient)
+        return MSREvaluationStrategy(utility, coefficient)
 
     def result_updater(self, result: ValuationResult) -> ResultUpdater:
         """Returns a callable that updates a valuation result with an MSR value update.
@@ -278,15 +278,13 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
 
         if k > 0:  # Sample was not empty => there are in-sample indices
             in_sample_coefficient = self.valuation_coefficient(self.n_indices, k - 1)
-            in_sample_weight = self.sampler_weight(self.n_indices, k - 1)
-            update = log_abs_u + in_sample_coefficient - in_sample_weight
+            update = log_abs_u + in_sample_coefficient
             for i in sample.subset:
                 updates.append(MSRValueUpdate(np.int_(i), update, sign, True))
 
         if k < self.n_indices:  # Sample != full set => there are out-of-sample indices
             out_sample_coefficient = self.valuation_coefficient(self.n_indices, k)
-            out_sample_weight = self.sampler_weight(self.n_indices, k)
-            update = log_abs_u + out_sample_coefficient - out_sample_weight
+            update = log_abs_u + out_sample_coefficient
             for i in range(self.n_indices):
                 if not mask[i]:
                     updates.append(MSRValueUpdate(np.int_(i), update, sign, False))

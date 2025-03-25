@@ -39,8 +39,11 @@ def test_log_coefficients(n, valuation_cls, kwargs):
     logarithms of coefficients and sampler weights to enable larger values and
     avoid numerical instabilities.
     """
+    class DummySampler:
+        def log_weight(self, n: int, j: int) -> float:
+            return 0.0
     valuation = valuation_cls(  # type: ignore
-        utility=None, sampler=None, is_done=None, progress=False, **kwargs
+        utility=None, sampler=DummySampler(), is_done=None, progress=False, **kwargs
     )
 
     log_terms = [
