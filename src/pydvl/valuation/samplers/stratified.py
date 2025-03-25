@@ -773,10 +773,9 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             return -np.inf
 
         return float(
-            -logcomb(effective_n, subset_len)
+            np.log(p_k)
+            - logcomb(effective_n, subset_len)
             + np.log(index_iteration_length)
-            + np.log(f_k)
-            + np.log(p_k)
         )
 
 
