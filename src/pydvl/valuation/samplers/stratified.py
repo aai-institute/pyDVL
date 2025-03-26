@@ -193,17 +193,17 @@ from pydvl.utils import (
     maybe_add_argument,
     random_subset_of_size,
     suppress_warnings,
-)
+    )
 from pydvl.valuation.samplers.permutation import (
     PermutationEvaluationStrategy,
     PermutationSampler,
     TruncationPolicy,
-)
+    )
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
-)
+    )
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -213,7 +213,7 @@ from pydvl.valuation.types import (
     SampleGenerator,
     SemivalueCoefficient,
     ValueUpdate,
-)
+    )
 
 __all__ = [
     "ConstantSampleSize",
@@ -810,3 +810,175 @@ class VRDSSampler(StratifiedSampler):
             index_iteration=FiniteSequentialIndexIteration,
             seed=seed,
         )
+
+
+@dataclass(frozen=True)
+class StratifiedPermutation(Sample):
+    """A sample for the stratified permutation sampling strategy.
+
+    This is a subclass of [Sample][pydvl.valuation.samplers.Sample] which adds
+    information about the set sizes to sample
+    """
+
+    lower_bound: int
+    """ The lower bound for the set sizes."""
+
+    upper_bound: int
+    """ The upper bound for the set sizes."""
+
+
+class StratifiedPermutationSampler(PermutationSampler):
+    """A stratified permutation sampler.
+
+    !!! warning "Experimental"
+        That is: very likely to be wrong.
+
+    Args:
+        sample_sizes: An object which returns the number of samples to take for a given
+            set size. This must be able to compute discrete numbers of samples, as
+            opposed to only probabilities. Either choose one that generates integer
+            sample sizes, or set `n_samples` manually upon its construction.
+        truncation: A policy to stop the permutation early.
+        seed: Seed for the random number generator.
+        batch_size: The number of samples (full permutations) to generate at once.
+    """
+
+    def __init__(
+        self,
+        sample_sizes: SampleSizeStrategy,
+        truncation: TruncationPolicy | None = None,
+        seed: Seed | None = None,
+        batch_size: int = 1,
+    ):
+        super().__init__(truncation, seed, batch_size)
+        self.sample_sizes_strategy = sample_sizes
+
+    @property
+    def skip_indices(self) -> IndexSetT:
+        return self._skip_indices
+
+    @skip_indices.setter
+    def skip_indices(self, indices: IndexSetT):
+        raise AttributeError(
+            f"Cannot skip converged indices in {self.__class__.__name__}."
+        )
+
+    def effective_bounds(self, n: int) -> tuple[int, int]:
+        """Returns the effective bounds for the sample sizes, given the number of
+        indices `n`.
+        Args:
+            n: The number of indices.
+        Returns:
+            A tuple of [lower, upper] bounds for sample sizes (inclusive).
+        """
+        if self.sample_sizes_strategy.lower_bound is None:
+            lower = 0
+        else:
+            lower = self.sample_sizes_strategy.lower_bound
+        if self.sample_sizes_strategy.upper_bound is None:
+            upper = n
+        else:
+            upper = self.sample_sizes_strategy.upper_bound
+        return lower, upper
+
+    def generate(self, indices: IndexSetT) -> SampleGenerator[StratifiedPermutation]:
+        """Generates the permutation samples.
+
+        These samples include information as to what sample sizes can be taken from the
+        permutation by the strategy.
+
+        !!! info
+            This generator ignores `skip_indices`.
+
+        Args:
+            indices: The indices to sample from. If empty, no samples are generated.
+        """
+        if len(indices) == 0:
+            return
+        sizes = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
+        n_samples = np.sum(sizes)
+        if n_samples <= 1:
+            raise ValueError(
+                "Sample size strategy must return sample sizes, not probabilities."
+                "Ensure that you initialize it with a valid sample size."
+            )
+
+        while True:
+            # Can't have skip indices: if the index set is smaller than the lower bound
+            # for the set sizes, the strategy's process() will always return empty
+            # evaluations and the method might never stop with criteria depending on the
+            # number of updates
+            # _indices = np.setdiff1d(indices, self.skip_indices)
+
+            sizes -= 1
+            positive = np.where(sizes > 0)[0]
+            if len(positive) == 0:
+                break
+            lb, ub = int(positive[0]), int(positive[-1])
+            assert all(sizes[lb : ub + 1] > 0), "Sample size function must be monotonic"
+
+            yield StratifiedPermutation(
+                idx=None,
+                subset=self._rng.permutation(indices),
+                lower_bound=lb,
+                upper_bound=ub,
+            )
+
+    def make_strategy(
+        self, utility: UtilityBase, coefficient: SemivalueCoefficient | None = None
+    ) -> StratifiedPermutationEvaluationStrategy:
+        return StratifiedPermutationEvaluationStrategy(
+            sampler=self,
+            utility=utility,
+            coefficient=coefficient,
+        )
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        effective_n = n - 1
+        lb, ub = self.effective_bounds(effective_n)
+
+        if subset_len < lb or subset_len > ub:
+            return -np.inf
+
+        p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
+        p_k = p[subset_len]
+        if p_k == 0:
+            return -np.inf
+
+        return float(np.log(p_k) - logcomb(effective_n, subset_len))
+
+
+class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
+    """Evaluation strategy for the
+    [StratifiedPermutationSampler][pydvl.valuation.samplers.stratified.StratifiedPermutationSampler].
+
+    !!! warning "Experimental"
+    """
+
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
+    def process(
+        self, batch: SampleBatch, is_interrupted: NullaryPredicate
+    ) -> list[ValueUpdate]:
+        r = []
+        for sample in batch:
+            lb = sample.lower_bound
+            ub = sample.upper_bound
+            self.truncation.reset(self.utility)
+            truncated = False
+            curr = prev = self.utility(None)
+            permutation = sample.subset
+            for i, idx in enumerate(permutation[lb : ub + 1], start=lb):  # type: int, np.int_
+                if not truncated:
+                    new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
+                    curr = self.utility(new_sample)
+                marginal = curr - prev
+                sign = np.sign(marginal)
+                log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+                log_marginal += self.valuation_coefficient(self.n_indices, i)
+                r.append(ValueUpdate(idx, log_marginal, sign))
+                prev = curr
+                if not truncated and self.truncation(idx, curr, self.n_indices):
+                    truncated = True
+                if is_interrupted():
+                    return r
+        return r
