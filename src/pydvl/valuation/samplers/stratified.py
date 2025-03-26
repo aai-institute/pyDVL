@@ -869,6 +869,10 @@ class StratifiedPermutationSampler(PermutationSampler):
             f"Cannot skip converged indices in {self.__class__.__name__}."
         )
 
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        m = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
+        return len(indices) * sum(m)
+
     def generate(self, indices: IndexSetT) -> SampleGenerator[StratifiedPermutation]:
         """Generates the permutation samples.
 
