@@ -54,6 +54,7 @@ import logging
 from abc import abstractmethod
 from typing import Any
 
+import numpy as np
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
@@ -115,6 +116,8 @@ class SemivalueValuation(Valuation):
         self.sampler = sampler
         self.is_done = is_done
         self.skip_converged = skip_converged
+        if skip_converged:  # test whether the sampler supports skipping indices:
+            self.sampler.skip_indices = np.array([], dtype=np.int_)
         self.show_warnings = show_warnings
         self.tqdm_args: dict[str, Any] = {"desc": str(self)}
         # HACK: parse additional args for the progress bar if any (we probably want
