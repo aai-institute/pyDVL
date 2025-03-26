@@ -898,12 +898,12 @@ class StratifiedPermutationSampler(PermutationSampler):
             # number of updates
             # _indices = np.setdiff1d(indices, self.skip_indices)
 
-            sizes -= 1
             positive = np.where(sizes > 0)[0]
             if len(positive) == 0:
                 break
             lb, ub = int(positive[0]), int(positive[-1])
             assert all(sizes[lb : ub + 1] > 0), "Sample size function must be monotonic"
+            sizes -= 1
 
             yield StratifiedPermutation(
                 idx=None,
@@ -950,7 +950,7 @@ class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation[lb : ub + 1], start=lb):  # type: int, np.int_
+            for i, idx in enumerate(permutation[lb : ub], start=lb):  # type: int, np.int_
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
