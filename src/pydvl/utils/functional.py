@@ -234,17 +234,17 @@ def suppress_warnings(
                 raise ValueError("Cannot use suppress_warnings flag with non-methods")
 
             @functools.wraps(fn)
-            def wrapper(*args: Any, **kwargs: Any) -> R:
+            def suppress_warnings_wrapper(*args: Any, **kwargs: Any) -> R:
                 with warnings.catch_warnings():
                     for category in categories:
                         warnings.simplefilter("ignore", category=category)
                     return fn(*args, **kwargs)
 
-            return cast(Callable[P, R], wrapper)
+            return cast(Callable[P, R], suppress_warnings_wrapper)
         else:
 
             @functools.wraps(fn)
-            def wrapper(self, *args: Any, **kwargs: Any) -> R:
+            def suppress_warnings_wrapper(self, *args: Any, **kwargs: Any) -> R:
                 if flag and not hasattr(self, flag):
                     raise AttributeError(
                         f"Instance has no attribute '{flag}' for suppress_warnings"
@@ -263,7 +263,7 @@ def suppress_warnings(
                         warnings.simplefilter(action, category=category)  # type: ignore
                     return fn(self, *args, **kwargs)
 
-            return cast(Callable[P, R], wrapper)
+            return cast(Callable[P, R], suppress_warnings_wrapper)
 
     if fun is None:
         return decorator
@@ -346,7 +346,7 @@ def timed(
     assert fun is not None
 
     @functools.wraps(fun)
-    def wrapper(*args, **kwargs) -> R:
+    def timed_wrapper(*args, **kwargs) -> R:
         start = time.perf_counter()
         try:
             assert fun is not None
@@ -354,9 +354,9 @@ def timed(
         finally:
             elapsed = time.perf_counter() - start
             if accumulate:
-                cast(TimedCallable, wrapper).execution_time += elapsed
+                cast(TimedCallable, timed_wrapper).execution_time += elapsed
             else:
-                cast(TimedCallable, wrapper).execution_time = elapsed
+                cast(TimedCallable, timed_wrapper).execution_time = elapsed
             if logger is not None:
                 assert fun is not None
                 logger.log(
@@ -365,6 +365,6 @@ def timed(
                 )
         return result
 
-    cast(TimedCallable, wrapper).execution_time = 0.0
+    cast(TimedCallable, timed_wrapper).execution_time = 0.0
 
-    return cast(TimedCallable[P, R], wrapper)
+    return cast(TimedCallable[P, R], timed_wrapper)
