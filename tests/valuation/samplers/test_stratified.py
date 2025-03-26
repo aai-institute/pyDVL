@@ -12,7 +12,7 @@ from pydvl.valuation import (
     HarmonicSampleSize,
     PowerLawSampleSize,
     RandomSizeIteration,
-    RoundRobinIteration,
+    RoundRobinSizeIteration,
     SampleSizeStrategy,
 )
 from tests.valuation import recursive_make
@@ -35,13 +35,13 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
 @pytest.mark.parametrize(
     "iteration_cls, sample_sizes, expected_output",
     [
-        (RoundRobinIteration, [], []),
-        (RoundRobinIteration, [2], [(0, 1), (0, 1)]),
-        (RoundRobinIteration, [0, 2], [(1, 1), (1, 1)]),
+        (RoundRobinSizeIteration, [], []),
+        (RoundRobinSizeIteration, [2], [(0, 1), (0, 1)]),
+        (RoundRobinSizeIteration, [0, 2], [(1, 1), (1, 1)]),
         (
-            RoundRobinIteration,
-            [2, 3, 1],
-            [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
+                RoundRobinSizeIteration,
+                [2, 3, 1],
+                [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
         ),
         (FiniteSequentialSizeIteration, [], []),
         (FiniteSequentialSizeIteration, [2], [(0, 2)]),

@@ -267,6 +267,9 @@ class PowersetSampler(IndexSampler, ABC):
         super().__init__(batch_size)
         self._index_iterator_cls = index_iteration
 
+    def complement_size(self, n: int) -> int:
+        return self._index_iterator_cls.complement_size(n)
+
     @property
     def skip_indices(self):
         """Set of indices to skip in the outer loop."""
@@ -339,7 +342,7 @@ class PowersetSampler(IndexSampler, ABC):
                 upon construction.
 
         """
-        m = self._index_iterator_cls.complement_size(n)
+        m = self.complement_size(n)
         return float(-m * np.log(2))
 
     @abstractmethod
@@ -531,9 +534,7 @@ class DeterministicUniformSampler(PowersetSampler):
         if len_outer is None:  # Infinite index iteration
             return None
 
-        return int(
-            len_outer * 2 ** (self._index_iterator_cls.complement_size(len(indices)))
-        )
+        return int(len_outer * 2 ** (self.complement_size(len(indices))))
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):

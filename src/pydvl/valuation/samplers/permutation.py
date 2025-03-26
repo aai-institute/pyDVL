@@ -117,6 +117,15 @@ class PermutationSamplerBase(IndexSampler, ABC):
         super().__init__(batch_size=batch_size)
         self.truncation = truncation or NoTruncation()
 
+    def complement_size(self, n: int) -> int:
+        """Size of the complement of an index wrt. set size `n`.
+
+        Required in certain coefficient computations. Even though we are sampling
+        permutations, updates are always done per-index and the size of the complement
+        is always $n-1$.
+        """
+        return n-1
+
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""Log probability of sampling a set S from a set of size **n-1**.
 

@@ -249,7 +249,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         Returns:
             The logarithm of the weight of a subset of size `subset_len`.
         """
-        m = self._index_iterator_cls.complement_size(n)
+        m = self.complement_size(n)
         return float(-logcomb(m, subset_len) - np.log(m + 1))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:

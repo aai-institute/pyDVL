@@ -304,6 +304,21 @@ class SampleSizeStrategy(ABC):
         """
         ...
 
+    def effective_bounds(self, n: int) -> tuple[int, int]:
+        """Returns the effective bounds for the sample sizes, given the number of
+        indices `n`.
+        Args:
+            n: The number of indices.
+        Returns:
+            A tuple of [lower, upper] bounds for sample sizes (inclusive).
+        """
+        lower = 0 if self.lower_bound is None else self.lower_bound
+        upper = n if self.upper_bound is None else self.upper_bound
+        lower = min(lower, n)
+        upper = min(upper, n)
+
+        return lower, upper
+
     @lru_cache
     def sample_sizes(
         self, n_indices: int, probs: bool = True
@@ -346,12 +361,9 @@ class SampleSizeStrategy(ABC):
         # m_k = m * f(k) / sum_j f(j)
         values = np.zeros(n_indices + 1, dtype=float)
         s = 0.0
-        lower = self.lower_bound if self.lower_bound is not None else 0
-        upper = self.upper_bound if self.upper_bound is not None else n_indices
-        lower = min(lower, n_indices)
-        upper = min(upper, n_indices)
+        lb, ub = self.effective_bounds(n_indices)
 
-        for k in range(lower, upper + 1):
+        for k in range(lb, ub + 1):
             val = self.fun(n_indices, k)
             values[k] = val
             s += val
@@ -390,10 +402,6 @@ class ConstantSampleSize(SampleSizeStrategy):
     """
 
     def fun(self, n_indices: int, subset_len: int) -> float:
-        if self.lower_bound is not None and subset_len < self.lower_bound:
-            return 0.0
-        if self.upper_bound is not None and subset_len > self.upper_bound:
-            return 0.0
         return 1.0
 
 
@@ -710,7 +718,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self.sample_sizes_iteration = maybe_add_argument(sample_sizes_iteration, "seed")
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        m = self._index_iterator_cls.complement_size(len(indices))
+        m = self.complement_size(len(indices))
         sample_sizes_iterable = self.sample_sizes_iteration(
             self.sample_sizes_strategy, m, seed=self._rng
         )
@@ -747,7 +755,7 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
             The logarithm of the probability of having sampled a set of size `subset_len`.
         """
 
-        effective_n = self._index_iterator_cls.complement_size(n)
+        effective_n = self.complement_size(n)
 
         # Note that we can simplify the quotient
         # $$ \frac{m_k}{m} =
@@ -863,24 +871,6 @@ class StratifiedPermutationSampler(PermutationSampler):
             f"Cannot skip converged indices in {self.__class__.__name__}."
         )
 
-    def effective_bounds(self, n: int) -> tuple[int, int]:
-        """Returns the effective bounds for the sample sizes, given the number of
-        indices `n`.
-        Args:
-            n: The number of indices.
-        Returns:
-            A tuple of [lower, upper] bounds for sample sizes (inclusive).
-        """
-        if self.sample_sizes_strategy.lower_bound is None:
-            lower = 0
-        else:
-            lower = self.sample_sizes_strategy.lower_bound
-        if self.sample_sizes_strategy.upper_bound is None:
-            upper = n
-        else:
-            upper = self.sample_sizes_strategy.upper_bound
-        return lower, upper
-
     def generate(self, indices: IndexSetT) -> SampleGenerator[StratifiedPermutation]:
         """Generates the permutation samples.
 
@@ -935,7 +925,7 @@ class StratifiedPermutationSampler(PermutationSampler):
 
     def log_weight(self, n: int, subset_len: int) -> float:
         effective_n = n - 1
-        lb, ub = self.effective_bounds(effective_n)
+        lb, ub = self.sample_sizes_strategy.effective_bounds(effective_n)
 
         if subset_len < lb or subset_len > ub:
             return -np.inf
@@ -961,8 +951,7 @@ class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
     ) -> list[ValueUpdate]:
         r = []
         for sample in batch:
-            lb = sample.lower_bound
-            ub = sample.upper_bound
+            lb, ub = sample.lower_bound, sample.upper_bound
             self.truncation.reset(self.utility)
             truncated = False
             curr = prev = self.utility(None)
