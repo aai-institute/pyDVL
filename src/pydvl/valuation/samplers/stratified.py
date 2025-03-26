@@ -224,7 +224,7 @@ __all__ = [
     "HarmonicSampleSize",
     "PowerLawSampleSize",
     "RandomSizeIteration",
-    "RoundRobinIteration",
+    "RoundRobinSizeIteration",
     "SampleSizeIteration",
     "SampleSizeStrategy",
     "StratifiedPermutationSampler",
@@ -636,7 +636,7 @@ class RandomSizeIteration(SampleSizeIteration):
         yield k, 1
 
 
-class RoundRobinIteration(SampleSizeIteration):
+class RoundRobinSizeIteration(SampleSizeIteration):
     """Generates one sample for each set size $k$ before moving to the next.
 
     This continues yielding until every size $k$ has been emitted exactly $m_k$ times.
