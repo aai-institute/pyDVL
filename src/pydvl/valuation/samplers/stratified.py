@@ -718,9 +718,9 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         self.sample_sizes_iteration = maybe_add_argument(sample_sizes_iteration, "seed")
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        m = self.complement_size(len(indices))
+        effective_n = self.complement_size(len(indices))
         sample_sizes_iterable = self.sample_sizes_iteration(
-            self.sample_sizes_strategy, m, seed=self._rng
+            self.sample_sizes_strategy, effective_n, seed=self._rng
         )
         for idx in self.index_iterable(indices):
             from_set = complement(indices, [idx])
@@ -733,10 +733,8 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         index_iteration_length = self._index_iterator_cls.length(len(indices))
         if index_iteration_length is None:
             return None
-        # Compute n_samples as side effect (yuk!):
-        _ = self.sample_sizes_strategy.sample_sizes(len(indices))
-        assert self.sample_sizes_strategy.n_samples is not None
-        return index_iteration_length * self.sample_sizes_strategy.n_samples
+        m = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
+        return index_iteration_length * sum(m)
 
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
@@ -914,6 +912,16 @@ class StratifiedPermutationSampler(PermutationSampler):
                 upper_bound=ub,
             )
 
+    def log_weight(self, n: int, subset_len: int) -> float:
+        effective_n = n - 1
+
+        p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
+        p_k = p[subset_len]
+        if p_k == 0:
+            return -np.inf
+
+        return float(np.log(p_k) - logcomb(effective_n, subset_len))
+
     def make_strategy(
         self, utility: UtilityBase, coefficient: SemivalueCoefficient | None = None
     ) -> StratifiedPermutationEvaluationStrategy:
@@ -922,20 +930,6 @@ class StratifiedPermutationSampler(PermutationSampler):
             utility=utility,
             coefficient=coefficient,
         )
-
-    def log_weight(self, n: int, subset_len: int) -> float:
-        effective_n = n - 1
-        lb, ub = self.sample_sizes_strategy.effective_bounds(effective_n)
-
-        if subset_len < lb or subset_len > ub:
-            return -np.inf
-
-        p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
-        p_k = p[subset_len]
-        if p_k == 0:
-            return -np.inf
-
-        return float(np.log(p_k) - logcomb(effective_n, subset_len))
 
 
 class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
