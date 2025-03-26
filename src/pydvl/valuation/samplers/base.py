@@ -11,7 +11,6 @@ and importance sampling, read [[semi-values-sampling]].
 from __future__ import annotations
 
 import logging
-import warnings
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
@@ -125,7 +124,7 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
         is deactivated by default. Samplers must explicitly override the setter to
         signal that they support skipping indices.
         """
-        warnings.warn(f"Cannot skip indices in {self.__class__.__name__}.")
+        raise AttributeError(f"Cannot skip converged indices in {self.__class__.__name__}.")
 
     def interrupt(self):
         """Signals the sampler to stop generating samples after the current batch."""
