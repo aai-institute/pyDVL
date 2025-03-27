@@ -178,6 +178,7 @@ configurations besides VRDS appear in the literature as follows:
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
@@ -214,6 +215,7 @@ from pydvl.valuation.types import (
     SemivalueCoefficient,
     ValueUpdate,
     )
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
     "ConstantSampleSize",
@@ -233,7 +235,7 @@ __all__ = [
     "VRDSSampler",
 ]
 
-from pydvl.valuation.utility.base import UtilityBase
+logger = logging.getLogger(__name__)
 
 
 class SampleSizeStrategy(ABC):
@@ -848,7 +850,9 @@ class StratifiedPermutationSampler(PermutationSampler):
     """A stratified permutation sampler.
 
     !!! warning "Experimental"
-        That is: very likely to be wrong.
+        This is just an approximation for now. The number of set sizes generated is only
+        roughly equal to that specified by the
+        [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
 
     Args:
         sample_sizes: An object which returns the number of samples to take for a given
@@ -869,6 +873,8 @@ class StratifiedPermutationSampler(PermutationSampler):
     ):
         super().__init__(truncation, seed, batch_size)
         self.sample_sizes_strategy = sample_sizes
+        logger.warning("StratifiedPermutationSampler is experimental and inexact. "
+                       "Please use another sampler if you are benchmarking methods.")
 
     @property
     def skip_indices(self) -> IndexSetT:
@@ -896,9 +902,10 @@ class StratifiedPermutationSampler(PermutationSampler):
         Args:
             indices: The indices to sample from. If empty, no samples are generated.
         """
-        if len(indices) == 0:
+        n = len(indices)
+        if n == 0:
             return
-        sizes = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
+        sizes = self.sample_sizes_strategy.sample_sizes(n, probs=False)
         n_samples = np.sum(sizes)
         if n_samples <= 1:
             raise ValueError(
@@ -906,6 +913,11 @@ class StratifiedPermutationSampler(PermutationSampler):
                 f"probabilities. Ensure you set up the strategy with a fixed "
                 f"number of samples per index greater than 1."
             )
+
+        # FIXME: This is just an approximation. On expectation we should produce roughly
+        #   the correct number of sizes per index, but we should probably keep track
+        #   separately.
+        sizes *= n
 
         while True:
             # Can't have skip indices: if the index set is smaller than the lower bound
