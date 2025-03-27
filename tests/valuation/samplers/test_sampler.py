@@ -679,7 +679,7 @@ def test_sampler_weights(
     expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
     for k in range(effective_n + 1):
         # log_weight = log probability of sampling
-        # So: no. of sets of size k in the powerset, times. prob of sampling size k
+        # So: no. of sets of size k in the powerset, times. prob of sampling S|k
         expected_log_subset_len_probs[k] = (
             logcomb(effective_n, k) + sampler.log_weight(n, k) + log_fudge
         )

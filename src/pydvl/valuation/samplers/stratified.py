@@ -111,7 +111,7 @@ configured via subclasses of
   When using this in conjunction with an infinite index iteration for the sampler,
   `n_samples` can be safely left to its default `None` since $m_k$ will be interpreted
   as a probability.
-* [RoundRobinIteration][pydvl.valuation.samplers.stratified.RoundRobinIteration] will
+* [RoundRobinSizeIteration][pydvl.valuation.samplers.stratified.RoundRobinSizeIteration] will
   iterate over set sizes $k$ and generate one sample each time, until reaching $m_k.$
 
 ## Other known strategies
@@ -401,7 +401,9 @@ class SampleSizeStrategy(ABC):
         int_values: NDArray[np.int64] = np.floor(values).astype(np.int64)
         remainder = self.n_samples - np.sum(int_values)
         fractional_parts = values - int_values
-        fractional_parts_indices = np.argsort(-fractional_parts, kind="stable")[:remainder]
+        fractional_parts_indices = np.argsort(-fractional_parts, kind="stable")[
+            :remainder
+        ]
         int_values[fractional_parts_indices] += 1
         return int_values
 
@@ -778,10 +780,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         # m is 1, so that quantization would yield a bunch of zeros.
         p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
         p_k = p[subset_len]  # also m_k / m
-        assert np.isclose(np.sum(p), 1.0), (
-            f"Strategy returned invalid probabilities, adding to {np.sum(p)=}"
-        )
-
         if p_k == 0:
             return -np.inf
 
@@ -835,8 +833,10 @@ class VRDSSampler(StratifiedSampler):
 class StratifiedPermutation(Sample):
     """A sample for the stratified permutation sampling strategy.
 
-    This is a subclass of [Sample][pydvl.valuation.samplers.Sample] which adds
-    information about the set sizes to sample
+    This is a subclass of [Sample][pydvl.valuation.types.Sample] which adds information
+    about the set sizes to sample. It is used by
+    [StratifiedPermutationEvaluationStrategy][pydvl.valuation.samplers.stratified.StratifiedPermutationEvaluationStrategy]
+    to clip permutations to the required lengths.
     """
 
     lower_bound: int
@@ -873,8 +873,10 @@ class StratifiedPermutationSampler(PermutationSampler):
     ):
         super().__init__(truncation, seed, batch_size)
         self.sample_sizes_strategy = sample_sizes
-        logger.warning("StratifiedPermutationSampler is experimental and inexact. "
-                       "Please use another sampler if you are benchmarking methods.")
+        logger.warning(
+            "StratifiedPermutationSampler is experimental and inexact. "
+            "Please use another sampler if you are benchmarking methods."
+        )
 
     @property
     def skip_indices(self) -> IndexSetT:
@@ -941,8 +943,20 @@ class StratifiedPermutationSampler(PermutationSampler):
             )
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        effective_n = n - 1
+        """The probability of sampling a set of size `subset_len` from `n` indices.
 
+        See
+        [StratifiedSampler.log_weight()][pydvl.valuation.samplers.stratified.StratifiedSampler.log_weight]
+
+        Args:
+            n:  Size of the index set.
+            subset_len: Size of the subset.
+
+        Returns:
+            The logarithm of the probability of having sampled a set of size
+                `subset_len`.
+        """
+        effective_n = self.complement_size(n)
         p = self.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
         p_k = p[subset_len]
         if p_k == 0:
@@ -978,7 +992,7 @@ class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
             truncated = False
             curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation[lb : ub], start=lb):  # type: int, np.int_
+            for i, idx in enumerate(permutation[lb:ub], start=lb):  # type: int, np.int_
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
