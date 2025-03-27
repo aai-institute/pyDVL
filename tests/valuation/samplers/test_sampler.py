@@ -666,21 +666,14 @@ def test_sampler_weights(
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
             if issubclass(sampler_cls, StratifiedPermutationSampler):
-                # The eval strategy iterates through a subset of the permutation only,
-                # but we account for that below
-                subset_len_probs += 1
+                lb, ub = sample.lower_bound, sample.upper_bound
+                subset_len_probs[lb:ub+1] += 1
             elif issubclass(sampler_cls, PermutationSamplerBase):
                 # The eval strategy iterates through the whole permutation, which is
                 # effectively equivalent to yielding every subset size, for each sample.
                 subset_len_probs += 1
             else:
                 subset_len_probs[len(sample.subset)] += 1
-    # Not a great test: we should compute the probabilities manually instead of using
-    # the sampler itself to compute them (FIXME)
-    if issubclass(sampler_cls, StratifiedPermutationSampler):
-        subset_len_probs *= sampler.sample_sizes_strategy.sample_sizes(
-            effective_n, probs=True
-        )
     subset_len_probs /= subset_len_probs.sum()
 
     expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
