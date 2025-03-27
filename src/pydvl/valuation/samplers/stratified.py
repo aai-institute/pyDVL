@@ -262,8 +262,10 @@ class SampleSizeStrategy(ABC):
             **per index**, i.e. if the sampler iterates over each index exactly
             once, e.g.
             [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration],
-            then the total number of samples will be `n_samples * n_indices`. Leave
-            as `None` to let the strategy compute it whenever possible.
+            then the total number of samples will be `n_samples * n_indices`. Leave as
+            `None` when a fixed number is unnecessary, e.g. when using a stochastic
+            sampler and a
+            [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration].
         lower_bound: Lower bound for the set sizes. If the set size is smaller than this,
             the probability of sampling is 0. If `None`, the lower bound is set to 0.
         upper_bound: Upper bound for the set size. If the set size is larger than this,
@@ -387,13 +389,22 @@ class SampleSizeStrategy(ABC):
         #
         # would not respect the total number of samples, and would not distribute
         # remainders correctly
-
+        if self.n_samples < len(np.nonzero(values)[0]):
+            raise ValueError(
+                f"Number of samples per index {self.n_samples} is smaller than the "
+                f"number of non-zero sample sizes {len(np.nonzero(values)[0])}. "
+                f"Increase `n_samples` when instantiating {str(self)}, or use a"
+                f"stochastic size / index iteration and sampler."
+            )
         int_values: NDArray[np.int64] = np.floor(values).astype(np.int64)
         remainder = self.n_samples - np.sum(int_values)
         fractional_parts = values - int_values
-        fractional_parts_indices = np.argsort(-fractional_parts)[:remainder]
+        fractional_parts_indices = np.argsort(-fractional_parts, kind="stable")[:remainder]
         int_values[fractional_parts_indices] += 1
         return int_values
+
+    def __str__(self):
+        return self.__class__.__name__
 
 
 class ConstantSampleSize(SampleSizeStrategy):
@@ -891,8 +902,9 @@ class StratifiedPermutationSampler(PermutationSampler):
         n_samples = np.sum(sizes)
         if n_samples <= 1:
             raise ValueError(
-                "Sample size strategy must return sample sizes, not probabilities."
-                "Ensure that you initialize it with a valid sample size."
+                f"{self.sample_sizes_strategy.__class__.__name__} seems to only provide "
+                f"probabilities. Ensure you set up the strategy with a fixed "
+                f"number of samples per index greater than 1."
             )
 
         while True:
