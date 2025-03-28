@@ -1122,7 +1122,9 @@ class RankCorrelation(StoppingCriterion):
 
         self.rtol = validate_number("rtol", rtol, float, lower=0.0, upper=1.0)
         self.burn_in = burn_in
-        self.fraction = validate_number("fraction", fraction, float, lower=0.0, upper=1.0)
+        self.fraction = validate_number(
+            "fraction", fraction, float, lower=0.0, upper=1.0
+        )
         self.memory = RollingMemory(size=2, default=np.nan, dtype=np.float64)
         self.count_memory = RollingMemory(size=2, default=0, dtype=np.int_)
         self._corr = np.nan

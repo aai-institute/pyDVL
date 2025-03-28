@@ -39,9 +39,9 @@ class MockSampleSizeStrategy(SampleSizeStrategy):
         (RoundRobinSizeIteration, [2], [(0, 1), (0, 1)]),
         (RoundRobinSizeIteration, [0, 2], [(1, 1), (1, 1)]),
         (
-                RoundRobinSizeIteration,
-                [2, 3, 1],
-                [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
+            RoundRobinSizeIteration,
+            [2, 3, 1],
+            [(0, 1), (1, 1), (2, 1), (0, 1), (1, 1), (1, 1)],
         ),
         (FiniteSequentialSizeIteration, [], []),
         (FiniteSequentialSizeIteration, [2], [(0, 2)]),
@@ -59,17 +59,17 @@ def test_deterministic_iterations(iteration_cls, sample_sizes, expected_output):
 
 @pytest.mark.parametrize("sample_sizes", [[1], [0, 1], [2, 3, 1]])
 def test_random_iteration(sample_sizes, seed):
-    n_indices = len(sample_sizes)-1
+    n_indices = len(sample_sizes) - 1
     strategy = MockSampleSizeStrategy(sample_sizes)
     iterable = RandomSizeIteration(strategy, n_indices, seed)
     counts = np.zeros(n_indices + 1, dtype=float)
     sizes = strategy.sample_sizes(n_indices)
-    for _ in range(100*(n_indices+1)):
+    for _ in range(100 * (n_indices + 1)):
         for size, n_samples in iterable:
             counts[size] += n_samples
 
     counts /= max(1, counts.sum())
-    np.testing.assert_allclose(counts, sizes/sum(sizes), rtol=0.1, atol=0.1)
+    np.testing.assert_allclose(counts, sizes / sum(sizes), rtol=0.1, atol=0.1)
 
 
 @pytest.mark.parametrize(

@@ -21,7 +21,7 @@ from pydvl.valuation.stopping import (
     RankCorrelation,
     RollingMemory,
     StoppingCriterion,
-    )
+)
 from pydvl.valuation.types import ValueUpdate
 
 
@@ -330,7 +330,7 @@ def test_count(criterion):
 
 def test_memory():
     r1 = np.arange(5)
-    r2 = np.arange(5,10)
+    r2 = np.arange(5, 10)
     r3 = np.arange(10, 15)
 
     memory = RollingMemory(size=4, default=np.nan, dtype=np.float64)

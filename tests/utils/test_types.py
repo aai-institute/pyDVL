@@ -136,4 +136,3 @@ def test_validate_number_bound_error():
 
     with pytest.raises(ValueError, match=r"'test' is 15, but it should be <= 10"):
         validate_number("test", 15, int, lower=0, upper=10)
-

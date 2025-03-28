@@ -94,7 +94,6 @@ class Losses(NamedTuple):
     validation: NDArray[np.float64]
 
 
-
 def fit_torch_model(
     model: nn.Module,
     training_data: DataLoader,

@@ -162,18 +162,18 @@ def powerset_samplers():
 
 
 def stratified_samplers(n_samples_per_index: int = 32):
-    dummy_config = DeltaShapleyNCSGDConfig(
-        lipschitz_grad=1,
-        lipschitz_loss=1,
-        lr_factor=1,
-        n_sgd_iter=1,
-        max_loss=1,
-        n_val=10,
-        n_train=10,
-        eps=0.1,
-        delta=0.1,
-        version="theorem7",
-    )
+    # dummy_config = DeltaShapleyNCSGDConfig(
+    #     lipschitz_grad=1,
+    #     lipschitz_loss=1,
+    #     lr_factor=1,
+    #     n_sgd_iter=1,
+    #     max_loss=1,
+    #     n_val=10,
+    #     n_train=10,
+    #     eps=0.1,
+    #     delta=0.1,
+    #     version="theorem7",
+    # )
 
     sample_size_strategies = [
         (
@@ -596,7 +596,7 @@ def test_proper_stochastic(sampler_cls, sampler_kwargs, indices, seed, seed_alt)
             (
                 PermutationSampler,
                 AntitheticPermutationSampler,
-                StratifiedPermutationSampler
+                StratifiedPermutationSampler,
             ),
         ):
             assert len(subset_1) == 0 or np.any(subset_1 != subset_2)
@@ -667,7 +667,7 @@ def test_sampler_weights(
         for sample in batch:
             if issubclass(sampler_cls, StratifiedPermutationSampler):
                 lb, ub = sample.lower_bound, sample.upper_bound
-                subset_len_probs[lb:ub+1] += 1
+                subset_len_probs[lb : ub + 1] += 1
             elif issubclass(sampler_cls, PermutationSamplerBase):
                 # The eval strategy iterates through the whole permutation, which is
                 # effectively equivalent to yielding every subset size, for each sample.

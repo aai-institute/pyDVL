@@ -98,6 +98,7 @@ class DeltaShapleyValuation(SemivalueValuation):
             if p[k] == 0:
                 return -np.inf
             # FIXME: why don't we subtract self.sampler.log_weight(n, k) here?
-            return float(-np.log(ub - lb + 1) - np.log(p[k]) ) #- self.sampler.log_weight(n, k))
+            # - self.sampler.log_weight(n, k))
+            return float(-np.log(ub - lb + 1) - np.log(p[k]))
 
         return _log_coefficient

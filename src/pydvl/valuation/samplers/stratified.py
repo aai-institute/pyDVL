@@ -194,17 +194,17 @@ from pydvl.utils import (
     maybe_add_argument,
     random_subset_of_size,
     suppress_warnings,
-    )
+)
 from pydvl.valuation.samplers.permutation import (
     PermutationEvaluationStrategy,
     PermutationSampler,
     TruncationPolicy,
-    )
+)
 from pydvl.valuation.samplers.powerset import (
     FiniteSequentialIndexIteration,
     IndexIteration,
     PowersetSampler,
-    )
+)
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -214,7 +214,7 @@ from pydvl.valuation.types import (
     SampleGenerator,
     SemivalueCoefficient,
     ValueUpdate,
-    )
+)
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [

@@ -115,7 +115,9 @@ class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
         )
 
         self.in_sample_updater = LogResultUpdater[MSRValueUpdate](self.in_sample)
-        self.out_of_sample_updater = LogResultUpdater[MSRValueUpdate](self.out_of_sample)
+        self.out_of_sample_updater = LogResultUpdater[MSRValueUpdate](
+            self.out_of_sample
+        )
 
     def process(self, update: MSRValueUpdate) -> ValuationResult:
         assert update.idx is not None
@@ -290,4 +292,3 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
                     updates.append(MSRValueUpdate(np.int_(i), update, sign, False))
 
         return updates
-

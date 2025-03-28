@@ -92,7 +92,7 @@ from typing import (
     Union,
     cast,
     overload,
-    )
+)
 
 import numpy as np
 import pandas as pd
@@ -1049,7 +1049,7 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
 
         nz = result.values != 0
         x2 = (
-            result.variances[nz] * np.maximum(1, result.counts[nz]-1) ** 2
+            result.variances[nz] * np.maximum(1, result.counts[nz] - 1) ** 2
             + result.values[nz] ** 2 * result.counts[nz]
         )
         self._log_sum2[nz] = np.log(x2)
