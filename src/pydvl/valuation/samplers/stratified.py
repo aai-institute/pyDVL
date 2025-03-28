@@ -181,7 +181,7 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from typing import Generator, Literal, Type
 
 import numpy as np
@@ -285,7 +285,7 @@ class SampleSizeStrategy(ABC):
             raise ValueError(
                 f"Number of samples must be non-negative, got {n_samples=}"
             )
-        self.n_samples = n_samples
+        self.n_samples_per_index = n_samples
         if lower_bound is not None and lower_bound < 0:
             raise ValueError(f"Lower bound must be non-negative, got {lower_bound=}")
         if upper_bound is not None and upper_bound < 0:
@@ -323,7 +323,7 @@ class SampleSizeStrategy(ABC):
 
         return lower, upper
 
-    @lru_cache
+    @cache
     def sample_sizes(
         self, n_indices: int, probs: bool = True
     ) -> NDArray[np.int64] | NDArray[np.float64]:
@@ -337,17 +337,14 @@ class SampleSizeStrategy(ABC):
 
         If `probs` is `False`, the result is a vector of integers, where each
         element $k$ is the number of samples to take for set size $k.$ The sum of all
-        elements is equal to `self.n_samples` if provided upon construction, or the sum
-        of the values of `fun` for all set sizes if `self.n_samples` is `None`.
+        elements is equal to `self.n_samples_per_index` if provided upon construction,
+        or the sum of the values of `fun` for all set sizes if
+        `self.n_samples_per_index` is `None`.
 
         When `probs` is `False`, this method corrects rounding errors taking into
         account the fractional parts so that the total number of samples is respected,
         while allocating remainders in a way that follows the relative sizes of the
         fractional parts.
-
-        !!! warning "Ugly reliance on side effect"
-            This method changes `n_samples` if it was `None` to the total number of
-            samples computed. We rely on this in some places. It's ugly. (FIXME)
 
         Args:
             n_indices: number of indices in the index set from which to sample. This is
@@ -375,14 +372,12 @@ class SampleSizeStrategy(ABC):
         assert n_indices == 0 or s > 0, "Sum of sample sizes must be positive"
         values /= s
 
-        # FIXME: make this hack more explicit
-        if self.n_samples is None:
-            self.n_samples = int(np.ceil(s))
+        n_samples = self.n_samples_per_index or int(np.ceil(s))
 
         if probs:
             return values  # m_k / m
 
-        values *= self.n_samples
+        values *= n_samples
         # Round down and distribute remainder by adjusting the largest fractional parts
         # A naive implementation with e.g.
         #
@@ -391,15 +386,15 @@ class SampleSizeStrategy(ABC):
         #
         # would not respect the total number of samples, and would not distribute
         # remainders correctly
-        if self.n_samples < len(np.nonzero(values)[0]):
+        if n_samples < len(np.nonzero(values)[0]):
             raise ValueError(
-                f"Number of samples per index {self.n_samples} is smaller than the "
+                f"Number of samples per index {n_samples} is smaller than the "
                 f"number of non-zero sample sizes {len(np.nonzero(values)[0])}. "
                 f"Increase `n_samples` when instantiating {str(self)}, or use a"
                 f"stochastic size / index iteration and sampler."
             )
         int_values: NDArray[np.int64] = np.floor(values).astype(np.int64)
-        remainder = self.n_samples - np.sum(int_values)
+        remainder = n_samples - np.sum(int_values)
         fractional_parts = values - int_values
         fractional_parts_indices = np.argsort(-fractional_parts, kind="stable")[
             :remainder
