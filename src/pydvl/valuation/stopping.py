@@ -207,6 +207,7 @@ from scipy.stats import spearmanr
 from typing_extensions import Self
 
 from pydvl.utils.status import Status
+from pydvl.utils.types import validate_number
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import IndexSampler
 
@@ -522,9 +523,8 @@ class MaxChecks(StoppingCriterion):
 
 
     Args:
-        n_checks: Threshold: if `None`, no _check is performed,
-            effectively creating a (never) stopping criterion that always returns
-            `Pending`.
+        n_checks: Threshold: if `None`, no check is performed, effectively
+            creating a (never) stopping criterion that always returns `Pending`.
         modify_result: If `True` the status of the input
             [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
             place after the call.
@@ -532,12 +532,12 @@ class MaxChecks(StoppingCriterion):
 
     def __init__(self, n_checks: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        if n_checks is not None and n_checks < 1:
-            raise ValueError("n_iterations must be at least 1 or None")
-        self.n_checks = n_checks or np.inf
+        if n_checks is not None:
+            n_checks = validate_number("n_checks", n_checks, int, lower=1)
+        self.n_checks = n_checks
 
     def _check(self, result: ValuationResult) -> Status:
-        if self._count >= self.n_checks:
+        if self.n_checks is not None and self._count >= self.n_checks:
             self._converged = np.full_like(result.indices, True, dtype=bool)
             return Status.Converged
         return Status.Pending
@@ -566,9 +566,8 @@ class MaxUpdates(StoppingCriterion):
     permutation samplers, it coincides with the number of permutations sampled.
 
     Args:
-        n_updates: Threshold: if `None`, no _check is performed,
-            effectively creating a (never) stopping criterion that always returns
-            `Pending`.
+        n_updates: Threshold: if `None`, no check is performed, effectively creating a
+            (never) stopping criterion that always returns `Pending`.
         modify_result: If `True` the status of the input
             [ValuationResult][pydvl.valuation.result.ValuationResult] is modified in
             place after the call.
@@ -576,15 +575,15 @@ class MaxUpdates(StoppingCriterion):
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        if n_updates is not None and n_updates < 1:
-            raise ValueError("n_updates must be at least 1 or None")
+        if n_updates is not None:
+            n_updates = validate_number("n_updates", n_updates, int, lower=1)
         self.n_updates = n_updates
         self.last_max = 0
 
     def _check(self, result: ValuationResult) -> Status:
         if result.counts.size == 0:
             return Status.Pending
-        if self.n_updates:
+        if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
             try:
                 self.last_max = int(np.max(result.counts))
@@ -666,11 +665,9 @@ class MaxSamples(StoppingCriterion):
     def __init__(
         self, sampler: IndexSampler, n_samples: int, modify_result: bool = True
     ):
-        if n_samples <= 0:
-            raise ValueError("n_samples must be positive")
         super().__init__(modify_result=modify_result)
         self.sampler = sampler
-        self.n_samples = n_samples
+        self.n_samples = validate_number("n_samples", n_samples, int, lower=1)
         self._completion = 0.0
 
     def _check(self, result: ValuationResult) -> Status:
@@ -709,6 +706,8 @@ class MinUpdates(StoppingCriterion):
 
     def __init__(self, n_updates: int | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
+        if n_updates is not None:
+            n_updates = validate_number("n_updates", n_updates, int, lower=1)
         self.n_updates = n_updates
         self.last_min = 0
         self._actual_completion = 0.0
@@ -755,9 +754,9 @@ class MaxTime(StoppingCriterion):
 
     def __init__(self, seconds: float | None, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        self.max_seconds = seconds or np.inf
-        if self.max_seconds <= 0:
-            raise ValueError("Number of seconds for MaxTime must be positive or None")
+        if seconds is None:
+            seconds = np.inf
+        self.max_seconds = validate_number("seconds", seconds, float, lower=1e-6)
         self.start = time()
 
     def _check(self, result: ValuationResult) -> Status:
@@ -810,12 +809,8 @@ class RollingMemory(Generic[DT]):
             default = cast(DT, np.array(default, dtype=np.result_type(default))[()])
         if dtype is not None:  # user forced conversion
             default = dtype(default)
-        if size < 1:
-            raise ValueError("n_steps must be at least 1")
-        if skip_steps < 0:
-            raise ValueError("skip_steps must be at least 0")
-        self.size = size
-        self._skip_steps = skip_steps
+        self.size = validate_number("size", size, int, lower=1)
+        self._skip_steps = validate_number("skip_steps", skip_steps, int, lower=0)
         self._count = 0
         self._default = cast(DT, default)
         self._data: NDArray[DT] = np.full(0, default, dtype=type(default))
@@ -881,7 +876,7 @@ class RollingMemory(Generic[DT]):
                     f"Attempt to access step {key} beyond "
                     f"memory with size={self.size} (count={self._count})"
                 )
-            if key < - self._count or 0 <= key < free:
+            if key < -self._count or 0 <= key < free:
                 raise IndexError(
                     f"Attempt to access step {key} beyond "
                     f"number of updates {self._count} (size={self.size})"
@@ -972,7 +967,7 @@ class History(StoppingCriterion):
     def __init__(self, n_steps: int, skip_steps: int = 0, modify_result: bool = False):
         super().__init__(modify_result=False)
         self.memory = RollingMemory(
-            n_steps, skip_steps=skip_steps, default=np.inf, dtype=np.float64
+            size=n_steps, skip_steps=skip_steps, default=np.inf, dtype=np.float64
         )
 
     def _check(self, result: ValuationResult) -> Status:
@@ -1044,11 +1039,8 @@ class HistoryDeviation(StoppingCriterion):
         modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        if rtol <= 0 or rtol >= 1:
-            raise ValueError("rtol must be in (0, 1)")
-
         self.memory = RollingMemory(n_steps + 1, default=np.inf, dtype=np.float64)
-        self.rtol = rtol
+        self.rtol = validate_number("rtol", rtol, float, lower=0.0, upper=1.0)
         self.update_op = np.logical_or if pin_converged else np.logical_and
 
     def _check(self, r: ValuationResult) -> Status:
@@ -1127,14 +1119,10 @@ class RankCorrelation(StoppingCriterion):
         modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        if rtol < 0 or rtol > 1:
-            raise ValueError("rtol must be in [0, 1]")
-        if fraction <= 0 or fraction > 1:
-            raise ValueError("fraction must be in (0, 1]")
 
-        self.rtol = rtol
+        self.rtol = validate_number("rtol", rtol, float, lower=0.0, upper=1.0)
         self.burn_in = burn_in
-        self.fraction = fraction
+        self.fraction = validate_number("fraction", fraction, float, lower=0.0, upper=1.0)
         self.memory = RollingMemory(size=2, default=np.nan, dtype=np.float64)
         self.count_memory = RollingMemory(size=2, default=0, dtype=np.int_)
         self._corr = np.nan

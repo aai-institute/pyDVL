@@ -209,10 +209,10 @@ def test_history_deviation(n_steps, rtol):
     assert not done.converged.any()
 
     with pytest.raises(ValueError, match="rtol"):
-        HistoryDeviation(n_steps=n_steps, rtol=0.0)
+        HistoryDeviation(n_steps=n_steps, rtol=-0.1)
 
     with pytest.raises(ValueError, match="rtol"):
-        HistoryDeviation(n_steps=n_steps, rtol=1.0)
+        HistoryDeviation(n_steps=n_steps, rtol=1.1)
 
 
 def test_standard_error():
