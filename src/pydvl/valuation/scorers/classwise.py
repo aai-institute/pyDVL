@@ -78,7 +78,9 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable[SupervisedModelT, ArrayT] | SupervisedModelT,
+        scoring: str
+        | SupervisedScorerCallable[SupervisedModelT, ArrayT]
+        | SupervisedModelT,
         test_data: Dataset,
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),

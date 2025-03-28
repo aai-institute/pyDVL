@@ -34,9 +34,7 @@ SupervisedModelT = TypeVar(
 class SupervisedScorerCallable(Protocol[SupervisedModelT, ArrayT]):
     """Signature for a scorer"""
 
-    def __call__(
-        self, model: SupervisedModelT, X: ArrayT, y: ArrayT
-    ) -> float: ...
+    def __call__(self, model: SupervisedModelT, X: ArrayT, y: ArrayT) -> float: ...
 
 
 class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
@@ -69,7 +67,9 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable[SupervisedModelT, ArrayT] | SupervisedModelT,
+        scoring: str
+        | SupervisedScorerCallable[SupervisedModelT, ArrayT]
+        | SupervisedModelT,
         test_data: Dataset,
         default: float,
         range: tuple[float, float] = (-np.inf, np.inf),

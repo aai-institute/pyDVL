@@ -94,7 +94,10 @@ class RawData(Generic[ArrayT]):
     def __post_init__(self):
         if not (isinstance(self.x, np.ndarray) and isinstance(self.y, np.ndarray)):
             if torch := try_torch_import():
-                if not (isinstance(self.x, torch.Tensor) and isinstance(self.y, torch.Tensor)):
+                if not (
+                    isinstance(self.x, torch.Tensor)
+                    and isinstance(self.y, torch.Tensor)
+                ):
                     raise TypeError("x and y must be valid arrays")
         try:
             if self.x.shape[0] != self.y.shape[0]:
