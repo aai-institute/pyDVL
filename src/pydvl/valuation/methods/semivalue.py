@@ -35,17 +35,15 @@ with any sampler. For importance sampling, the mechanism is as follows:
   coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
   stability. The coefficient is a function of the number of elements in the set $n$ and
   the size of the subset $k$ for which the coefficient is being computed, and of the
-  sampler's weight. You can combin combine the method's coefficient and the weight, in
-  any way. For instance, in order to entirely compensate for the sampling distribution
-  one simply subtracts the log-weights from the log-coefficient.
+  sampler's weight. You can combine the method's coefficient and the weight in any way.
+  For instance, in order to entirely compensate for the sampling distribution one simply
+  subtracts the log-weights from the log-coefficient.
 
 ## Disabling importance sampling
 
 In case you have a sampler that already provides the coefficients you need implicitly
 as the sampling probabilities, you can override the `log_coefficient` property to
 return `None`.
-
-
 """
 
 from __future__ import annotations
@@ -142,9 +140,8 @@ class SemivalueValuation(Valuation):
         """This property returns the function computing the semi-value coefficient.
 
         Return `None` in subclasses that do not need to correct for the sampling
-        distribution probabilities because of a specific, fixed sampler choice.
-        [Evaluation strategies][pydvl.valuation.samplers.base.EvaluationStrategy] will
-        then ignore the sampler coefficients as well.
+        distribution probabilities because of a specific, fixed sampler choice which
+        already yields the semi-value coefficient.
         """
         ...
 
