@@ -218,12 +218,12 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
         r"""Factor by which to multiply Monte Carlo samples, so that the
         mean converges to the desired expression.
 
-        By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$
+        By the Law of Large Numbers, the sample mean of $\Delta_i(S_j)$
         converges to the expectation under the distribution from which $S_j$ is
         sampled.
 
-        $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
-           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (
+        $$ \frac{1}{m}  \sum_{j = 1}^m \Delta_i (S_j) c (S_j) \longrightarrow
+           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\Delta_i (S) c (
            S)]$$
 
         We add a factor $c(S_j)$ in order to have this expectation coincide with
