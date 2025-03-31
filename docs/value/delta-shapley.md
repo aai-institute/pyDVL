@@ -7,98 +7,105 @@ alias:
 
 # $\delta$-Shapley { #delta-shapley-intro }
 
-!!! warning "Experimental"
-    As of v0.10.0, the $\delta$-Shapley value is an experimental feature. It has
-    not been tested enough and is known to contain bugs. PRs welcome!
+**$\delta$-Shapley** is a semi-value that approximates the average marginal
+contribution of a data point per subset size, truncated for sizes beyond a
+certain range. It was introduced in [@watson_accelerated_2023], and is available
+in pyDVL as
+[DeltaShapleyValuation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation],
+which is built around a [stratified
+sampler][pydvl.valuation.samplers.stratified]. When its clipping feature
+(discussed below) is not used, it is an approximation to [Shapley
+value][shapley-valuation-intro].
 
-!!! tip "Practical applications"
+!!! tip "Practical application"
     While we provide an implementation of the $\delta$-Shapley value for the
     sake of completeness, in practice, properly adjusting the constants required
     is often difficult, making it hard to use. If one still wishes to use
-    stratified sampling, we recommend using subset size sampling strategies that
-    don't require these constants, such as
-    [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize].
+    stratified sampling, it is possible to use subset size sampling strategies 
+    that don't require these constants, such as
+    [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize],
+    or [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
 
-**$\delta$-Shapley** is a semi-value that approximates the average marginal
-contribution per subset size, truncated for sizes beyond a certain range.  It
-was introduced in [@watson_accelerated_2023], and is available in pyDVL as
-[DeltaShapleyValuation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation].
 
-Let's decompose the definition of Shapley value into "layers", one per subset
-size $k$, by letting $v_\text{shap}(i) = \frac{1}{n} \sum_{k=0}^{n-1}
-\phi_i^{k},$ where 
+## A layer-wise approximation
 
-$$\phi_i^{k} := \binom{n-1}{k}^{-1} 
-                \sum_{S \subseteq D_{-i}^{k}} [u(S_{+i}) - u(S)],$$
+As discussed in [Stratified Shapley][stratified-shapley-value], it is possible
+to compute Shapley values by averaging the "layer-wise" (i.e. per subset size)
+marginal contributions $\phi_i^{k} := \sum_{S_j \subseteq N_{-i}^{k}}
+\Delta_i(S_j).$
 
-and $D_i^{(k)}$ is the complement  of $\{i\}$, $u$ is the utility and $S_{+i}$
-is the set $S$ with the point $i$ added to it. Since there are $\binom{n-1}{k}$
-sets of size $k$, each $\phi_i^{k}$ is the average marginal contribution of the
-point $i$ to all sets of size $k$.
+Therefore, one can estimate $v_\text{shap}(i)$ by approximating the $\phi_i^{k}$
+and then averaging those. This approximation consists of sampling only a
+fraction $m_k$ of all the sets of size $k$ to average the $\Delta_i(S_j),\ j=1,
+..., m_k.$ The main contributions of the paper is a careful choice of $m_k$ (see
+[below][setting-mk-delta-shapley]) which depends on the ML model for which the
+values are computed.
 
-Therefore, one can estimate $v_\text{shap}(i)$ by approximating the
-$\phi_i^{(k)}$ and then averaging those. This approximation consists of sampling
-only a fraction $m_k$ of all the sets of size $k$ and averaging the marginal
-contributions. One of the contributions of the paper is a careful choice of
-$m_k$ (see [below][sampling-for-delta-shapley]).
+## Clipping the sample sizes
 
 Additionally, the authors argue that, for certain model classes, small
 coalitions are good estimators of the data value, because adding more data tends
-to have diminishing returns for many models. This motivates clipping $k$ outside
-a given range, to come to the final definition of the $\delta$-Shapley
-value:[^def]
+to have diminishing returns. This motivates clipping $k$ outside a given range,
+to come to the final definition of the $\delta$-Shapley value:[^def]
 
-$$
-v_\text{del}(i) := \frac{1}{u - l + 1} \sum_{k=l}^{u} \frac{1}{m_k} \sum_{j=1}^{m_k}
-[u(S^j_{+i}) - u(S^j)]
-$$
+$$ \hat{v}_\delta(i) := \frac{1}{u - l + 1} \sum_{k=l}^{u} \frac{1}{m_k}
+\sum_{j=1}^{m_k} \Delta_i(S_j), $$
 
-where $l$ and $u$ are lower and upper bounds for $k$, the sets $S^j$ are sampled
-uniformly at random from $D_{-i}^{k}$, and $m_k$ is the number of samples at
+where $l$ and $u$ are lower and upper bounds for $k$, the sets $S_j$ are sampled
+uniformly at random from $N_{-i}^{k}$, and $m_k$ is the number of samples at
 size $k.$
 
+## Delta Shapley as importance sampling
 
-## Sampling for Delta-Shapley  { #sampling-for-delta-shapley }
+Above, we have departed from the paper and use the notation $\hat{v}_\delta$ to
+indicate that this is an approximation to Shapley value using importance sampling
+and a certain stratified sampling distribution.
 
-In $\delta$-Shapley, subset sizes are sampled according to the probability
-$m_k/m$ (even though the exact procedure can vary, e.g. iterate through all $k$
+Recall from [Stratified Shapley][stratified-shapley-value] that we if we define
+a distribution $\mathcal{L}$ over sets by first sampling a size $k$ uniformly
+between $0$ and $n-1,$ then a subset of $N_{-i}$ and size $k$ uniformly from the
+powerset, then
+
+$$v_\text{shap}(i) = \mathbb{E}_{\mathcal{L}}[\Delta_i(S)].$$
+
+This holds because the probability under $\mathcal{L}$ of drawing any set $S$
+is, letting $k=|S|:$
+
+$$p_{\mathcal{L}}(S) = p_{\mathcal{L}}(k)\ p_{\mathcal{L}}(S|k) = \frac{1}{n}
+\binom{n-1}{k}^{-1}.$$
+
+Now, $\delta$-Shapley introduces a new stratified distribution $\mathcal{L}_k,$
+such that:
+
+$$p_{\mathcal{L}_k}(S) = p_{\mathcal{L}_k}(k)\ p_{\mathcal{L}_k}(S|k) = 
+\frac{m_k}{\sum_j m_j} \binom{n-1}{k}^{-1}.$$
+
+And computes the approximation
+
+$$ \hat{v}_\delta(i) := \mathbb{E}_{\mathcal{L}_k}[\Delta_i(S)\
+\frac{p_{\mathcal{L}}(S)}{p_{\mathcal{L}_k}(S)}].$$
+
+!!! info "Also see"
+    Read [Sampling strategies for semi-values][semi-values-sampling] for more
+    on the interaction between coefficients and sampler weights in Monte Carlo
+    estimation of semi-values.
+
+## Choosing the number of sets  { #setting-mk-delta-shapley }
+
+As discussed, subset sizes are sampled according to the probability $m_k/sum_j
+m_j$ (even though the exact procedure can vary, e.g. iterate through all $k$
 [deterministically][pydvl.valuation.samplers.stratified.FiniteSequentialSizeIteration]
 or [at random][pydvl.valuation.samplers.stratified.RandomSizeIteration]). This
 means that the probability of sampling a set of size $k$ is
 
-$$p(S|k) = \binom{n-1}{k}^{-1} \frac{m_k}{m},$$
-
-which is the implicit coefficient for the average marginal contribution, that
-one must account for when sampling sets stochastically (see [Sampling strategies
-for semi-values][semi-values-sampling]).
-
 The choice of $m_k$ is guided by theoretical bounds derived from the uniform
-stability properties of the learning algorithm. The authors derive bounds for
-different classes of loss functions using concentration inequalities, with
-Theorems 6 and 7 providing the choice of $m_k$ for the case of non-convex,
-smooth Lipschitz models trained with SGD.[^sgd] This is the case that we
-implement in
+stability properties of the learning algorithm. The authors of $\delta$-Shapley
+derive bounds for different classes of loss functions using concentration
+inequalities, with Theorems 6 and 7 of the paper providing the choice of $m_k$
+for the case of non-convex, smooth Lipschitz models trained with SGD.[^sgd] This
+is the case that we implement in
 [DeltaShapleyNCSGDSampleSize][pydvl.valuation.samplers.stratified.DeltaShapleyNCSGDSampleSize],
 but we will discuss below how to implement any choice of $m_k$.
-
-### Powerset and permutation sampling
-
-The original paper uses a standard powerset sampling approach, where the sets
-$S^j$ are sampled uniformly at random from the powerset of $D_{-i}^{k}.$ We
-provide this sampling method via
-[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler],
-which can be configured with any of the classes inheriting
-[SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
-These implement the $m_k,$ and the lower and upper bounds truncating $k.$
-
-Alternatively, we provide an **experimental and approximate** permutation-based
-approach which clips permutations and keeps track of the sizes of sets returned.
-This reduces computation by at least a factor of 2, since the evaluation
-strategy can reuse the previously computed utility for the marginal
-contribution. This is implemented in
-[StratifiedPermutationSampler][pydvl.valuation.samplers.stratified.StratifiedPermutationSampler].
-Note that it does not guarantee sampling the exact number of set sizes $m_k.$
-
 
 ## Delta-Shapley for non-convex SGD
 
@@ -126,6 +133,24 @@ class.
     strategy implementing these bounds to either follow those in the paper or
     those in the code, for reproducibility purposes. See
     [DeltaShapleyNCSGDSampleSize][pydvl.valuation.samplers.stratified.DeltaShapleyNCSGDSampleSize].
+
+## Powerset and permutation sampling
+
+The original paper uses a standard powerset sampling approach, where the sets
+$S^j$ are sampled uniformly at random from the powerset of $D_{-i}^{k}.$ We
+provide this sampling method via
+[StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler],
+which can be configured with any of the classes inheriting
+[SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
+These implement the $m_k,$ and the lower and upper bounds truncating $k.$
+
+Alternatively, we provide an **experimental and approximate** permutation-based
+approach which clips permutations and keeps track of the sizes of sets returned.
+This reduces computation by at least a factor of 2, since the evaluation
+strategy can reuse the previously computed utility for the marginal
+contribution. It is implemented in
+[StratifiedPermutationSampler][pydvl.valuation.samplers.stratified.StratifiedPermutationSampler].
+Note that it does not guarantee sampling the exact number of set sizes $m_k.$
 
 
 [^sgd]: A technical detail is the assumption that the order in which batches

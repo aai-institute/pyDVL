@@ -28,9 +28,14 @@ The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
+<span id="combinatorial-shapley" class="tm-eqlabel"></span>
+
 $$
-v(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
+\begin{equation}
+v_\text{shap}(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
 \binom{n-1}{ | S | }^{-1} [u(S_{+i}) − u(S)],
+  \label{combinatorial-shapley}\tag{1}
+\end{equation}
 $$
 
 where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i,$ and $S_{+i}$
@@ -99,6 +104,65 @@ stop condition. This is an instance of a
 [MaxTime][pydvl.value.stopping.MaxTime] and
 [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError].
 
+
+## A stratified approach  { #stratified-shapley-value }
+
+Let's decompose definition [(1)][#combinatorial-shapley] into "layers", one per
+subset size $k,$ by writing it in the equivalent form:[^not1]
+
+$$v_\text{shap}(i) = \sum_{k=0}^{n-1} \frac{1}{n} \binom{n-1}{k}^{-1} 
+    \sum_{S \subseteq N_{-i}^{k}} \Delta_i(S).$$
+
+Here $N_i^{k}$ is the set of all subsets of size $k$ in the complement  of
+$\{i\}.$ Since there are $\binom{n-1}{k}$ such sets, the above is an average
+over all $n$ set sizes $k$ of the average marginal contributions of the point
+$i$ to all sets of size $k.$
+
+We can now devise a sampling scheme over the powerset of $N_{-i}$ that yields
+this expression:
+
+1. Sample $k$ uniformly from $\{0, ..., n-1\}.$
+2. Sample $S$ uniformly from the powerset of $N_{-i}^k.$
+
+Call this distribution $\mathcal{L}_k.$ Then
+
+$$
+\begin{eqnarray*}
+    \mathbb{E}_{S \sim \mathcal{L}} [\Delta_i (S)] 
+            & = & \sum_{k = 0}^{n - 1} \sum_{S \subseteq N_{- i}^k} 
+                  \Delta_i (S) p (S|k) p (k) \\
+            & = & \sum_{k = 0}^{n - 1} \sum_{S \subseteq N_{- i}^k} \Delta_i (S)
+                  \binom{n - 1}{k}^{- 1} \frac{1}{n} \\
+            & = & v_{\text{sh}}(i).
+\end{eqnarray*}
+$$
+
+??? Example "Stratified Shapley"
+    The specific instance of stratified sampling described above can be directly
+    used by instantiating a
+    [StratifiedShapleyValuation][pydvl.valuation.methods.shapley.StratifiedShapleyValuation]
+    object. For more general use cases, use
+    [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] with a
+    custom sampler.
+
+    ```python
+    from pydvl.valuation import StratifiedShapleyValuation, MinUpdates, History
+    training_data, test_data = Dataset.from_arrays(...)
+    model = ...
+    scorer = SupervisedScorer(model, test_data, default=..., range=...)
+    utility = ModelUtility(model, scorer, 
+    valuation = StratifiedShapleyValuation(
+        utility=utility,
+        is_done=MinUpdates(min_updates) | History(n_steps=min_updates),
+        batch_size=batch_size,
+        seed=seed,
+        skip_converged=True,
+        progress=True,
+    )
+    with parallel_config(n_jobs=-4):
+        valuation.fit(training_data)
+    results = valuation.values()
+    ```
 
 ## Permutation Shapley  { #permutation-shapley-intro }
 
@@ -210,5 +274,5 @@ kNN model, and is $O(n_test n \log n).$
 
 [^not1]: The quantity $u(S_{+i}) − u(S)$ is called the
   [marginal utility][glossary-marginal-utility] of the sample $x_i$ (with
-  respect to $S$), and we will often denote it by $\delta_i(S, u),$ or, when no
-  confusion is possible, simply $\delta_i(S).$
+  respect to $S$), and we will often denote it by $\Delta_i(S, u),$ or, when no
+  confusion is possible, simply $\Delta_i(S).$

@@ -48,12 +48,12 @@ $$
 \begin{eqnarray*}
   v_{\operatorname{sh}} (i) & = & \sum_{S \subseteq D_{- i}} \frac{1}{n}
   \binom{n - 1}{| S |}^{- 1}  [U (S_{+ i}) - U (S)],\\\
-  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |) \delta_{i} (S),
+  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |) \Delta_i (S),
 \end{eqnarray*}
 $$
 
 where $w_{\operatorname{sh}} (| S |) = \frac{1}{n}  \binom{n - 1}{| S |}^{- 
-1}$ is the Shapley weight and $\delta_{i} (S) := U (S_{+ i}) - U (S)$ the 
+1}$ is the Shapley weight and $\Delta_i (S) := U (S_{+ i}) - U (S)$ the 
 marginal utility. The naive Monte Carlo approximation is then to sample $S_{j} 
 \sim \mathcal{U} (D_{- i})$ and let
 
@@ -62,7 +62,7 @@ marginal utility. The naive Monte Carlo approximation is then to sample $S_{j}
 $$
 \begin{equation}
   \hat{v}_{\operatorname{sh}, \operatorname{unif}} (i) = \frac{1}{M}  \sum_{j
-  = 1}^M w_{\operatorname{sh}} (| S_{j} |) \delta_{i} (S_{j})
+  = 1}^M w_{\operatorname{sh}} (| S_{j} |) \Delta_i (S_{j})
   \label{mc-shapley}\tag{1}
 \end{equation}
 $$
@@ -73,8 +73,8 @@ $$
 \begin{eqnarray*}
   \hat{v}_{\operatorname{sh}, \operatorname{unif}} (i) & \underset{M
   \rightarrow \infty}{\longrightarrow} & \underset{S \sim \mathcal{U} (D_{-
-  i})}{\mathbb{E}} [w_{\operatorname{sh}} (| S |) \delta_{i} (S)]\\\
-  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (k) \delta_{i}
+  i})}{\mathbb{E}} [w_{\operatorname{sh}} (| S |) \Delta_i (S)]\\\
+  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (k) \Delta_i
   (S) p_{\mathcal{U}} (S),
 \end{eqnarray*}
 $$
@@ -97,7 +97,7 @@ At every step of the MC algorithm we do the following:
 
 !!! abstract "Monte Carlo Shapley Update"
     1. sample $S_{j} \sim \mathcal{U} (D_{- i}),$ let $k = | S_{j} |$
-    1. compute the marginal $\delta_{i} (S_{j})$
+    1. compute the marginal $\Delta_i (S_{j})$
     1. compute the product of coefficients for the sampler and the method: 
        $w_{\operatorname{unif}} (k) w_{\operatorname{sh}} (k)$
     1. update the running average for $\hat{v}_{\operatorname{unif}, 
@@ -179,10 +179,10 @@ By total expectation:
 $$
 \begin{eqnarray*}
   v_{\operatorname{ame}(\mathcal{Q})} (i) & := & \mathbb{E}_{S \sim
-  \mathcal{L}_{\mathcal{Q}} (D_{- i})} [\delta_{i} (S)]\\\
+  \mathcal{L}_{\mathcal{Q}} (D_{- i})} [\Delta_i (S)]\\\
   & = & \mathbb{E}_{q \sim \mathcal{Q}}  [\mathbb{E}_{S \sim \mathcal{L} (q,
-  D_{- i})} [\delta_{i} (S) |q]]\\\
-  & = & \sum_{S \subseteq D_{- i}} \delta_{i} (S)  \int_{0}^1 p (S|q) f
+  D_{- i})} [\Delta_i (S) |q]]\\\
+  & = & \sum_{S \subseteq D_{- i}} \Delta_i (S)  \int_{0}^1 p (S|q) f
   (q) \mathrm{d} q
 \end{eqnarray*}
 $$
@@ -214,7 +214,7 @@ $$
   _{i} (S_{i}^{\sigma_{j}})\\\
   & \underset{M \rightarrow \infty}{\longrightarrow} & \underset{\sigma \sim
   \mathcal{U} (\Pi (D))}{\mathbb{E}} [w_{\operatorname{sh}} (| S_{i}^{\sigma}
-  |) \delta_{i} (S_{i}^{\sigma})]\\\
+  |) \Delta_i (S_{i}^{\sigma})]\\\
   & = & \frac{1}{n!}  \sum_{\sigma \in \Pi (D)} w_{\operatorname{sh}} (|
   S_{i}^{\sigma} |)  [U (S_{i}^{\sigma} \cup \lbrace i \rbrace) - U
   (S_{i}^{\sigma})]\\\
@@ -222,9 +222,9 @@ $$
   w_{\operatorname{sh}} (| S |)  (n - 1 - | S |) ! | S | ! [U (S_{+ i}) - U
   (S)]\\\
   & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |)
-  \frac{1}{n}  \binom{n - 1}{| S |}^{- 1} \delta_{i} (S)\\\
+  \frac{1}{n}  \binom{n - 1}{| S |}^{- 1} \Delta_i (S)\\\
   & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |)
-  w_{\operatorname{sh}} (| S |) \delta_{i} (S) .
+  w_{\operatorname{sh}} (| S |) \Delta_i (S) .
 \end{eqnarray*}
 $$
 
@@ -256,7 +256,7 @@ configuration. Then the corrections will be applied:
 $$
 \hat{v}_{\operatorname{sh}, \operatorname{per}} (i) := \frac{1}{m}
 \sum_{j = 1}^m w_{\operatorname{per}} (k) w_{\operatorname{sh}} (k)
-\delta_{i} (S_{i}^{\sigma_{j}}), \quad k = | S_{i}^{\sigma_{j}} | 
+\Delta_i (S_{i}^{\sigma_{j}}), \quad k = | S_{i}^{\sigma_{j}} | 
 $$
 
 with $w_{\operatorname{per}} (k) = w_{\operatorname{sh}} (k)^{- 1},$ in order to
@@ -276,7 +276,7 @@ Let's look now at general semi-values, which are of the form:
 $$
 \begin{eqnarray*}
   v_{\operatorname{semi}} (i) & = & \sum_{k = 0}^{n - 1} w (k)  \sum_{S
-  \subseteq D_{- i}^{(k)}} \delta_{i} (S),
+  \subseteq D_{- i}^{(k)}} \Delta_i (S),
 \end{eqnarray*}
 $$
 
@@ -306,9 +306,9 @@ sampling. Let $\mathcal{L}$ be the law of a sampling procedure such that
 $p_{\mathcal{L}} (S|k) = w_{\operatorname{semi}}$ for some semi-value 
 coefficient, and let $\mathcal{Q}$ be that of any sampler we choose: Then:
 
-$$ v_{\operatorname{semi}} (i) = \mathbb{E}_{\mathcal{L}} [\delta_{i} (S)]
+$$ v_{\operatorname{semi}} (i) = \mathbb{E}_{\mathcal{L}} [\Delta_i (S)]
    = \mathbb{E}_{Q} \left[ \frac{w_{\operatorname{semi}} (S)}{p_{Q} (S|k)}
-   \delta_{i} (S) \right] $$
+   \Delta_i (S) \right] $$
 
 The drawback is that a direct implementation with that much cancelling of 
 coefficients might be inefficient or numerically unstable. Integration issues 
