@@ -12,7 +12,7 @@ from pydvl.valuation.methods import (
     ShapleyValuation,
 )
 from pydvl.valuation.samplers import IndexSampler, LOOSampler
-from pydvl.valuation.stopping import HistoryDeviation, MinUpdates
+from pydvl.valuation.stopping import MinUpdates
 
 from .. import check_values, recursive_make
 from ..samplers.test_sampler import deterministic_samplers, random_samplers
@@ -89,17 +89,23 @@ def test_games(
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler does not apply to Shapley and Banzhaf")
 
-    history = HistoryDeviation(n_steps=1000 * len(test_game.data) ** 2, rtol=1e-3)
+    n_samples = len(test_game.data) ** 2
 
-    # The games have too few players for the bounds in random_samplers(), so we reset
-    # them to the limits
     sampler = recursive_make(
-        sampler_cls, sampler_kwargs, seed=seed, lower_bound=None, upper_bound=None
+        sampler_cls,
+        sampler_kwargs,
+        seed=seed,
+        # For stratified samplers:
+        lower_bound=None,  # The games have too few players for the bounds in
+        upper_bound=None,  # random_samplers(), so we reset them to the limits
+        n_samples=n_samples,
     )
     valuation = valuation_cls(
         utility=test_game.u,
         sampler=sampler,
-        is_done=MinUpdates(1000 * len(test_game.data)) | history,
+        is_done=MinUpdates(
+            1000 * len(test_game.data)
+        ),  # | History(n_steps=1000 * n_samples),
         progress=False,
         **valuation_kwargs,
     )
@@ -111,7 +117,8 @@ def test_games(
     #
     # from pydvl.valuation.games import ShoesGame, SymmetricVotingGame
     #
-    # data = history.memory[-history.count :]  # Grab the last `count` values
+    # # Grab the last `count` values
+    # data = valuation.stopping.criteria[1][-history.count :]
     # for vv in data.T:  # each row is one value series
     #     fraction = len(vv) // 2
     #     plt.plot(range(fraction), vv[-fraction:], alpha=0.7)

@@ -75,14 +75,14 @@ def test_random_iteration(sample_sizes, seed):
 @pytest.mark.parametrize(
     "lower_bound, upper_bound, n_indices, subset_len, expected",
     [
-        (0, None, 5, 0, 1.0),
-        (0, None, 5, 5, 1.0),
+        (0, None, 5, 0, 1 / 6),
+        (0, None, 5, 5, 1 / 6),
         (1, 4, 5, 0, 0.0),
-        (1, 4, 5, 1, 1.0),
-        (1, 4, 5, 4, 1.0),
+        (1, 4, 5, 1, 1 / 4),
+        (1, 4, 5, 4, 1 / 4),
         (1, 4, 5, 5, 0.0),
-        (None, 3, 5, 0, 1.0),
-        (None, 3, 5, 3, 1.0),
+        (None, 3, 5, 0, 1 / 4),
+        (None, 3, 5, 3, 1 / 4),
         (None, 3, 5, 4, 0.0),
     ],
 )
@@ -90,7 +90,9 @@ def test_constant_sample_size_fun(
     lower_bound, upper_bound, n_indices, subset_len, expected
 ):
     strategy = ConstantSampleSize(1, lower_bound, upper_bound)
-    assert strategy.fun(n_indices, subset_len) == expected
+    np.testing.assert_allclose(
+        strategy.sample_sizes(n_indices, probs=True)[subset_len], expected
+    )
 
 
 class LinearSampleSize(SampleSizeStrategy):

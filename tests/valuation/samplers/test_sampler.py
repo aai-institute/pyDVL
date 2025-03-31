@@ -207,6 +207,12 @@ def stratified_samplers(n_samples_per_index: int = 32):
 
     ret = []
     for ss in sample_size_strategies:
+        ret.append(
+            (
+                StratifiedPermutationSampler,
+                {"sample_sizes": ss, "seed": lambda seed: seed},
+            )
+        )
         for s_it in sample_sizes_iterations:
             for i_it in index_iterations:
                 if (  # Finite iterations don't mix well with random ones
@@ -224,12 +230,6 @@ def stratified_samplers(n_samples_per_index: int = 32):
                             "index_iteration": i_it,
                             "seed": lambda seed: seed,
                         },
-                    )
-                )
-                ret.append(
-                    (
-                        StratifiedPermutationSampler,
-                        {"sample_sizes": ss, "seed": lambda seed: seed},
                     )
                 )
     return ret
