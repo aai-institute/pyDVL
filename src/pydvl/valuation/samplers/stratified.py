@@ -806,8 +806,10 @@ class VRDSSampler(StratifiedSampler):
     [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
 
     Args:
-        n_samples_per_index: The number of samples to generate **per index**. The
-            distribution per set size will follow a harmonic function, as defined in
+        n_samples_per_index: The number of samples to generate **per index**.
+            To compute with the (ε,δ) bound from the paper, use
+            [min_samples()][pydvl.valuation.samplers.stratified.VRDSSampler.min_samples].
+            The distribution per set size will follow a harmonic function, as defined in
             [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize].
         batch_size: The number of samples to generate per batch. Batches are processed
             together by each subprocess when working in parallel.
@@ -827,6 +829,27 @@ class VRDSSampler(StratifiedSampler):
             index_iteration=FiniteSequentialIndexIteration,
             seed=seed,
         )
+
+    @staticmethod
+    def min_samples(n_indices: int, eps: float = 0.01, delta: float = 0.05) -> int:
+        r"""Computes the minimal amount of samples for an (ε,δ)-approximation of data
+        Shapley.
+
+        This is the bound shown in Theorem 4.3 of Wu et al. (2023)<sup><a
+        href="#wu_variance_2023">2</a></sup>.
+
+        Args:
+            n_indices: The number of indices in the index set.
+            eps: The epsilon value in the epsilon-delta guarantee, i.e. the distance to the
+                true value.
+            delta: The delta value in the epsilon-delta guarantee, i.e. the probability of
+                failure.
+        Returns:
+            $(2 \log(2/\delta) / \epsilon^2) \log(n + 1)^2.$
+        """
+        m = 2 * (np.log(2) - np.log(delta)) / eps**2
+        m *= (np.log(n_indices) + 1) ** 2
+        return np.ceil(m).astype(int)
 
 
 @dataclass(frozen=True)
