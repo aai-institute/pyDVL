@@ -2,13 +2,11 @@ r"""
 This module implements the $\delta$-Shapley valuation method, introduced by Watson et al.
 (2023)[^1].
 
-!!! warning "Experimental"
-    The $\delta$-Shapley value is an experimental feature. It has not been tested enough
-    and is known to contain bugs. PRs welcome!
+$\delta$-Shapley uses a stratified sampling approach to accurately approximate Shapley
+values for certain model classes, based on uniform stability bounds.
 
-$\delta$-Shapley is a variant of the Shapley value that uses a stratified sampling
-approach to skip computation of the marginal utilities for set sizes outside a small
-range.
+Additionally, it reduces computation by skipping the marginal utilities for set sizes
+outside a small range.[^2]
 
 !!! info
     See [the documentation][delta-shapley-intro] or Watson et al. (2023)[^1] for a
@@ -19,6 +17,9 @@ range.
 [^1]: Watson, Lauren, Zeno Kujawa, Rayna Andreeva, Hao-Tsung Yang, Tariq Elahi, and Rik
       Sarkar. [Accelerated Shapley Value Approximation for Data
       Evaluation](https://doi.org/10.48550/arXiv.2311.05346). arXiv, 9 November 2023.
+
+[^2]: When this is done, the final values are off by a constant factor with respect to
+      the true Shapley values.
 """
 
 from __future__ import annotations
@@ -82,23 +83,27 @@ class DeltaShapleyValuation(SemivalueValuation):
     def log_coefficient(self) -> SemivalueCoefficient | None:
         r"""Returns the log-coefficient of the $\delta$-Shapley valuation.
 
+        This is constructed to account for the sampling distribution of a
+        [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] and
+        yield the Shapley coefficient as effective coefficient (truncated by the
+        size bounds in the sampler).
+
         !!! note "Normalization"
             This coefficient differs from the one used in the original paper by a
             normalization factor of $m=\sum_k m_k,$ where $m_k$ is the number of
-            samples of size $k$. Since this is constant across indices, the ranking of
-            values is unaffected.
+            samples of size $k$. Since, contrary to their layer-wise means, we are
+            computing running averages of all $m$ value updates, this cancels out, and
+            we are left with the same effective coefficient.
         """
 
         def _log_coefficient(n: int, k: int) -> float:
             effective_n = self.sampler.complement_size(n)
             lb, ub = self.sampler.sample_sizes_strategy.effective_bounds(effective_n)
             # We don't always have m_k so we use p_k instead, and return a coefficient
-            # that is off by a constant factor m
+            # that is off by a constant factor m before averaging.
             p = self.sampler.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
             if p[k] == 0:
                 return -np.inf
-            # FIXME: why don't we subtract self.sampler.log_weight(n, k) here?
-            # - self.sampler.log_weight(n, k))
             return float(-np.log(ub - lb + 1) - np.log(p[k]))
 
         return _log_coefficient
