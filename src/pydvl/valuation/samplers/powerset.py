@@ -211,7 +211,7 @@ class FiniteRandomIndexIteration(FiniteIterationMixin, RandomIndexIteration):
     def __iter__(self) -> Generator[IndexT, None, None]:
         if len(self._indices) == 0:
             return
-        yield from self._rng.choice(self._indices, size=len(self._indices))
+        yield from self._rng.permutation(self._indices)
 
 
 class NoIndexIteration(InfiniteIterationMixin, IndexIteration):
