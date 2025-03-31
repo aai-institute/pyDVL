@@ -255,7 +255,7 @@ class StratifiedShapleyValuation(ShapleyValuation):
         utility: UtilityBase,
         is_done: StoppingCriterion,
         batch_size: int = 1,
-        seed: Seed = None,
+        seed: Seed | None = None,
         skip_converged: bool = False,
         show_warnings: bool = True,
         progress: dict[str, Any] | bool = False,
