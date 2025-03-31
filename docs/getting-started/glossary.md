@@ -83,9 +83,13 @@ Introduced by [@wang_improving_2022].
 
 ### Delta-Shapley { #glossary-delta-shapley }
 
-Delta-Shapley is a semi-value that employs a constant sampling probability,
-truncated for sets beyond a certain range. Introduced in
-[@watson_accelerated_2023].
+Delta-Shapley is an approximation to Shapley value which uses a [stratified
+sampling][glossary-stratified-sampling] distribution that picks set sizes based
+on stability bounds for the machine learning model for which values are 
+estimated. An additional clipping constraint saves computation by skipping
+subset sizes (justified because of diminishing returns for model performance).
+This introduces a difference to Shapley value by a multiplicative factor that
+should not affect ranking. Introduced in [@watson_accelerated_2023].
 
  * [Implementation][pydvl.valuation.methods.delta_shapley.DeltaShapleyValuation]
  * [Documentation][delta-shapley-intro]
@@ -164,7 +168,7 @@ performance when that point is removed from the training set.
 
 In data valuation for ML, _marginal utility_ refers to the change in performance
 of an ML model when a single data point is added to or removed from the training
-set. In our documentation it is often denoted $\delta_i(S) := U(S_{+i}) - U(S),$
+set. In our documentation it is often denoted $\Delta_i(S) := U(S_{+i}) - U(S),$
 where $S$ is a subset of the training set, $i$ is the index of the data point
 to be added, and $U$ is the [utility function][glossary-utility-function].
 
@@ -251,6 +255,32 @@ Introduced into data valuation by [@ghorbani_data_2019].
  * [Documentation][shapley-valuation-intro]
 
 
+### Stratified sampling { #glossary-stratified-sampling }
+
+In pyDVL, a [stratified sampler][pydvl.valuation.samplers.stratified] is one
+that first chooses a subset size $k$ following some distribution
+$\mathcal{L}_k$ over $\{0,...,n-1\},$ then samples a subset of that size
+uniformly at random from the powerset of ${N_{-i}}:$
+
+1. Sample $k \sim \mathcal{L}_k,$
+2. Sample $S \sim \mathcal{U}(2^{N_{-i}}).$
+
+If we denote by $\mathcal{L}$ the law for this two stage procedure, then one has
+that the [Shapley value][glossary-shapley-value] is the expectation over this
+distribution:
+
+$$v_\text{sh}(i) = \mathbb{E}_{S \sim \mathcal{L}}[\Delta_i(S)].$$
+
+One can try to reduce variance or obtain different semi-values by choosing
+$\mathcal{L}_k$ differently, or combining it with any semivalue. See the links
+below.
+
+ * [Data Shapley with a uniform stratified sampler][stratified-shapley-value]
+ * [Sampler implementation][pydvl.valuation.samplers.stratified]
+ * [Variance-Reduced Data Shapley][glossary-vrds]
+ * [$\delta$-Shapley][glossary-delta-shapley] 
+
+
 ### Truncated Monte Carlo Shapley  { #glossary-tmcs }
 
 TMCS is an efficient approach to estimating the Shapley Value using a
@@ -288,6 +318,16 @@ Note that computing a score (loss) over a fixed set is typically a poor
 approximation to the true score of the model, i.e. to its expected score on
 unseen data. This problem might be alleviated with some form of cross-validation,
 but we haven't explored this possibility in pyDVL.
+
+### Variance-Reduced Data-Shapley { #glossary-vrds }
+
+A [stratified sampling][glossary-stratified-sampling]-based approach to estimate
+Shapley values that uses a simple deterministic heuristic for sample sizes,
+which in particular does not depend on run-time variance estimates. A good
+default choice is based on the harmonic function. Introduced in
+[@wu_variance_2023].
+
+* [Implementation][pydvl.valuation.samplers.stratified.VRDSSampler]
 
 
 ### Weighted Accuracy Drop  { #glossary-wad }
