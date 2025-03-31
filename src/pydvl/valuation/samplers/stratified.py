@@ -408,7 +408,10 @@ class SampleSizeStrategy(ABC):
         return int_values
 
     def __str__(self):
-        return self.__class__.__name__
+        return (
+            f"{self.__class__.__name__}(n_samples={self.n_samples_per_index}, "
+            f"lower_bound={self.lower_bound}, upper_bound={self.upper_bound})"
+        )
 
 
 class ConstantSampleSize(SampleSizeStrategy):
@@ -970,6 +973,9 @@ class StratifiedPermutationSampler(PermutationSampler):
             utility=utility,
             coefficient=coefficient,
         )
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({str(self.sample_sizes_strategy)})"
 
 
 class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
