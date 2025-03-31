@@ -134,7 +134,7 @@ class PermutationSamplerBase(IndexSampler, ABC):
         """
         if n > 0:
             return float(-np.log(n) - logcomb(n - 1, subset_len))
-        return 0.0
+        return -np.inf
 
     def make_strategy(
         self,
