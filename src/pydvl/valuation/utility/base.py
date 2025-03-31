@@ -11,6 +11,11 @@ from pydvl.valuation.types import SampleT
 
 
 class UtilityBase(Generic[SampleT], ABC):
+    """Base class for all utilities.
+
+    A utility is a scalar-valued set function which will be evaluated over subsets of
+    the training set.
+    """
     _training_data: Dataset | None
 
     @property

@@ -310,9 +310,14 @@ class SampleSizeStrategy(ABC):
 
     def effective_bounds(self, n: int) -> tuple[int, int]:
         """Returns the effective bounds for the sample sizes, given the number of
-        indices `n`.
+        indices `n` from which sets are sampled.
+
+        !!! note
+            The number of indices `n` will typically be `complement_size(len(train))`,
+            i.e. what we sometimes denote as `effective_n`.
+
         Args:
-            n: The number of indices.
+            n: The number of indices from which subsets are drawn.
         Returns:
             A tuple of [lower, upper] bounds for sample sizes (inclusive).
         """
@@ -686,7 +691,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
     """A sampler stratified by coalition size with variable number of samples per set
     size.
 
-
     Args:
         sample_sizes: An object which returns the number of samples to
             take for a given set size. If `index_iteration` below is finite, then the
@@ -704,8 +708,6 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
         batch_size: The number of samples to generate per batch. Batches are processed
             together by each subprocess when working in parallel.
         index_iteration: the strategy to use for iterating over indices to update.
-            Note that anything other than returning index exactly once will break the
-            weight computation.
         seed: The seed for the random number generator.
 
     !!! tip "New in version 0.10.0"
@@ -847,7 +849,8 @@ class StratifiedPermutationSampler(PermutationSampler):
     !!! warning "Experimental"
         This is just an approximation for now. The number of set sizes generated is only
         roughly equal to that specified by the
-        [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy].
+        [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy]. In
+        particular, there is a **single counter of sizes for all indices**.
 
     Args:
         sample_sizes: An object which returns the number of samples to take for a given

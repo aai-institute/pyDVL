@@ -210,6 +210,11 @@ class AntitheticPermutationSampler(PermutationSampler):
         processes whole permutations in one go, effectively batching the computation of
         up to n-1 marginal utilities in one process.
 
+    Args:
+        truncation: A policy to stop the permutation early.
+        seed: Seed for the random number generator.
+        batch_size: The number of samples (full permutations) to generate at once.
+
     !!! tip "New in version 0.7.1"
     """
 

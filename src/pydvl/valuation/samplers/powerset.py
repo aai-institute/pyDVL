@@ -264,6 +264,13 @@ class PowersetSampler(IndexSampler, ABC):
         batch_size: int = 1,
         index_iteration: Type[IndexIteration] = SequentialIndexIteration,
     ):
+        """
+        Args:
+            batch_size: The number of samples to generate per batch. Batches are
+                processed together by
+                [UtilityEvaluator][pydvl.valuation.utility.evaluator.UtilityEvaluator].
+            index_iteration: the strategy to use for iterating over indices to update
+        """
         super().__init__(batch_size)
         self._index_iterator_cls = index_iteration
 
