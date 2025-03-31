@@ -797,7 +797,7 @@ class VRDSSampler(StratifiedSampler):
 
     It is functionally equivalent to a
     [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler] with
-    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize],
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSamp leSize],
     [FiniteSequentialSizeIteration][pydvl.valuation.samplers.stratified.FiniteSequentialSizeIteration],
     and
     [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
@@ -988,9 +988,13 @@ class StratifiedPermutationEvaluationStrategy(PermutationEvaluationStrategy):
             lb, ub = sample.lower_bound, sample.upper_bound
             self.truncation.reset(self.utility)
             truncated = False
-            curr = prev = self.utility(None)
             permutation = sample.subset
-            for i, idx in enumerate(permutation[lb:ub], start=lb):  # type: int, np.int_
+            if lb == 0:
+                curr = prev = self.utility(None)
+            else:
+                first = sample.with_idx(None).with_subset(permutation[:lb])
+                curr = prev = self.utility(first)
+            for i, idx in enumerate(permutation[lb : ub + 1], start=lb):  # type: int, np.int_
                 if not truncated:
                     new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
                     curr = self.utility(new_sample)
