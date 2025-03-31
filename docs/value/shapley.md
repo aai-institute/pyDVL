@@ -137,13 +137,20 @@ $$
 \end{eqnarray*}
 $$
 
+The choice $p(k) = 1/n$ is implemented in 
+[StratifiedShapleyValuation][pydvl.valuation.methods.shapley.StratifiedShapleyValuation]
+but can be changed to any other distribution over $k.$ [@wu_variance_2023]
+introduced [VRDS sampling][pydvl.valuation.samplers.stratified.VRDSSampler] as
+a way to reduce the variance of the estimator.
+
 ??? Example "Stratified Shapley"
     The specific instance of stratified sampling described above can be directly
     used by instantiating a
     [StratifiedShapleyValuation][pydvl.valuation.methods.shapley.StratifiedShapleyValuation]
     object. For more general use cases, use
     [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] with a
-    custom sampler.
+    custom sampler, for instance
+    [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
 
     ```python
     from pydvl.valuation import StratifiedShapleyValuation, MinUpdates, History

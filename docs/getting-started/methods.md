@@ -47,6 +47,9 @@ We currently implement the following methods:
 - [Truncated Monte Carlo Shapley][tmcs-intro]
   [@ghorbani_data_2019].
 
+- [Variance-Reduced Data Shapley][pydvl.valuation.samplers.stratified.VRDSSampler]
+  [@wu_variance_2023].
+
 ## Influence functions  { #implemented-methods-influence-functions }
 
 - [CG Influence][pydvl.influence.torch.CgInfluence]
