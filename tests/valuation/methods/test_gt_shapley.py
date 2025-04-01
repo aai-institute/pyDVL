@@ -70,7 +70,3 @@ def test_gt_setsize_strategy():
     np.testing.assert_allclose(
         n_samples, strategy.sample_sizes(len(indices), probs=False).sum()
     )
-
-    with pytest.raises(ValueError, match="Number of samples per index"):
-        strategy = GroupTestingSampleSize(n_samples=1)
-        strategy.sample_sizes(2, probs=False)

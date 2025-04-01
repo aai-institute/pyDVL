@@ -89,23 +89,21 @@ def test_games(
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler does not apply to Shapley and Banzhaf")
 
-    n_samples = len(test_game.data) ** 2
+    n_samples = 1000 * len(test_game.data)
 
     sampler = recursive_make(
         sampler_cls,
         sampler_kwargs,
         seed=seed,
         # For stratified samplers:
-        lower_bound=None,  # The games have too few players for the bounds in
-        upper_bound=None,  # random_samplers(), so we reset them to the limits
-        n_samples=n_samples,
+        lower_bound=1,
+        upper_bound=None,
+        n_samples=n_samples,  # Required for cases using FiniteSequentialSizeIteration
     )
     valuation = valuation_cls(
         utility=test_game.u,
         sampler=sampler,
-        is_done=MinUpdates(
-            1000 * len(test_game.data)
-        ),  # | History(n_steps=1000 * n_samples),
+        is_done=MinUpdates(n_samples),  # | History(n_steps=1000 * n_samples),
         progress=False,
         **valuation_kwargs,
     )
