@@ -8,7 +8,12 @@ import pytest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from pydvl.valuation import IndicatorUtilityModel, PowerLawSampleSize
+from pydvl.valuation import (
+    IndicatorUtilityModel,
+    PowerLawSampleSize,
+    RandomSizeIteration,
+    StratifiedSampler,
+)
 from pydvl.valuation.methods import *
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import AntitheticSampler, PermutationSampler
@@ -104,7 +109,10 @@ def test_beta_shapley_valuation(train_data, utility, n_jobs):
 def test_delta_shapley_valuation(train_data, utility, n_jobs):
     valuation = DeltaShapleyValuation(
         utility,
-        strategy=PowerLawSampleSize(exponent=-2),
+        sampler=StratifiedSampler(
+            sample_sizes=PowerLawSampleSize(exponent=-2),
+            sample_sizes_iteration=RandomSizeIteration,
+        ),
         is_done=MaxUpdates(5),
         progress=False,
     )

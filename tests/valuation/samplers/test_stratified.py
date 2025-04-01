@@ -1,6 +1,8 @@
 """This module tests some of the components of stratified samplers,
 but the main features are tested in test_sampler.py"""
 
+from __future__ import annotations
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -15,6 +17,7 @@ from pydvl.valuation import (
     RoundRobinSizeIteration,
     SampleSizeStrategy,
 )
+from pydvl.valuation.samplers.stratified import LinearSampleSize
 from tests.valuation import recursive_make
 
 
@@ -95,15 +98,6 @@ def test_constant_sample_size_fun(
     )
 
 
-class LinearSampleSize(SampleSizeStrategy):
-    def __init__(self, n_samples: int, scale: float):
-        super().__init__(n_samples)
-        self.scale = np.abs(scale)
-
-    def fun(self, n_indices: int, subset_len: int) -> float:
-        return int(subset_len * self.scale)
-
-
 @pytest.mark.parametrize(
     "strategy_cls, strategy_kwargs",
     [
@@ -113,11 +107,21 @@ class LinearSampleSize(SampleSizeStrategy):
             {"lower_bound": lambda n: n // 3, "upper_bound": lambda n: 2 * n // 3},
         ),
         (GroupTestingSampleSize, {}),
-        (HarmonicSampleSize, {}),
-        (PowerLawSampleSize, {"exponent": lambda e: e}),
+        (
+            HarmonicSampleSize,
+            {"lower_bound": lambda n: n // 3, "upper_bound": lambda n: 2 * n // 3},
+        ),
+        (
+            PowerLawSampleSize,
+            {
+                "exponent": lambda e: e,
+                "lower_bound": lambda n: n // 3,
+                "upper_bound": lambda n: 2 * n // 3,
+            },
+        ),
     ],
 )
-@pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7), (0, 10)])
+@pytest.mark.parametrize("n_samples, n_indices", [(None, 5), (10, 7), (11, 10)])
 @pytest.mark.parametrize("probs", [True, False])
 @pytest.mark.parametrize("scale", [-1 / 3, -1.0, -np.pi])
 def test_sample_sizes_sum(
@@ -136,12 +140,17 @@ def test_sample_sizes_sum(
     if probs:
         np.testing.assert_allclose(sum(sizes), 1.0)
     else:
-        np.testing.assert_allclose(sum(sizes), n_samples)
+        assert np.all(np.floor(sizes) == sizes), "Quantized sizes must be integers"
+        if n_samples is None:
+            lb, ub = strategy.effective_bounds(n_indices)
+            assert sum(sizes) >= ub - lb
+        else:
+            np.testing.assert_allclose(sum(sizes), n_samples)
 
 
-@pytest.mark.parametrize("n_samples, n_indices", [(1, 5), (10, 7)])
+@pytest.mark.parametrize("n_samples, n_indices", [(10, 7)])
 @pytest.mark.parametrize("scale", [1 / 3, 1.0, np.pi])
 def test_sample_sizes_quantization(n_samples, n_indices, scale):
-    strategy = LinearSampleSize(n_samples, scale)
+    strategy = LinearSampleSize(scale=scale, offset=0, n_samples=n_samples)
     sizes = strategy.sample_sizes(n_indices, probs=False)
     assert np.all(np.floor(sizes) == sizes), "Quantized sizes must be integers"

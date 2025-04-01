@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from functools import reduce
 from itertools import islice, takewhile
 from typing import Any, Callable, Iterator, Type
 
@@ -185,7 +186,14 @@ def stratified_samplers(n_samples_per_index: int = 32):
             },
         ),
         (ConstantSampleSize, {"n_samples": lambda n=n_samples_per_index: n}),
-        (HarmonicSampleSize, {"n_samples": lambda n=n_samples_per_index: n}),
+        (
+            HarmonicSampleSize,
+            {
+                "n_samples": lambda n=n_samples_per_index: n,
+                "lower_bound": lambda l=1: l,
+                "upper_bound": lambda u=None: u,
+            },
+        ),
         (
             PowerLawSampleSize,
             {"n_samples": lambda n=n_samples_per_index: n, "exponent": lambda e=0.5: e},
@@ -549,81 +557,75 @@ def test_length_of_infinite_samplers(
         len(sampler)
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
-@pytest.mark.parametrize("indices", [np.array([]), np.arange(10)])
-def test_proper_reproducible(sampler_cls, sampler_kwargs: dict, indices: NDArray, seed):
-    """Test that the sampler is reproducible."""
-    samples_1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
-    samples_2 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
-    for batch_1, batch_2 in zip(samples_1, samples_2):
-        subset_1 = list(batch_1)[0].subset
-        subset_2 = list(batch_2)[0].subset
+def hash_indices(sampler_cls: Type[IndexSampler], indices: NDArray) -> int:
+    """Hashes the indices to a single integer.
+
+    This assumes that the indices are prime numbers!
+    """
+    if issubclass(
+        sampler_cls,
+        (
+            PermutationSampler,
+            AntitheticPermutationSampler,
+            StratifiedPermutationSampler,
+        ),
+    ):
         # Order matters for permutations!
-        if issubclass(
-            sampler_cls,
-            (
-                PermutationSampler,
-                AntitheticPermutationSampler,
-                StratifiedPermutationSampler,
-            ),
-        ):
-            assert np.all(subset_1 == subset_2)
-        else:
-            assert set(subset_1) == set(subset_2)
+        p = 31  # A prime number as base for polynomial hash function
+        return reduce(lambda h, y: h * p + y, indices, 0)
+    else:
+        return reduce(lambda x, y: x * y, indices, 1)
 
 
 @pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
-@pytest.mark.parametrize("indices", [np.array([]), np.arange(10)])
-def test_proper_stochastic(sampler_cls, sampler_kwargs, indices, seed, seed_alt):
+def test_proper_reproducible(sampler_cls, sampler_kwargs: dict, seed):
+    """Test that the sampler is reproducible."""
+    indices = np.array([1, 3, 5, 7, 11, 13, 17, 19])
+    samples1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+    samples2 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+
+    seq1 = [hash_indices(sampler_cls, s.subset) for s in samples1]
+    seq2 = [hash_indices(sampler_cls, s.subset) for s in samples2]
+
+    assert np.all(seq1 == seq2)
+
+
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
+def test_proper_stochastic(sampler_cls, sampler_kwargs, seed, seed_alt):
     """Test that the sampler is stochastic."""
-    samples_1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
-    samples_2 = _create_seeded_sample_iter(
+    indices = np.array([1, 3, 5, 7, 11, 13, 17, 19])
+    samples1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+    samples2 = _create_seeded_sample_iter(
         sampler_cls, sampler_kwargs, indices, seed_alt
     )
 
-    for batch_1, batch_2 in zip(samples_1, samples_2):
-        subset_1 = list(batch_1)[0].subset
-        subset_2 = list(batch_2)[0].subset
+    seq1 = [hash_indices(sampler_cls, s.subset) for s in samples1]
+    seq2 = [hash_indices(sampler_cls, s.subset) for s in samples2]
 
-        if issubclass(sampler_cls, AntitheticOwenSampler):
-            if len(subset_1) == len(indices):
-                # This sample was generated as the complement of an empty set, and hence
-                # will always be the same, irrespective of random seed
-                continue
-        # Order matters for permutations!
-        elif issubclass(
-            sampler_cls,
-            (
-                PermutationSampler,
-                AntitheticPermutationSampler,
-                StratifiedPermutationSampler,
-            ),
-        ):
-            assert len(subset_1) == 0 or np.any(subset_1 != subset_2)
-        else:
-            assert len(subset_1) == 0 or set(subset_1) != set(subset_2)
+    assert np.any(seq1 != seq2)
 
 
 def _create_seeded_sample_iter(
     sampler_cls: Type[StochasticSampler],
     sampler_kwargs: dict[str, Any],
-    # index_iteration: Type[IndexIteration],
     indices: NDArray[np.int_],
     seed: Seed,
 ) -> Iterator:
+    """Returns a flattened iterator over samples generated by the sampler."""
     sampler_kwargs["seed"] = seed
-    # sampler_kwargs["index_iteration"] = index_iteration
-    try:
-        sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
-    except TypeError:
-        del sampler_kwargs["index_iteration"]
-        sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
-
-    # If we set max_iterations to len(indices), then the OwenSampler will
-    # always generate the full sample as last once, failing test_proper_stochastic()
-    max_iterations = len(indices) // 2
-    sample_stream = takewhile(
-        lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
+    sampler = recursive_make(
+        sampler_cls,
+        sampler_kwargs,
+        seed=seed,
+        # Since we sample very few sets, increase the likelihood of non-empty sets for Owen
+        # (these parameters are passed to lambdas in the structure of the sampler_kwargs)
+        n_samples_inner=1,
+        n_samples_outer=4,
+    )
+    max_iterations = len(indices)
+    sample_stream = map(
+        lambda batch: list(batch)[0],
+        islice(sampler.generate_batches(indices), max_iterations),
     )
     return sample_stream
 

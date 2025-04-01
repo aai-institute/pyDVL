@@ -140,6 +140,11 @@ configurations besides VRDS appear in the literature as follows:
             index_iteration=SequentialIndexIteration,
             )
         ```
+    !!! Note "Other bounds"
+        Implementing the other bounds from the paper is just a matter of subclassing
+        [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy] and
+        implementing the  `fun` method, as done in
+        [DeltaShapleyNCSGDSampleSize][pydvl.valuation.samplers.stratified.DeltaShapleyNCSGDSampleSize].
 
 * Sample sizes decreasing with a power law. Use
   [PowerLawSampleSize][pydvl.valuation.samplers.stratified.PowerLawSampleSize] for the
@@ -194,6 +199,7 @@ from pydvl.utils import (
     maybe_add_argument,
     random_subset_of_size,
     suppress_warnings,
+    validate_number,
 )
 from pydvl.valuation.samplers.permutation import (
     PermutationEvaluationStrategy,
@@ -253,21 +259,23 @@ class SampleSizeStrategy(ABC):
     method `fun()` implementing $f$. It is provided both the size $k$ and the total
     number of indices $n$ as arguments.
 
-    The argument `n_samples` can be fixed, or it can be set to `None` to indicate that
-    it should be left to the strategy to compute. For strategies producing sampling
-    probabilities, `n_samples` will be set to 1. For strategies producing integer
-    sample sizes, `n_samples` will be set to the total number of samples generated per
-    index.
+    The argument `n_samples` can be:
+
+    * Fixed to a positive integer. For powerset samplers, this is the number of samples
+      **per index** that will be generated, i.e. if the sampler iterates over each index
+      exactly once, e.g.
+      [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration],
+      then the total number of samples will be `n_samples * n_indices`.
+    * Fixed to `0` to indicate the strategy produces an absolute number of samples,
+      this only used when subclassing and implementing a `fun` that does not return
+      frequencies.
+    * `None` if only sampling probabilities are required, e.g. when using a stochastic
+      sampler and a
+      [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration].
 
     Args:
-        n_samples: Number of samples for the stratified sampler to generate,
-            **per index**, i.e. if the sampler iterates over each index exactly
-            once, e.g.
-            [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration],
-            then the total number of samples will be `n_samples * n_indices`. Leave as
-            `None` when a fixed number is unnecessary, e.g. when using a stochastic
-            sampler and a
-            [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration].
+        n_samples: Number of samples for the stratified sampler to generate. It can be
+            `None`, 0 or a positive integer. See the class documentation for details.
         lower_bound: Lower bound for the set sizes. If the set size is smaller than this,
             the probability of sampling is 0. If `None`, the lower bound is set to 0.
         upper_bound: Upper bound for the set size. If the set size is larger than this,
@@ -281,23 +289,25 @@ class SampleSizeStrategy(ABC):
         lower_bound: int | None = None,
         upper_bound: int | None = None,
     ):
-        if n_samples is not None and n_samples < 0:
-            raise ValueError(
-                f"Number of samples must be non-negative, got {n_samples=}"
+        if n_samples is not None:
+            n_samples = validate_number("n_samples", n_samples, int, lower=0)
+        if lower_bound is not None:
+            lower_bound = validate_number("lower_bound", lower_bound, int, lower=0)
+        if upper_bound is not None:
+            upper_bound = validate_number(
+                "upper_bound", upper_bound, int, lower=lower_bound
             )
-        self.n_samples_per_index = n_samples
-        if lower_bound is not None and lower_bound < 0:
-            raise ValueError(f"Lower bound must be non-negative, got {lower_bound=}")
-        if upper_bound is not None and upper_bound < 0:
-            raise ValueError(f"Upper bound must be non-negative, got {upper_bound=}")
-        if lower_bound is not None and upper_bound is not None:
-            if lower_bound > upper_bound:
-                raise ValueError(
-                    f"Lower bound must be smaller than upper bound, got "
-                    f"{lower_bound=}, {upper_bound=}"
-                )
+        self._n_samples_per_index = n_samples
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
+
+    def n_samples_per_index(self, n_indices: int) -> int | None:
+        """Returns the total number of samples to take for the given number of indices,
+        or `None` if no limit was set and samples are generated with probabilities."""
+        if self._n_samples_per_index is None:
+            return None
+        sizes = self.sample_sizes(n_indices, probs=False)
+        return np.sum(sizes).astype(int)
 
     @abstractmethod
     def fun(self, n_indices: int, subset_len: int) -> float:
@@ -338,13 +348,25 @@ class SampleSizeStrategy(ABC):
         If `probs` is `True`, the result is a vector of floats, where each element
         is the probability of sampling a set of size $k.$ This is useful e.g. for
         [RandomSizeIteration][pydvl.valuation.samplers.stratified.RandomSizeIteration]
-        where one needs frequencies. In this case `n_samples` can be `None`.
+        where one needs frequencies. In this case `self.n_samples_per_index` can be
+        `None`.
 
-        If `probs` is `False`, the result is a vector of integers, where each
-        element $k$ is the number of samples to take for set size $k.$ The sum of all
-        elements is equal to `self.n_samples_per_index` if provided upon construction,
-        or the sum of the values of `fun` for all set sizes if
-        `self.n_samples_per_index` is `None`.
+        If `probs` is `False`, the result is a vector of integers, where each element
+        $k$ is the number of samples to take for set size $k.$ The sum of all elements
+        will depend on the value of `n_samples` upon construction. It will be
+
+        * equal to `n_samples` if `n_samples > 0`,
+        * the sum of the values of `fun` for all set sizes if `n_samples == 0`,
+        * the sum after a normalization such that the smallest non-zero value is 1, if
+          `n_samples == None`.
+
+        This somewhat complex behavior is necessary to ensure that the total number of
+        samples is respected when provided either globally upon construction, or
+        implicitly by the sum of the values of `fun` when the strategy computes absolute
+        numbers, but also when the strategy has a `fun` that returns frequencies. The
+        special handling of the case `n_samples == None` is used implicitly by
+        [StratifiedPermutationSampler][pydvl.valuation.samplers.stratified.StratifiedPermutationSampler]
+        (yeah, it's not pretty).
 
         When `probs` is `False`, this method corrects rounding errors taking into
         account the fractional parts so that the total number of samples is respected,
@@ -355,8 +377,8 @@ class SampleSizeStrategy(ABC):
             n_indices: number of indices in the index set from which to sample. This is
                 typically `len(dataset) - 1` with the usual index iterations.
             probs: Whether to perform the remainder distribution. If `True`, sampling
-                probabilities are returned. If `False`, then `n_samples` is used to
-                compute the actual number of samples and the values are rounded
+                probabilities are returned. If `False`, then `n_samples_per_index` is
+                used to compute the actual number of samples and the values are rounded
                 down to the nearest integer, and the remainder is distributed to
                 maintain the relative frequencies.
         Returns:
@@ -377,12 +399,20 @@ class SampleSizeStrategy(ABC):
         assert n_indices == 0 or s > 0, "Sum of sample sizes must be positive"
         values /= s
 
-        n_samples = self.n_samples_per_index or int(np.ceil(s))
-
         if probs:
+            values.setflags(write=False)  # avoid accidental modification of cache
             return values  # m_k / m
 
+        if self._n_samples_per_index is None:
+            normalization = min(values[values > 0])
+            n_samples = np.sum(values / normalization).astype(int)  # min m_k = 1
+        elif self._n_samples_per_index == 0:
+            n_samples = np.ceil(s).astype(int)  # sum m_k = sum f_k
+        else:
+            n_samples = self._n_samples_per_index  # sum m_k = n_samples
+
         values *= n_samples
+
         # Round down and distribute remainder by adjusting the largest fractional parts
         # A naive implementation with e.g.
         #
@@ -391,13 +421,6 @@ class SampleSizeStrategy(ABC):
         #
         # would not respect the total number of samples, and would not distribute
         # remainders correctly
-        if n_samples < len(np.nonzero(values)[0]):
-            raise ValueError(
-                f"Number of samples per index {n_samples} is smaller than the "
-                f"number of non-zero sample sizes {len(np.nonzero(values)[0])}. "
-                f"Increase `n_samples` when instantiating {str(self)}, or use a"
-                f"stochastic size / index iteration and sampler."
-            )
         int_values: NDArray[np.int64] = np.floor(values).astype(np.int64)
         remainder = n_samples - np.sum(int_values)
         fractional_parts = values - int_values
@@ -405,22 +428,64 @@ class SampleSizeStrategy(ABC):
             :remainder
         ]
         int_values[fractional_parts_indices] += 1
+        int_values.setflags(write=False)  # avoid accidental modification of cache
         return int_values
 
     def __str__(self):
         return (
-            f"{self.__class__.__name__}(n_samples={self.n_samples_per_index}, "
+            f"{self.__class__.__name__}(n_samples={self._n_samples_per_index}, "
             f"lower_bound={self.lower_bound}, upper_bound={self.upper_bound})"
         )
 
 
 class ConstantSampleSize(SampleSizeStrategy):
-    r"""Use a constant number of samples for each set size between two (optional)
-    bounds. The total number of samples (per index) is respected.
+    r"""Use a constant number of samples for each set size.
+
+    Args:
+        n_samples: Number of samples for the stratified sampler to generate. It can be
+            `None`, 0 or a positive integer. See the documentation of
+             [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy]
+             for details.
+        lower_bound: Lower bound for the set sizes.
+        upper_bound: Upper bound for the set sizes.
     """
 
     def fun(self, n_indices: int, subset_len: int) -> float:
         return 1.0
+
+
+class LinearSampleSize(SampleSizeStrategy):
+    r"""Use a linear function of the set size to determine the number of samples to take.
+
+    This is mostly intended for testing purposes, as it is not a very useful heuristic.
+
+    Args:
+        scale: Slope of the linear function.
+        offset: Offset of the linear function.
+        n_samples: Number of samples for the stratified sampler to generate. It can be
+            `None`, 0 or a positive integer. See the documentation of
+             [SampleSizeStrategy][pydvl.valuation.samplers.stratified.SampleSizeStrategy]
+             for details.
+        lower_bound: Lower bound for the set sizes.
+        upper_bound: Upper bound for the set sizes.
+    """
+
+    def __init__(
+        self,
+        scale: float,
+        offset: int = 0,
+        n_samples: int | None = None,
+        lower_bound: int | None = None,
+        upper_bound: int | None = None,
+    ):
+        super().__init__(
+            n_samples=n_samples, lower_bound=lower_bound, upper_bound=upper_bound
+        )
+        self.scale = validate_number("scale", scale, float, lower=0.0)
+        self.offset = validate_number("offset", offset, int, lower=0)
+
+    def fun(self, n_indices: int, subset_len: int) -> float:
+        return int(subset_len * self.scale + self.offset)
 
 
 # This otherwise unnecessary class can be convenient for passing around and storing
@@ -472,12 +537,24 @@ class DeltaShapleyNCSGDConfig:
         assert self.n_sgd_iter > 0
 
 
-# TODO: implement the other bounds?
 class DeltaShapleyNCSGDSampleSize(SampleSizeStrategy):
     r"""Heuristic choice of samples per set size for $\delta$-Shapley.
 
     This implements the non-convex SGD bound from Watson et al.
     (2023)<sup><a href="#watson_accelerated_2023">1</a></sup>.
+
+    !!! Note
+        This strategy does not accept an `n_samples` parameter because it provides the
+        absolute number of samples to take for each set size based on the constants
+        provided in the configuration.
+
+    Args:
+        config: Configuration for the sample bound.
+        lower_bound: Lower bound for the set sizes. If the set size is smaller than this,
+            the probability of sampling is 0. If `None`, the lower bound is set to 0.
+        upper_bound: Upper bound for the set size. If the set size is larger than this,
+            the probability of sampling is 0. If `None`, the upper bound is set to the
+            number of indices.
     """
 
     def __init__(
@@ -486,9 +563,7 @@ class DeltaShapleyNCSGDSampleSize(SampleSizeStrategy):
         lower_bound: int | None = None,
         upper_bound: int | None = None,
     ):
-        super().__init__(
-            n_samples=None, lower_bound=lower_bound, upper_bound=upper_bound
-        )
+        super().__init__(n_samples=0, lower_bound=lower_bound, upper_bound=upper_bound)
         self.config = config
 
     def fun(self, n_indices: int, subset_size: int) -> int:
@@ -628,17 +703,22 @@ class SampleSizeIteration(ABC):
 
 
 class FiniteSequentialSizeIteration(SampleSizeIteration):
-    """Generates exactly $m_k$ samples for each set size $k$ before moving to the next."""
+    """Generates exactly $m_k$ samples for each set size $k$ before moving to the next.
+
+    !!! warning "Only for deterministic sample sizes"
+        This iteration is only valid for deterministic sample sizes. In particular,
+        `n_samples` must be set to the total number of samples.
+    """
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
-        counts = self.strategy.sample_sizes(self.n_indices, probs=False)
-        if self.n_indices > 1 and np.sum(counts) <= 1:
+        if self.strategy.n_samples_per_index(self.n_indices) is None:
             raise ValueError(
-                f"{self.strategy.__class__.__name__} seems to only provide "
-                f"probabilities. Ensure you set up the strategy with a fixed "
-                f"number of samples per index greater than 1."
+                f"{str(self.strategy)} seems to only provide probabilities. In order "
+                f"to use {str(self)}, ensure that you set up the strategy with a "
+                f"fixed number of samples per index."
             )
 
+        counts = self.strategy.sample_sizes(self.n_indices, probs=False)
         for k, m_k in enumerate(counts):  # type: int, int
             if m_k > 0:
                 yield k, max(1, m_k)
@@ -670,19 +750,18 @@ class RoundRobinSizeIteration(SampleSizeIteration):
     (0,1), (1,1), (2,1), (0,1), (1,1), (1,1)
 
     !!! warning "Only for deterministic sample sizes"
-        This iteration is only valid for deterministic sample sizes. In particular, the
-        strategy must support `quantize=True` and `n_samples` must be set to the total
-        number of samples.
+        This iteration is only valid for deterministic sample sizes. In particular,
+        `n_samples` must be set to the total number of samples.
     """
 
     def __iter__(self) -> Generator[tuple[int, int], None, None]:
-        counts = self.strategy.sample_sizes(self.n_indices, probs=False).copy()
-        if self.n_indices > 1 and np.sum(counts) <= 1:
+        if self.strategy.n_samples_per_index(self.n_indices) is None:
             raise ValueError(
-                f"{self.strategy.__class__.__name__} seems to only provide "
-                f"probabilities. Ensure you set up the strategy with a fixed "
-                f"number of samples per index greater than 1."
+                f"{str(self.strategy)} seems to only provide probabilities. In order "
+                f"to use {str(self)}, ensure that you set up the strategy with a "
+                f"fixed number of samples per index."
             )
+        counts = self.strategy.sample_sizes(self.n_indices, probs=False).copy()
         while any(count > 0 for count in counts):
             for k, count in enumerate(counts):  # type: int, int
                 if count > 0:
@@ -745,11 +824,14 @@ class StratifiedSampler(StochasticSamplerMixin, PowersetSampler):
                     yield Sample(idx, subset)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        index_iteration_length = self._index_iterator_cls.length(len(indices))
+        n = len(indices)
+        index_iteration_length = self._index_iterator_cls.length(n)
         if index_iteration_length is None:
             return None
-        m = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
-        return index_iteration_length * sum(m)
+        m = self.sample_sizes_strategy.n_samples_per_index(n)
+        if m is None:
+            return None
+        return index_iteration_length * m
 
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""The probability of sampling a set of size k is 1/(n choose k) times the
@@ -880,9 +962,10 @@ class StratifiedPermutationSampler(PermutationSampler):
 
     Args:
         sample_sizes: An object which returns the number of samples to take for a given
-            set size. This must be able to compute discrete numbers of samples, as
-            opposed to only probabilities. Either choose one that generates integer
-            sample sizes, or set `n_samples` manually upon its construction.
+            set size. If the strategy fixes a total number of samples for each set size,
+            then this sampler will produce (approximately) that amount of samples for
+            each index. If it does not, then the sampler will generate infinitely many
+            samples, with set sizes following the distribution set by the strategy.
         truncation: A policy to stop the permutation early.
         seed: Seed for the random number generator.
         batch_size: The number of samples (full permutations) to generate at once.
@@ -913,8 +996,11 @@ class StratifiedPermutationSampler(PermutationSampler):
         )
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        m = self.sample_sizes_strategy.sample_sizes(len(indices), probs=False)
-        return len(indices) * sum(m)
+        n = len(indices)
+        m = self.sample_sizes_strategy.n_samples_per_index(n)
+        if m is None:
+            return None
+        return m * n
 
     def generate(self, indices: IndexSetT) -> SampleGenerator[StratifiedPermutation]:
         """Generates the permutation samples.
@@ -931,19 +1017,12 @@ class StratifiedPermutationSampler(PermutationSampler):
         n = len(indices)
         if n == 0:
             return
-        sizes = self.sample_sizes_strategy.sample_sizes(n, probs=False)
-        n_samples = np.sum(sizes)
-        if n_samples <= 1:
-            raise ValueError(
-                f"{self.sample_sizes_strategy.__class__.__name__} seems to only provide "
-                f"probabilities. Ensure you set up the strategy with a fixed "
-                f"number of samples per index greater than 1."
-            )
 
+        sizes = self.sample_sizes_strategy.sample_sizes(n, probs=False)
         # FIXME: This is just an approximation. On expectation we should produce roughly
         #   the correct number of sizes per index, but we should probably keep track
         #   separately.
-        sizes *= n
+        sizes = sizes * n  # Need a copy because the method is @cached
 
         while True:
             # Can't have skip indices: if the index set is smaller than the lower bound
@@ -953,11 +1032,14 @@ class StratifiedPermutationSampler(PermutationSampler):
             # _indices = np.setdiff1d(indices, self.skip_indices)
 
             positive = np.where(sizes > 0)[0]
-            if len(positive) == 0:
-                break
+            if len(positive) == 0:  # Restart
+                sizes = self.sample_sizes_strategy.sample_sizes(n, probs=False)
+                sizes = sizes * n
+                continue
             lb, ub = int(positive[0]), int(positive[-1])
+            # FIXME: do we really want to restrict the strategies to be monotonic?
             assert all(sizes[lb : ub + 1] > 0), "Sample size function must be monotonic"
-            sizes -= 1
+            sizes = np.maximum(sizes - 1, 0)
 
             yield StratifiedPermutation(
                 idx=None,
