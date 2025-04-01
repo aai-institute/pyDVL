@@ -13,26 +13,23 @@ your data needs special handling before being fed to the model from the `Dataset
 can override the
 [sample_to_data()][pydvl.valuation.utility.modelutility.ModelUtility.sample_to_data]
 method. Be sure not to rely on the data being static for this. If you need to transform
-it once before fitting, then override
+it before fitting, then override
 [with_dataset()][pydvl.valuation.utility.base.UtilityBase.with_dataset].
 
-## Caveats with parallel computation
+!!! warning "Caveats with parallel computation"
+    When running in parallel, the utility is copied to each worker, which implies
+    copying the dataset as well, which can obviously be very expensive. In order to
+    alleviate the problem, one can memmap the data to disk. Alas, automatic memmapping
+    by joblib does not work for nested structures like
+    [Dataset][pydvl.valuation.dataset.Dataset] objects, nor for pytorch tensors. For
+    now, it should be possible to [use memmap
+    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
+    but it hasn't been tested.
 
-!!! warning "Read this if your models are minimally large"
-
-When running in parallel, the utility is copied to each worker, and this can have
-different consequences. Assuming you are working on one machine:
-
-1. When working with numpy arrays, joblib will automagically memmap the data if it's
-   beyond a certain size (typically 1MB), and working with `backend="loky"` or
-   `"multiprocessing"`.
-2. When working with torch tensors this will have to be [done
-   manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
-   but it hasn't been tested.
-
-If you are working on a cluster, the data will be copied to each worker, and this can
-be very expensive. In this case, more subclassing of `Dataset` and `Utility` might be
-necessary. Feel free to open an issue if you need help with this.
+    If you are working on a cluster, the data will be copied to each worker. In this
+    case, subclassing of `Dataset` and `Utility` will be necessary to minimize copying,
+    and the solution will depend on your storage solution. Feel free to open an issue if
+    you need help with this.
 """
 
 from __future__ import annotations
