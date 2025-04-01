@@ -268,7 +268,7 @@ class PowersetSampler(IndexSampler, ABC):
         Args:
             batch_size: The number of samples to generate per batch. Batches are
                 processed together by
-                [UtilityEvaluator][pydvl.valuation.utility.evaluator.UtilityEvaluator].
+                [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy].
             index_iteration: the strategy to use for iterating over indices to update
         """
         super().__init__(batch_size)

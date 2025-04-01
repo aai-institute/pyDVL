@@ -107,8 +107,8 @@ stop condition. This is an instance of a
 
 ## A stratified approach  { #stratified-shapley-value }
 
-Let's decompose definition [(1)][#combinatorial-shapley] into "layers", one per
-subset size $k,$ by writing it in the equivalent form:[^not1]
+Let's decompose definition [(1)][combinatorial-shapley-intro] into "layers",
+one per subset size $k,$ by writing it in the equivalent form:[^not1]
 
 $$v_\text{shap}(i) = \sum_{k=0}^{n-1} \frac{1}{n} \binom{n-1}{k}^{-1} 
     \sum_{S \subseteq N_{-i}^{k}} \Delta_i(S).$$

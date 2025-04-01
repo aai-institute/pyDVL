@@ -882,7 +882,7 @@ class VRDSSampler(StratifiedSampler):
 
     It is functionally equivalent to a
     [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler] with
-    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSamp leSize],
+    [HarmonicSampleSize][pydvl.valuation.samplers.stratified.HarmonicSampleSize],
     [FiniteSequentialSizeIteration][pydvl.valuation.samplers.stratified.FiniteSequentialSizeIteration],
     and
     [FiniteSequentialIndexIteration][pydvl.valuation.samplers.powerset.FiniteSequentialIndexIteration].
