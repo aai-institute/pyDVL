@@ -1,3 +1,7 @@
+"""
+This module defines the base class for all utilities.
+"""
+
 from __future__ import annotations
 
 import copy as cp
@@ -16,6 +20,7 @@ class UtilityBase(Generic[SampleT], ABC):
     A utility is a scalar-valued set function which will be evaluated over subsets of
     the training set.
     """
+
     _training_data: Dataset | None
 
     @property

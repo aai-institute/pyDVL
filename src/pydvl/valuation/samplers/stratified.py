@@ -307,7 +307,7 @@ class SampleSizeStrategy(ABC):
         if self._n_samples_per_index is None:
             return None
         sizes = self.sample_sizes(n_indices, probs=False)
-        return np.sum(sizes).astype(int)
+        return int(np.sum(sizes).item())
 
     @abstractmethod
     def fun(self, n_indices: int, subset_len: int) -> float:
@@ -931,7 +931,7 @@ class VRDSSampler(StratifiedSampler):
         """
         m = 2 * (np.log(2) - np.log(delta)) / eps**2
         m *= (np.log(n_indices) + 1) ** 2
-        return np.ceil(m).astype(int)
+        return int(np.ceil(m).item())
 
 
 @dataclass(frozen=True)
