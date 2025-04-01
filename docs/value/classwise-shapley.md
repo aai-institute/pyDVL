@@ -150,7 +150,7 @@ Accuracy Drop** (WAD) as:
 
 $$
 \begin{aligned}
-\text{WAD} &= \sum_{j=1}^{n} \frac{1}{j} \sum_{i=1}^{j}
+\text{wad} &= \sum_{j=1}^{n} \frac{1}{j} \sum_{i=1}^{j}
   \left( a_{T_{-\{1 : i-1 \}}}(D) - a_{T_{-\{1 : i \}}}(D) \right) \\
    &= a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 : j \}}}(D)}{j} ,
 \end{aligned}
@@ -162,8 +162,8 @@ and $T_{-\{1 : j \}}$ is the set $T$ without elements from $\{1, \dots , j
 \}$.
 
 We run the point removal experiment for a logistic regression model five times
-and compute WAD for each run, then report the mean $\mu_\text{WAD}$ and standard
-deviation $\sigma_\text{WAD}$.
+and compute WAD for each run, then report the mean $\mu_\text{wad}$ and standard
+deviation $\sigma_\text{wad}$.
 
 ![Mean WAD for best-point removal on logistic regression. Values
 computed using LOO, CWS, Beta Shapley, and TMCS

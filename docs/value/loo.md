@@ -13,7 +13,7 @@ $S \subseteq D$.
 
 LOO assigns to each sample its *marginal utility* as value: 
 
-$$v_\text{LOO}(i) = u(D) - u(D_{-i}),$$
+$$v_\text{loo}(i) = u(D) - u(D_{-i}),$$
 
 and as such is the simplest example of marginal contribution-based valuation
 method. In pyDVL it is available as
