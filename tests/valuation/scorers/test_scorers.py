@@ -34,12 +34,12 @@ def scorer(model):
     X = np.array([[1, 2], [3, 4]])
     y = X @ coef
     test_data = Dataset(X, y)
-    return SupervisedScorer("r2", test_data=test_data, default=0)
+    return SupervisedScorer("r2", test_data=test_data, default=0.0)
 
 
 def test_scorer(model, scorer):
     """Tests the Scorer class."""
-    assert str(scorer) == "r2"
+    assert str(scorer) == "r2(default=0.0, range=(-inf, inf))"
     if version.parse(sklearn.__version__) >= version.parse("1.4.0"):
         assert (
             repr(scorer)
