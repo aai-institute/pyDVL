@@ -165,7 +165,6 @@ def amesampler_samplers():
     ]
 
 
-
 def powerset_samplers():
     ret = []
 
@@ -306,21 +305,24 @@ def owen_samplers():
     ]
 
 
-def random_samplers(proper: bool = False, n_samples_per_index: int = 32):
+def random_samplers(proper: bool = False, stratified: bool = True):
     """Use this as parameter values in pytest.mark.parametrize for parameters
     "sampler_cls, sampler_kwargs"
 
     Build the objects with recursive_make(sampler_cls, sampler_kwargs, **lambda_args)
     where lambda args are named as the key in the dictionary that contains the lambda.
     """
-    return (
+    ret = (
         permutation_samplers()
         + powerset_samplers()
         + amesampler_samplers()
-        + stratified_samplers(n_samples_per_index=n_samples_per_index)
         + owen_samplers()
-        + (improper_samplers() if not proper else [])
     )
+    if stratified:
+        ret += stratified_samplers()
+    if not proper:
+        ret += improper_samplers()
+    return ret
 
 
 @pytest.mark.parametrize(
