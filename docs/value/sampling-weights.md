@@ -11,34 +11,53 @@ alias:
     of sampling sets of a given size), semi-value coefficients and Monte Carlo
     sampling.
 
-Samplers define so-called *sampling strategies*, which subclass
-[EvaluationStrategy][pydvl.valuation.samplers.EvaluationStrategy]. These
-strategies are where sub-processes compute marginal utilities, by whichever
-method is required depending on the sampling scheme. Crucially, they compute
-**the product of a semi-value coefficient with a sampling weight**. This can be
-seen either as a form of importance sampling, or as a mechanism to allow
-mix-and-matching of sampling strategies and semi-value coefficients.
+Valuation methods based on semi-values involve computing averages of [marginal
+utilities][glossary-marginal-utility] over all possible subsets of the training
+data. As explained in [the introduction with uniform
+sampling][monte-carlo-combinatorial-shapley-intro], we use Monte Carlo
+approximations to compute these averages. Below we show that this introduces
+additional terms in the results due to the sampling probabilities, yielding
+_effective coefficients_ that are **the product of the semi-value coefficient
+with a sampling probability**. To correct for this, all samplers provide a
+method which is just $p(S),$ the probability of sampling a set $S.$ This can be
+seen either as a form of importance sampling to reduce variance, or as a
+mechanism to allow mix-and-matching of sampling strategies and semi-value
+coefficients.
 
-It is however an unnecessary step when the sampling distribution yields exactly
-the semi-value coefficient, as we explain below.
+However, the correction an unnecessary step when the sampling distribution
+yields exactly the semi-value coefficient, a situation which is the basis for
+several methods proposed in the literature.
 
 ??? Example "The core semi-value computation for powerset sampling"
     This is the core of the marginal update computation in
     [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy]:*
     ```python
     for sample in batch:
-      u_i = self.utility(sample.with_idx_in_subset())
-      u = self.utility(sample)
-      marginal = u_i - u
-      sign = np.sign(marginal)
-      log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-      log_marginal += self.log_correction(self.n_indices, len(sample.subset))
-      updates.append(ValueUpdate(sample.idx, log_marginal, sign))
+        u_i = self.utility(sample.with_idx_in_subset())
+        u = self.utility(sample)
+        marginal = u_i - u
+        sign = np.sign(marginal)
+        log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+        
+        # Here's the coefficient, as defined by the valuation method,
+        # potentially with a correction.
+        log_marginal += self.valuation_coefficient(
+            self.n_indices, len(sample.subset)
+        )
+
+        updates.append(ValueUpdate(sample.idx, log_marginal, sign))
+        ...
     ```
 
-We will be discussing the `log_correction(n, k)`. In pyDVL we allow for almost 
-arbitrary combinations of semi-value and sampler, but allow switching off the 
-coefficients and provide dedicated classes that do so when possible.
+The `valuation_coefficient(n, k)` is in effect defined by the valuation method,
+and allows for almost arbitrary combinations of semi-value and sampler. By
+subclassing one can also switch off the coefficients when indicated. We provide
+dedicated classes that do so for the most common combinations, like
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation] or
+[MSRBanzhafValuation][pydvl.valuation.methods.banzhaf.MSRBanzhafValuation]. If
+you check the code you will see that they are in fact little more than thin
+wrappers.
+
 
 ## Uniform sampling
 
@@ -87,20 +106,20 @@ coefficient
 
 $$ w_{\operatorname{unif}} (S) \equiv 2^{n - 1} . $$
 
-The product $w_{\operatorname{unif}}  (S) w_{\operatorname{sh}} (S)$ is the 
-`log_correction(n, k)` in the code above. Because of how samplers work the 
-coefficients only depend on the size $k = | S |$ of the subsets, and it will 
-always be the inverse of the probability of a set $S,$ given that it has size 
+The product $w_{\operatorname{unif}}  (S) w_{\operatorname{sh}} (S)$ is the
+`valuation_coefficient(n, k)` in the code above. Because of how samplers work
+the coefficients only depend on the size $k = | S |$ of the subsets, and it will
+always be the inverse of the probability of a set $S,$ given that it has size
 $k.$
 
 At every step of the MC algorithm we do the following:
 
 !!! abstract "Monte Carlo Shapley Update"
     1. sample $S_{j} \sim \mathcal{U} (D_{- i}),$ let $k = | S_{j} |$
-    1. compute the marginal $\Delta_i (S_{j})$
-    1. compute the product of coefficients for the sampler and the method: 
+    2. compute the marginal $\Delta_i (S_{j})$
+    3. compute the product of coefficients for the sampler and the method: 
        $w_{\operatorname{unif}} (k) w_{\operatorname{sh}} (k)$
-    1. update the running average for $\hat{v}_{\operatorname{unif}, 
+    4. update the running average for $\hat{v}_{\operatorname{unif}, 
        \operatorname{sh}}$
 
 ## Picking a different distribution
@@ -301,20 +320,21 @@ overriding the property
 [log_coefficient][pydvl.valuation.methods.semivalue.SemivalueValuation.log_coefficient]
 to return `None`.
 
-Alternatively, we can mix and match samplers, effectively performing importance 
-sampling. Let $\mathcal{L}$ be the law of a sampling procedure such that 
-$p_{\mathcal{L}} (S|k) = w_{\operatorname{semi}}$ for some semi-value 
-coefficient, and let $\mathcal{Q}$ be that of any sampler we choose: Then:
+Alternatively, we can mix and match sampler and semi-values, effectively
+performing importance sampling. Let $\mathcal{L}$ be the law of a sampling
+procedure such that $p_{\mathcal{L}} (S|k) = w_{\operatorname{semi}}$ for some
+semi-value coefficient, and let $\mathcal{Q}$ be that of any sampler we choose.
+Then:
 
 $$ v_{\operatorname{semi}} (i) = \mathbb{E}_{\mathcal{L}} [\Delta_i (S)]
    = \mathbb{E}_{Q} \left[ \frac{w_{\operatorname{semi}} (S)}{p_{Q} (S|k)}
    \Delta_i (S) \right] $$
 
-The drawback is that a direct implementation with that much cancelling of 
-coefficients might be inefficient or numerically unstable. Integration issues 
-arise to compute $p_{Q} (S|k)$ and so on. On the flip side, we can implement 
-any sampling method, like antithetic sampling, and immediately benefit in all 
-semi-value computations.
+The drawback is that a direct implementation with that much cancelling of
+coefficients might be inefficient or numerically unstable. Integration issues
+might arise to compute $p_{Q} (S|k)$ and so on. On the plus side, we can
+implement any sampling method, like antithetic sampling, and immediately benefit
+in all semi-value computations.
 
 [^1]: At step $(\star)$ we have counted the number of permutations before a
 fixed position of index $i$ and after it, because the utility does not depend on
