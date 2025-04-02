@@ -1,3 +1,17 @@
+"""
+This module defines some utilities used in the parallel processing of valuation methods.
+
+In particular, it defines a flag that can be used to signal across parallel processes
+to stop computation. This is useful when utility computations are expensive or batched
+together.
+
+The flag is created by the `fit` method of valuations within a
+[make_parallel_flag][pydvl.valuation.parallel.make_parallel_flag] context manager, and
+passed to implementations of
+[EvaluationStrategy.process][pydvl.valuation.samplers.base.EvaluationStrategy.process].
+The latter calls the flag to detect if the computation should stop.
+"""
+
 from __future__ import annotations
 
 import uuid
@@ -33,6 +47,12 @@ def ensure_backend_has_generator_return():
 
 
 class Flag(ABC):
+    """Abstract class for flags
+
+    To check a flag, call it as a function or check it in a boolean context. This will
+    return `True` if the flag is set, and `False` otherwise.
+    """
+
     @abstractmethod
     def set(self): ...
 
@@ -50,6 +70,8 @@ class Flag(ABC):
 
 
 class ThreadingFlag(Flag):
+    """A trivial flag for signalling across threads."""
+
     def __init__(self):
         self._flag = False
 
@@ -67,6 +89,8 @@ class ThreadingFlag(Flag):
 
 
 class MultiprocessingFlag(Flag):
+    """A flag for signalling across processes using shared memory."""
+
     def __init__(self, name: str):
         self._flag = shared_memory.SharedMemory(name, create=False, size=1)
 
@@ -93,6 +117,8 @@ class MultiprocessingFlag(Flag):
 
 @contextmanager
 def make_parallel_flag():
+    """A context manager that creates a flag for signalling across parallel processes.
+    The type of flag created is based on the active parallel backend."""
     backend = _get_active_backend()[0]
 
     if isinstance(backend, MultiprocessingBackend) or isinstance(backend, LokyBackend):

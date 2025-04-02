@@ -1,7 +1,7 @@
 """
 ## References
 
-[^1]: <a name="kwon_data_2023"></a>Kwon et al.
+[^1]: <a name="kwon_dataoob_2023"></a>Kwon et al.
 [Data-OOB: Out-of-bag Estimate as a Simple and Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html).
 In: Published at ICML 2023
 
@@ -37,7 +37,7 @@ def compute_data_oob(
     r"""Computes Data out of bag values
 
     This implements the method described in
-    (Kwon and Zou, 2023)<sup><a href="#kwon_data_2023">1</a></sup>.
+    (Kwon and Zou, 2023)<sup><a href="#kwon_dataoob_2023">1</a></sup>.
     It fits several base estimators provided through u.model through a bagging
     process. The point value corresponds to the average loss of estimators which
     were not fit on it.

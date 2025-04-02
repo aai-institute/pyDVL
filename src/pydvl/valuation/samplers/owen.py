@@ -205,7 +205,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         self.q_stop = 1.0
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             _complement = complement(indices, [idx])
             for prob in self.sampling_probabilities(self.q_stop):
                 for _ in range(self.n_samples_inner):
@@ -248,7 +248,7 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
         Returns:
             The logarithm of the weight of a subset of size `subset_len`.
         """
-        m = self._index_iterator_cls.complement_size(n)
+        m = self.complement_size(n)
         return float(-logcomb(m, subset_len) - np.log(m + 1))
 
     def sample_limit(self, indices: IndexSetT) -> int | None:

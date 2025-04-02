@@ -1,7 +1,53 @@
 r"""
-Permutation-based samplers.
+Permutation samplers draw permutations $\sigma^N$ from the index set $N$ uniformly at
+random and iterate through it returning the sets:
 
-TODO: explain the formulation and the different samplers.
+$$S_1 = \{\sigma^N_1\}, S_2 = \{\sigma^N_1,
+\sigma^N_2\}, S_3 = \{\sigma^N_1,\sigma^N_2, \sigma^N_3\}, ...$$
+
+## The probability of sampling a set
+
+!!! warning "Read on below for the actual formula"
+    This section describes the general case. However, because of how the samplers are
+    used to compute marginals, the effective sampling probabilities are slightly
+    different.
+
+Let $k$ be the size of a sampled set $S$ and $n=|N|$ the size of the index set. By the
+product rule:
+
+$$p(S) = p(S \mid k) \ p(k).$$
+
+Now, for a uniformly chosen permutation, every subset of size $k$ appears as the
+prefix (the first $k$ elements) with probability
+
+$$ p (S \mid k) = \frac{k! (n - k) !}{n!} = \binom{n}{k}^{- 1}, $$
+
+and, because we iterate from left to right, each size $k$ is sampled with probability
+$p(k) = 1/n.$ Hence:
+
+$$ p(S) = \frac{1}{n} \binom{n}{k}^{- 1}. $$
+
+The same argument applies to the
+[DeterministicPermutationSampler][pydvl.valuation.samplers.permutation.DeterministicPermutationSampler]
+and [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], but
+also to
+[AntitheticPermutationSampler][pydvl.valuation.samplers.permutation.AntitheticPermutationSampler].
+For the latter, note that the sampling process is symmetric.
+
+
+## The case of a fixed index when computing marginals
+
+However, when computing marginal utilities, which is what the samplers are used for, the
+situation is slightly different since we update indices $i$ sequentially. In [Sampling
+strategies for semi-values][sampling-strategies-permutations] a more convoluted argument
+is made, whereby one splits the permutation by the index $i$. This ends up being similar
+to what we found above:
+
+$$ p(S) = \frac{1}{n} \binom{n-1}{k}^{- 1}, $$
+
+Therefore,
+[log_weight()][pydvl.valuation.samplers.permutation.PermutationSampler.log_weight]
+is valid, **when computing marginal utilities**.
 
 
 ## References
@@ -23,7 +69,6 @@ import math
 from abc import ABC
 from copy import copy
 from itertools import permutations
-from typing import Callable
 
 import numpy as np
 
@@ -42,15 +87,17 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
-    "PermutationSampler",
     "AntitheticPermutationSampler",
     "DeterministicPermutationSampler",
+    "PermutationSampler",
     "PermutationEvaluationStrategy",
+    "TruncationPolicy",
 ]
 
 
@@ -70,24 +117,29 @@ class PermutationSamplerBase(IndexSampler, ABC):
         super().__init__(batch_size=batch_size)
         self.truncation = truncation or NoTruncation()
 
-    def log_weight(self, n: int, subset_len: int) -> float:
-        """Probability of sampling a subset of size k from n indices, given k
+    def complement_size(self, n: int) -> int:
+        """Size of the complement of an index wrt. set size `n`.
 
-        !!! info
-            Even though this does not look like P(S|k), some algebra shows that it is.
-            For details, see [the documentation][...]
-        Args:
-            n: Total number of indices.
-            subset_len: Size of the sampled subset.
+        Required in certain coefficient computations. Even though we are sampling
+        permutations, updates are always done per-index and the size of the complement
+        is always $n-1$.
+        """
+        return n - 1
+
+    def log_weight(self, n: int, subset_len: int) -> float:
+        r"""Log probability of sampling a set S from a set of size **n-1**.
+
+        See [the module's documentation][pydvl.valuation.samplers.permutation] for
+        details.
         """
         if n > 0:
             return float(-np.log(n) - logcomb(n - 1, subset_len))
-        return 0.0
+        return -np.inf
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -105,6 +157,7 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
     Args:
         truncation: A policy to stop the permutation early.
         seed: Seed for the random number generator.
+        batch_size: The number of samples (full permutations) to generate at once.
     """
 
     def __init__(
@@ -155,6 +208,18 @@ class AntitheticPermutationSampler(PermutationSampler):
     This sampler was suggested in (Mitchell et al. 2022)<sup><a
     href="#mitchell_sampling_2022">1</a></sup>
 
+    !!! info "Batching"
+        Even though this sampler supports batching, it is not recommended to use it
+        since the
+        [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
+        processes whole permutations in one go, effectively batching the computation of
+        up to n-1 marginal utilities in one process.
+
+    Args:
+        truncation: A policy to stop the permutation early.
+        seed: Seed for the random number generator.
+        batch_size: The number of samples (full permutations) to generate at once.
+
     !!! tip "New in version 0.7.1"
     """
 
@@ -166,9 +231,14 @@ class AntitheticPermutationSampler(PermutationSampler):
 
 
 class DeterministicPermutationSampler(PermutationSamplerBase):
-    """Samples all n! permutations of the indices deterministically, and
-    iterates through them, returning sets as required for the permutation-based
-    definition of semi-values.
+    """Samples all n! permutations of the indices deterministically.
+
+    !!! info "Batching"
+        Even though this sampler supports batching, it is not recommended to use it
+        since the
+        [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
+        processes whole permutations in one go, effectively batching the computation of
+        up to n-1 marginal utilities in one process.
     """
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
@@ -184,19 +254,22 @@ class DeterministicPermutationSampler(PermutationSamplerBase):
 class PermutationEvaluationStrategy(
     EvaluationStrategy[PermutationSamplerBase, ValueUpdate]
 ):
-    """Computes marginal values for permutation sampling schemes in log-space.
+    """Computes marginal values for permutation sampling schemes.
 
     This strategy iterates over permutations from left to right, computing the marginal
     utility wrt. the previous one at each step to save computation.
+
+    The [TruncationPolicy][pydvl.valuation.samplers.truncation.TruncationPolicy] of the
+    sampler is copied and reset for each permutation in a batch.
     """
 
     def __init__(
         self,
         sampler: PermutationSamplerBase,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None,
     ):
-        super().__init__(sampler, utility, coefficient)
+        super().__init__(utility, coefficient)
         self.truncation = copy(sampler.truncation)
         self.truncation.reset(utility)  # Perform initial setup (e.g. total_utility)
 
@@ -217,11 +290,11 @@ class PermutationEvaluationStrategy(
                 marginal = curr - prev
                 sign = np.sign(marginal)
                 log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-                update = self.log_correction(self.n_indices, i) + log_marginal
-                r.append(ValueUpdate(idx, update, sign))
+                log_marginal += self.valuation_coefficient(self.n_indices, i)
+                r.append(ValueUpdate(idx, log_marginal, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):
                     truncated = True
                 if is_interrupted():
-                    break
+                    return r
         return r

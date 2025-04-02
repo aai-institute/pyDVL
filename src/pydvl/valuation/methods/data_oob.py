@@ -1,26 +1,21 @@
 r"""
-This module implements the method described in (Kwon and Zou, 2023)<sup><a
-href="kwon_data_2023">1</a></sup>.
+This module implements the method described in Kwon and Zou, (2023).[^1]
 
-A data point's Data-OOB value is defined for bagging models. It is the average loss of
-the estimators which were not fit on it.
+Data-OOB value is tailored to bagging models. It defines a data point's value as
+the average loss of the estimators which were not fit on it.
 
-Let $w_{bj}\in Z$ be the number of times the j-th datum $(x_j, y_j)$ is selected
-in the b-th bootstrap dataset. The Data-OOB value is computed as follows:
+As such it is not a semi-value, and it is not based on marginal contributions.
 
-$$
-\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i,
-\hat{f}_b(x_i))}{\sum_{b=1}^{B}
-\mathbb{1}(w_{bi}=0)},
-$$
+!!! info
+    For details on the method and a discussion on how and whether to use it by
+    bagging models a posteriori, see the [main
+    documentation][data-oob-intro].
 
-where $T: Y \times Y \rightarrow \mathbb{R}$ is a score function that represents the
-goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
 
 ## References
 
-[^1]: <a name="kwon_data_2023"></a> Kwon, Yongchan, and James Zou. [Data-OOB: Out-of-bag
-      Estimate as a Simple and Efficient Data
+[^1]: <a name="kwon_dataoob_2023"></a> Kwon, Yongchan, and James Zou. [Data-OOB:
+      Out-of-bag Estimate as a Simple and Efficient Data
       Value](https://proceedings.mlr.press/v202/kwon23e.html). In Proceedings of the
       40th International Conference on Machine Learning, 18135–52. PMLR, 2023.
 """
@@ -56,8 +51,8 @@ logger = logging.getLogger(__name__)
 class DataOOBValuation(Valuation):
     """Computes Data Out-Of-Bag values.
 
-    This class implements the method described in (Kwon and Zou,
-    2023)<sup><a href="kwon_data_2023">1</a></sup>.
+    This class implements the method described in Kwon and Zou,
+    (2023)<sup><a href="kwon_dataoob_2023">1</a></sup>.
 
     Args:
         model: A fitted bagging model. Bagging models in sklearn include

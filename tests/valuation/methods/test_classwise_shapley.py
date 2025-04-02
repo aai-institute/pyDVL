@@ -1,3 +1,21 @@
+r"""
+
+The unit tests include the following manually constructed data:
+Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
+the train set. This specific dataset is chosen as it allows to solve the model
+
+$$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
+
+in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
+solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy
+$a_S(D_{-y_i})$ can be calculated. By using these tables and setting
+$\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and
+$\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
+the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
+The details of the derivation are left to the eager reader.
+
+"""
+
 from __future__ import annotations
 
 import logging

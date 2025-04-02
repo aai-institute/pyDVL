@@ -1,8 +1,9 @@
 ---
 title: Data-OOB
+alias: data-oob-intro
 ---
 
-# Data valuation for bagged models with Data-OOB
+# Data valuation for bagged models with Data-OOB  { #data-oob-intro }
 
 Data-OOB [@kwon_dataoob_2023] is a method for valuing data used to train bagged
 models. It defines value as the out-of-bag (OOB) performance estimate for the
@@ -35,23 +36,23 @@ The main class is
 a *fitted* bagged model and uses data precomputed during training to calculate
 the values. It is therefore very fast, and can be used to value large datasets.
 
-This is how you would use it with a 
-[RandomForestClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html):
+??? example "Using Data-OOB with a RandomForest"
+    This is how you would use it with a [RandomForestClassifier][sklearn.ensemble.RandomForestClassifier]. 
+    ```python
+    from sklearn.ensemble import RandomForestClassifier
+    from pydvl.valuation import DataOOBValuation, Dataset
+    
+    train, test = Dataset(...), Dataset(...)
+    model = RandomForestClassifier(...)
+    model.fit(*train.data())
+    valuation = DataOOBValuation(model)
+    valuation.fit(train)
+    values = valuation.values()
+    ```
 
-```python
-from sklearn.ensemble import RandomForestClassifier
-from pydvl.valuation import DataOOBValuation, Dataset
-
-train, test = Dataset(...), Dataset(...)
-model = RandomForestClassifier(...)
-model.fit(*train.data())
-valuation = DataOOBValuation(model)
-valuation.fit(train)
-values = valuation.values()
-```
-
-`values` is then a [ValuationResult][pydvl.valuation.result.ValuationResult] to
-be used for data inspection, cleaning, etc.
+The object returned by `values()` is a
+[ValuationResult][pydvl.valuation.result.ValuationResult] to be used for data
+inspection, cleaning, etc.
 
 Data-OOB is not limited to sklearn's `RandomForest`, but can be used with
 any bagging model that defines the attribute `estimators_`  after fitting and
@@ -68,27 +69,25 @@ valuation we are not interested in the performance of the bagged model, but in
 the valuation coming out of it, which can then be used to work on the original
 model and data.
 
-```python
-from sklearn.ensemble import BaggingClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from pydvl.valuation import DataOOBValuation, Dataset
+??? example "Bagging a k-NN classifier"
+    ```python
+    from sklearn.ensemble import BaggingClassifier
+    from sklearn.neighbors import KNeighborsClassifier
+    from pydvl.valuation import DataOOBValuation, Dataset
+    
+    train, test = Dataset(...), Dataset(...)
+    model = BaggingClassifier(
+        estimator=KNeighborsClassifier(n_neighbors=10),
+        n_estimators=20)
+    model.fit(*train.data())
+    valuation = DataOOBValuation(model)
+    valuation.fit(train)
+    values = valuation.values(sort=True)
+    low_values = values[:int(0.05*len(train))]  # select lowest 5%
+    ...
+    ```
 
-train, test = Dataset(...), Dataset(...)
-model = BaggingClassifier(
-    estimator=KNeighborsClassifier(n_neighbors=10),
-    n_estimators=20)
-model.fit(*train.data())
-valuation = DataOOBValuation(model)
-valuation.fit(train)
-values = valuation.values()
-values.sort()
-low_values = values[:int(0.05*len(train))]  # select lowest 5%
-
-# Inspect the data with lowest values:
-...
-```
-
-### Off-topic: When not to use bagging as the main model
+### Off-topic: When not to bag models
 
 Here are some guidelines for when bagging might unnecessarily increase
 computational cost, or even be detrimental:
@@ -133,11 +132,6 @@ simple workflow is to compute values using a random forest, then use them to
 inspect the data and clean it, and finally train a more complex model on the
 cleaned data. Whether this is a valid idea or not will depend on the specific
 dataset.
-
-```python
-...
-```
-...
 
 ## A comment about sampling
 

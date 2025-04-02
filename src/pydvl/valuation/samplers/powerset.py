@@ -10,14 +10,24 @@ These samplers operate in two loops:
    sampled in different ways: uniformly, with varying probabilities, in tuples of
    complementary sets, etc.
 
-This scheme follows the usual definition of semi-values as:
+## Index iteration
 
-$$
-v_\text{semi}(i) = \sum_{i=1}^n w(k)
-                     \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)],
-$$
+The type of iteration over indices $i$ and their complements is configured upon
+construction of the sampler with the classes
+[SequentialIndexIteration][pydvl.valuation.samplers.powerset.SequentialIndexIteration],
+[RandomIndexIteration][pydvl.valuation.samplers.powerset.RandomIndexIteration], or their
+finite counterparts, when each index must be visited just once (albeit possibly
+generating many samples per index).
 
-see [semivalues][pydvl.valuation.methods.semivalue] for reference.
+However, some valuation schemes require iteration over subsets of the whole set (as
+opposed to iterating over complements of individual indices). For this purpose, one can
+use [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or its finite
+counterpart.
+
+
+!!! info "See also"
+    [General information on semi-values][semi-values-intro] and, an explanation of
+    [importance sampling in the context of semi-values][semi-values-sampling].
 
 
 ## References
@@ -37,7 +47,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Generator, Generic, Type, TypeVar
+from typing import Generator, Generic, Type, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -61,6 +71,7 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
@@ -84,14 +95,17 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-# Careful with MRO when using these and subclassing!
 class FiniteIterationMixin:
+    """Careful with MRO when using this and subclassing!"""
+
     @staticmethod
     def length(n_indices: int) -> int | None:
         return n_indices
 
 
 class InfiniteIterationMixin:
+    """Careful with MRO when using this and subclassing!"""
+
     @staticmethod
     def length(n_indices: int) -> int | None:
         if n_indices == 0:
@@ -100,6 +114,14 @@ class InfiniteIterationMixin:
 
 
 class IndexIteration(ABC):
+    """An index iteration defines the way in which the outer loop over indices in a
+    [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] is done.
+
+    Iterations can be finite, infinite, at random, etc. Subclasses must implement
+    certain methods to inform the samplers of the size of the complement, the number
+    of iterations, etc.
+    """
+
     def __init__(self, indices: IndexSetT):
         self._indices = indices
 
@@ -112,7 +134,7 @@ class IndexIteration(ABC):
         """Returns the length of the iteration over the index set
 
         Args:
-            n_indices: The number of indices in the set.
+            n_indices: The size of the index set.
 
         Returns:
             The length of the iteration. It can be:
@@ -129,6 +151,8 @@ class IndexIteration(ABC):
 
         If the iteration returns single indices, then this is n-1, if it returns no
         indices, then it is n. If it returned tuples, then n-2, etc.
+        Args:
+            n: The size of the index set.
         """
         ...
 
@@ -207,7 +231,8 @@ class NoIndexIteration(InfiniteIterationMixin, IndexIteration):
 
 class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
     """A finite iteration over no indices.
-    The iterator will yield None once and then stop.
+
+    The iterator will yield `None` once and then stop.
     """
 
     def __iter__(self) -> Generator[None, None, None]:
@@ -215,7 +240,7 @@ class FiniteNoIndexIteration(FiniteIterationMixin, NoIndexIteration):
 
     @staticmethod
     def length(n_indices: int) -> int | None:
-        """Returns 1, as the iteration yields exactly one item (None)"""
+        """Returns 1, as the iteration yields exactly one item (`None`)"""
         return 1
 
     @staticmethod
@@ -230,6 +255,11 @@ class PowersetSampler(IndexSampler, ABC):
     This is done in two nested loops, where the outer loop iterates over the set
     of indices, and the inner loop iterates over subsets of the complement of
     the current index. The outer iteration can be either sequential or at random.
+    Args:
+        batch_size: The number of samples to generate per batch. Batches are
+            processed together by `process()` in the evaluation strategy
+            [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy].
+        index_iteration: the strategy to use for iterating over indices to update.
     """
 
     def __init__(
@@ -241,12 +271,14 @@ class PowersetSampler(IndexSampler, ABC):
         Args:
             batch_size: The number of samples to generate per batch. Batches are
                 processed together by
-                [UtilityEvaluator][pydvl.valuation.utility.evaluator.UtilityEvaluator].
+                [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy].
             index_iteration: the strategy to use for iterating over indices to update
         """
         super().__init__(batch_size)
         self._index_iterator_cls = index_iteration
-        self._index_iterator: IndexIteration | None = None
+
+    def complement_size(self, n: int) -> int:
+        return self._index_iterator_cls.complement_size(n)
 
     @property
     def skip_indices(self):
@@ -262,44 +294,80 @@ class PowersetSampler(IndexSampler, ABC):
         """
         self._skip_indices = indices
 
-    def index_iterator(
+    def index_iterable(
         self, indices: IndexSetT
     ) -> Generator[IndexT | None, None, None]:
         """Iterates over indices with the method specified at construction."""
         try:
-            self._index_iterator = self._index_iterator_cls(indices, seed=self._rng)  # type: ignore
+            iterable = self._index_iterator_cls(indices, seed=self._rng)  # type: ignore
         except (AttributeError, TypeError):
-            self._index_iterator = self._index_iterator_cls(indices)
-        for idx in self._index_iterator:
+            iterable = self._index_iterator_cls(indices)
+        for idx in iterable:
             if idx not in self.skip_indices:
                 yield idx
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> PowersetEvaluationStrategy:
-        return PowersetEvaluationStrategy(self, utility, log_coefficient)
+        return PowersetEvaluationStrategy(utility, log_coefficient)
 
     @abstractmethod
     def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates samples over the powerset of `indices`
 
         Each `PowersetSampler` defines its own way to generate the subsets by
-        implementing this method. The outer loop is handled by the `index_iterator`.
-        Batching is handled by the `generate_batches` method.
+        implementing this method. The outer loop is handled by the
+        [index_iterable()][pydvl.valuation.samplers.powerset.PowersetSampler.index_iterable]
+        method. Batching is handled by the
+        [generate_batches()][pydvl.valuation.samplers.base.IndexSampler.generate_batches]
+        method.
 
         Args:
             indices: The set from which to generate samples.
+        Returns:
+            A generator that yields samples over the powerset of `indices`.
         """
         ...
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        """Correction coming from Monte Carlo integration so that the mean of
-        the marginals converges to the value: the uniform distribution over the
-        powerset of a set with n-1 elements has mass 1/2^{n-1} over each subset."""
-        m = self._index_iterator_cls.complement_size(n)
+        """Probability of sampling a set S as a function of total number of indices and
+         set size.
+
+        The uniform distribution over the powerset of a set with $n$ elements has mass
+        $1/2^{n}$ over each subset.
+
+        Args:
+            n: The size of the index set. Note that the actual size of the set being
+                sampled will often be n-1, as one index might be removed from the set.
+                See [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration]
+                for more.
+            subset_len: The size of the subset being sampled
+
+        Returns:
+            The natural logarithm of the probability of sampling a set of the given
+                size, when the index set has size `n`, under the
+                [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration] given
+                upon construction.
+
+        """
+        m = self.complement_size(n)
         return float(-m * np.log(2))
+
+    @abstractmethod
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        """Returns the number of samples that can be generated from the index set.
+
+        This will depend, among other things, on the type of
+        [IndexIteration][pydvl.valuation.samplers.powerset.IndexIteration].
+
+        Args:
+            indices: The set of indices to sample from.
+        Returns:
+            The number of samples that can be generated from the index set.
+        """
+        ...
 
 
 PowersetSamplerT = TypeVar("PowersetSamplerT", bound=PowersetSampler)
@@ -329,7 +397,9 @@ class PowersetEvaluationStrategy(
             marginal = u_i - u
             sign = np.sign(marginal)
             log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
+            log_marginal += self.valuation_coefficient(
+                self.n_indices, len(sample.subset)
+            )
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
@@ -366,35 +436,43 @@ class LOOSampler(PowersetSampler):
         self._rng = np.random.default_rng(seed)
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             yield Sample(idx, complement(indices, [idx]))
 
     def log_weight(self, n: int, subset_len: int) -> float:
         """This sampler returns only sets of size n-1. There are n such sets, so the
         probability of drawing one is 1/n, or 0 if subset_len != n-1."""
-        return float(-np.log(n if subset_len == n - 1 else 0))
+        return float(-np.log(n) if subset_len == n - 1 else -np.inf)
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> PowersetEvaluationStrategy[LOOSampler]:
-        return LOOEvaluationStrategy(self, utility, log_coefficient)
+        return LOOEvaluationStrategy(utility, log_coefficient)
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
         return self._index_iterator_cls.length(len(indices))
 
 
 class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
-    """Computes marginal values for LOO."""
+    """Computes marginal values for LOO.
+
+    Upon construction, the total utility is computed once. Then, the utility for every
+    sample processed in [process()] is subtracted from it and returned as value update.
+
+    Args:
+        utility: The utility function to use.
+        coefficient: The coefficient to use. If `None`, the correction of importance
+            sampling is disabled.
+    """
 
     def __init__(
         self,
-        sampler: LOOSampler,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None,
     ):
-        super().__init__(sampler, utility, coefficient)
+        super().__init__(utility, coefficient)
         assert utility.training_data is not None
         self.total_utility = utility(Sample(None, utility.training_data.indices))
 
@@ -408,7 +486,9 @@ class LOOEvaluationStrategy(PowersetEvaluationStrategy[LOOSampler]):
             marginal = self.total_utility - self.utility(sample)
             sign = np.sign(marginal)
             log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-            log_marginal += self.log_correction(self.n_indices, len(sample.subset))
+            log_marginal += self.valuation_coefficient(
+                self.n_indices, len(sample.subset)
+            )
             updates.append(ValueUpdate(sample.idx, log_marginal, sign))
             if is_interrupted():
                 break
@@ -453,7 +533,7 @@ class DeterministicUniformSampler(PowersetSampler):
         super().__init__(batch_size=batch_size, index_iteration=index_iteration)
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             for subset in powerset(complement(indices, [idx])):
                 yield Sample(idx, np.asarray(subset, dtype=indices.dtype))
 
@@ -464,23 +544,20 @@ class DeterministicUniformSampler(PowersetSampler):
         if len_outer is None:  # Infinite index iteration
             return None
 
-        return int(
-            len_outer * 2 ** (self._index_iterator_cls.complement_size(len(indices)))
-        )
+        return int(len_outer * 2 ** (self.complement_size(len(indices))))
 
 
 class UniformSampler(StochasticSamplerMixin, PowersetSampler):
     """Draws random samples uniformly from the powerset of the index set.
 
     Iterating over every index $i$, either in sequence or at random depending on
-    the value of ``index_iteration``, one subset of the complement
-    ``indices - {i}`` is sampled with equal probability $2^{n-1}$.
+    the value of `index_iteration`, one subset of the complement
+    `indices - {i}` is sampled with equal probability $2^{n-1}$.
 
     Args:
         batch_size: The number of samples to generate per batch. Batches are processed
             together by each subprocess when working in parallel.
-        index_iteration: the strategy to use for iterating over indices to update. This iteration
-            can be either finite or infinite.
+        index_iteration: the strategy to use for iterating over indices to update.
         seed: The seed for the random number generator.
 
     ??? Example
@@ -507,7 +584,7 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
         )
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             subset = random_subset(complement(indices, [idx]), seed=self._rng)
             yield Sample(idx, subset)
 
@@ -516,15 +593,19 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler):
 
 
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
-    """A sampler that draws samples uniformly and their complements.
+    """A sampler that draws samples uniformly, followed by their complements.
 
     Works as [UniformSampler][pydvl.valuation.samplers.UniformSampler], but for every
     tuple $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the
     complement of the set $S$ in the set of indices, excluding $i$.
+
+    By symmetry, the probability of sampling a set $S$ is the same as the probability of
+    sampling its complement $S^c$, so that $p(S)$ in `log_weight` is the same as in the
+    [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] class.
     """
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             _complement = complement(indices, [idx])
             subset = random_subset(_complement, seed=self._rng)
             yield Sample(idx, subset)

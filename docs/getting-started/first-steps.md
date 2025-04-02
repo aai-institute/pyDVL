@@ -7,9 +7,9 @@ alias:
 
 # First steps
 
-!!! Warning
-    Make sure you have read [[getting-started#installation]] before using the library. 
-    In particular read about which extra dependencies you may need.
+!!! info
+    Make sure you have read [[getting-started#installation]] before using the
+    library. In particular read about which extra dependencies you may need.
 
 ## Main concepts
 
@@ -18,16 +18,30 @@ algorithms for data valuation and influence functions. Even though we only
 briefly introduce key concepts in the documentation, the following sections 
 should be enough to get you started.
 
-* [[data-valuation]] for key objects and usage patterns for Shapley value
-  computation and related methods.
-* [[influence-function]] for instructions on how to compute influence functions.
+<div class="grid cards" markdown>
+
+-   [[data-valuation-intro]]
+  
+    ---
+    Key objects and usage patterns for Shapley values and related methods.
+  
+    [[data-valuation-intro|:octicons-arrow-right-24: Data valuation]]
+  
+-   [[influence-function]]
+  
+    ---
+    Instructions on how to compute influence functions, and many approximations.
+    
+    [[influence-function|:octicons-arrow-right-24: Influence functions]]
+
+</div>
 
 ## Running the examples
 
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
-- In the examples under [[data-valuation]] and [[influence-function]].
+- In the examples under [[data-valuation-intro]] and [[influence-function]].
 - Using [binder](https://mybinder.org/) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will
