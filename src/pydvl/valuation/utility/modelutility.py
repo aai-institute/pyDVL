@@ -194,7 +194,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         model: ModelT,
         scorer: Scorer,
         *,
-        catch_errors: bool = False,
+        catch_errors: bool = True,
         show_warnings: bool = True,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,
