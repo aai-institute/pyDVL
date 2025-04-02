@@ -111,9 +111,9 @@ Let's decompose definition [(1)][combinatorial-shapley-intro] into "layers",
 one per subset size $k,$ by writing it in the equivalent form:[^not1]
 
 $$v_\text{shap}(i) = \sum_{k=0}^{n-1} \frac{1}{n} \binom{n-1}{k}^{-1} 
-    \sum_{S \subseteq N_{-i}^{k}} \Delta_i(S).$$
+    \sum_{S \subseteq D_{-i}^{k}} \Delta_i(S).$$
 
-Here $N_i^{k}$ is the set of all subsets of size $k$ in the complement  of
+Here $D_i^{k}$ is the set of all subsets of size $k$ in the complement  of
 $\{i\}.$ Since there are $\binom{n-1}{k}$ such sets, the above is an average
 over all $n$ set sizes $k$ of the average marginal contributions of the point
 $i$ to all sets of size $k.$

@@ -89,7 +89,7 @@ $$\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
 -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), $$
 
 where $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})$ is the Hessian of $L$. These quantities are also knows as
+\hat{\theta})$ is the Hessian of $L$. These quantities are also known as
 **influence factors**.
 
 Importantly, notice that this expression is only valid when $\hat{\theta}$ is a
