@@ -11,14 +11,14 @@
         <link rel="canonical" href="https://pydvl.org/stable/influence/">
       
       
-        <link rel="prev" href="../value/data-oob/">
+        <link rel="prev" href="../value/sampling-weights/">
       
       
         <link rel="next" href="influence_function_model/">
       
       
       <link rel="icon" href="../assets/signet.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.11">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.a40c8224.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.4af4bdda.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
@@ -143,7 +143,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-influence-function" class="md-skip">
+        <a href="#influence-function" class="md-skip">
           Skip to content
         </a>
       
@@ -242,11 +242,13 @@
     
     
     
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
@@ -280,6 +282,7 @@
     </div>
   </div>
 </div>
+      
     
     
       <div class="md-header__source">
@@ -312,9 +315,11 @@
   
   
   
+  
     <li class="md-tabs__item">
       <a href=".." class="md-tabs__link">
         
+  
   
     
   
@@ -329,9 +334,11 @@
   
   
   
+  
     <li class="md-tabs__item">
       <a href="../getting-started/" class="md-tabs__link">
         
+  
   
     
   
@@ -346,9 +353,11 @@
   
   
   
+  
     <li class="md-tabs__item">
       <a href="../value/" class="md-tabs__link">
         
+  
   
     
   
@@ -362,12 +371,14 @@
         
   
   
+  
     
   
   
     <li class="md-tabs__item md-tabs__item--active">
       <a href="./" class="md-tabs__link">
         
+  
   
     
   
@@ -382,9 +393,11 @@
   
   
   
+  
     <li class="md-tabs__item">
       <a href="../examples/" class="md-tabs__link">
         
+  
   
     
   
@@ -399,17 +412,69 @@
   
   
   
+  
+    
+    
+      
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
         <a href="../api/pydvl/" class="md-tabs__link">
           
   
+  
+    
+  
   Code
 
         </a>
       </li>
     
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/methods/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Methods
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/glossary/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Glossary
+
+      </a>
+    </li>
   
 
       
@@ -467,8 +532,10 @@
       <a href=".." class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Home
+    
   </span>
   
 
@@ -485,6 +552,17 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -499,24 +577,18 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../getting-started/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
   
   <span class="md-ellipsis">
     Getting Started
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
@@ -535,8 +607,10 @@
       <a href="../getting-started/first-steps/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     First steps
+    
   </span>
   
 
@@ -556,8 +630,10 @@
       <a href="../getting-started/applications/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Applications
+    
   </span>
   
 
@@ -577,29 +653,10 @@
       <a href="../getting-started/benchmarking/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Benchmarking
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../getting-started/methods/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Methods
+    
   </span>
   
 
@@ -619,29 +676,10 @@
       <a href="../getting-started/advanced-usage/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Advanced usage
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../getting-started/glossary/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Glossary
+    
   </span>
   
 
@@ -666,6 +704,37 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -680,24 +749,18 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../value/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
   
   <span class="md-ellipsis">
     Data Valuation
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
@@ -713,11 +776,13 @@
   
   
     <li class="md-nav__item">
-      <a href="../value/shapley/" class="md-nav__link">
+      <a href="../value/loo/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
-    Shapley values
+    Leave-One-Out
+    
   </span>
   
 
@@ -734,11 +799,13 @@
   
   
     <li class="md-nav__item">
-      <a href="../value/semi-values/" class="md-nav__link">
+      <a href="../value/shapley/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
-    Semi-values
+    Shapley values
+    
   </span>
   
 
@@ -758,8 +825,171 @@
       <a href="../value/classwise-shapley/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Class-wise Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/semi-values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Semi-values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/beta-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Beta Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/data-banzhaf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Banzhaf
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/delta-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Delta Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/knn-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    KNN-Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/group-testing-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Group Testing Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/owen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Owen-Shapley values
+    
   </span>
   
 
@@ -779,8 +1009,10 @@
       <a href="../value/the-core/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Least Core
+    
   </span>
   
 
@@ -800,8 +1032,56 @@
       <a href="../value/data-oob/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Data-OOB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/dul/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Utility Learning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/sampling-weights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sampling strategies for semi-values
+    
   </span>
   
 
@@ -826,6 +1106,13 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
     
     
     
@@ -845,24 +1132,18 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="./" class="md-nav__link md-nav__link--active">
-              
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
   
   <span class="md-ellipsis">
     The Influence Function
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link md-nav__link--active" for="__nav_4" id="__nav_4_label" tabindex="">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
@@ -881,8 +1162,10 @@
       <a href="influence_function_model/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Influence Function Model
+    
   </span>
   
 
@@ -902,8 +1185,10 @@
       <a href="scaling_computation/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Scaling Computation
+    
   </span>
   
 
@@ -928,6 +1213,13 @@
   
     
     
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -942,24 +1234,18 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../examples/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
   
   <span class="md-ellipsis">
     Examples
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
@@ -974,6 +1260,21 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -993,8 +1294,10 @@
           <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     Data Valuation
+    
   </span>
   
 
@@ -1018,8 +1321,10 @@
       <a href="../examples/shapley_basic_spotify/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Shapley values
+    
   </span>
   
 
@@ -1039,8 +1344,10 @@
       <a href="../examples/shapley_knn_flowers/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     KNN Shapley
+    
   </span>
   
 
@@ -1060,8 +1367,10 @@
       <a href="../examples/shapley_utility_learning/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Data utility learning
+    
   </span>
   
 
@@ -1081,8 +1390,10 @@
       <a href="../examples/msr_banzhaf_digits/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Banzhaf semivalues
+    
   </span>
   
 
@@ -1102,8 +1413,10 @@
       <a href="../examples/least_core_basic/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Least Core
+    
   </span>
   
 
@@ -1123,8 +1436,10 @@
       <a href="../examples/data_oob/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Data OOB
+    
   </span>
   
 
@@ -1150,6 +1465,17 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -1167,8 +1493,10 @@
           <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     Influence Function
+    
   </span>
   
 
@@ -1192,8 +1520,10 @@
       <a href="../examples/influence_imagenet/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     For CNNs
+    
   </span>
   
 
@@ -1213,8 +1543,10 @@
       <a href="../examples/influence_synthetic/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     For mislabeled data
+    
   </span>
   
 
@@ -1234,8 +1566,10 @@
       <a href="../examples/influence_wine/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     For outlier detection
+    
   </span>
   
 
@@ -1255,8 +1589,10 @@
       <a href="../examples/influence_sentiment_analysis/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     For language models
+    
   </span>
   
 
@@ -1289,6 +1625,17 @@
   
     
     
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
     
       
       
@@ -1303,16 +1650,25 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../deprecated/" class="md-nav__link ">
+              
+  
   
   <span class="md-ellipsis">
     Code
+    
   </span>
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
@@ -1329,6 +1685,21 @@
   
     
     
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -1343,13 +1714,14 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
         
           
-          
           <div class="md-nav__link md-nav__container">
             <a href="../api/pydvl/" class="md-nav__link ">
               
   
+  
   <span class="md-ellipsis">
     API Reference
+    
   </span>
   
 
@@ -1370,6 +1742,8 @@
           <ul class="md-nav__list" data-md-scrollfix>
             
               
+            
+              
                 
   
   
@@ -1377,347 +1751,31 @@
   
     
     
-    
-      
       
         
       
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
+        
       
         
+      
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_1" >
+      
+        
+      
+        
+      
+        
+      
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/influence/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Influence
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_1" id="__nav_6_1_1_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_1">
-            <span class="md-nav__icon md-icon"></span>
-            Influence
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/array/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Array
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/base_influence_function_model/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Base influence function model
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/influence_calculator/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Influence calculator
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/types/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Types
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
       
+        
       
         
       
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
+        
       
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_1_5" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/influence/torch/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Torch
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_1_5" id="__nav_6_1_1_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_1_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_1_5">
-            <span class="md-nav__icon md-icon"></span>
-            Torch
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/base/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Base
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/batch_operation/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Batch operation
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/functional/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Functional
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/influence_function_model/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Influence function model
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/operator/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Operator
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/preconditioner/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Preconditioner
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/influence/torch/util/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Util
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -1734,13 +1792,14 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2" >
         
           
-          
           <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/parallel/" class="md-nav__link ">
+            <a href="../api/pydvl/valuation/methods/" class="md-nav__link ">
               
   
+  
   <span class="md-ellipsis">
-    Parallel
+    Data Valuation
+    
   </span>
   
 
@@ -1756,847 +1815,7 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_1_2">
             <span class="md-nav__icon md-icon"></span>
-            Parallel
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/backend/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Backend
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/config/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Config
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/map_reduce/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Map reduce
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_4" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/parallel/backends/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Backends
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_2_4" id="__nav_6_1_2_4_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_2_4">
-            <span class="md-nav__icon md-icon"></span>
-            Backends
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/backends/joblib/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Joblib
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/backends/ray/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Ray
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_5" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/parallel/futures/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Futures
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_2_5" id="__nav_6_1_2_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_2_5">
-            <span class="md-nav__icon md-icon"></span>
-            Futures
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/parallel/futures/ray/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Ray
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_3" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/reporting/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Reporting
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_3" id="__nav_6_1_3_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_3">
-            <span class="md-nav__icon md-icon"></span>
-            Reporting
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/reporting/plots/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Plots
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/reporting/point_removal/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Point removal
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/reporting/scores/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Scores
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/utils/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Utils
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_4" id="__nav_6_1_4_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4">
-            <span class="md-nav__icon md-icon"></span>
-            Utils
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/config/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Config
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/dataset/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Dataset
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/exceptions/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Exceptions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/functional/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Functional
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/numeric/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Numeric
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/progress/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Progress
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/score/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Score
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/status/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Status
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/types/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Types
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/utility/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Utility
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4_11" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/utils/caching/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Caching
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_4_11" id="__nav_6_1_4_11_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            Caching
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/base/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Base
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/config/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Config
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/disk/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Disk
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/memcached/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Memcached
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/utils/caching/memory/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Memory
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/valuation/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Valuation
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_5" id="__nav_6_1_5_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_5">
-            <span class="md-nav__icon md-icon"></span>
-            Valuation
+            Data Valuation
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -2610,8 +1829,10 @@
       <a href="../api/pydvl/valuation/base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Base
+    
   </span>
   
 
@@ -2631,8 +1852,10 @@
       <a href="../api/pydvl/valuation/dataset/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Dataset
+    
   </span>
   
 
@@ -2652,8 +1875,33 @@
       <a href="../api/pydvl/valuation/games/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Games
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Parallel
+    
   </span>
   
 
@@ -2673,8 +1921,10 @@
       <a href="../api/pydvl/valuation/result/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Result
+    
   </span>
   
 
@@ -2694,8 +1944,10 @@
       <a href="../api/pydvl/valuation/stopping/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Stopping
+    
   </span>
   
 
@@ -2715,8 +1967,10 @@
       <a href="../api/pydvl/valuation/types/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Types
+    
   </span>
   
 
@@ -2727,32 +1981,36 @@
               
             
               
+            
+              
                 
   
   
   
   
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/utils/" class="md-nav__link">
+    
+    
+      
         
-  
-  <span class="md-ellipsis">
-    Utils
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2766,380 +2024,24 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_9" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/valuation/methods/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Methods
-  </span>
-  
-
-            </a>
+          <label class="md-nav__link" for="__nav_6_1_2_9" id="__nav_6_1_2_9_label" tabindex="0">
             
-              
-              <label class="md-nav__link " for="__nav_6_1_5_8" id="__nav_6_1_5_8_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_5_8">
-            <span class="md-nav__icon md-icon"></span>
-            Methods
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
   
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/beta_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Beta shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/classwise_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Classwise shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/data_banzhaf/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Data banzhaf
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/data_oob/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Data oob
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/delta_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Delta shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/gt_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Gt shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/knn_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Knn shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/least_core/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Least core
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/loo/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Loo
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/owen_shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Owen shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/random/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Random
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/semivalue/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Semivalue
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/shapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Shapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/valuation/methods/twodshapley/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Twodshapley
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_9" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/valuation/samplers/" class="md-nav__link ">
-              
   
   <span class="md-ellipsis">
     Samplers
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_5_9" id="__nav_6_1_5_9_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_5_9">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_9">
             <span class="md-nav__icon md-icon"></span>
             Samplers
           </label>
@@ -3152,11 +2054,36 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/ame/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Ame
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/pydvl/valuation/samplers/base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Base
+    
   </span>
   
 
@@ -3176,8 +2103,10 @@
       <a href="../api/pydvl/valuation/samplers/classwise/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Classwise
+    
   </span>
   
 
@@ -3197,8 +2126,10 @@
       <a href="../api/pydvl/valuation/samplers/msr/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Msr
+    
   </span>
   
 
@@ -3218,8 +2149,10 @@
       <a href="../api/pydvl/valuation/samplers/owen/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Owen
+    
   </span>
   
 
@@ -3239,8 +2172,10 @@
       <a href="../api/pydvl/valuation/samplers/permutation/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Permutation
+    
   </span>
   
 
@@ -3260,8 +2195,10 @@
       <a href="../api/pydvl/valuation/samplers/powerset/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Powerset
+    
   </span>
   
 
@@ -3281,8 +2218,10 @@
       <a href="../api/pydvl/valuation/samplers/stratified/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Stratified
+    
   </span>
   
 
@@ -3302,8 +2241,10 @@
       <a href="../api/pydvl/valuation/samplers/truncation/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Truncation
+    
   </span>
   
 
@@ -3323,8 +2264,10 @@
       <a href="../api/pydvl/valuation/samplers/utils/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Utils
+    
   </span>
   
 
@@ -3350,6 +2293,17 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -3361,30 +2315,24 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_10" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/valuation/scorers/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_6_1_2_10" id="__nav_6_1_2_10_label" tabindex="0">
+            
+  
   
   <span class="md-ellipsis">
     Scorers
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_5_10" id="__nav_6_1_5_10_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_5_10">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_10">
             <span class="md-nav__icon md-icon"></span>
             Scorers
           </label>
@@ -3400,8 +2348,10 @@
       <a href="../api/pydvl/valuation/scorers/base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Base
+    
   </span>
   
 
@@ -3421,8 +2371,10 @@
       <a href="../api/pydvl/valuation/scorers/classwise/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Classwise
+    
   </span>
   
 
@@ -3442,8 +2394,10 @@
       <a href="../api/pydvl/valuation/scorers/supervised/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Supervised
+    
   </span>
   
 
@@ -3463,8 +2417,10 @@
       <a href="../api/pydvl/valuation/scorers/utils/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Utils
+    
   </span>
   
 
@@ -3490,6 +2446,21 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
     
       
       
@@ -3501,30 +2472,24 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_11" >
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/valuation/utility/" class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_6_1_2_11" id="__nav_6_1_2_11_label" tabindex="0">
+            
+  
   
   <span class="md-ellipsis">
     Utility
+    
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_5_11" id="__nav_6_1_5_11_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_5_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_11">
             <span class="md-nav__icon md-icon"></span>
             Utility
           </label>
@@ -3540,8 +2505,10 @@
       <a href="../api/pydvl/valuation/utility/base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Base
+    
   </span>
   
 
@@ -3561,8 +2528,10 @@
       <a href="../api/pydvl/valuation/utility/classwise/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Classwise
+    
   </span>
   
 
@@ -3582,8 +2551,10 @@
       <a href="../api/pydvl/valuation/utility/deepset/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Deepset
+    
   </span>
   
 
@@ -3603,8 +2574,10 @@
       <a href="../api/pydvl/valuation/utility/knn/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Knn
+    
   </span>
   
 
@@ -3624,8 +2597,10 @@
       <a href="../api/pydvl/valuation/utility/learning/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Learning
+    
   </span>
   
 
@@ -3645,8 +2620,10 @@
       <a href="../api/pydvl/valuation/utility/modelutility/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Modelutility
+    
   </span>
   
 
@@ -3680,157 +2657,19 @@
   
     
     
-    
-      
       
         
       
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
+        
       
         
+      
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_6" >
+      
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/value/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Value
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_6" id="__nav_6_1_6_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_6">
-            <span class="md-nav__icon md-icon"></span>
-            Value
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/games/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Games
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/result/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Result
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/sampler/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Sampler
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/semivalues/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Semivalues
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/stopping/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Stopping
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
+      
     
     
     
@@ -3844,32 +2683,33 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_6_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_3" >
         
           
-          
           <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/value/least_core/" class="md-nav__link ">
+            <a href="../api/pydvl/influence/torch/" class="md-nav__link ">
               
   
+  
   <span class="md-ellipsis">
-    Least core
+    Influence Function
+    
   </span>
   
 
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_6_6" id="__nav_6_1_6_6_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_3" id="__nav_6_1_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_6_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_6_6">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_3">
             <span class="md-nav__icon md-icon"></span>
-            Least core
+            Influence Function
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -3880,11 +2720,13 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/value/least_core/common/" class="md-nav__link">
+      <a href="../api/pydvl/influence/array/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
-    Common
+    Array
+    
   </span>
   
 
@@ -3901,11 +2743,13 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/value/least_core/montecarlo/" class="md-nav__link">
+      <a href="../api/pydvl/influence/base_influence_function_model/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
-    Montecarlo
+    Base influence function model
+    
   </span>
   
 
@@ -3922,242 +2766,13 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/value/least_core/naive/" class="md-nav__link">
+      <a href="../api/pydvl/influence/influence_calculator/" class="md-nav__link">
         
+  
   
   <span class="md-ellipsis">
-    Naive
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
+    Influence calculator
     
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_6_7" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/value/loo/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Loo
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_6_7" id="__nav_6_1_6_7_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_6_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_6_7">
-            <span class="md-nav__icon md-icon"></span>
-            Loo
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/loo/loo/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Loo
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_6_8" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/value/oob/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Oob
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_6_8" id="__nav_6_1_6_8_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_6_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_6_8">
-            <span class="md-nav__icon md-icon"></span>
-            Oob
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/oob/oob/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Oob
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_6_9" >
-        
-          
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../api/pydvl/value/shapley/" class="md-nav__link ">
-              
-  
-  <span class="md-ellipsis">
-    Shapley
-  </span>
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_6_1_6_9" id="__nav_6_1_6_9_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_6_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_6_9">
-            <span class="md-nav__icon md-icon"></span>
-            Shapley
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/classwise/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Classwise
   </span>
   
 
@@ -4174,158 +2789,514 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/common/" class="md-nav__link">
+      <a href="../api/pydvl/influence/types/" class="md-nav__link">
         
   
-  <span class="md-ellipsis">
-    Common
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/gt/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Gt
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/knn/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Knn
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/montecarlo/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Montecarlo
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/naive/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Naive
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/owen/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Owen
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/truncated/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Truncated
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/pydvl/value/shapley/types/" class="md-nav__link">
-        
   
   <span class="md-ellipsis">
     Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_4" id="__nav_6_1_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reporting
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            Reporting
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/plots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plots
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/point_removal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Point removal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Scores
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Utilities
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1_5" id="__nav_6_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Utilities
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_5_2" id="__nav_6_1_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Caching
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/disk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Disk
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memcached/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Memcached
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exceptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/functional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Functional
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Numeric
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Progress
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Status
+    
   </span>
   
 
@@ -4351,13 +3322,52 @@
 
               
             
-          </ul>
-        </nav>
+              
+                
+  
+  
+  
+  
+    
+    
       
-    </li>
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
   
 
-              
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -4369,29 +3379,10 @@
       <a href="../CHANGELOG/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Changelog
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../CONTRIBUTING/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Development Guidelines
+    
   </span>
   
 
@@ -4404,6 +3395,60 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Methods
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossary
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -4433,7 +3478,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-influence-function" class="md-nav__link">
+  <a href="#influence-function" class="md-nav__link">
     <span class="md-ellipsis">
       The influence function
     </span>
@@ -4548,16 +3593,17 @@
                 
                   
 
+
   
   
 
 
   <h1>The Influence Function</h1>
 
-<h2 id="the-influence-function">The influence function<a class="headerlink" href="#the-influence-function" title="Permanent link">&para;</a></h2>
+<h2 id="influence-function">The influence function<a class="headerlink" href="#influence-function" title="Permanent link">&para;</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>The code in the package <a class="autorefs autorefs-internal" href="../api/pydvl/influence/#pydvl.influence">pydvl.influence</a> is experimental.
+<p>The code in the package <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-module&quot;&gt;&lt;/code&gt;&amp;nbsp;influence" href="../api/pydvl/influence/#pydvl.influence">pydvl.influence</a> is experimental.
 Package structure and basic API are bound to change before v1.0.0</p>
 </div>
 <p>The influence function (<abbr title="Influence Function">IF</abbr>) is a method to quantify the effect (influence) that
@@ -4570,16 +3616,16 @@ application difficult. Yet another drawback is that they require the computation
 of the inverse of the Hessian of the model wrt. its parameters, which is
 intractable for large models like deep neural networks. Much of the recent
 research tackles this issue using approximations, like a Neuman series
- (Agarwal et al., 2017)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, with the most successful solution using a low-rank
+(Agarwal et al., 2017)<sup id="fnref:agarwal_secondorder_2017"><a class="footnote-ref" href="#fn:agarwal_secondorder_2017">1</a></sup>, with the most successful solution using a low-rank
 approximation that iteratively finds increasing eigenspaces of the Hessian
- (Schioppa et al., 2022)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
+(Schioppa et al., 2022)<sup id="fnref:schioppa_scaling_2022"><a class="footnote-ref" href="#fn:schioppa_scaling_2022">2</a></sup>.</p>
 <p>pyDVL implements several methods for the efficient computation of the <abbr title="Influence Function">IF</abbr> for
 machine learning. In the examples we document some of the difficulties that can
 arise when using the <abbr title="Influence Function">IF</abbr>.</p>
 <h2 id="construction">Construction<a class="headerlink" href="#construction" title="Permanent link">&para;</a></h2>
-<p>First introduced in the context of robust statistics in (Hampel, 1974)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>,
+<p>First introduced in the context of robust statistics in (Hampel, 1974)<sup id="fnref:hampel_influence_1974"><a class="footnote-ref" href="#fn:hampel_influence_1974">3</a></sup>,
 the <abbr title="Influence Function">IF</abbr> was popularized in the context of machine learning in
- (Koh and Liang, 2017)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
+(Koh and Liang, 2017)<sup id="fnref:koh_understanding_2017"><a class="footnote-ref" href="#fn:koh_understanding_2017">4</a></sup>.</p>
 <p>Following their formulation, consider an input space <span class="arithmatex">\(\mathcal{X}\)</span> (e.g. images)
 and an output space <span class="arithmatex">\(\mathcal{Y}\)</span> (e.g. labels). Let's take <span class="arithmatex">\(z_i = (x_i, y_i)\)</span>,
 for <span class="arithmatex">\(i \in  \{1,...,n\}\)</span> to be the <span class="arithmatex">\(i\)</span>-th training point, and <span class="arithmatex">\(\theta\)</span> to be the
@@ -4613,11 +3659,11 @@ up-weighting of samples and perturbation influences.</p>
 <p>which is the optimal <span class="arithmatex">\(\hat{\theta}\)</span> when we up-weight <span class="arithmatex">\(z\)</span> by an amount <span class="arithmatex">\(\epsilon
 \gt 0\)</span>.</p>
 <p>From a classical result (a simple derivation is available in Appendix A of
- (Koh and Liang, 2017)<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup>), we know that:</p>
+(Koh and Liang, 2017)<sup id="fnref2:koh_understanding_2017"><a class="footnote-ref" href="#fn:koh_understanding_2017">4</a></sup>), we know that:</p>
 <div class="arithmatex">\[\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
 -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), \]</div>
 <p>where <span class="arithmatex">\(H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})\)</span> is the Hessian of <span class="arithmatex">\(L\)</span>. These quantities are also knows as
+\hat{\theta})\)</span> is the Hessian of <span class="arithmatex">\(L\)</span>. These quantities are also known as
 <strong>influence factors</strong>.</p>
 <p>Importantly, notice that this expression is only valid when <span class="arithmatex">\(\hat{\theta}\)</span> is a
 minimum of <span class="arithmatex">\(L\)</span>, or otherwise <span class="arithmatex">\(H_{\hat{\theta}}\)</span> cannot be inverted! At the same
@@ -4655,7 +3701,7 @@ on the model score we can define</p>
 <p>Similarly to what was done above, we up-weight point <span class="arithmatex">\(z_{\delta}\)</span>, but then we
 also remove the up-weighting for all the features that are not modified by
 <span class="arithmatex">\(\delta\)</span>. From the calculations in
-<a class="autorefs autorefs-internal" href="#influence-of-a-point">the previous section</a>
+<a class="autorefs autorefs-internal" title="Approximating the influence of a point" href="#influence-of-a-point">the previous section</a>
 it is then easy to see that</p>
 <div class="arithmatex">\[\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
 \Big|_{\epsilon=0} = -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z_{\delta},
@@ -4683,14 +3729,14 @@ effect on the accuracy of the model.</p>
 <p>It is worth noting that the perturbation influence score is a very rough
 estimate of the impact of a point on the models loss and it is subject to large
 approximation errors. It can nonetheless be used to build training-set attacks,
-as done in (Koh and Liang, 2017)<sup id="fnref3:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
+as done in (Koh and Liang, 2017)<sup id="fnref3:koh_understanding_2017"><a class="footnote-ref" href="#fn:koh_understanding_2017">4</a></sup>.</p>
 <h2 id="computation">Computation<a class="headerlink" href="#computation" title="Permanent link">&para;</a></h2>
 <p>The main abstraction of the library for influence calculation is
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/base_influence_function_model/#pydvl.influence.base_influence_function_model.InfluenceFunctionModel">InfluenceFunctionModel</a>. 
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;InfluenceFunctionModel" href="../api/pydvl/influence/base_influence_function_model/#pydvl.influence.base_influence_function_model.InfluenceFunctionModel">InfluenceFunctionModel</a>. 
 On implementations of this abstraction, you can call the method <code>influences</code>
 to compute influences. </p>
 <p>pyDVL provides implementations to use with pytorch model in
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model">pydvl.influence.torch</a>. For detailed information 
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-module&quot;&gt;&lt;/code&gt;&amp;nbsp;influence_function_model" href="../api/pydvl/influence/torch/influence_function_model/#pydvl.influence.torch.influence_function_model">pydvl.influence.torch</a>. For detailed information 
 on available implementations see the documentation in <a href="influence_function_model/">InfluenceFunctionModel</a>.</p>
 <p>Given a pre-trained pytorch model and a loss, a basic example would look like</p>
 <p><div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
@@ -4720,7 +3766,7 @@ tends to improve the performance of the model on test point <span class="arithma
 a large negative influence indicates that training point <span class="arithmatex">\(j\)</span> tends to worsen the
 performance of the model on test point <span class="arithmatex">\(i\)</span>.</p>
 <h3 id="hessian-regularization">Hessian regularization<a class="headerlink" href="#hessian-regularization" title="Permanent link">&para;</a></h3>
-<p>Additionally, and as discussed in <a href="#the-influence-function">the introduction</a>,
+<p>Additionally, and as discussed in <a class="autorefs autorefs-internal" title="The influence function" href="#influence-function">the introduction</a>,
 in machine learning training rarely converges to a global minimum of the loss.
 Despite good apparent convergence, <span class="arithmatex">\(\hat{\theta}\)</span> might be located in a region
 with flat curvature or close to a saddle point. In particular, the Hessian might
@@ -4749,7 +3795,7 @@ The full matrix is approximated by a block-diagonal version, which
 reduces both the time and memory consumption.
 The blocking structure can be specified via the <code>block_structure</code> parameter.
 The <code>block_structure</code> parameter can either be a
-<a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/util/#pydvl.influence.torch.util.BlockMode">BlockMode</a> enum (which provides
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;BlockMode" href="../api/pydvl/influence/torch/util/#pydvl.influence.torch.util.BlockMode">BlockMode</a> enum (which provides
 layer-wise or parameter-wise blocking) or a custom block structure defined
 by an ordered dictionary with the keys being the block identifiers (arbitrary
 strings) and the values being lists of parameter names contained in the block.
@@ -4828,7 +3874,7 @@ represents the influence of each feature of each training point on each test
 point.</p>
 <h3 id="influence-factors">Influence factors<a class="headerlink" href="#influence-factors" title="Permanent link">&para;</a></h3>
 <p>The influence factors(refer to
-<a class="autorefs autorefs-internal" href="#influence-of-a-point">the previous section</a> for a definition)
+<a class="autorefs autorefs-internal" title="Approximating the influence of a point" href="#influence-of-a-point">the previous section</a> for a definition)
 are typically the most computationally demanding part of influence calculation.
 They can be obtained via calling the <code>influence_factors</code> method, saved, and later used 
 for influence calculation on different subsets of the training dataset.</p>
@@ -4838,17 +3884,17 @@ for influence calculation on different subsets of the training dataset.</p>
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:1">
-<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1–40.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<li id="fn:agarwal_secondorder_2017">
+<p>Agarwal, N., Bullins, B., Hazan, E., 2017. <a href="https://www.jmlr.org/papers/v18/16-491.html">Second-Order Stochastic Optimization for Machine Learning in Linear Time</a>. JMLR 18, 1--40.&#160;<a class="footnote-backref" href="#fnref:agarwal_secondorder_2017" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
-<li id="fn:2">
-<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2022. Scaling Up Influence Functions. Proc. AAAI Conf. Artif. Intell. 36, 8179–8186. <a href="https://doi.org/10.1609/aaai.v36i8.20791">https://doi.org/10.1609/aaai.v36i8.20791</a>&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<li id="fn:schioppa_scaling_2022">
+<p>Schioppa, A., Zablotskaia, P., Vilar, D., Sokolov, A., 2022. Scaling Up Influence Functions. Proc. AAAI Conf. Artif. Intell. 36, 8179--8186. <a href="https://doi.org/10.1609/aaai.v36i8.20791">https://doi.org/10.1609/aaai.v36i8.20791</a>&#160;<a class="footnote-backref" href="#fnref:schioppa_scaling_2022" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
-<li id="fn:3">
-<p>Hampel, F.R., 1974. The Influence Curve and Its Role in Robust Estimation. J. Am. Stat. Assoc. 69, 383–393. <a href="https://doi.org/10.2307/2285666">https://doi.org/10.2307/2285666</a>&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+<li id="fn:hampel_influence_1974">
+<p>Hampel, F.R., 1974. The Influence Curve and Its Role in Robust Estimation. J. Am. Stat. Assoc. 69, 383--393. <a href="https://doi.org/10.2307/2285666">https://doi.org/10.2307/2285666</a>&#160;<a class="footnote-backref" href="#fnref:hampel_influence_1974" title="Jump back to footnote 3 in the text">&#8617;</a></p>
 </li>
-<li id="fn:4">
-<p>Koh, P.W., Liang, P., 2017. <a href="https://proceedings.mlr.press/v70/koh17a.html">Understanding <span class="nocase">Black-box Predictions</span> via Influence Functions</a>, in: Proceedings of the 34th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 1885–1894.&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:4" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+<li id="fn:koh_understanding_2017">
+<p>Koh, P.W., Liang, P., 2017. <a href="https://proceedings.mlr.press/v70/koh17a.html">Understanding [Black-box Predictions]{.nocase} via Influence Functions</a>, in: Proceedings of the 34th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 1885--1894.&#160;<a class="footnote-backref" href="#fnref:koh_understanding_2017" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:koh_understanding_2017" title="Jump back to footnote 4 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:koh_understanding_2017" title="Jump back to footnote 4 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -4874,7 +3920,7 @@ for influence calculation on different subsets of the training dataset.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="March 3, 2025 21:25:40">2025-03-03</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-04-02</span>
   </span>
 
     
@@ -4884,7 +3930,7 @@ for influence calculation on different subsets of the training dataset.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="October 11, 2022 18:42:12">2022-10-11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2022-10-11</span>
   </span>
 
     
@@ -4921,7 +3967,7 @@ for influence calculation on different subsets of the training dataset.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../value/data-oob/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Data-OOB">
+          <a href="../value/sampling-weights/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Sampling strategies for semi-values">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4931,7 +3977,7 @@ for influence calculation on different subsets of the training dataset.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Data-OOB
+                Sampling strategies for semi-values
               </div>
             </div>
           </a>
@@ -5034,10 +4080,12 @@ for influence calculation on different subsets of the training dataset.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "content.tooltips", "navigation.instant", "navigation.path", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "content.tooltips", "navigation.indexes", "navigation.instant", "navigation.path", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.60a45f97.min.js"></script>
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       
