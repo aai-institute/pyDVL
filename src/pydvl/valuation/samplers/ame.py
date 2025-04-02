@@ -32,7 +32,6 @@ from typing import Type
 
 import numpy as np
 import scipy.stats.distributions as dist
-from numpy.typing import NDArray
 from scipy.integrate import quad
 from scipy.stats import rv_continuous
 
@@ -79,7 +78,7 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         """For each index i, sample p ~ p_distribution and then generate a subset of
         the complement by including each element independently with probability p.
         """
-        for idx in self.index_iterator(indices):
+        for idx in self.index_iterable(indices):
             _complement = complement(indices, [idx])
             p = self.p_distribution.rvs(random_state=self._rng).item()
             subset = random_subset(_complement, p, self._rng)
@@ -90,7 +89,7 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         return self._index_iterator_cls.length(len(indices))
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        r"""Computes the log correction weight for a sample of a given subset size.
+        r"""Computes the probability of a sample of a given size.
 
         Let m = n - 1 or m = n depending on the index iteration strategy. For a given
         index i and a sampled subset S of size k, The probability of obtaining S under
@@ -113,6 +112,4 @@ class AMESampler(StochasticSamplerMixin, PowersetSampler):
         I, abserr = quad(integrand, 0, 1, epsabs=1e-12)  # noqa
         if I < 0:
             raise ValueError("Computed integral is non-positive.")
-        return float(-np.log(n) - np.log(I))
-        log_i = np.log(I) if I > 0 else -np.inf
-        return float(log_i)
+        return float(np.log(I) if I > 0 else -np.inf)
