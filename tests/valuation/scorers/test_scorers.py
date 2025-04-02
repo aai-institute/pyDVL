@@ -54,7 +54,7 @@ def test_scorer(model, scorer):
 def test_compose_score(model, scorer):
     """Tests the compose_score function."""
     composed = compose_score(scorer, sigmoid, name="squashed r2")
-    assert str(composed) == "squashed r2"
+    assert str(composed) == "squashed r2(default=0.5, range=(0.0, 1.0))"
 
     assert composed.range[0] == 0
     assert composed.range[1] == 1
