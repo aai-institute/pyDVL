@@ -40,7 +40,8 @@ from pydvl.valuation.stopping import MinUpdates
 
 train, test = Dataset.from_arrays(...)
 model = ...
-utility = ModelUtility(model, SupervisedScorer(model, test, default=0.0))
+scorer =  SupervisedScorer(model, test, default=0.0)
+utility = ModelUtility(model, scorer)
 sampler = PermutationSampler()
 valuation = BanzhafValuation(utility, sampler, MinUpdates(1000))
 with parallel_config(n_jobs=16):
@@ -84,7 +85,8 @@ more on this subject see [[semi-values-sampling]].
     
     train, test = Dataset.from_arrays(...)
     model = ...
-    utility = ModelUtility(model, SupervisedScorer(model, test, default=0.0))
+    scorer = SupervisedScorer(model, test, default=0.0)
+    utility = ModelUtility(model, scorer)
     valuation = MSRBanzhafValuation(utility, MaxSamples(1000), batch_size=64)
     with parallel_config(n_jobs=16):
         valuation.fit(train)

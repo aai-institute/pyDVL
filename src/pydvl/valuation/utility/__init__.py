@@ -9,7 +9,7 @@ class for all utilities is [UtilityBase][pydvl.valuation.utility.base.UtilityBas
 ## Utility for model-based methods
 
 [ModelUtility][pydvl.valuation.utility.modelutility.ModelUtility] holds information
-about model, and scoring function (the latter being what one usually understands under
+about model and scoring function (the latter being what one usually understands under
 *utility* in the general definition of Shapley value). Model-based evaluation methods
 define the utility as a retraining of the model on a subset of the data, which is then
 [scored][pydvl.valuation.scorers]. Please see the documentation on [Computing Data
