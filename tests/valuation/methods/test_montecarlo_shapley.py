@@ -10,7 +10,11 @@ from pydvl.utils import SupervisedModel
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.status import Status
 from pydvl.valuation.dataset import GroupedDataset
-from pydvl.valuation.methods import GroupTestingShapleyValuation, ShapleyValuation
+from pydvl.valuation.methods import (
+    GroupTestingShapleyValuation,
+    ShapleyValuation,
+    StratifiedShapleyValuation,
+)
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import (
     AntitheticOwenSampler,
@@ -158,6 +162,15 @@ def shapley_methods(fudge_factor: int):
                 "seed": lambda seed: seed,
             },
         ),
+        (
+            None,
+            {},
+            StratifiedShapleyValuation,
+            {
+                "seed": lambda seed: seed,
+                "is_done": (MinUpdates, {"n_updates": fudge_factor}),
+            },
+        ),
     ]
 
 
@@ -224,7 +237,7 @@ def test_games(
     indirect=["test_game"],
 )
 @pytest.mark.parametrize(
-    "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(2)
+    "sampler_cls, sampler_kwargs, valuation_cls, valuation_kwargs", shapley_methods(10)
 )
 def test_seed(
     test_game,

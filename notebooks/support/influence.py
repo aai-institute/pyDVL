@@ -2,19 +2,18 @@ import logging
 import os
 import pickle as pkl
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+from numpy.typing import NDArray
 from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
 from tqdm.auto import tqdm
-
-from .types import Losses
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +87,11 @@ class TorchMLP(nn.Module):
             Tensor output of shape[NxK], with K the output size of the network.
         """
         return self.layers(x)
+
+
+class Losses(NamedTuple):
+    training: NDArray[np.float64]
+    validation: NDArray[np.float64]
 
 
 def fit_torch_model(

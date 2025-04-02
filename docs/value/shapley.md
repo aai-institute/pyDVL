@@ -1,8 +1,11 @@
 ---
 title: Shapley value
+alias:
+  name: shapley-valuation-intro
+  title: Shapley value
 ---
 
-## Shapley value
+# Shapley value  { #shapley-valuation-intro }
 
 The Shapley method is an approach to compute data values originating in
 cooperative game theory. Shapley values are a common way of assigning payoffs to
@@ -10,120 +13,181 @@ each participant in a cooperative game (i.e. one in which players can form
 coalitions) in a way that ensures that certain axioms are fulfilled.
 
 pyDVL implements several methods for the computation and approximation of
-Shapley values. They can all be accessed via the facade function
-[compute_shapley_values][pydvl.value.shapley.compute_shapley_values].
-The supported methods are enumerated in
-[ShapleyMode][pydvl.value.shapley.ShapleyMode].
-
-Empirically, the most useful method is the so-called *Truncated Monte Carlo
-Shapley* [@ghorbani_data_2019], which is a Monte Carlo approximation of the
-[permutation Shapley value][permutation-shapley].
+Shapley values. Empirically, one of the most useful methods is the so-called 
+[Truncated Monte Carlo Shapley][tmcs-intro] [@ghorbani_data_2019], but several
+approximations exist with different convergence rates and computational costs.
 
 
-### Combinatorial Shapley
+## Combinatorial Shapley  { #combinatorial-shapley-intro }
 
-The first algorithm is just a verbatim implementation of the definition. As such
-it returns as exact a value as the utility function allows (see what this means
-in [Problems of Data Values][problems-of-data-values]).
+The first algorithm is just a verbatim implementation of the definition below.
+As such it returns as exact a value as the utility function allows (see what
+this means in [Problems of Data Values][problems-of-data-values]).
 
 The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
+<span id="combinatorial-shapley" class="tm-eqlabel"></span>
+
 $$
-v(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
-\binom{n-1}{ | S | }^{-1} [u(S_{+i}) − u(S)]
-,$$
+\begin{equation}
+v_\text{shap}(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
+\binom{n-1}{ | S | }^{-1} [u(S_{+i}) − u(S)],
+  \label{combinatorial-shapley}\tag{1}
+\end{equation}
+$$
 
-where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i$, and $S_{+i}$
-denotes the set $S$ with $x_i$ added.
+where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i,$ and $S_{+i}$
+denotes the set $S$ with $x_i$ added.[^not1]
 
-```python
-from pydvl.value import compute_shapley_values
+??? example "Computing exact Shapley values"
+    ```python
+    from joblib import parallel_config
+    from pydvl.valuation import (
+        Dataset, ModelUtility, SupervisedScorer, ShapleyValuation
+    )
 
-values = compute_shapley_values(utility, mode="combinatorial_exact")
-df = values.to_dataframe(column='value')
-```
+    train, test = SomeVerySmallDatasets()
+    model = ...
+    scorer = SupervisedScorer(model, test, default=..)
+    utility = ModelUtility(model, scorer)
+    sampler = DeterministicUniformSampler()
+    valuation = ShapleyValuation(utility, sampler, NoStopping(sampler))
+
+    with parallel_config(n_jobs=-1):
+        valuation.fit(train)
+    result = valuation.values()
+    ```
 
 We can convert the return value to a
-[pandas.DataFrame][].
-and name the column with the results as `value`. Please refer to the
-documentation in [shapley][pydvl.value.shapley] and
-[ValuationResult][pydvl.value.result.ValuationResult] for more information.
+[pandas.DataFrame][] with the `to_dataframe` method. Please refer to the
+[introduction to data valuation][data-valuation-intro] and to the documentation
+in [ValuationResult][pydvl.valuation.result.ValuationResult] for more
+information.
 
-### Monte Carlo Combinatorial Shapley
+## Monte Carlo Combinatorial Shapley  { #monte-carlo-combinatorial-shapley-intro }
 
-Because the number of subsets $S \subseteq D_{-i}$ is
-$2^{ | D | - 1 }$, one typically must resort to approximations. The simplest
-one is done via Monte Carlo sampling of the powerset $\mathcal{P}(D)$. In pyDVL
-this simple technique is called "Monte Carlo Combinatorial". The method has very
-poor converge rate and others are preferred, but if desired, usage follows the
-same pattern:
+Because the number of subsets $S \subseteq D_{-i}$ is $2^{ | D | - 1 },$ one
+must typically resort to approximations. The simplest one is done via Monte
+Carlo sampling of the powerset $\mathcal{P}(D).$ In pyDVL this simple technique
+is called "Monte Carlo Combinatorial". The method has very poor converge rate
+and others are preferred, but if desired, usage follows the same pattern:
 
-```python
-from pydvl.value import compute_shapley_values, MaxUpdates
+??? example "Monte Carlo Combinatorial Shapley values"
+    ```python
+    from pydvl.valuation import (
+        ShapleyValuation,
+        ModelUtility,
+        SupervisedScorer,
+        PermutationSampler,
+        MaxSamples
+    )
 
-values = compute_shapley_values(
-   utility, mode="combinatorial_montecarlo", done=MaxUpdates(1000)
-)
-df = values.to_dataframe(column='cmc')
-```
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer("accuracy", test_data, default=0.0)
+    utility = ModelUtility(model, scorer)
+    sampler = UniformSampler(seed=42)
+    stopping = MaxSamples(sampler, 5000)
+    valuation = ShapleyValuation(utility, sampler, stopping)
+    with parallel_config(n_jobs=16):
+        valuation.fit(training_data)
+    result = valuation.values()
+    ```
 
-The DataFrames returned by most Monte Carlo methods will contain approximate
-standard errors as an additional column, in this case named `cmc_stderr`.
+Note the usage of the object [MaxSamples][pydvl.value.stopping.MaxSamples] as
+the stopping condition, which takes the sampler as argument. This is a special
+instance of a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]. More
+examples which are not tied to the sampler are
+[MaxTime][pydvl.value.stopping.MaxTime] (stops after a certain time),
+[MinUpdates][pydvl.value.stopping.MinUpdates] (looks at the number of updates
+to the individual values), and
+[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError] (not very
+reliable as a stopping criterion), among others.
 
-Note the usage of the object [MaxUpdates][pydvl.value.stopping.MaxUpdates] as the
-stop condition. This is an instance of a
-[StoppingCriterion][pydvl.value.stopping.StoppingCriterion]. Other examples are
-[MaxTime][pydvl.value.stopping.MaxTime] and
-[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError].
 
+## A stratified approach  { #stratified-shapley-value }
 
-### Owen sampling
+Let's decompose definition [(1)][combinatorial-shapley-intro] into "layers",
+one per subset size $k,$ by writing it in the equivalent form:[^not1]
 
-**Owen Sampling** [@okhrati_multilinear_2021] is a practical algorithm based on
-the combinatorial definition. It uses a continuous extension of the utility from
-$\{0,1\}^n$, where a 1 in position $i$ means that sample $x_i$ is used to train
-the model, to $[0,1]^n$. The ensuing expression for Shapley value uses
-integration instead of discrete weights:
+$$v_\text{shap}(i) = \sum_{k=0}^{n-1} \frac{1}{n} \binom{n-1}{k}^{-1} 
+    \sum_{S \subseteq D_{-i}^{k}} \Delta_i(S).$$
+
+Here $D_i^{k}$ is the set of all subsets of size $k$ in the complement  of
+$\{i\}.$ Since there are $\binom{n-1}{k}$ such sets, the above is an average
+over all $n$ set sizes $k$ of the average marginal contributions of the point
+$i$ to all sets of size $k.$
+
+We can now devise a sampling scheme over the powerset of $N_{-i}$ that yields
+this expression:
+
+1. Sample $k$ uniformly from $\{0, ..., n-1\}.$
+2. Sample $S$ uniformly from the powerset of $N_{-i}^k.$
+
+Call this distribution $\mathcal{L}_k.$ Then
 
 $$
-v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{-i})} [u(S_{+i}) - u(S)].
+\begin{eqnarray*}
+    \mathbb{E}_{S \sim \mathcal{L}} [\Delta_i (S)] 
+            & = & \sum_{k = 0}^{n - 1} \sum_{S \subseteq N_{- i}^k} 
+                  \Delta_i (S) p (S|k) p (k) \\
+            & = & \sum_{k = 0}^{n - 1} \sum_{S \subseteq N_{- i}^k} \Delta_i (S)
+                  \binom{n - 1}{k}^{- 1} \frac{1}{n} \\
+            & = & v_{\text{sh}}(i).
+\end{eqnarray*}
 $$
 
-Using Owen sampling follows the same pattern as every other method for Shapley
-values in pyDVL. First construct the dataset and utility, then call
-[compute_shapley_values][pydvl.value.shapley.compute_shapley_values]:
+The choice $p(k) = 1/n$ is implemented in 
+[StratifiedShapleyValuation][pydvl.valuation.methods.shapley.StratifiedShapleyValuation]
+but can be changed to any other distribution over $k.$ [@wu_variance_2023]
+introduced [VRDS sampling][pydvl.valuation.samplers.stratified.VRDSSampler] as
+a way to reduce the variance of the estimator.
 
-```python
-from pydvl.value import compute_shapley_values
+??? Example "Stratified Shapley"
+    The specific instance of stratified sampling described above can be directly
+    used by instantiating a
+    [StratifiedShapleyValuation][pydvl.valuation.methods.shapley.StratifiedShapleyValuation]
+    object. For more general use cases, use
+    [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] with a
+    custom sampler, for instance
+    [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
+    Note the use of the [History][pydvl.value.stopping.History] object, a stopping
+    which does not stop, but records the trace of value updates in a rolling
+    memory. The data can then be used to check for convergence, debugging,
+    plotting, etc.
 
-values = compute_shapley_values(
-   u=utility, mode="owen", n_iterations=4, max_q=200
-)
-```
+    ```python
+    from pydvl.valuation import StratifiedShapleyValuation, MinUpdates, History
+    training_data, test_data = Dataset.from_arrays(...)
+    model = ...
+    scorer = SupervisedScorer(model, test_data, default=..., range=...)
+    utility = ModelUtility(model, scorer)
+    valuation = StratifiedShapleyValuation(
+        utility=utility,
+        is_done=MinUpdates(min_updates) | History(n_steps=min_updates),
+        batch_size=batch_size,
+        seed=seed,
+        skip_converged=True,
+        progress=True,
+    )
+    with parallel_config(n_jobs=-4):
+        valuation.fit(training_data)
+    results = valuation.values()
+    ```
 
-There are more details on Owen sampling, and its variant *Antithetic Owen
-Sampling* in the documentation for the function doing the work behind the scenes:
-[owen_sampling_shapley][pydvl.value.shapley.owen.owen_sampling_shapley].
-
-Note that in this case we do not pass a
-[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] to the function, but
-instead the number of iterations and the maximum number of samples to use in the
-integration.
-
-### Permutation Shapley
+## Permutation Shapley  { #permutation-shapley-intro }
 
 An equivalent way of computing Shapley values (`ApproShapley`) appeared in
 [@castro_polynomial_2009] and is the basis for the method most often used in
 practice. It uses permutations over indices instead of subsets:
 
 $$
-v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{:i} \cup \{x_i\}) − u(\sigma_{:i})],
+v_u(i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+[u(S_{i}^{\sigma} \cup \{i\}) − u(S_{i}^{\sigma})],
 $$
 
-where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+where $S_{i}^{\sigma}$ denotes the set of indices in permutation sigma before the
 position where $i$ appears. To approximate this sum (which has $\mathcal{O}(n!)$
 terms!) one uses Monte Carlo sampling of permutations, something which has
 surprisingly low sample complexity. One notable difference wrt. the
@@ -131,92 +195,103 @@ combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
 [@castro_polynomial_2009], Proposition 3.2).
 
+??? info "A note about implementation"
+    The definition above uses all permutations to update one datapoint $i$.
+    However, in practice, instead of searching for the position of a fixed index
+    in every permutation, one can use a single permutation to update all
+    datapoints, by iterating through it and updating the value for the index at
+    the current position. This has the added benefit of allowing to use the
+    utility for the previous index to compute the marginal utility for the
+    current one, thus halving the number of utility calls. This strategy is
+    implemented in
+    [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy],
+    and is automatically selected when using any of the permutation samplers.
+
+
+## Truncated Monte Carlo Shapley { #tmcs-intro }
+
 By adding two types of early stopping, the result is the so-called **Truncated
 Monte Carlo Shapley** [@ghorbani_data_2019], which is efficient enough to be
-useful in applications. The first is simply a convergence criterion, of which
+useful in applications. 
+
+The first is simply a convergence criterion, of which
 there are [several to choose from][pydvl.value.stopping]. The second is a
 criterion to truncate the iteration over single permutations.
 [RelativeTruncation][pydvl.value.shapley.truncated.RelativeTruncation] chooses
 to stop iterating over samples in a permutation when the marginal utility
-becomes too small.
+becomes too small. The method is available through the class
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation].
 
-```python
-from pydvl.value import compute_shapley_values, MaxUpdates, RelativeTruncation
-
-values = compute_shapley_values(
-    u=utility,
-    mode="permutation_montecarlo",
-    done=MaxUpdates(1000),
-    truncation=RelativeTruncation(utility, rtol=0.01)
-)
-```
+However, being a heuristic to permutation sampling, it can be "manually"
+implemented by choosing a
+[RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation]
+for a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]
+when configuring
+[ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+(note however that this introduces some correcting factors, see 
+[[semi-values-sampling]]).
 
 You can see this method in action in
 [this example](../../examples/shapley_basic_spotify/) using the Spotify dataset.
 
-### Exact Shapley for KNN
 
-It is possible to exploit the local structure of K-Nearest Neighbours to reduce
-the amount of subsets to consider: because no sample besides the K closest
-affects the score, most are irrelevant and it is possible to compute a value in
-linear time. This method was introduced by [@jia_efficient_2019a], and can be
-used in pyDVL with:
+??? example "Truncated Monte Carlo Shapley values"
+    Use of this object follows the same pattern as the previous examples, except
+    that separate instantiation of the sampler is not necessary anymore. This
+    has the drawback that we cannot use
+    [MaxSamples][pydvl.value.stopping.MaxSamples] as stopping criterion anymore
+    since it requires the sampler. To work around this, use
+    [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+    directly.
 
-```python
-from pydvl.utils import Dataset, Utility
-from pydvl.value import compute_shapley_values
-from sklearn.neighbors import KNeighborsClassifier
+    ```python
+    from pydvl.valuation import (
+        MinUpdates
+        ModelUtility,
+        PermutationSampler,
+        SupervisedScorer,
+        RelativeTruncation,
+        TMCShapleyValuation,
+    )
 
-model = KNeighborsClassifier(n_neighbors=5)
-data = Dataset(...)
-utility = Utility(model, data)
-values = compute_shapley_values(u=utility, mode="knn")
-```
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer("accuracy", test_data, default=0)
+    utility = ModelUtility(model, scorer, ...)
+    truncation = RelativeTruncation(rtol=0.05)
+    stopping = MinUpdates(5000)
+    valuation = TMCShapleyValuation(utility, truncation, stopping)
+    with parallel_config(n_jobs=16):
+        valuation.fit(training_data)
+    result = valuation.values()
+    ```
 
-### Group testing
+## Other approximation methods
 
-An alternative method for the approximation of Shapley values introduced in
-[@jia_efficient_2019a] first estimates the differences of values with a Monte
-Carlo sum. With
+As already mentioned, with the architecture of
+[ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation] it is
+possible to try different importance-sampling schemes by swapping the sampler.
+Besides TMCS we also have [Owen sampling][owen-shapley-intro]
+[@okhrati_multilinear_2021], and [Beta Shapley][beta-shapley-intro]
+[@kwon_beta_2022] when $\alpha = \beta = 1.$
 
-$$\hat{\Delta}_{i j} \approx v_i - v_j,$$
+A different approach is via a SAT problem, as done in [Group Testing
+Shapley][group-testing-shapley-intro] [@jia_efficient_2019].
 
-one then solves the following linear constraint satisfaction problem (CSP) to
-infer the final values:
+Yet another, which is applicable to any utility-based valuation method, is [Data
+Utility Learning][data-utility-learning-intro] [@wang_improving_2022]. This
+method learns a model of the utility function during a warmup phase, and then
+uses it to speed up marginal utility computations.
 
-$$
-\begin{array}{lll}
-\sum_{i = 1}^N v_i & = & U (D)\\
-| v_i - v_j - \hat{\Delta}_{i j} | & \leqslant &
-\frac{\varepsilon}{2 \sqrt{N}}
-\end{array}
-$$
 
-!!! Warning
-    We have reproduced this method in pyDVL for completeness and benchmarking,
-    but we don't advocate its use because of the speed and memory cost. Despite
-    our best efforts, the number of samples required in practice for convergence
-    can be several orders of magnitude worse than with e.g. TMCS. Additionally,
-    the CSP can sometimes turn out to be infeasible.
+## Model-specific methods
 
-Usage follows the same pattern as every other Shapley method, but with the
-addition of an `epsilon` parameter required for the solution of the CSP. It
-should be the same value used to compute the minimum number of samples required.
-This can be done with
-[num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta], but
-note that the number returned will be huge! In practice, fewer samples can be
-enough, but the actual number will strongly depend on the utility, in particular
-its variance.
+Shapley values can have a closed form expression or a simpler approximation
+scheme when the model class is restricted. The prime example is
+[kNN-Shapley][knn-shapley-intro] [@jia_efficient_2019a], which is exact for the
+kNN model, and is $O(n_\text{test}\  n \log n).$
 
-```python
-from pydvl.utils import Dataset, Utility
-from pydvl.value import compute_shapley_values
-
-model = ...
-data = Dataset(...)
-utility = Utility(model, data, score_range=(_min, _max))
-min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
-values = compute_shapley_values(
-   u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
-)
-```
+[^not1]: The quantity $u(S_{+i}) − u(S)$ is called the
+  [marginal utility][glossary-marginal-utility] of the sample $x_i$ (with
+  respect to $S$), and we will often denote it by $\Delta_i(S, u),$ or, when no
+  confusion is possible, simply $\Delta_i(S).$

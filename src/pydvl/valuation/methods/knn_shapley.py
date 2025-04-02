@@ -1,5 +1,15 @@
-"""
-This module contains Shapley computations for K-Nearest Neighbours.
+r"""
+This module contains Shapley computations for K-Nearest Neighbours classifier,
+introduced by Jia et al. (2019).[^1]
+
+In particular it provides
+[KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation] to
+compute exact Shapley values for a KNN classifier in
+$O(n \log n)$ time per test point, as opposed to $O(n^2 \log^2 n)$ if the model were
+simply fed to a generic [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+object.
+
+See [the documentation][knn-shapley-intro] or the paper for details.
 
 !!! Todo
     Implement approximate KNN computation for sublinear complexity
@@ -38,16 +48,12 @@ class KNNShapleyValuation(Valuation):
 
     This implements the method described in
     (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
-    It exploits the local structure of K-Nearest Neighbours to reduce the number
-    of calls to the utility function to a constant number per index, thus
-    reducing computation time to $O(n)$.
 
     Args:
         model: KNeighborsClassifier model to use for valuation
-        test_data: Dataset containing test data for valuation
+        test_data: Dataset containing test data to evaluate the model.
         progress: Whether to display a progress bar.
         clone_before_fit: Whether to clone the model before fitting.
-
     """
 
     def __init__(

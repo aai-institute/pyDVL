@@ -1,12 +1,18 @@
-"""
-This module provides an implementation of DeepSet, from Zaheer et al. (2017)...
+r"""
+This module provides an implementation of DeepSet, from Zaheer et al. (2017).[^1]
 
 DeepSet uses a simple permutation-invariant architecture to learn embeddings for
-sets of points, see...
+sets of points. Please see [the documentation][data-utility-learning-intro] or the paper
+for details.
+
 
 ## References
 
-...
+[^1]: <a name="zaheer_deep_2017"></a>Zaheer, Manzil, Satwik Kottur, Siamak Ravanbakhsh,
+      Barnabas Poczos, Russ R Salakhutdinov, and Alexander J Smola. [Deep
+      Sets](https://papers.nips.cc/paper_files/paper/2017/hash/f22e4747da1aa27e363d86d40ff442fe-Abstract.html).
+      In Advances in Neural Information Processing Systems, Vol. 30. Curran Associates,
+      Inc., 2017.
 
 """
 
@@ -37,18 +43,11 @@ __all__ = ["DeepSet", "DeepSetUtilityModel"]
 
 
 class DeepSet(nn.Module):
-    r"""Simple implementation of DeepSets to learn utility functions.
+    r"""Simple implementation of DeepSets<sup>1<a href="#zaheer_deep_2017">2</a></sup>.
+    to learn utility functions.
 
-    Given a set $S= \{x_1, x_2, ..., x_n\},$ deepset learns a representation of the set
-    which is invariant to the order of elements in the set. The model consists of two
-    networks:
-
-    $$ \Phi(S) = \sum_{x_i \in S} \phi(x_i), $$
-
-    where $\phi(x_i)$ is a learned embedding for data point $x_i,$ and a second network
-    $\rho$ that predicts the output $y$ from the aggregated representation:
-
-    $$ y = \rho(\Phi(S)). $$
+    This is a feed forward neural network with two hidden layers and a bottleneck
+    operation (sum) that makes it permutation invariant.
 
     Args:
         input_dim: Dimensions of each instance in the set, or dimension of the embedding
@@ -127,6 +126,8 @@ class DeepSet(nn.Module):
 
 
 class SetDatasetRaw(TorchDataset):
+    """Dataloader compatible dataset for DeepSet."""
+
     def __init__(
         self,
         samples: dict[Sample, float],

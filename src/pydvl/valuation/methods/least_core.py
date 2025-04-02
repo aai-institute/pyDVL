@@ -1,3 +1,21 @@
+"""
+This module implements the least-core valuation method.
+
+Least-Core values were introduced by Yan and Procaccia (2021).[^1] Please refer to the
+paper or our [documentation][least-core-intro] for more details and a [comparison with
+other methods][least-core-comparison] (Benmerzoug and de Benito Delgado, 2023).[^2]
+
+## References
+
+[^1]: Yan, Tom, and Ariel D. Procaccia. [If You Like Shapley Then You’ll Love the
+      Core](https://doi.org/10.1609/aaai.v35i6.16721). In Proceedings of the 35th AAAI
+      Conference on Artificial Intelligence, 2021, 6:5751–59. Virtual conference:
+      Association for the Advancement of Artificial Intelligence, 2021.
+[^2]: Benmerzoug, Anes, and Miguel de Benito Delgado. [[Re] If You like Shapley, Then
+      You’ll Love the Core](https://doi.org/10.5281/zenodo.8173733). ReScience C 9, no.
+      2 (31 July 2023): #32.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -35,16 +53,16 @@ __all__ = [
 class LeastCoreValuation(Valuation):
     """Umbrella class to calculate least-core values with multiple sampling methods.
 
-    See [Data valuation][data-valuation] for an overview.
+    See [the documentation][least-core-intro] for an overview.
 
     Different samplers correspond to different least-core methods from the literature.
-    For those, we provide convenience subclasses of LeastCoreValuation. See
+    For those, we provide convenience subclasses of `LeastCoreValuation`. See
 
     - [ExactLeastCoreValuation][pydvl.valuation.methods.least_core.ExactLeastCoreValuation]
     - [MonteCarloLeastCoreValuation][pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation]
 
-    Other samplers allow you to create your own method and might yield computational
-    gains over a standard Monte Carlo method.
+    Other samplers allow you to create your own importance sampling method and might
+    yield computational gains over the standard Monte Carlo method.
 
     Args:
         utility: Utility object with model, data and scoring function.
@@ -57,7 +75,8 @@ class LeastCoreValuation(Valuation):
         solver_options: Optional dictionary containing a CVXPY solver and options to
             configure it. For valid values to the "solver" key see
             [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
-            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+            For additional options see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         progress: Whether to show a progress bar during the construction of the
             least-core problem.
 
@@ -134,18 +153,6 @@ class ExactLeastCoreValuation(LeastCoreValuation):
     [DeterministicUniformSampler][pydvl.valuation.samplers.powerset.DeterministicUniformSampler]
     and `n_samples=None`.
 
-    The definition of the exact least-core valuation is:
-
-    $$
-    \begin{array}{lll}
-    \text{minimize} & \\displaystyle{e} & \\
-    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
-    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) &, \forall S \\subseteq N \\
-    \\end{array}
-    $$
-
-    Where $N = \\{1, 2, \\dots, n\\}$ are the training set's indices.
-
     Args:
         utility: Utility object with model, data and scoring function.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
@@ -182,24 +189,9 @@ class ExactLeastCoreValuation(LeastCoreValuation):
 class MonteCarloLeastCoreValuation(LeastCoreValuation):
     """Class to calculate exact least-core values.
 
-    Equivalent to calling `LeastCoreValuation` with a `UniformSampler`.
-
-    The definition of the Monte Carlo least-core valuation is:
-
-    $$
-    \begin{array}{lll}
-    \text{minimize} & \\displaystyle{e} & \\
-    \text{subject to} & \\displaystyle\\sum_{i\\in N} x_{i} = v(N) & \\
-    & \\displaystyle\\sum_{i\\in S} x_{i} + e \\geq v(S) & ,
-    \forall S \\in \\{S_1, S_2, \\dots, S_m \\overset{\\mathrm{iid}}{\\sim} U(2^N) \\}
-    \\end{array}
-    $$
-
-    Where:
-
-    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
-    * $m$ is the number of subsets that will be sampled and whose utility will
-      be computed and used to compute the data values.
+    Equivalent to creating a
+    [LeastCoreValuation][pydvl.valuation.methods.least_core.LeastCoreValuation]
+    with a [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler].
 
     Args:
         utility: Utility object with model, data and scoring function.

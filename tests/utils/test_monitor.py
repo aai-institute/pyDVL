@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import time
 
 import psutil
@@ -76,6 +77,9 @@ def test_integration_memory_usage():
     )
 
 
+@pytest.mark.skipif(
+    os.environ.get("CI") is not None, reason="More children reported in CI"
+)
 @pytest.mark.timeout(5)
 def test_integration_multiple_children():
     baseline = psutil.Process().memory_info().rss

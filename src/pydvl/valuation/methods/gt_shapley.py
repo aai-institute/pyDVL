@@ -1,28 +1,33 @@
 """
 This module implements Group Testing for the approximation of Shapley values, as
-introduced in (Jia, R. et al., 2019)[^1]. The sampling of index subsets is
-done in such a way that an approximation to the true Shapley values can be
-computed with guarantees.
+introduced in (Jia, R. et al., 2019).[^1]
+
+Computation of the Shapley value is transformed into a feasibility problem, where the
+constraints involve certain utility evaluations of sampled subsets. The sampling is done
+in such a way that an approximation to the true Shapley values can be computed with
+guarantees.[^3]
 
 !!! Warning
-    Group Testing is very inefficient. Potential improvements to the
-    implementation notwithstanding, convergence seems to be very slow (in terms
-    of evaluations of the utility required). We recommend other Monte Carlo
-    methods instead.
+    Group Testing is very inefficient. Potential improvements to the implementation
+    notwithstanding, convergence seems to be very slow (in terms of evaluations of the
+    utility required). We recommend other Monte Carlo methods instead. See [the whole
+    list here][implemented-methods-data-valuation].
 
-You can read more [in the documentation][data-valuation].
+You can read about data valuation in general [in the documentation][data-valuation-intro].
 
 ## References
 
 [^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
-    [Towards Efficient Data Valuation Based on the Shapley
-    Value](https://proceedings.mlr.press/v89/jia19a.html).
-    In: Proceedings of the 22nd International Conference on Artificial
-    Intelligence and Statistics, pp. 1167–1176. PMLR.
+      [Towards Efficient Data Valuation Based on the Shapley
+      Value](https://proceedings.mlr.press/v89/jia19a.html).
+      In: Proceedings of the 22nd International Conference on Artificial Intelligence
+      and Statistics, pp. 1167–1176. PMLR.
 [^2]: <a name="jia_update_2023"></a>Jia, R. et al., 2023.
-    [A Note on "Towards Efficient Data Valuation Based on the Shapley Value"](
-    https://arxiv.org/pdf/2302.11431).
-
+    [A Note on "Towards Efficient Data Valuation Based on the Shapley
+    Value"](https://arxiv.org/pdf/2302.11431).
+[^3]: Internally, this sampling is achieved with a
+      [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler] with
+      [GroupTestingSampleSize][pydvl.valuation.samplers.GroupTestingSampleSize] strategy.
 """
 
 from __future__ import annotations
@@ -61,13 +66,15 @@ __all__ = ["GroupTestingShapleyValuation", "compute_n_samples"]
 class GroupTestingShapleyValuation(Valuation):
     """Class to calculate the group-testing approximation to shapley values.
 
-    See [Data valuation][data-valuation] for an overview.
+    See (Jia, R. et al., 2019)<sup><a href="#jia_update_2023">1</a></sup> for a
+    description of the method, and [Data valuation][data-valuation-intro] for an overview of
+    data valuation.
 
     !!! Warning
-        This method is very inefficient. Potential improvements to the
-        implementation notwithstanding, convergence seems to be very slow (in
-        terms of evaluations of the utility required). We recommend other Monte
-        Carlo methods instead.
+        Group Testing is very inefficient. Potential improvements to the implementation
+        notwithstanding, convergence seems to be very slow (in terms of evaluations of
+        the utility required). We recommend other Monte Carlo methods instead. See [the
+        whole list here][implemented-methods-data-valuation].
 
     Args:
         utility: Utility object with model, data and scoring function.
@@ -257,7 +264,7 @@ def _calculate_utility_differences(
 
     Args:
         utility_values: 1D array with utility values.
-        masks: 2d array with sample masks.
+        masks: 2D array with sample masks.
         n_obs: The number of observations.
 
     Returns:
@@ -291,7 +298,8 @@ def solve_group_testing_problem(
         solver_options: Optional dictionary containing a CVXPY solver and options to
             configure it. For valid values to the "solver" key see
             [here](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver).
-            For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
+            For additional options see
+            [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         algorithm_name: The name of the algorithm.
         data_names: The names of the data columns.
 

@@ -23,7 +23,7 @@ from sklearn.preprocessing import TargetEncoder
 
 from pydvl.valuation.dataset import Dataset
 
-from .types import Losses
+from .influence import Losses
 
 logger = logging.getLogger(__name__)
 
@@ -450,8 +450,7 @@ def plot_losses(losses: Losses):
     """Plots the train and validation loss
 
     Args:
-        training_loss: list of training losses, one per epoch
-        validation_loss: list of validation losses, one per epoch
+        losses: list of losses, one per epoch
     """
     _, ax = plt.subplots()
     ax.plot(losses.training, label="Train")

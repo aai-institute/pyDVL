@@ -12,7 +12,8 @@ from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
 from pydvl.valuation import ValuationResult
-from pydvl.valuation.result import ValueItem
+from pydvl.valuation.result import LogResultUpdater, ValueItem
+from pydvl.valuation.types import ValueUpdate
 
 
 @pytest.fixture
@@ -225,21 +226,30 @@ def test_updating():
     Variance updates use Bessel's correction, same as np.var(ddof=1) since we are
     working with sample estimates.
     """
+
     v = ValuationResult(values=np.array([1.0, 2.0]))
-    v.update(0, 1.0)
+    updater = LogResultUpdater(v)
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [2, 1])
     np.testing.assert_allclose(v.values, [1, 2])
     np.testing.assert_allclose(v.variances, [0.0, 0.0])
 
-    v.update(1, 4.0)
+    saved = updater.process(ValueUpdate(1, np.log(4.0), 1)).copy()
     np.testing.assert_allclose(v.counts, [2, 2])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 2.0])
 
-    v.update(1, 3.0)
+    updater.process(ValueUpdate(1, np.log(3.0), 1))
     np.testing.assert_allclose(v.counts, [2, 3])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 1])
+
+    # Test init updater with counts and variances already set
+    other_updater = LogResultUpdater(saved)
+    other_updater.process(ValueUpdate(1, np.log(3.0), 1))
+    np.testing.assert_allclose(saved.values, [1, 3])
+    np.testing.assert_allclose(saved.counts, [2, 3])
+    np.testing.assert_allclose(saved.variances, [0.0, 1])
 
     # Test after sorting
     v.sort(reverse=True, key="value")
@@ -247,20 +257,21 @@ def test_updating():
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0.0])
 
-    v.update(0, 1.0)
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [3, 3])
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0])
 
     # Test data indexing
     v = ValuationResult(values=np.array([3.0, 0.0]), indices=np.array([3, 4]))
-    v.update(4, 1.0)
+    updater = LogResultUpdater(v)
+    updater.process(ValueUpdate(4, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [1, 2])
     np.testing.assert_allclose(v.values, [3, 0.5])
     np.testing.assert_allclose(v.variances, [0.0, 0.5])
 
     with pytest.raises(IndexError, match="not found in ValuationResult"):
-        v.update(5, 1.0)
+        updater.process(ValueUpdate(5, np.log(1.0), 1))
 
 
 def test_updating_order_invariance():
@@ -268,8 +279,9 @@ def test_updating_order_invariance():
     values = []
     for permutation in permutations(updates):
         v = ValuationResult.zeros(indices=np.array([0]))
+        updater = LogResultUpdater(v)
         for update in permutation:
-            v.update(0, update)
+            updater.process(ValueUpdate(0, update, 1))
         values.append(v)
 
     v1 = values[0]

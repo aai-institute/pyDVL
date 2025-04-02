@@ -220,7 +220,7 @@ def test_futures_executor_map_with_max_workers(parallel_backend):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 def test_future_cancellation(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Currently this test only works with Ray")

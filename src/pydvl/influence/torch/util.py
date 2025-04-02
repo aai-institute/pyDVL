@@ -299,7 +299,7 @@ def torch_dataset_to_dask_array(
 
     def _infer_data_len(d_set: Dataset):
         try:
-            n_data = len(d_set)
+            n_data = len(d_set)  # type:ignore
             if total_size is not None and n_data != total_size:
                 raise ValueError(
                     f"The number of samples in the dataset ({n_data}), derived "
@@ -570,7 +570,9 @@ def empirical_cross_entropy_loss_fn(
 
 
 @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
-def safe_torch_linalg_eigh(*args: Any, **kwargs: Any) -> torch.Tensor:
+def safe_torch_linalg_eigh(
+    *args: Any, **kwargs: Any
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
     A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
     by raising a custom `TorchLinalgEighException` with more context,
@@ -589,7 +591,7 @@ def safe_torch_linalg_eigh(*args: Any, **kwargs: Any) -> torch.Tensor:
         TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
             `torch.linalg.eigh`.
     """
-    return torch.linalg.eigh(*args, **kwargs)
+    return cast(tuple[torch.Tensor, torch.Tensor], torch.linalg.eigh(*args, **kwargs))
 
 
 class TorchLinalgEighException(Exception):

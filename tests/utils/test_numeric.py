@@ -455,15 +455,15 @@ def test_running_moments_log_initialization(unbiased):
     ],
 )
 def test_log_running_moments(
-    prev_log_sum_pos,
-    prev_log_sum_neg,
-    prev_log_sum2,
-    count,
-    new_log_value,
-    new_sign,
-    unbiased,
-    expected_mean,
-    expected_variance,
+    prev_log_sum_pos: float,
+    prev_log_sum_neg: float,
+    prev_log_sum2: float,
+    count: int,
+    new_log_value: float,
+    new_sign: int,
+    unbiased: bool,
+    expected_mean: float,
+    expected_variance: float,
 ):
     mean, variance, _, _, _ = log_running_moments(
         prev_log_sum_pos,
