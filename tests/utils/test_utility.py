@@ -6,13 +6,12 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import DataUtilityLearning, Scorer, Utility, powerset
+from pydvl.utils import Dataset, DataUtilityLearning, Scorer, Utility, powerset
 from pydvl.utils.caching import CachedFuncConfig, InMemoryCacheBackend
 
 
 @pytest.mark.parametrize("show_warnings", [False, True])
-@pytest.mark.parametrize("num_points, num_features", [(4, 4)])
-def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
+def test_utility_show_warnings(show_warnings, recwarn):
     class WarningModel:
         def fit(self, x, y):
             warnings.warn("Warning model fit")
@@ -28,7 +27,7 @@ def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
 
     utility = Utility(
         model=WarningModel(),
-        data=housing_dataset,
+        data=Dataset.from_arrays(np.zeros((4, 4)), np.zeros(4)),
         show_warnings=show_warnings,
     )
     utility([0])
