@@ -5,10 +5,10 @@ alias:
   text: Computing Influence Values
 ---
 
-## The influence function
+## The influence function  { #influence-function }
 
 !!! Warning 
-    The code in the package [pydvl.influence][pydvl.influence] is experimental.
+    The code in the package [pydvl.influence][] is experimental.
     Package structure and basic API are bound to change before v1.0.0
 
 The influence function (IF) is a method to quantify the effect (influence) that
@@ -89,7 +89,7 @@ $$\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
 -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), $$
 
 where $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})$ is the Hessian of $L$. These quantities are also knows as
+\hat{\theta})$ is the Hessian of $L$. These quantities are also known as
 **influence factors**.
 
 Importantly, notice that this expression is only valid when $\hat{\theta}$ is a
@@ -221,7 +221,7 @@ performance of the model on test point $i$.
 
 ### Hessian regularization
 
-Additionally, and as discussed in [the introduction](#the-influence-function),
+Additionally, and as discussed in [the introduction][influence-function],
 in machine learning training rarely converges to a global minimum of the loss.
 Despite good apparent convergence, $\hat{\theta}$ might be located in a region
 with flat curvature or close to a saddle point. In particular, the Hessian might

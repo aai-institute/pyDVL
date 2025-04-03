@@ -4,18 +4,31 @@ This module contains convenience classes to handle data and groups thereof.
 Value computations with supervised models benefit from a unified interface to handle
 data. This module provides two classes to handle data and labels, as well as feature
 names and other information:
-[Dataset][pydvl.valuation.dataset.Dataset]
-and [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. Objects of both types can
-be used to construct [scorers][pydvl.valuation.scorers] and to fit (most) valuation
-methods.
+
+* [Dataset][pydvl.valuation.dataset.Dataset]
+* [GroupedDataset][pydvl.valuation.dataset.GroupedDataset].
+
+Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] (for
+the valuation set) and to `fit` (most) valuation methods.
 
 The underlying data arrays can always be accessed (read-only) via
 [Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
 
+!!! tip "Logical vs data indices"
+    [Dataset][pydvl.valuation.dataset.Dataset] and
+    [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] use two different types of
+    indices:
+    * **Logical indices**: These are the indices used to access the elements in the
+      `(Grouped)Dataset` objects when slicing or indexing them.
+    * **Data indices**: These are the indices used to access the data points in the
+        underlying data arrays. They are the indices used in the
+        [RawData][pydvl.valuation.dataset.RawData] object returned by
+        [Dataset.data()][pydvl.valuation.dataset.Dataset.data].
+
 ## Slicing
 
-Slicing the object, e.g. `dataset[0]`, will return a new `Dataset` with the data
-corresponding to that slice. Note however that the contents of the new object, i.e.
+Slicing a [Dataset][] object, e.g. `dataset[0]`, will return a new `Dataset` with the
+data corresponding to that slice. Note however that the contents of the new object, i.e.
 `dataset[0].data().x`, may not be the same as `dataset.data().x[0]`, which is the first
 point in the original data array. This is in particular true for
 [GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
@@ -26,22 +39,26 @@ Slicing with `None`, i.e. `dataset[None]`, will return a copy of the whole datas
 ## Grouped datasets and logical indices
 
 As mentioned above, it is also possible to group data points together with
-[GroupedDataset][pydvl.valuation.dataset.GroupedDataset].
-In order to handle groups correctly, Datasets map "logical" indices to "data" indices
-and vice versa. The latter correspond to indices in the data arrays themselves, while
-the former may map to groups of data points.
+[GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. In order to handle groups
+correctly, Datasets map "logical" indices to "data" indices and vice versa. The latter
+correspond to indices in the data arrays themselves, while the former may map to groups
+of data points.
 
 A call to [GroupedDataset.data(indices)][pydvl.valuation.dataset.GroupedDataset.data]
 will return the data and labels of all samples for the given groups. But
 `grouped_data[0]` will return the data and labels of the first group, not the first data
 point and will therefore be in general different from `grouped_data.data([0])`.
 
-Grouping data can be useful to reduce computation time, e.g. for Shapley-based methods.
+Grouping data can be useful to reduce computation time, e.g. for Shapley-based methods,
+or to look at the importance of certain feature sets for the model.
 
-It is important to keep in mind the distinction between logical and data indices for
-valuation methods that require computation on individual data points, like KNNShapley or
-Data-OOB. In these cases, the logical indices are used to compute the Shapley values,
-while the data indices are used internally by the method.
+!!! tip
+    It is important to keep in mind the distinction between logical and data indices for
+    valuation methods that require computation on individual data points, like
+    [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation] or
+    [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]. In these
+    cases, the logical indices are used to compute the Shapley values, while the data
+    indices are used internally by the method.
 """
 
 from __future__ import annotations

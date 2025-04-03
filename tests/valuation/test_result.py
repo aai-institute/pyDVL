@@ -12,6 +12,8 @@ from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
 from pydvl.valuation import ValuationResult
+from pydvl.valuation.result import LogResultUpdater, ValueItem
+from pydvl.valuation.types import ValueUpdate
 
 
 @pytest.fixture
@@ -24,6 +26,55 @@ def dummy_values(values, names):
         data_names=names,
         sort=True,
     )
+
+
+def test_valueitem_comparison():
+    v1 = ValueItem(idx=0, name="a", value=1.0, variance=0.0, count=1)
+    v2 = ValueItem(idx=0, name="a", value=1.0, variance=0.0, count=1)
+    v3 = ValueItem(idx=1, name="b", value=2.0, variance=0.0, count=1)
+    v4 = ValueItem(idx=1, name="b", value=3.0, variance=0.0, count=1)
+
+    assert v1 == v2
+    assert v1 != v3
+    assert v3 < v4
+    assert v4 > v3
+    assert v3 <= v4
+    assert v4 >= v3
+
+    with pytest.raises(TypeError, match="Cannot compare ValueItem with"):
+        v1 == 1.0  # noqa
+
+
+def test_creation():
+    values = np.array([1.0, 2.0, 3.0])
+    indices = np.array([0, 1, 2])
+    v = ValuationResult(values=values, indices=indices)
+    assert len(v) == len(values)
+    assert np.all(v.values == values)
+    assert np.all(v.indices == indices)
+
+    v = ValuationResult(values=values, indices=indices, sort=False)
+    assert len(v) == len(values)
+    assert np.all(v.values == values[::-1])
+    assert np.all(v.indices == indices[::-1])
+
+    with pytest.raises(
+        ValueError, match=r"Lengths of values \(3\) and indices \(2\) do not match"
+    ):
+        v = ValuationResult(values=values, indices=np.array([0, 1]))
+
+    with pytest.raises(
+        ValueError, match=r"Lengths of values \(3\) and variances \(2\) do not match"
+    ):
+        v = ValuationResult(values=values, variances=np.array([0, 1]))
+
+    with pytest.raises(
+        ValueError, match=r"Lengths of values \(3\) and data_names \(1\) do not match"
+    ):
+        v = ValuationResult(values=values, data_names=["d"])
+
+    with pytest.raises(ValueError, match="Data names must be unique"):
+        v = ValuationResult(values=values, data_names=["a", "b", "a"])
 
 
 @pytest.mark.parametrize(
@@ -111,16 +162,49 @@ def test_indexing(ranks_asc, dummy_values):
     if len(ranks_asc) == 0:
         with pytest.raises(IndexError):
             dummy_values[1]  # noqa
-        dummy_values[:2]  # noqa
+        empty_slice = dummy_values[:2]  # noqa
+        assert isinstance(empty_slice, ValuationResult)
+        assert len(empty_slice) == 0
     else:
-        assert ranks_asc[:] == [it.idx for it in dummy_values[:]]
-        assert ranks_asc[0] == dummy_values[0].idx
-        assert [ranks_asc[0]] == [it.idx for it in dummy_values[[0]]]
-        assert ranks_asc[:2] == [it.idx for it in dummy_values[:2]]
-        assert ranks_asc[:2] == [it.idx for it in dummy_values[[0, 1]]]
-        assert ranks_asc[:-2] == [it.idx for it in dummy_values[:-2]]
-        assert ranks_asc[-2:] == [it.idx for it in dummy_values[-2:]]
-        assert ranks_asc[-2:] == [it.idx for it in dummy_values[[-2, -1]]]
+        # Test that indexing returns ValuationResult objects
+        single_idx_result = dummy_values[0]
+        assert isinstance(single_idx_result, ValuationResult)
+        assert len(single_idx_result) == 1
+        assert single_idx_result.indices[0] == ranks_asc[0]
+
+        # Test list indexing
+        list_idx_result = dummy_values[[0]]
+        assert isinstance(list_idx_result, ValuationResult)
+        assert len(list_idx_result) == 1
+        assert list_idx_result.indices[0] == ranks_asc[0]
+
+        # Test slice indexing
+        slice_idx_result = dummy_values[:2]
+        assert isinstance(slice_idx_result, ValuationResult)
+        assert len(slice_idx_result) == 2
+        assert np.all(slice_idx_result.indices == ranks_asc[:2])
+
+        # Test multiple indexing
+        multi_idx_result = dummy_values[[0, 1]]
+        assert isinstance(multi_idx_result, ValuationResult)
+        assert len(multi_idx_result) == 2
+        assert np.all(multi_idx_result.indices == ranks_asc[:2])
+
+        # Test negative indexing
+        neg_slice_result = dummy_values[-2:]
+        assert isinstance(neg_slice_result, ValuationResult)
+        assert len(neg_slice_result) == 2
+        assert np.all(neg_slice_result.indices == ranks_asc[-2:])
+
+        # Test negative list indexing
+        neg_list_result = dummy_values[[-2, -1]]
+        assert isinstance(neg_list_result, ValuationResult)
+        assert len(neg_list_result) == 2
+        assert np.all(neg_list_result.indices == ranks_asc[-2:])
+
+        # Verify metadata is copied
+        assert single_idx_result.algorithm == dummy_values.algorithm
+        assert single_idx_result.status == dummy_values.status
 
 
 def test_get_idx():
@@ -142,21 +226,30 @@ def test_updating():
     Variance updates use Bessel's correction, same as np.var(ddof=1) since we are
     working with sample estimates.
     """
+
     v = ValuationResult(values=np.array([1.0, 2.0]))
-    v.update(0, 1.0)
+    updater = LogResultUpdater(v)
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [2, 1])
     np.testing.assert_allclose(v.values, [1, 2])
     np.testing.assert_allclose(v.variances, [0.0, 0.0])
 
-    v.update(1, 4.0)
+    saved = updater.process(ValueUpdate(1, np.log(4.0), 1)).copy()
     np.testing.assert_allclose(v.counts, [2, 2])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 2.0])
 
-    v.update(1, 3.0)
+    updater.process(ValueUpdate(1, np.log(3.0), 1))
     np.testing.assert_allclose(v.counts, [2, 3])
     np.testing.assert_allclose(v.values, [1, 3])
     np.testing.assert_allclose(v.variances, [0.0, 1])
+
+    # Test init updater with counts and variances already set
+    other_updater = LogResultUpdater(saved)
+    other_updater.process(ValueUpdate(1, np.log(3.0), 1))
+    np.testing.assert_allclose(saved.values, [1, 3])
+    np.testing.assert_allclose(saved.counts, [2, 3])
+    np.testing.assert_allclose(saved.variances, [0.0, 1])
 
     # Test after sorting
     v.sort(reverse=True, key="value")
@@ -164,17 +257,21 @@ def test_updating():
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0.0])
 
-    v.update(0, 1.0)
+    updater.process(ValueUpdate(0, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [3, 3])
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0])
 
     # Test data indexing
     v = ValuationResult(values=np.array([3.0, 0.0]), indices=np.array([3, 4]))
-    v.update(4, 1.0)
+    updater = LogResultUpdater(v)
+    updater.process(ValueUpdate(4, np.log(1.0), 1))
     np.testing.assert_allclose(v.counts, [1, 2])
     np.testing.assert_allclose(v.values, [3, 0.5])
     np.testing.assert_allclose(v.variances, [0.0, 0.5])
+
+    with pytest.raises(IndexError, match="not found in ValuationResult"):
+        updater.process(ValueUpdate(5, np.log(1.0), 1))
 
 
 def test_updating_order_invariance():
@@ -182,8 +279,9 @@ def test_updating_order_invariance():
     values = []
     for permutation in permutations(updates):
         v = ValuationResult.zeros(indices=np.array([0]))
+        updater = LogResultUpdater(v)
         for update in permutation:
-            v.update(0, update)
+            updater.process(ValueUpdate(0, update, 1))
         values.append(v)
 
     v1 = values[0]
@@ -199,8 +297,10 @@ def test_updating_order_invariance():
 def test_serialization(serialize, deserialize, dummy_values):
     serded = deserialize(serialize(dummy_values))
     assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
-    dummy_values.sort(reverse=True)
-    assert dummy_values != serded  # Order checks
+    if len(dummy_values) > 0:
+        # Sorting only has an effect over equality on non-empty results
+        dummy_values.sort(reverse=True)
+        assert dummy_values != serded  # Order checks
 
 
 @pytest.mark.parametrize("values, names", [([], []), ([2, 3, 1], ["a", "b", "c"])])
@@ -209,7 +309,9 @@ def test_copy_and_equality(values, names, dummy_values):
 
     c = dummy_values.copy()
     dummy_values.sort(reverse=True)
-    assert c != dummy_values
+
+    if len(c) > 0:  # Sorting only has an effect over equality on non-empty results
+        assert c != dummy_values
 
     c2 = ValuationResult(
         algorithm="dummy",
@@ -272,6 +374,139 @@ def test_extra_values(extra_values):
         assert k in repr_string
 
 
+@pytest.mark.parametrize(
+    "extra_values", [{"test_value": 1.2}, {"test_value1": 1.2, "test_value2": "test"}]
+)
+def test_extra_values_preserved_in_indexing(extra_values):
+    """Test that extra values are preserved when indexing."""
+    kwargs = dict(
+        algorithm="test",
+        status=Status.Converged,
+        values=np.random.rand(10),
+        sort=True,
+    )
+    kwargs.update(extra_values)
+    result = ValuationResult(**kwargs)
+
+    # Test single indexing
+    single_result = result[0]
+    for k, v in extra_values.items():
+        assert getattr(single_result, k) == v
+
+    # Test slice indexing
+    slice_result = result[:5]
+    for k, v in extra_values.items():
+        assert getattr(slice_result, k) == v
+
+    # Test list indexing
+    list_result = result[[0, 1, 2]]
+    for k, v in extra_values.items():
+        assert getattr(list_result, k) == v
+
+
+def test_set_method():
+    """Test the set method for setting ValueItems by data index."""
+    values = np.array([1.0, 2.0, 3.0])
+    indices = np.array([10, 20, 30])
+    result = ValuationResult(values=values, indices=indices)
+
+    new_item = ValueItem(
+        idx=20,  # Must match an existing index
+        name="test_name",
+        value=5.0,
+        variance=0.5,
+        count=3,
+    )
+
+    result.set(20, new_item)
+    assert result.get(20) == new_item
+
+    mismatched_item = ValueItem(
+        idx=50,  # Doesn't match data_idx we're setting
+        name="mismatch",
+        value=9.0,
+        variance=1.0,
+        count=1,
+    )
+
+    with pytest.raises(ValueError, match="doesn't match the provided data_idx"):
+        result.set(20, mismatched_item)
+
+    with pytest.raises(IndexError, match="not found in ValuationResult"):
+        result.set(50, mismatched_item)
+
+
+def test_get_and_setitem():
+    r1 = ValuationResult(
+        indices=np.array([10, 20, 30, 40]),
+        values=np.array([1.0, 2.0, 3.0, 4.0]),
+        data_names=np.array(["a", "b", "c", "d"]),
+    )
+
+    r2 = ValuationResult(
+        indices=np.array([50, 60]),
+        values=np.array([5.0, 6.0]),
+        data_names=np.array(["e", "f"]),
+    )
+
+    r1[:2] = r2
+    # test indexing with slices and iterables too
+    assert r1[slice(0, 2)] == r2[[0, 1]]
+
+    # Original state at other positions should be unchanged
+    assert all(r1.indices[2:] == [30, 40])  # noqa
+    assert all(r1.values[2:] == [3.0, 4.0])  # noqa
+    assert all(r1.names[2:] == ["c", "d"])  # noqa
+
+    r2.sort(reverse=True, key="value")
+    r1[[0, 1]] = r2
+    assert all(r1.indices[:2] == [60, 50])  # noqa
+    assert all(r1.values[:2] == [6.0, 5.0])  # noqa
+    assert all(r1.names[:2] == ["f", "e"])  # noqa
+
+    with pytest.raises(ValueError, match="Operation would result in duplicate indices"):
+        r1[2:] = r2
+
+    with pytest.raises(ValueError, match="Operation would result in duplicate names"):
+        r1[0] = ValuationResult(
+            indices=np.array([80]), values=np.array([8.0]), data_names=np.array(["e"])
+        )
+
+    r1.sort(key="index")
+    r3 = r1[::-1]
+    r1.sort(reverse=True, key="index")
+    assert r3 == r1
+
+    # Test negative indexing
+    r3[-1] = r1[3]
+    r3[-2] = r1[2]
+    assert r3 == r1
+
+    assert r3[3] == r1[-1]
+    assert r3[2] == r1[-2]
+
+    # Test error when lengths don't match
+    with pytest.raises(ValueError, match="Cannot set .* positions"):
+        r1[:3] = r2
+
+    # Test error when not ValuationResult
+    with pytest.raises(TypeError, match="Value must be a ValuationResult"):
+        r1[0] = ValueItem(idx=0, name="test", value=1.0, variance=0.0, count=1)  # type: ignore
+
+    # Test index types
+    with pytest.raises(TypeError, match="Indices must be"):
+        r1["a"]  # noqa
+
+    with pytest.raises(TypeError, match="Indices must be"):
+        r1["a"] = r2[0]  # noqa
+
+    with pytest.raises(IndexError, match=r"Index 5 out of range \(0, 4\)"):
+        r1[5]  # noqa
+
+    with pytest.raises(IndexError, match=r"Index 5 out of range \(0, 4\)"):
+        r1[5] = r2[0]
+
+
 @pytest.mark.parametrize("size", [1, 10])
 @pytest.mark.parametrize("total", [None, 1.0, -1.0])
 def test_from_random_creation(size: int, total: float | None):
@@ -288,6 +523,26 @@ def test_from_random_creation_errors():
         ValuationResult.from_random(size=0)
 
 
+def test_addition_compatibility():
+    v1 = ValuationResult.from_random(size=4)
+    with pytest.raises(TypeError, match="Cannot combine ValuationResult with"):
+        v1 += 1
+    v2 = ValuationResult.from_random(size=4, algorithm="blah")  # noqa
+    with pytest.raises(ValueError, match="Cannot combine results from"):
+        v1 += v2
+
+
+def test_equality_compatibility():
+    v = ValuationResult.empty(algorithm="foo", status=Status.Pending)  # noqa
+
+    with pytest.raises(TypeError, match="Cannot compare"):
+        v == 1  # noqa
+
+    assert not v == ValuationResult.from_random(3)
+    assert not v == ValuationResult.empty(algorithm="bar")
+    assert not v == ValuationResult.empty(algorithm="foo", status=Status.Converged)  # noqa
+
+
 def test_adding_random():
     """Test adding multiple valuation results together.
 
@@ -296,9 +551,9 @@ def test_adding_random():
     results together and check that the resulting means and variances match with
     those of the original matrix.
     """
-    n_samples, n_values, n_subsets = 10, 1000, 12
-    values = np.random.rand(n_samples, n_values)
-    split_indices = np.sort(np.random.randint(1, n_values, size=n_subsets - 1))
+    n_data, n_values, n_splits = 10, 1000, 12
+    values = np.random.rand(n_data, n_values)
+    split_indices = np.sort(np.random.randint(1, n_values, size=n_splits - 1))
     splits = np.split(values, split_indices, axis=1)
     vv = [
         ValuationResult(
@@ -306,7 +561,7 @@ def test_adding_random():
             status=Status.Pending,
             values=np.average(s, axis=1),
             variances=np.var(s, axis=1),
-            counts=s.shape[1] * np.ones(n_samples),
+            counts=np.full(s.shape[0], fill_value=s.shape[1]),
         )
         for s in splits
     ]
@@ -314,11 +569,13 @@ def test_adding_random():
 
     true_means = values.mean(axis=1)
     true_variances = values.var(axis=1)
+    true_stderr = values.std(axis=1) / np.sqrt(n_values)
 
     np.testing.assert_allclose(true_means[result.indices], result.values, atol=1e-5)
     np.testing.assert_allclose(
         true_variances[result.indices], result.variances, atol=1e-5
     )
+    np.testing.assert_allclose(true_stderr[result.indices], result.stderr, atol=1e-5)
 
 
 @pytest.mark.parametrize(
@@ -442,10 +699,11 @@ def test_names(data_names):
     assert np.all(v.names == np.array(data_names))
 
 
+@pytest.mark.parametrize("n_samples", [0, 3])
 @pytest.mark.parametrize("n", [0, 5])
-def test_empty(n):
-    v = ValuationResult.empty()
-    assert len(v) == 0
+def test_empty(n_samples: int, n: int):
+    v = ValuationResult.empty(n_samples=n_samples)
+    assert len(v) == n_samples
     v2 = ValuationResult(values=np.arange(n))
     v += v2
     assert len(v2) == n

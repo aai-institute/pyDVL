@@ -1,63 +1,82 @@
 r"""
 Samplers iterate over subsets of indices.
 
-The classes in this module are used to iterate over indices, and subsets of their
-complement in the whole set, as required for the computation of marginal utilities
-for semi-values and other marginal-utility based methods.
+The classes in this module are used to iterate over sets of indices, as required for the
+computation of marginal utilities for [semi-values][semi-values-intro] and other
+[marginal-utility][glossary-marginal-utility] based methods, in particular all
+[game-theoretic methods][glossary-game-theoretic-methods]. Because of the intertwining
+of these algorithms with the sampler employed, there are several strategies to choose
+when deploying, or extending each.
 
-These samplers are used by all game-theoretic valuation methods, as well as for LOO and
-any other marginal-contribution-based method which iterates over subsets of the training
-data, and because of intertwining of these algorithms with the sampling, there are
-several strategies to choose when constructing them.
+## A user's guide
 
-## Index iteration
+* Construct a sampler by instantiating one of the classes in this module. Refer to
+  the documentation of each class for details.
+* Pass the constructed sampler to the method. Not all combinations of sampler and
+  valuation method are meaningful.
+* When using finite samplers, use the [NoStopping][pydvl.valuation.stopping.NoStopping]
+  criterion and pass it the sampler to keep track of progress.
 
-Subclasses of [IndexSampler][pydvl.valuation.samplers.IndexSampler] are iterators
-over **batches** of [Samples][pydvl.valuation.types.Sample]. These are typically of
-the form $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
-is a subset of the complement of $i.$
 
-This type of iteration over indices $i$ and their complements is configured upon
-construction of the sampler with the classes
-[SequentialIndexIteration][pydvl.valuation.samplers.powerset.SequentialIndexIteration],
-[RandomIndexIteration][pydvl.valuation.samplers.powerset.RandomIndexIteration], or their finite
-counterparts, when each index must be visited just once (albeit possibly generating many
-samples per index).
+## A high-level overview
 
-However, some valuation schemes require iteration over subsets of the whole set (as
-opposed to iterating over complements of individual indices). For this purpose, one can
-use [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or its finite
-counterpart.
+Subclasses of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler] are iterators
+over **batches** of [Samples][pydvl.valuation.types.Sample]. Each sample is typically,
+but not necessarily, of the form $(i, S)$, where $i$ is an index of interest, and $S
+\subseteq N \setminus \{i\}$ is a subset of the complement of $i$ over the index set
+$N.$
+
+Samplers reside in the main process. Their samples are sent to the workers by the
+`fit()` method of the valuation class, to be processed by a so-called
+[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]'s `process()`
+method. These strategies return [ValueUpdate][pydvl.valuation.types.ValueUpdate]
+objects, which are then aggregated into the final result by the main process.
+
+
+## Sampler weights
+
+Because the samplers are used in a Monte Carlo setting, they can be weighted to perform
+importance sampling. To this end, classes inheriting from
+[IndexSampler][pydvl.valuation.samplers.base.IndexSampler] implement the
+[log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] method, which
+returns the (logarithm of) the probability of sampling a given subset. This is used to
+correct the mean of the Monte Carlo samples, so that it converges to the desired
+expression. For an explanation of the interactions between sampler weights, semi-value
+coefficients and importance sampling, see [Sampling strategies for
+semi-values][semi-values-sampling].
 
 ## Sampler evaluation
 
-Different samplers imply different strategies for processing samples, i.e. for
-evaluating the utility of the subsets. For instance permutation samplers generate
-increasing subsets of permutations, allowing semi-value calculations to benefit an
-incremental evaluation of the utility that reuses the previous computation.
+Different samplers require different strategies for processing samples, i.e. for
+evaluating the utility of the subsets. For instance, [permutation
+samplers][pydvl.valuation.samplers.permutation] generate full permutations of the index
+set, and rely on a special evaluation loop that allows semi-value calculations to reuse
+computations, by iterating through each permutation sequentially.
 
-This behaviour is communicated to the valuation method through the
-[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] class. The basic
-usage pattern inside a valuation method is the following (see below for info on the
-`updater`):
+This behaviour is encoded in the
+[EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] class, which the
+evaluation method retrieves through
+[make_strategy()][pydvl.valuation.samplers.base.IndexSampler.make_strategy].
 
-```python
-    def fit(self, data: Dataset):
+??? info "Usage pattern in valuation method"
+    The basic pattern is the following (see below for info on the `updater`):
+    ```python
+        def fit(self, data: Dataset):
 
-        ...
-
-        strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
-        processor = delayed(strategy.process)
-        updater = self.sampler.result_updater(self.result)
-
-        delayed_batches = Parallel()(
-            processor(batch=list(batch), is_interrupted=flag) for batch in self.sampler
-        )
-        for batch in delayed_batches:
-            for evaluation in batch:
-                self.result = updater(evaluation)
             ...
-```
+
+            strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
+            processor = delayed(strategy.process)
+            updater = self.sampler.result_updater(self.result)
+
+            delayed_batches = Parallel()(
+                processor(batch=list(batch), is_interrupted=flag) for batch in self.sampler
+            )
+            for batch in delayed_batches:
+                for evaluation in batch:
+                    self.result = updater(evaluation)
+                ...
+    ```
 
 ## Updating the result
 
@@ -73,8 +92,9 @@ which returns a callable that updates the result with a single evaluation.
 
 To create a custom sampler, subclass either
 [PowersetSampler][pydvl.valuation.samplers.PowersetSampler]
-or [PermutationSamplerBase][pydvl.valuation.samplers.permutation.PermutationSamplerBase], or
-implement the [IndexSampler][pydvl.valuation.samplers.IndexSampler] interface directly.
+or [PermutationSamplerBase][pydvl.valuation.samplers.permutation.PermutationSamplerBase],
+or implement the [IndexSampler][pydvl.valuation.samplers.IndexSampler] interface
+directly.
 
 There are three main methods to implement (and others that can be overridden):
 
@@ -86,8 +106,20 @@ There are three main methods to implement (and others that can be overridden):
   single permutations are always processed in one go.
 * [log_weight()][pydvl.valuation.samplers.base.IndexSampler.log_weight] to provide a
   factor by which to multiply Monte Carlo samples in stochastic methods, so that the
-  mean converges to the desired expression. This will typically be the logarithm of the
-  inverse probability of sampling a given subset.
+  mean converges to the desired expression. This will be the logarithm of the
+  probability of sampling a given subset. For an explanation of the interactions between
+  sampler weights, semi-value coefficients and importance sampling, see
+  [Sampling strategies for semi-values][semi-values-sampling].
+
+    ??? tip "Disabling importance sampling"
+        If you want to disable importance sampling, you can override the property
+        [log_coefficient()][pydvl.valuation.methods.semivalue.SemivalueValuation.log_coefficient]
+        and return `None`. This will make the evaluation strategy ignore the sampler
+        weights and the Monte Carlo sums converge to the expectation of the marginal
+        utilities wrt. the sampling distribution, with no change.
+* [sample_limit()][pydvl.valuation.samplers.base.IndexSampler.sample_limit] to return
+  the maximum number of samples that can be generated from a set of indices. Infinte
+  samplers should return `None`.
 * [make_strategy()][pydvl.valuation.samplers.base.IndexSampler.make_strategy] to create
   an evaluation strategy that processes the samples. This is typically a subclass of
   [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy] that computes
@@ -96,7 +128,7 @@ There are three main methods to implement (and others that can be overridden):
   evaluations of
   [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy]
   or the successive evaluations of
-  [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy]
+  [PermutationEvaluationStrategy][pydvl.valuation.samplers.permutation.PermutationEvaluationStrategy].
 
 Finally, if the sampler requires a dedicated result updater, you must override
 [result_updater()][pydvl.valuation.samplers.base.IndexSampler.result_updater] to return

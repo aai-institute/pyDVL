@@ -1,29 +1,58 @@
 r"""
 This module contains the base class for all semi-value valuation methods.
 
-A **semi-value** is any valuation function with the form:
+A **semi-value** is any marginal contribution-based valuation method which weights
+the marginal contributions of a data point $i$ to the utility of a subset $S$ by
+weights $w(k)$, where $k$ is the size of the subset, fulfilling certain conditions. For
+details, please refer to the [introduction to semi-values][semi-values-intro].
 
-$$
-v_\text{semi}(i) = \sum_{i=1}^n w(k)
-                     \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)],
-$$
+## Implementing new methods with importance sampling
 
-where $U$ is the utility, and the coefficients $w(k)$ satisfy the property:
+!!! info "Semi-values and importance sampling"
+    For a more detailed analysis of the ideas in this and the following section, please
+    read [Sampling strategies for semi-values][semi-values-sampling].
 
-$$
-\sum_{k=1}^n w(k) = 1.
-$$
+Because almost every method employs Monte Carlo sampling of subsets, our architecture
+allows for importance sampling. Early valuation methods chose samplers to
+implicitly provide the weights $w(k)$ as exactly the sampling probabilities of sets
+$p(S|k)$, e.g. [permutation Shapley][permutation-shapley-intro].
 
-This is the largest class of marginal-contribution-based valuation methods. These
-compute the value of a data point by evaluating the change in utility when the data
-point is removed from one or more subsets of the data.
+However, this is not a requirement. In fact, other methods employ different forms of
+importance sampling as a means to reduce the variance both of the Monte Carlo estimates
+and the utility function.
+
+For this reason, our implementation allows mix-and-matching of any semi-value coefficient
+with any sampler. For importance sampling, the mechanism is as follows:
+
+* Choose a sampler to go with the semi-value. The sampler must implement the
+  `log_weight()` property, which returns the logarithm of the sampling probability of a
+  subset $S$ of size $k$, i.e. $p(S|k).$ Note that this is **not** p(|S|=k).$ The sampler
+  also implements an [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]
+  which is used to compute the utility of the sampled subsets in subprocesses.
+
+* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
+  and implement the `log_coefficient()` method. This method should return the final
+  coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
+  stability. The coefficient is a function of the number of elements in the set $n$ and
+  the size of the subset $k$ for which the coefficient is being computed, and of the
+  sampler's weight. You can combine the method's coefficient and the weight in any way.
+  For instance, in order to entirely compensate for the sampling distribution one simply
+  subtracts the log-weights from the log-coefficient.
+
+## Disabling importance sampling
+
+In case you have a sampler that already provides the coefficients you need implicitly
+as the sampling probabilities, you can override the `log_coefficient` property to
+return `None`.
 """
 
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import Any
 
+import numpy as np
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
@@ -31,22 +60,26 @@ from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers import IndexSampler
-from pydvl.valuation.stopping import StoppingCriterion
-from pydvl.valuation.utility.base import UtilityBase
-from pydvl.valuation.utils import (
+from pydvl.valuation.parallel import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
 )
+from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.samplers import IndexSampler
+from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["SemivalueValuation"]
 
 
-class SemivalueValuation(Valuation):
-    r"""Abstract class to define semi-values.
+logger = logging.getLogger(__name__)
 
-    Implementations must only provide the `log_coefficient()` method, corresponding
+
+class SemivalueValuation(Valuation):
+    """Abstract class to define semi-values.
+
+    Implementations must only provide the `log_coefficient()` property, corresponding
     to the semi-value coefficient.
 
     !!! Note
@@ -81,10 +114,10 @@ class SemivalueValuation(Valuation):
         self.sampler = sampler
         self.is_done = is_done
         self.skip_converged = skip_converged
+        if skip_converged:  # test whether the sampler supports skipping indices:
+            self.sampler.skip_indices = np.array([], dtype=np.int_)
         self.show_warnings = show_warnings
-        self.tqdm_args: dict[str, Any] = {
-            "desc": f"{self.__class__.__name__}: {str(is_done)}"
-        }
+        self.tqdm_args: dict[str, Any] = {"desc": str(self)}
         # HACK: parse additional args for the progress bar if any (we probably want
         #  something better)
         if isinstance(progress, bool):
@@ -94,29 +127,28 @@ class SemivalueValuation(Valuation):
         else:
             raise TypeError(f"Invalid type for progress: {type(progress)}")
 
+    # TODO: automate str representation for all Valuations (and find something better)
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}-{self.utility.__class__.__name__}-"
+            f"{self.sampler.__class__.__name__}-{self.is_done}"
+        )
+
+    @property
     @abstractmethod
-    def log_coefficient(self, n: int, k: int) -> float:
-        """The semi-value coefficient in log-space.
+    def log_coefficient(self) -> SemivalueCoefficient | None:
+        """This property returns the function computing the semi-value coefficient.
 
-        The semi-value coefficient is a function of the number of elements in the set,
-        and the size of the subset for which the coefficient is being computed.
-        Because both coefficients and sampler weights can be very large or very small,
-        we perform all computations in log-space to avoid numerical issues.
-
-        Args:
-            n: Total number of elements in the set.
-            k: Size of the subset for which the coefficient is being computed
-
-        Returns:
-            The natural logarithm of the semi-value coefficient.
+        Return `None` in subclasses that do not need to correct for the sampling
+        distribution probabilities because of a specific, fixed sampler choice which
+        already yields the semi-value coefficient.
         """
         ...
 
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
-            # TODO: automate str representation for all Valuations (and find something better)
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
+            algorithm=str(self),
             indices=data.indices,
             data_names=data.names,
         )
@@ -137,11 +169,12 @@ class SemivalueValuation(Valuation):
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
-                        self.result = updater(update)
+                        self.result = updater.process(update)
                     if self.is_done(self.result):
                         flag.set()
                         self.sampler.interrupt()
-                        return self
+                        break
                     if self.skip_converged:
                         self.sampler.skip_indices = data.indices[self.is_done.converged]
+        logger.debug(f"Fitting done after {updater.n_updates} value updates.")
         return self

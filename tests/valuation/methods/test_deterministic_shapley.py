@@ -238,4 +238,4 @@ def test_polynomial_with_outlier(
 
     check_total_value(poly_utility.with_dataset(data_train), values, atol=total_atol)
 
-    assert values[0].idx == outlier_idx
+    assert values.get(0).idx == outlier_idx

@@ -4,7 +4,16 @@ import logging
 from functools import wraps
 from itertools import cycle, takewhile
 from time import time
-from typing import TYPE_CHECKING, Any, Collection, Generic, Iterable, Iterator, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Generator,
+    Generic,
+    Iterable,
+    Iterator,
+    TypeVar,
+)
 
 from deprecate import deprecated
 from tqdm.auto import tqdm
@@ -121,7 +130,7 @@ class Progress(Generic[T]):
             **kwargs,
         )
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Generator[T, None, None]:
         self.pbar.reset()
         try:
             for item in self.iterable:

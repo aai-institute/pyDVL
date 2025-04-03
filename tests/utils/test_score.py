@@ -12,13 +12,13 @@ class FittedLinearModel:
     def __init__(self, coef: NDArray):
         self.coef = coef
 
-    def predict(self, X):
+    def predict(self, X: NDArray) -> NDArray:
         return X @ self.coef
 
-    def fit(self, X, y):
+    def fit(self, X: NDArray, y: NDArray):
         pass
 
-    def score(self, X, y):
+    def score(self, X: NDArray, y: NDArray) -> float:
         return np.linalg.norm(X @ self.coef - y)
 
 

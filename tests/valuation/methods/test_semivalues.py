@@ -6,13 +6,13 @@ import pytest
 from pydvl.utils import logcomb
 from pydvl.valuation.games import Game
 from pydvl.valuation.methods import (
+    BanzhafValuation,
     BetaShapleyValuation,
-    DataBanzhafValuation,
     SemivalueValuation,
     ShapleyValuation,
 )
 from pydvl.valuation.samplers import IndexSampler, LOOSampler
-from pydvl.valuation.stopping import HistoryDeviation, MinUpdates
+from pydvl.valuation.stopping import MinUpdates
 
 from .. import check_values, recursive_make
 from ..samplers.test_sampler import deterministic_samplers, random_samplers
@@ -25,7 +25,7 @@ from ..samplers.test_sampler import deterministic_samplers, random_samplers
         (BetaShapleyValuation, {"alpha": 1, "beta": 1}),
         (BetaShapleyValuation, {"alpha": 1, "beta": 16}),
         (BetaShapleyValuation, {"alpha": 4, "beta": 1}),
-        (DataBanzhafValuation, {}),
+        (BanzhafValuation, {}),
         (ShapleyValuation, {}),
     ],
 )
@@ -39,8 +39,13 @@ def test_log_coefficients(n, valuation_cls, kwargs):
     logarithms of coefficients and sampler weights to enable larger values and
     avoid numerical instabilities.
     """
+
+    class DummySampler:
+        def log_weight(self, n: int, j: int) -> float:
+            return 0.0
+
     valuation = valuation_cls(  # type: ignore
-        utility=None, sampler=None, is_done=None, progress=False, **kwargs
+        utility=None, sampler=DummySampler(), is_done=None, progress=False, **kwargs
     )
 
     log_terms = [
@@ -69,7 +74,7 @@ def test_log_coefficients(n, valuation_cls, kwargs):
         # DataShapley is already tested in test_montecarlo_shapley.py
         # (ShapleyValuation, {}, "shapley_values"),
         (BetaShapleyValuation, {"alpha": 1, "beta": 1}, "shapley_values"),
-        (DataBanzhafValuation, {}, "banzhaf_values"),
+        (BanzhafValuation, {}, "banzhaf_values"),
     ],
 )
 def test_games(
@@ -84,17 +89,21 @@ def test_games(
     if issubclass(sampler_cls, LOOSampler):
         pytest.skip("LOOSampler does not apply to Shapley and Banzhaf")
 
-    history = HistoryDeviation(n_steps=1000 * len(test_game.data) ** 2, rtol=1e-3)
+    n_samples = 1000 * len(test_game.data)
 
-    # The games have too few players for the bounds in random_samplers(), so we reset
-    # them to the limits
     sampler = recursive_make(
-        sampler_cls, sampler_kwargs, seed=seed, lower_bound=None, upper_bound=None
+        sampler_cls,
+        sampler_kwargs,
+        seed=seed,
+        # For stratified samplers:
+        lower_bound=1,
+        upper_bound=None,
+        n_samples=n_samples,  # Required for cases using FiniteSequentialSizeIteration
     )
     valuation = valuation_cls(
         utility=test_game.u,
         sampler=sampler,
-        is_done=MinUpdates(1000 * len(test_game.data)) | history,
+        is_done=MinUpdates(n_samples),  # | History(n_steps=1000 * n_samples),
         progress=False,
         **valuation_kwargs,
     )
@@ -106,7 +115,8 @@ def test_games(
     #
     # from pydvl.valuation.games import ShoesGame, SymmetricVotingGame
     #
-    # data = history.memory[-history.count :]  # Grab the last `count` values
+    # # Grab the last `count` values
+    # data = valuation.stopping.criteria[1][-history.count :]
     # for vv in data.T:  # each row is one value series
     #     fraction = len(vv) // 2
     #     plt.plot(range(fraction), vv[-fraction:], alpha=0.7)

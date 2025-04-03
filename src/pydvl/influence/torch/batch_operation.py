@@ -518,7 +518,7 @@ _TensorDictAveragingType = TypeVar(
 
 class _TensorAveraging(Generic[_TensorDictAveragingType], ABC):
     @abstractmethod
-    def __call__(self, tensors: Generator[torch.Tensor, None, None]):
+    def __call__(self, tensors: Generator[torch.Tensor, None, None]) -> torch.Tensor:
         pass
 
     @abstractmethod
@@ -530,7 +530,9 @@ TensorAveragingType = TypeVar("TensorAveragingType", bound=_TensorAveraging)
 
 
 class _TensorDictChunkAveraging(_TensorDictAveraging):
-    def __call__(self, tensor_dicts: Generator[Dict[str, torch.Tensor], None, None]):
+    def __call__(
+        self, tensor_dicts: Generator[Dict[str, torch.Tensor], None, None]
+    ) -> Dict[str, torch.Tensor]:
         result = next(tensor_dicts)
         n_chunks = 1.0
         for tensor_dict in tensor_dicts:
@@ -546,7 +548,7 @@ class ChunkAveraging(_TensorAveraging[_TensorDictChunkAveraging]):
     of tensors.
     """
 
-    def __call__(self, tensors: Generator[torch.Tensor, None, None]):
+    def __call__(self, tensors: Generator[torch.Tensor, None, None]) -> torch.Tensor:
         result = next(tensors)
         n_chunks = 1.0
         for tensor in tensors:
@@ -562,7 +564,9 @@ class _TensorDictPointAveraging(_TensorDictAveraging):
     def __init__(self, batch_dim: int = 0):
         self.batch_dim = batch_dim
 
-    def __call__(self, tensor_dicts: Generator[Dict[str, torch.Tensor], None, None]):
+    def __call__(
+        self, tensor_dicts: Generator[Dict[str, torch.Tensor], None, None]
+    ) -> Dict[str, torch.Tensor]:
         result = next(tensor_dicts)
         n_points = next(iter(result.values())).shape[self.batch_dim]
         for tensor_dict in tensor_dicts:
@@ -587,7 +591,7 @@ class PointAveraging(_TensorAveraging[_TensorDictPointAveraging]):
     def __init__(self, batch_dim: int = 0):
         self.batch_dim = batch_dim
 
-    def __call__(self, tensors: Generator[torch.Tensor, None, None]):
+    def __call__(self, tensors: Generator[torch.Tensor, None, None]) -> torch.Tensor:
         result = next(tensors)
         n_points = result.shape[self.batch_dim]
         for tensor in tensors:

@@ -1,94 +1,109 @@
 r"""
-This module implements the $\delta$-Shapley valuation method.
+This module implements the $\delta$-Shapley valuation method, introduced by Watson et al.
+(2023)[^1].
 
-The value of a point $i$ is defined as:
+$\delta$-Shapley uses a stratified sampling approach to accurately approximate Shapley
+values for certain model classes, based on uniform stability bounds.
 
-$$
-v_\delta(i) = \sum_{k=l}^u w(k) \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i}) - U(S)],
-$$
+Additionally, it reduces computation by skipping the marginal utilities for set sizes
+outside a small range.[^2]
 
-where $l$ and $u$ are the lower and upper bounds of the size of the subsets to sample
-from, and $w(k)$ is the weight of a subset of size $k$ in the complement of $\{i\}$, and
-is given by:
+!!! info
+    See [the documentation][delta-shapley-intro] or Watson et al. (2023)[^1] for a
+    more detailed introduction to the method.
 
-$$
-\begin{array}{ll}
-w (k) = \left \{
-    \begin{array}{ll}
-        \frac{1}{u - l + 1} & \text{if} l \ \leq k \leq u,\\ 0 &
-        \text{otherwise.}
-    \end{array} \right. &
-    \end{array}
-$$
+## References
+
+[^1]: Watson, Lauren, Zeno Kujawa, Rayna Andreeva, Hao-Tsung Yang, Tariq Elahi, and Rik
+      Sarkar. [Accelerated Shapley Value Approximation for Data
+      Evaluation](https://doi.org/10.48550/arXiv.2311.05346). arXiv, 9 November 2023.
+
+[^2]: When this is done, the final values are off by a constant factor with respect to
+      the true Shapley values.
 """
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
-from pydvl.utils.types import Seed
 from pydvl.valuation.methods.semivalue import SemivalueValuation
 from pydvl.valuation.samplers import (
-    ConstantSampleSize,
-    RandomIndexIteration,
-    RandomSizeIteration,
+    StratifiedPermutationSampler,
     StratifiedSampler,
 )
 from pydvl.valuation.stopping import StoppingCriterion
+from pydvl.valuation.types import SemivalueCoefficient
+from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["DeltaShapleyValuation"]
-
-from pydvl.valuation.utility.base import UtilityBase
 
 
 class DeltaShapleyValuation(SemivalueValuation):
     r"""Computes $\delta$-Shapley values.
 
-    $\delta$-Shapley does not accept custom samplers. Instead, it uses a
-    [StratifiedSampler][pydvl.valuation.samplers.StratifiedSampler]
-    with a lower and upper bound on the size of the sets to sample from.
-
     Args:
         utility: Object to compute utilities.
+        sampler: The sampling scheme to use. Must be a stratified sampler.
         is_done: Stopping criterion to use.
-        lower_bound: The lower bound of the size of the subsets to sample from.
-        upper_bound: The upper bound of the size of the subsets to sample from.
-        seed: The seed for the random number generator used by the sampler.
-        progress: Whether to show a progress bar. If a dictionary, it is passed to
-            `tqdm` as keyword arguments, and the progress bar is displayed.
         skip_converged: Whether to skip converged indices, as determined by the
             stopping criterion's `converged` array.
+        show_warnings: Whether to show warnings.
+        progress: Whether to show a progress bar. If a dictionary, it is passed to
+            `tqdm` as keyword arguments, and the progress bar is displayed.
     """
 
     algorithm_name = "Delta-Shapley"
-    sampler: StratifiedSampler
+    sampler: StratifiedSampler | StratifiedPermutationSampler
 
     def __init__(
         self,
         utility: UtilityBase,
+        sampler: StratifiedSampler | StratifiedPermutationSampler,
         is_done: StoppingCriterion,
-        lower_bound: int,
-        upper_bound: int,
-        seed: Seed | None = None,
         skip_converged: bool = False,
-        progress: bool = False,
+        show_warnings: bool = True,
+        progress: dict[str, Any] | bool = False,
     ):
-        sampler = StratifiedSampler(
-            sample_sizes=ConstantSampleSize(
-                1, lower_bound=lower_bound, upper_bound=upper_bound
-            ),
-            sample_sizes_iteration=RandomSizeIteration,
-            index_iteration=RandomIndexIteration,
-            seed=seed,
-        )
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
         super().__init__(
-            utility, sampler, is_done, progress=progress, skip_converged=skip_converged
+            utility, sampler, is_done, skip_converged, show_warnings, progress
         )
 
-    def log_coefficient(self, n: int, k: int) -> float:
-        # assert self.lower_bound <= k <= self.upper_bound, "Invalid subset size"
-        if not self.lower_bound <= k <= self.upper_bound:
-            return -np.inf
-        return float(-np.log(self.upper_bound - self.lower_bound + 1))
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}-"
+            f"{self.utility.__class__.__name__}-"
+            f"{self.sampler.__class__.__name__}-"
+            f"{self.sampler.sample_sizes_strategy.__class__.__name__}-"
+            f"{self.is_done}"
+        )
+
+    @property
+    def log_coefficient(self) -> SemivalueCoefficient | None:
+        r"""Returns the log-coefficient of the $\delta$-Shapley valuation.
+
+        This is constructed to account for the sampling distribution of a
+        [StratifiedSampler][pydvl.valuation.samplers.stratified.StratifiedSampler] and
+        yield the Shapley coefficient as effective coefficient (truncated by the
+        size bounds in the sampler).
+
+        !!! note "Normalization"
+            This coefficient differs from the one used in the original paper by a
+            normalization factor of $m=\sum_k m_k,$ where $m_k$ is the number of
+            samples of size $k$. Since, contrary to their layer-wise means, we are
+            computing running averages of all $m$ value updates, this cancels out, and
+            we are left with the same effective coefficient.
+        """
+
+        def _log_coefficient(n: int, k: int) -> float:
+            effective_n = self.sampler.complement_size(n)
+            lb, ub = self.sampler.sample_sizes_strategy.effective_bounds(effective_n)
+            # We don't always have m_k so we use p_k instead, and return a coefficient
+            # that is off by a constant factor m before averaging.
+            p = self.sampler.sample_sizes_strategy.sample_sizes(effective_n, probs=True)
+            if p[k] == 0:
+                return -np.inf
+            return float(-np.log(ub - lb + 1) - np.log(p[k]))
+
+        return _log_coefficient

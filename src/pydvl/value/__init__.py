@@ -2,7 +2,7 @@
 This module implements algorithms for the exact and approximate computation of
 values and semi-values.
 
-See [Data valuation][data-valuation] for an introduction to the concepts
+See [Data valuation][data-valuation-intro] for an introduction to the concepts
 and methods implemented here.
 """
 

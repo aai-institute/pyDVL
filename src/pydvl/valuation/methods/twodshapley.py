@@ -1,7 +1,10 @@
 """
-This module implements 2D-Shapley, as introduced in (Liu et al., 2023)<sup><a
+This module will implement 2D-Shapley, as introduced in (Liu et al., 2023)<sup><a
 href="#liu_2dshapley_2023">1</a></sup>.
 
+!!! failure "To do"
+    Once this is implemented, remember to un-exclude the file in
+    /build_scripts/generate_api_docs.py.
 
 ## References
 

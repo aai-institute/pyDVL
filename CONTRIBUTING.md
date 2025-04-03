@@ -15,10 +15,10 @@ If you are interested in setting up a similar project, consider the template
 
 ## Local development
 
-This project uses [black](https://github.com/psf/black) to format code and
+This project uses [ruff](https://github.com/astral-sh/ruff) to lint and format code and
 [pre-commit](https://pre-commit.com/) to invoke it as a git pre-commit hook.
-Consider installing any of [black's IDE
-integrations](https://black.readthedocs.io/en/stable/integrations/editors.html)
+Consider installing any of [ruff's IDE
+integrations](https://docs.astral.sh/ruff/editors/setup/)
 to make your life easier.
 
 Run the following to set up the pre-commit git hook to run before pushes:
@@ -83,7 +83,7 @@ If you use remote execution, don't forget to exclude data paths from deployment
 ## Testing
 
 Automated builds, tests, generation of documentation and publishing are handled
-by [CI pipelines](#CI). Before pushing your changes to the remote we recommend
+by [CI pipelines](#ci). Before pushing your changes to the remote we recommend
 to execute `tox` locally in order to detect mistakes early on and to avoid
 failing pipelines. tox will:
 * run the test suite
@@ -297,6 +297,33 @@ the environment variable `DYLD_FALLBACK_LIBRARY_PATH`:
 export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/opt/homebrew/lib
 ```
 
+### Automatic API documentation
+
+We use [mkdocstrings](https://mkdocstrings.github.io/) to automatically generate
+API documentation from docstrings, following almost verbatim [this
+recipe](https://mkdocstrings.github.io/recipes/#automatic-code-reference-pages):
+Stubs are generated for all modules on the fly using
+[generate_api_docs.py](https://github.com/aai-institute/pyDVL/blob/develop/build_scripts/generate_api_docs.py) thanks to the pluging
+[mkdocstrings-gen-files](https://github.com/oprypin/mkdocs-gen-files) and
+navigation is generated for
+[mkdocs-literate-nav](https://github.com/oprypin/mkdocs-literate-nav).
+
+With some renaming and using
+[section-index](https://github.com/oprypin/mkdocs-section-index) `__init__.py`
+files are used as entry points for the documentation of a module.
+
+Since very often we re-export symbols in the `__init__.py` files, the automatic
+generation of the documentation skips **all** symbols in those files. If you
+want to document any in particular you can do so by **overriding
+mkdocs_genfiles**: Create a file under `docs/api/pydvl/module/index.md` and add
+your documentation there. For example, to document the whole module and every
+(re-)exported symbol just add this to the file:
+
+```markdown
+::: pydvl.module
+```
+
+
 ### Adding new pages
 
 Navigation is configured in `mkdocs.yaml` using the nav section. We use the
@@ -441,7 +468,7 @@ use braces for legibility like in the first example.
 ### Abbreviations
 
 We keep the abbreviations used in the documentation inside the
-[docs_include/abbreviations.md](https://github.com/aai-institute/pyDVL/blob/develop/docs_includes%2Fabbreviations.md) file.
+[docs_include/abbreviations.md](https://github.com/aai-institute/pyDVL/blob/develop/docs_includes/abbreviations.md) file.
 
 The syntax for abbreviations is:
 

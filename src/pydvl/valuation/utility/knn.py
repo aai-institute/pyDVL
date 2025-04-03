@@ -2,8 +2,24 @@ r"""
 This module implements the utility function used in KNN-Shapley, as introduced by
 Jia et al. (2019)[^1].
 
+!!! warning "Uses of this utility"
+    Although this class can be used in conjunction with any semi-value method and
+    sampler, when computing **Shapley** values, it is recommended to use the dedicated
+    valuation class
+    [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation],
+    because it implements a more efficient algorithm for computing Shapley values
+    which runs in $O(n \log n)$ time for each test point.
+
+!!! info "KNN-Shapley"
+    See [the documentation][knn-shapley-intro] for an introduction to the method and
+    our implementation.
+
+The utility implemented by the class
+[KNNClassifierUtility][pydvl.valuation.utility.knn.KNNClassifierUtility] is defined
+as:
+
 $$
-U (S) \assign \frac{1}{n_{\text{test}}}  \sum_{j = 1}^{n_{\text{test}}}
+u (S) := \frac{1}{n_{\text{test}}}  \sum_{j = 1}^{n_{\text{test}}}
    \frac{1}{K}  \sum_{k = 1}^{| \alpha^{(j)} | \}}
    \mathbb{1} \{ y_{\alpha^{(j)}_k (S)} = y^{\text{test}}_j \},
 $$
@@ -12,15 +28,6 @@ where $\alpha^{(j)} (S)$ is the intersection of the $K$-nearest neighbors of the
 point $x^{\text{test}}_j$ across the whole training set, and the sample $S$. In
 particular, $\alpha^{(j)}_k (S)$ is the index of the training point in $S$ which is
 ranked $k$-th closest to test point $x^{\text{test}}_j.$
-
-
-!!! Warning "Uses of this utility"
-    Although this class can be used in conjunction with any semi-value method and
-    sampler, when computing **Shapley** values, it is recommended to use the dedicated
-    valuation class
-    [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation],
-    because it implements a more efficient algorithm for computing Shapley values
-    which runs in O(n log n) time for each test point.
 
 
 ## References
@@ -97,7 +104,7 @@ class KNNClassifierUtility(ModelUtility[Sample, KNeighborsClassifier]):
         model: KNeighborsClassifier,
         test_data: Dataset,
         *,
-        catch_errors: bool = True,
+        catch_errors: bool = False,
         show_warnings: bool = False,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,

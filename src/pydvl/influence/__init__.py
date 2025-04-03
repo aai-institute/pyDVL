@@ -1,7 +1,7 @@
 """
 This package contains algorithms for the computation of the influence function.
 
-See [The Influence function][the-influence-function] for an introduction to the
+See [The Influence function][influence-function] for an introduction to the
 concepts and methods implemented here.
 
 !!! Warning

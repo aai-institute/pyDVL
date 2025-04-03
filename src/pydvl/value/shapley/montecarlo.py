@@ -154,7 +154,7 @@ def permutation_montecarlo_shapley(
     $$
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears (see [[data-valuation]] for details).
+    the position where $i$ appears (see [[data-valuation-intro]] for details).
 
     This implements the method described in (Ghorbani and Zou, 2019)<sup><a
     href="#ghorbani_data_2019">1</a></sup> with a double stopping criterion.
@@ -332,7 +332,7 @@ def combinatorial_montecarlo_shapley(
 
     This consists of randomly sampling subsets of the power set of the training
     indices in [u.data][pydvl.utils.utility.Utility], and computing their
-    marginal utilities. See [Data valuation][data-valuation] for details.
+    marginal utilities. See [Data valuation][data-valuation-intro] for details.
 
     Note that because sampling is done with replacement, the approximation is
     poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$
