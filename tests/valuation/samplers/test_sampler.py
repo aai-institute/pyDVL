@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from functools import reduce
 from itertools import islice, takewhile
 from typing import Any, Callable, Iterator, Type
 
@@ -17,12 +18,12 @@ from pydvl.valuation.samplers import (
     AntitheticPermutationSampler,
     AntitheticSampler,
     ConstantSampleSize,
+    DeltaShapleyNCSGDConfig,
     DeterministicPermutationSampler,
-    DeterministicSizeIteration,
     DeterministicUniformSampler,
     FiniteNoIndexIteration,
-    FiniteRandomIndexIteration,
     FiniteSequentialIndexIteration,
+    FiniteSequentialSizeIteration,
     GridOwenStrategy,
     HarmonicSampleSize,
     IndexIteration,
@@ -34,8 +35,10 @@ from pydvl.valuation.samplers import (
     PowerLawSampleSize,
     RandomIndexIteration,
     RandomSizeIteration,
+    RoundRobinSizeIteration,
     SequentialIndexIteration,
     StochasticSampler,
+    StratifiedPermutationSampler,
     StratifiedSampler,
     UniformOwenStrategy,
     UniformSampler,
@@ -102,7 +105,7 @@ def improper_samplers():
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=200: n},
+                    {"n_samples_outer": lambda n=200: n, "seed": lambda s: s},
                 ),
                 "index_iteration": NoIndexIteration,
             },
@@ -112,7 +115,7 @@ def improper_samplers():
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=200: n},
+                    {"n_samples_outer": lambda n=200: n, "seed": lambda s: s},
                 ),
                 "index_iteration": NoIndexIteration,
             },
@@ -122,7 +125,7 @@ def improper_samplers():
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=200: n},
+                    {"n_samples_outer": lambda n=200: n, "seed": lambda s: s},
                 ),
                 "index_iteration": FiniteNoIndexIteration,
             },
@@ -132,11 +135,12 @@ def improper_samplers():
             {
                 "outer_sampling_strategy": (
                     UniformOwenStrategy,
-                    {"n_samples_outer": lambda n=200: n},
+                    {"n_samples_outer": lambda n=200: n, "seed": lambda s: s},
                 ),
                 "index_iteration": FiniteNoIndexIteration,
             },
         ),
+        (MSRSampler, {"seed": lambda seed: seed}),
     ]
 
 
@@ -148,103 +152,95 @@ def permutation_samplers():
 
 
 def powerset_samplers():
-    return [
-        (
-            UniformSampler,
-            {"index_iteration": RandomIndexIteration, "seed": lambda seed: seed},
-        ),
-        (
-            UniformSampler,
-            {"index_iteration": SequentialIndexIteration, "seed": lambda seed: seed},
-        ),
-        (
-            AntitheticSampler,
-            {"index_iteration": RandomIndexIteration, "seed": lambda seed: seed},
-        ),
-        (
-            AntitheticSampler,
-            {"index_iteration": SequentialIndexIteration, "seed": lambda seed: seed},
-        ),
-    ]
+    ret = []
+
+    for sampler in (UniformSampler, AntitheticSampler):
+        for idx_it in (RandomIndexIteration, SequentialIndexIteration):
+            ret.append(
+                (sampler, {"index_iteration": idx_it, "seed": lambda seed: seed})
+            )
+    return ret
 
 
 def stratified_samplers(n_samples_per_index: int = 32):
-    return [
+    # dummy_config = DeltaShapleyNCSGDConfig(
+    #     lipschitz_grad=1,
+    #     lipschitz_loss=1,
+    #     lr_factor=1,
+    #     n_sgd_iter=1,
+    #     max_loss=1,
+    #     n_val=10,
+    #     n_train=10,
+    #     eps=0.1,
+    #     delta=0.1,
+    #     version="theorem7",
+    # )
+
+    sample_size_strategies = [
         (
-            StratifiedSampler,
+            ConstantSampleSize,
             {
-                "sample_sizes": (
-                    ConstantSampleSize,
-                    {
-                        "n_samples": lambda n=n_samples_per_index: n,
-                        "lower_bound": lambda l=2: l,
-                        "upper_bound": lambda u=3: u,
-                    },
-                ),
-                "sample_sizes_iteration": RandomSizeIteration,
-                "index_iteration": RandomIndexIteration,
+                "n_samples": lambda n=n_samples_per_index: n,
+                "lower_bound": lambda l=2: l,
+                "upper_bound": lambda u=4: u,
+            },
+        ),
+        (ConstantSampleSize, {"n_samples": lambda n=n_samples_per_index: n}),
+        (
+            HarmonicSampleSize,
+            {
+                "n_samples": lambda n=n_samples_per_index: n,
+                "lower_bound": lambda l=1: l,
+                "upper_bound": lambda u=None: u,
             },
         ),
         (
-            StratifiedSampler,
-            {
-                "sample_sizes": (
-                    ConstantSampleSize,
-                    {"n_samples": lambda n=n_samples_per_index: n},
-                ),
-                "sample_sizes_iteration": RandomSizeIteration,
-                "index_iteration": RandomIndexIteration,
-            },
+            PowerLawSampleSize,
+            {"n_samples": lambda n=n_samples_per_index: n, "exponent": lambda e=0.5: e},
         ),
-        (
-            StratifiedSampler,
-            {
-                "sample_sizes": (
-                    HarmonicSampleSize,
-                    {"n_samples": lambda n=n_samples_per_index: n},
-                ),
-                "sample_sizes_iteration": DeterministicSizeIteration,
-                "index_iteration": RandomIndexIteration,
-            },
-        ),
-        (
-            StratifiedSampler,
-            {
-                "sample_sizes": (
-                    HarmonicSampleSize,
-                    {"n_samples": lambda n=n_samples_per_index: n},
-                ),
-                "sample_sizes_iteration": RandomSizeIteration,
-                "index_iteration": SequentialIndexIteration,
-            },
-        ),
-        (
-            StratifiedSampler,
-            {
-                "sample_sizes": (
-                    PowerLawSampleSize,
-                    {
-                        "n_samples": lambda n=n_samples_per_index: n,
-                        "exponent": lambda e=0.5: e,
-                    },
-                ),
-                "index_iteration": RandomIndexIteration,
-            },
-        ),
-        (
-            StratifiedSampler,
-            {
-                "sample_sizes": (
-                    PowerLawSampleSize,
-                    {
-                        "n_samples": lambda n=n_samples_per_index: n,
-                        "exponent": lambda e=0.5: e,
-                    },
-                ),
-                "index_iteration": SequentialIndexIteration,
-            },
-        ),
+        # (DeltaShapleyNCSGDSampleSize, {"config": dummy_config}),
     ]
+
+    sample_sizes_iterations = [
+        FiniteSequentialSizeIteration,
+        RandomSizeIteration,
+        RoundRobinSizeIteration,
+    ]
+
+    index_iterations = [
+        RandomIndexIteration,
+        SequentialIndexIteration,
+        FiniteSequentialIndexIteration,
+    ]
+
+    ret = []
+    for ss in sample_size_strategies:
+        ret.append(
+            (
+                StratifiedPermutationSampler,
+                {"sample_sizes": ss, "seed": lambda seed: seed},
+            )
+        )
+        for s_it in sample_sizes_iterations:
+            for i_it in index_iterations:
+                if (  # Finite iterations don't mix well with random ones
+                    i_it == FiniteSequentialIndexIteration
+                    and s_it != FiniteSequentialSizeIteration
+                ):
+                    continue
+
+                ret.append(
+                    (
+                        StratifiedSampler,
+                        {
+                            "sample_sizes": ss,
+                            "sample_sizes_iteration": s_it,
+                            "index_iteration": i_it,
+                            "seed": lambda seed: seed,
+                        },
+                    )
+                )
+    return ret
 
 
 def owen_samplers():
@@ -292,11 +288,10 @@ def owen_samplers():
                 "index_iteration": FiniteSequentialIndexIteration,
             },
         ),
-        (MSRSampler, {"seed": lambda seed: seed}),
     ]
 
 
-def random_samplers(proper: bool = False):
+def random_samplers(proper: bool = False, n_samples_per_index: int = 32):
     """Use this as parameter values in pytest.mark.parametrize for parameters
     "sampler_cls, sampler_kwargs"
 
@@ -306,7 +301,7 @@ def random_samplers(proper: bool = False):
     return (
         permutation_samplers()
         + powerset_samplers()
-        + stratified_samplers()
+        + stratified_samplers(n_samples_per_index=n_samples_per_index)
         + owen_samplers()
         + (improper_samplers() if not proper else [])
     )
@@ -547,90 +542,90 @@ def test_length_for_finite_samplers(
 def test_length_of_infinite_samplers(
     sampler_cls, sampler_kwargs, indices: NDArray, batch_size: int, seed: int
 ):
-    """All infinite samplers are random, but not all random are infinite..."""
-    if sampler_cls in (
-        OwenSampler,
-        AntitheticOwenSampler,
-        StratifiedSampler,
-    ):
-        pytest.skip(f"{sampler_cls.__name__} is a finite sampler")
     sampler_kwargs |= {"batch_size": batch_size}
     sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
+    if sampler.sample_limit(indices) is not None:
+        pytest.skip(f"{sampler_cls.__name__} is a finite sampler")
     n_batches = 2 ** (len(indices) + 1)
-    assert sampler.sample_limit(indices) is None
     # check that we can generate samples that are longer than size of powerset
     batches = list(islice(sampler.generate_batches(indices), n_batches))
     if len(indices) > 0:
-        assert len(list(flatten(batches))) == n_batches * batch_size
+        assert (
+            len(list(flatten(batches))) == n_batches * batch_size == sampler.n_samples
+        )
     with pytest.raises(TypeError):
         len(sampler)
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers(proper=True))
-@pytest.mark.parametrize(
-    "index_iteration", [FiniteSequentialIndexIteration, FiniteRandomIndexIteration]
-)
-@pytest.mark.parametrize("indices", [np.array([]), np.array(list(range(100)))])
-def test_proper_reproducible(
-    sampler_cls, sampler_kwargs: dict, index_iteration, indices: NDArray, seed
-):
+def hash_indices(sampler_cls: Type[IndexSampler], indices: NDArray) -> int:
+    """Hashes the indices to a single integer.
+
+    This assumes that the indices are prime numbers!
+    """
+    if issubclass(
+        sampler_cls,
+        (
+            PermutationSampler,
+            AntitheticPermutationSampler,
+            StratifiedPermutationSampler,
+        ),
+    ):
+        # Order matters for permutations!
+        p = 31  # A prime number as base for polynomial hash function
+        return reduce(lambda h, y: h * p + y, indices, 0)
+    else:
+        return reduce(lambda x, y: x * y, indices, 1)
+
+
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
+def test_proper_reproducible(sampler_cls, sampler_kwargs: dict, seed):
     """Test that the sampler is reproducible."""
-    samples_1 = _create_seeded_sample_iter(
-        sampler_cls, sampler_kwargs, index_iteration, indices, seed
-    )
-    samples_2 = _create_seeded_sample_iter(
-        sampler_cls, sampler_kwargs, index_iteration, indices, seed
-    )
-    for batch_1, batch_2 in zip(samples_1, samples_2):
-        assert set(batch_1[0].subset) == set(batch_2[0].subset)
+    indices = np.array([1, 3, 5, 7, 11, 13, 17, 19])
+    samples1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+    samples2 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+
+    seq1 = [hash_indices(sampler_cls, s.subset) for s in samples1]
+    seq2 = [hash_indices(sampler_cls, s.subset) for s in samples2]
+
+    assert np.all(seq1 == seq2)
 
 
-@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers(proper=True))
-@pytest.mark.parametrize("indices", [np.array([]), np.arange(10)])
-@pytest.mark.parametrize(
-    "index_iteration", [FiniteSequentialIndexIteration, FiniteRandomIndexIteration]
-)
-def test_proper_stochastic(
-    sampler_cls, sampler_kwargs, index_iteration, indices, seed, seed_alt
-):
-    """Test that the sampler is reproducible."""
-    samples_1 = _create_seeded_sample_iter(
-        sampler_cls, sampler_kwargs, index_iteration, indices, seed
-    )
-    samples_2 = _create_seeded_sample_iter(
-        sampler_cls, sampler_kwargs, index_iteration, indices, seed_alt
+@pytest.mark.parametrize("sampler_cls, sampler_kwargs", random_samplers())
+def test_proper_stochastic(sampler_cls, sampler_kwargs, seed, seed_alt):
+    """Test that the sampler is stochastic."""
+    indices = np.array([1, 3, 5, 7, 11, 13, 17, 19])
+    samples1 = _create_seeded_sample_iter(sampler_cls, sampler_kwargs, indices, seed)
+    samples2 = _create_seeded_sample_iter(
+        sampler_cls, sampler_kwargs, indices, seed_alt
     )
 
-    for batch_1, batch_2 in zip(samples_1, samples_2):
-        subset_1 = list(batch_1)[0].subset
-        subset_2 = list(batch_2)[0].subset
-        if issubclass(sampler_cls, PermutationSampler):
-            # Order matters for permutations!
-            assert len(subset_1) == 0 or np.any(subset_1 != subset_2)
-        else:
-            assert len(subset_1) == 0 or set(subset_1) != set(subset_2)
+    seq1 = [hash_indices(sampler_cls, s.subset) for s in samples1]
+    seq2 = [hash_indices(sampler_cls, s.subset) for s in samples2]
+
+    assert np.any(seq1 != seq2)
 
 
 def _create_seeded_sample_iter(
     sampler_cls: Type[StochasticSampler],
     sampler_kwargs: dict[str, Any],
-    index_iteration: Type[IndexIteration],
     indices: NDArray[np.int_],
     seed: Seed,
 ) -> Iterator:
+    """Returns a flattened iterator over samples generated by the sampler."""
     sampler_kwargs["seed"] = seed
-    sampler_kwargs["index_iteration"] = index_iteration
-    try:
-        sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
-    except TypeError:
-        del sampler_kwargs["index_iteration"]
-        sampler = recursive_make(sampler_cls, sampler_kwargs, seed=seed)
-
-    # If we set max_iterations to len(indices), then the OwenSampler will
-    # always generate the full sample as last once, failing test_proper_stochastic()
-    max_iterations = len(indices) // 2
-    sample_stream = takewhile(
-        lambda _: sampler.n_samples < max_iterations, sampler.generate_batches(indices)
+    sampler = recursive_make(
+        sampler_cls,
+        sampler_kwargs,
+        seed=seed,
+        # Since we sample very few sets, increase the likelihood of non-empty sets for Owen
+        # (these parameters are passed to lambdas in the structure of the sampler_kwargs)
+        n_samples_inner=1,
+        n_samples_outer=4,
+    )
+    max_iterations = len(indices)
+    sample_stream = map(
+        lambda batch: list(batch)[0],
+        islice(sampler.generate_batches(indices), max_iterations),
     )
     return sample_stream
 
@@ -667,12 +662,17 @@ def test_sampler_weights(
         effective_n = n - 1
 
     # HACK: MSR actually has same distribution as uniform over 2^(N-i)
-    fudge = 0.5 if issubclass(sampler_cls, MSRSampler) else 1.0
+    log_fudge = -math.log(2) if issubclass(sampler_cls, MSRSampler) else 0.0
 
     subset_len_probs = np.zeros(effective_n + 1)
     for batch in islice(sampler.generate_batches(indices), n_batches):
         for sample in batch:
-            if issubclass(sampler_cls, PermutationSamplerBase):
+            if issubclass(sampler_cls, StratifiedPermutationSampler):
+                lb, ub = sample.lower_bound, sample.upper_bound
+                subset_len_probs[lb : ub + 1] += 1
+            elif issubclass(sampler_cls, PermutationSamplerBase):
+                # The eval strategy iterates through the whole permutation, which is
+                # effectively equivalent to yielding every subset size, for each sample.
                 subset_len_probs += 1
             else:
                 subset_len_probs[len(sample.subset)] += 1
@@ -680,14 +680,11 @@ def test_sampler_weights(
 
     expected_log_subset_len_probs = np.full(effective_n + 1, -np.inf)
     for k in range(effective_n + 1):
-        try:
-            # log_weight = log probability of sampling
-            # So: no. of sets of size k in the powerset, times. prob of sampling size k
-            expected_log_subset_len_probs[k] = (
-                logcomb(effective_n, k) + sampler.log_weight(n, k) + math.log(fudge)
-            )
-        except ValueError:  # out of bounds in stratified samplers
-            pass
+        # log_weight = log probability of sampling
+        # So: no. of sets of size k in the powerset, times. prob of sampling S|k
+        expected_log_subset_len_probs[k] = (
+            logcomb(effective_n, k) + sampler.log_weight(n, k) + log_fudge
+        )
 
     np.testing.assert_allclose(
         subset_len_probs, np.exp(expected_log_subset_len_probs), atol=0.05
@@ -721,8 +718,8 @@ def test_skip_indices(
     sampler.skip_indices = skip
 
     # Check that the outer iteration skips indices:
-    if hasattr(sampler, "index_iterator"):
-        outer_indices = list(islice(sampler.index_iterator(indices), len(indices)))
+    if hasattr(sampler, "index_iterable"):
+        outer_indices = list(islice(sampler.index_iterable(indices), len(indices)))
         assert set(outer_indices) == set(expected)
 
     # Check that the generated samples skip indices...

@@ -11,34 +11,53 @@ alias:
     of sampling sets of a given size), semi-value coefficients and Monte Carlo
     sampling.
 
-Samplers define so-called *sampling strategies*, which subclass
-[EvaluationStrategy][pydvl.valuation.samplers.EvaluationStrategy]. These
-strategies are where sub-processes compute marginal utilities, by whichever
-method is required depending on the sampling scheme. Crucially, they compute
-**the product of a semi-value coefficient with a sampling weight**. This can be
-seen either as a form of importance sampling, or as a mechanism to allow
-mix-and-matching of sampling strategies and semi-value coefficients.
+Valuation methods based on semi-values involve computing averages of [marginal
+utilities][glossary-marginal-utility] over all possible subsets of the training
+data. As explained in [the introduction with uniform
+sampling][monte-carlo-combinatorial-shapley-intro], we use Monte Carlo
+approximations to compute these averages. Below we show that this introduces
+additional terms in the results due to the sampling probabilities, yielding
+_effective coefficients_ that are **the product of the semi-value coefficient
+with a sampling probability**. To correct for this, all samplers provide a
+method which is just $p(S),$ the probability of sampling a set $S.$ This can be
+seen either as a form of importance sampling to reduce variance, or as a
+mechanism to allow mix-and-matching of sampling strategies and semi-value
+coefficients.
 
-It is however an unnecessary step when the sampling distribution yields exactly
-the semi-value coefficient, as we explain below.
+However, the correction an unnecessary step when the sampling distribution
+yields exactly the semi-value coefficient, a situation which is the basis for
+several methods proposed in the literature.
 
 ??? Example "The core semi-value computation for powerset sampling"
     This is the core of the marginal update computation in
     [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy]:*
     ```python
     for sample in batch:
-      u_i = self.utility(sample.with_idx_in_subset())
-      u = self.utility(sample)
-      marginal = u_i - u
-      sign = np.sign(marginal)
-      log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
-      log_marginal += self.log_correction(self.n_indices, len(sample.subset))
-      updates.append(ValueUpdate(sample.idx, log_marginal, sign))
+        u_i = self.utility(sample.with_idx_in_subset())
+        u = self.utility(sample)
+        marginal = u_i - u
+        sign = np.sign(marginal)
+        log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+        
+        # Here's the coefficient, as defined by the valuation method,
+        # potentially with a correction.
+        log_marginal += self.valuation_coefficient(
+            self.n_indices, len(sample.subset)
+        )
+
+        updates.append(ValueUpdate(sample.idx, log_marginal, sign))
+        ...
     ```
 
-We will be discussing the `log_correction(n, k)`. In pyDVL we allow for almost 
-arbitrary combinations of semi-value and sampler, but allow switching off the 
-coefficients and provide dedicated classes that do so when possible.
+The `valuation_coefficient(n, k)` is in effect defined by the valuation method,
+and allows for almost arbitrary combinations of semi-value and sampler. By
+subclassing one can also switch off the coefficients when indicated. We provide
+dedicated classes that do so for the most common combinations, like
+[TMCShapleyValuation][pydvl.valuation.methods.shapley.TMCShapleyValuation] or
+[MSRBanzhafValuation][pydvl.valuation.methods.banzhaf.MSRBanzhafValuation]. If
+you check the code you will see that they are in fact little more than thin
+wrappers.
+
 
 ## Uniform sampling
 
@@ -48,12 +67,12 @@ $$
 \begin{eqnarray*}
   v_{\operatorname{sh}} (i) & = & \sum_{S \subseteq D_{- i}} \frac{1}{n}
   \binom{n - 1}{| S |}^{- 1}  [U (S_{+ i}) - U (S)],\\\
-  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |) \delta_{i} (S),
+  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |) \Delta_i (S),
 \end{eqnarray*}
 $$
 
 where $w_{\operatorname{sh}} (| S |) = \frac{1}{n}  \binom{n - 1}{| S |}^{- 
-1}$ is the Shapley weight and $\delta_{i} (S) := U (S_{+ i}) - U (S)$ the 
+1}$ is the Shapley weight and $\Delta_i (S) := U (S_{+ i}) - U (S)$ the 
 marginal utility. The naive Monte Carlo approximation is then to sample $S_{j} 
 \sim \mathcal{U} (D_{- i})$ and let
 
@@ -62,7 +81,7 @@ marginal utility. The naive Monte Carlo approximation is then to sample $S_{j}
 $$
 \begin{equation}
   \hat{v}_{\operatorname{sh}, \operatorname{unif}} (i) = \frac{1}{M}  \sum_{j
-  = 1}^M w_{\operatorname{sh}} (| S_{j} |) \delta_{i} (S_{j})
+  = 1}^M w_{\operatorname{sh}} (| S_{j} |) \Delta_i (S_{j})
   \label{mc-shapley}\tag{1}
 \end{equation}
 $$
@@ -73,8 +92,8 @@ $$
 \begin{eqnarray*}
   \hat{v}_{\operatorname{sh}, \operatorname{unif}} (i) & \underset{M
   \rightarrow \infty}{\longrightarrow} & \underset{S \sim \mathcal{U} (D_{-
-  i})}{\mathbb{E}} [w_{\operatorname{sh}} (| S |) \delta_{i} (S)]\\\
-  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (k) \delta_{i}
+  i})}{\mathbb{E}} [w_{\operatorname{sh}} (| S |) \Delta_i (S)]\\\
+  & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (k) \Delta_i
   (S) p_{\mathcal{U}} (S),
 \end{eqnarray*}
 $$
@@ -87,20 +106,20 @@ coefficient
 
 $$ w_{\operatorname{unif}} (S) \equiv 2^{n - 1} . $$
 
-The product $w_{\operatorname{unif}}  (S) w_{\operatorname{sh}} (S)$ is the 
-`log_correction(n, k)` in the code above. Because of how samplers work the 
-coefficients only depend on the size $k = | S |$ of the subsets, and it will 
-always be the inverse of the probability of a set $S,$ given that it has size 
+The product $w_{\operatorname{unif}}  (S) w_{\operatorname{sh}} (S)$ is the
+`valuation_coefficient(n, k)` in the code above. Because of how samplers work
+the coefficients only depend on the size $k = | S |$ of the subsets, and it will
+always be the inverse of the probability of a set $S,$ given that it has size
 $k.$
 
 At every step of the MC algorithm we do the following:
 
 !!! abstract "Monte Carlo Shapley Update"
     1. sample $S_{j} \sim \mathcal{U} (D_{- i}),$ let $k = | S_{j} |$
-    1. compute the marginal $\delta_{i} (S_{j})$
-    1. compute the product of coefficients for the sampler and the method: 
+    2. compute the marginal $\Delta_i (S_{j})$
+    3. compute the product of coefficients for the sampler and the method: 
        $w_{\operatorname{unif}} (k) w_{\operatorname{sh}} (k)$
-    1. update the running average for $\hat{v}_{\operatorname{unif}, 
+    4. update the running average for $\hat{v}_{\operatorname{unif}, 
        \operatorname{sh}}$
 
 ## Picking a different distribution
@@ -118,10 +137,11 @@ alleviating the problem that is employed in pyDVL is to perform all
 computations in log space and use the log-sum-exp trick for numerical 
 stability.
 
-However, while this greatly increases numerical range and accuracy, it remains 
-suboptimal. What if one chose instead the sampling procedure such that $p (S) = 
-w_{\operatorname{sh}} (S)$? This is the main contribution of several works in 
-the area, like TMCS, AME or Owen-Shapley.
+However, while this greatly increases numerical range and accuracy, it remains
+suboptimal. What if one chose instead the sampling distribution $\mathcal{L}$
+such that $p_\mathcal{L} (S) = w_{\operatorname{sh}} (S)$? This is the main
+contribution of several works in the area, like [TMCS][tmcs-intro], AME or
+[Owen-Shapley][owen-shapley-intro].
 
 ### An introductory example
 
@@ -147,7 +167,7 @@ sampling procedure which first samples $q \in (0, 1)$ according to some
 distribution $\mathcal{Q}$ and then samples sets $S \subseteq D_{- i}$ as 
 above, with an i.i.d. process using a Bernoulli of parameter $q$: $X_{1}, 
 \ldots, X_{n} \sim \operatorname{Ber} (q)$ and $S := \lbrace j : X_{j} = 1, j 
-\neq i \rbrace.$ With this method we have
+\neq i \rbrace.$ For each $q,$ we have:
 
 $$ p (S|q) = q^k  (1 - q)^{m - k}, $$
 
@@ -164,9 +184,10 @@ $$
 \end{eqnarray*}
 $$
 
-Now a Monte Carlo approximation $\hat{v}_{\operatorname{shap}, 
-\operatorname{ame} (\mathcal{U})}$ like that of [(1)](#mc-shapley) converges 
-exactly to $v_{\operatorname{shap}}$ **without any correcting factors**.
+If we sample following this scheme, and define a Monte Carlo approximation
+$\hat{v}_{\operatorname{ame} (\mathcal{U})}$ like that of [(1)](#mc-shapley), it
+will converge exactly to $v_{\operatorname{shap}}$ **without any correcting
+factors**.
 
 Formally, AME is defined as the expected marginal utility over the joint 
 distribution. Let $f$ be the density of $\mathcal{Q},$ and let $\mathcal{L} (q, 
@@ -176,11 +197,11 @@ By total expectation:
 
 $$
 \begin{eqnarray*}
-  v_{\operatorname{ame}, \mathcal{Q}} (i) & := & \mathbb{E}_{S \sim
-  \mathcal{L}_{\mathcal{Q}} (D_{- i})} [\delta_{i} (S)]\\\
+  v_{\operatorname{ame}(\mathcal{Q})} (i) & := & \mathbb{E}_{S \sim
+  \mathcal{L}_{\mathcal{Q}} (D_{- i})} [\Delta_i (S)]\\\
   & = & \mathbb{E}_{q \sim \mathcal{Q}}  [\mathbb{E}_{S \sim \mathcal{L} (q,
-  D_{- i})} [\delta_{i} (S) |q]]\\\
-  & = & \sum_{S \subseteq D_{- i}} \delta_{i} (S)  \int_{0}^1 p (S|q) f
+  D_{- i})} [\Delta_i (S) |q]]\\\
+  & = & \sum_{S \subseteq D_{- i}} \Delta_i (S)  \int_{0}^1 p (S|q) f
   (q) \mathrm{d} q
 \end{eqnarray*}
 $$
@@ -212,7 +233,7 @@ $$
   _{i} (S_{i}^{\sigma_{j}})\\\
   & \underset{M \rightarrow \infty}{\longrightarrow} & \underset{\sigma \sim
   \mathcal{U} (\Pi (D))}{\mathbb{E}} [w_{\operatorname{sh}} (| S_{i}^{\sigma}
-  |) \delta_{i} (S_{i}^{\sigma})]\\\
+  |) \Delta_i (S_{i}^{\sigma})]\\\
   & = & \frac{1}{n!}  \sum_{\sigma \in \Pi (D)} w_{\operatorname{sh}} (|
   S_{i}^{\sigma} |)  [U (S_{i}^{\sigma} \cup \lbrace i \rbrace) - U
   (S_{i}^{\sigma})]\\\
@@ -220,9 +241,9 @@ $$
   w_{\operatorname{sh}} (| S |)  (n - 1 - | S |) ! | S | ! [U (S_{+ i}) - U
   (S)]\\\
   & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |)
-  \frac{1}{n}  \binom{n - 1}{| S |}^{- 1} \delta_{i} (S)\\\
+  \frac{1}{n}  \binom{n - 1}{| S |}^{- 1} \Delta_i (S)\\\
   & = & \sum_{S \subseteq D_{- i}} w_{\operatorname{sh}} (| S |)
-  w_{\operatorname{sh}} (| S |) \delta_{i} (S) .
+  w_{\operatorname{sh}} (| S |) \Delta_i (S) .
 \end{eqnarray*}
 $$
 
@@ -254,7 +275,7 @@ configuration. Then the corrections will be applied:
 $$
 \hat{v}_{\operatorname{sh}, \operatorname{per}} (i) := \frac{1}{m}
 \sum_{j = 1}^m w_{\operatorname{per}} (k) w_{\operatorname{sh}} (k)
-\delta_{i} (S_{i}^{\sigma_{j}}), \quad k = | S_{i}^{\sigma_{j}} | 
+\Delta_i (S_{i}^{\sigma_{j}}), \quad k = | S_{i}^{\sigma_{j}} | 
 $$
 
 with $w_{\operatorname{per}} (k) = w_{\operatorname{sh}} (k)^{- 1},$ in order to
@@ -274,7 +295,7 @@ Let's look now at general semi-values, which are of the form:
 $$
 \begin{eqnarray*}
   v_{\operatorname{semi}} (i) & = & \sum_{k = 0}^{n - 1} w (k)  \sum_{S
-  \subseteq D_{- i}^{(k)}} \delta_{i} (S),
+  \subseteq D_{- i}^{(k)}} \Delta_i (S),
 \end{eqnarray*}
 $$
 
@@ -299,20 +320,21 @@ overriding the property
 [log_coefficient][pydvl.valuation.methods.semivalue.SemivalueValuation.log_coefficient]
 to return `None`.
 
-Alternatively, we can mix and match samplers, effectively performing importance 
-sampling. Let $\mathcal{L}$ be the law of a sampling procedure such that 
-$p_{\mathcal{L}} (S|k) = w_{\operatorname{semi}}$ for some semi-value 
-coefficient, and let $\mathcal{Q}$ be that of any sampler we choose: Then:
+Alternatively, we can mix and match sampler and semi-values, effectively
+performing importance sampling. Let $\mathcal{L}$ be the law of a sampling
+procedure such that $p_{\mathcal{L}} (S|k) = w_{\operatorname{semi}}$ for some
+semi-value coefficient, and let $\mathcal{Q}$ be that of any sampler we choose.
+Then:
 
-$$ v_{\operatorname{semi}} (i) = \mathbb{E}_{\mathcal{L}} [\delta_{i} (S)]
+$$ v_{\operatorname{semi}} (i) = \mathbb{E}_{\mathcal{L}} [\Delta_i (S)]
    = \mathbb{E}_{Q} \left[ \frac{w_{\operatorname{semi}} (S)}{p_{Q} (S|k)}
-   \delta_{i} (S) \right] $$
+   \Delta_i (S) \right] $$
 
-The drawback is that a direct implementation with that much cancelling of 
-coefficients might be inefficient or numerically unstable. Integration issues 
-arise to compute $p_{Q} (S|k)$ and so on. On the flip side, we can implement 
-any sampling method, like antithetic sampling, and immediately benefit in all 
-semi-value computations.
+The drawback is that a direct implementation with that much cancelling of
+coefficients might be inefficient or numerically unstable. Integration issues
+might arise to compute $p_{Q} (S|k)$ and so on. On the plus side, we can
+implement any sampling method, like antithetic sampling, and immediately benefit
+in all semi-value computations.
 
 [^1]: At step $(\star)$ we have counted the number of permutations before a
 fixed position of index $i$ and after it, because the utility does not depend on

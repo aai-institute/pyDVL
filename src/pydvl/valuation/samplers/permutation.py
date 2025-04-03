@@ -93,10 +93,11 @@ from pydvl.valuation.types import (
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
-    "PermutationSampler",
     "AntitheticPermutationSampler",
     "DeterministicPermutationSampler",
+    "PermutationSampler",
     "PermutationEvaluationStrategy",
+    "TruncationPolicy",
 ]
 
 
@@ -116,6 +117,15 @@ class PermutationSamplerBase(IndexSampler, ABC):
         super().__init__(batch_size=batch_size)
         self.truncation = truncation or NoTruncation()
 
+    def complement_size(self, n: int) -> int:
+        """Size of the complement of an index wrt. set size `n`.
+
+        Required in certain coefficient computations. Even though we are sampling
+        permutations, updates are always done per-index and the size of the complement
+        is always $n-1$.
+        """
+        return n - 1
+
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""Log probability of sampling a set S from a set of size **n-1**.
 
@@ -124,12 +134,12 @@ class PermutationSamplerBase(IndexSampler, ABC):
         """
         if n > 0:
             return float(-np.log(n) - logcomb(n - 1, subset_len))
-        return 0.0
+        return -np.inf
 
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: SemivalueCoefficient | None = None,
+        coefficient: SemivalueCoefficient | None,
     ) -> PermutationEvaluationStrategy:
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
@@ -200,6 +210,11 @@ class AntitheticPermutationSampler(PermutationSampler):
         processes whole permutations in one go, effectively batching the computation of
         up to n-1 marginal utilities in one process.
 
+    Args:
+        truncation: A policy to stop the permutation early.
+        seed: Seed for the random number generator.
+        batch_size: The number of samples (full permutations) to generate at once.
+
     !!! tip "New in version 0.7.1"
     """
 
@@ -247,9 +262,9 @@ class PermutationEvaluationStrategy(
         self,
         sampler: PermutationSamplerBase,
         utility: UtilityBase,
-        coefficient: SemivalueCoefficient | None = None,
+        coefficient: SemivalueCoefficient | None,
     ):
-        super().__init__(sampler, utility, coefficient)
+        super().__init__(utility, coefficient)
         self.truncation = copy(sampler.truncation)
         self.truncation.reset(utility)  # Perform initial setup (e.g. total_utility)
 
@@ -271,7 +286,6 @@ class PermutationEvaluationStrategy(
                 sign = np.sign(marginal)
                 log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
                 log_marginal += self.valuation_coefficient(self.n_indices, i)
-                log_marginal -= self.sampler_weight(self.n_indices, i)
                 r.append(ValueUpdate(idx, log_marginal, sign))
                 prev = curr
                 if not truncated and self.truncation(idx, curr, self.n_indices):

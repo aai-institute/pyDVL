@@ -92,7 +92,7 @@ from typing import (
     Union,
     cast,
     overload,
-    )
+)
 
 import numpy as np
 import pandas as pd
@@ -1022,13 +1022,14 @@ class ResultUpdater(ABC, Generic[ValueUpdateT]):
 
     def __init__(self, result: ValuationResult):
         self.result = result
+        self.n_updates = 0
 
     @abstractmethod
-    def __call__(self, update: ValueUpdateT) -> ValuationResult: ...
+    def process(self, update: ValueUpdateT) -> ValuationResult: ...
 
 
 class LogResultUpdater(ResultUpdater[ValueUpdateT]):
-    """A callable that a valuation result with a value update in log-space.
+    """An object to update valuation results in log-space.
 
     This updater keeps track of several quantities required to maintain accurate running
     1st and 2nd moments. It also uses the log-sum-exp trick for numerical stability.
@@ -1048,12 +1049,12 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
 
         nz = result.values != 0
         x2 = (
-            result.variances[nz] * np.maximum(1, result.counts[nz]-1) ** 2
+            result.variances[nz] * np.maximum(1, result.counts[nz] - 1) ** 2
             + result.values[nz] ** 2 * result.counts[nz]
         )
         self._log_sum2[nz] = np.log(x2)
 
-    def __call__(self, update: ValueUpdate) -> ValuationResult:
+    def process(self, update: ValueUpdate) -> ValuationResult:
         assert update.idx is not None
 
         try:
@@ -1063,6 +1064,7 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
         except KeyError:
             raise IndexError(f"Index {update.idx} not found in ValuationResult")
 
+        self.n_updates += 1
         item = self.result.get(update.idx)
 
         new_val, new_var, log_sum_pos, log_sum_neg, log_sum2 = log_running_moments(

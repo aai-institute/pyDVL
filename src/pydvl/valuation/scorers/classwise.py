@@ -1,7 +1,6 @@
 r"""
-This module contains the implementation of the
-[ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer]
-class for [Class-wise Shapley][pydvl.valuation.methods.classwise_shapley] values.
+This module contains the implementation of scorer class for [Class-wise
+Shapley][pydvl.valuation.methods.classwise_shapley] values.
 
 Its value is computed from an in-class and an out-of-class "inner score" (Schoch et al.,
 2022)<sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the training set and
@@ -67,7 +66,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
             discount the in-class score.
         out_of_class_discount_fn: Continuous, monotonic increasing function used
             to discount the out-of-class score.
-        rescale_scores: If set to True, the scores will be denormalized. This is
+        rescale_scores: If set to `True`, the scores will be denormalized. This is
             particularly useful when the inner score function $a_S$ is calculated by
             an estimator of the form $\frac{1}{N} \\sum_i x_i$.
         name: Name of the scorer. If not provided, the name of the inner scoring
@@ -120,9 +119,8 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
     def compute_in_and_out_of_class_scores(
         self, model: SupervisedModelT, rescale_scores: bool = True
     ) -> tuple[float, float]:
-        r"""
-        Computes in-class and out-of-class scores using the provided inner
-        scoring function. The result is
+        r"""Computes in-class and out-of-class scores using the provided inner scoring
+        function. The result is:
 
         $$
         a_S(D=\{(x_1, y_1), \dots, (x_K, y_K)\}) = \frac{1}{N} \sum_k s(y(x_k), y_k).
@@ -138,7 +136,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
 
         Args:
             model: Model used for computing the score on the validation set.
-            rescale_scores: If set to True, the scores will be denormalized. This is
+            rescale_scores: If set to `True`, the scores will be denormalized. This is
                 particularly useful when the inner score function $a_S$ is calculated by
                 an estimator of the form $\frac{1}{N} \sum_i x_i$.
 

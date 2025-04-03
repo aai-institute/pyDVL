@@ -10,6 +10,28 @@ a negated version can be used, see scikit-learn's
 
 [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer] holds the test data used to
 evaluate the model.
+
+!!! example "Named scorer"
+    It is possible to use all named scorers from scikit-learn.
+
+    ```python
+    from pydvl.valuation import Dataset, SupervisedScorer
+
+    train, test = Dataset.from_arrays(X, y, train_size=0.7)
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer("accuracy", test, default=0, range=(0, 1))
+    ```
+
+!!! example "Model scorer"
+    It is also possible to use the `score()` function from the model if it defines one:
+
+    ```python
+    from pydvl.valuation import Dataset, SupervisedScorer
+
+    train, test = Dataset.from_arrays(X, y, train_size=0.7)
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer(model, test, default=0, range=(-np.inf, 1))
+    ```
 """
 
 from __future__ import annotations
@@ -32,14 +54,13 @@ SupervisedModelT = TypeVar(
 
 
 class SupervisedScorerCallable(Protocol[SupervisedModelT, ArrayT]):
-    """Signature for a scorer"""
+    """Signature for a supervised scorer"""
 
     def __call__(self, model: SupervisedModelT, X: ArrayT, y: ArrayT) -> float: ...
 
 
 class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
-    """A scoring callable that takes a model, data, and labels and returns a
-    scalar.
+    """A scoring callable that takes a model, data, and labels and returns a scalar.
 
     Args:
         scoring: Either a string or callable that can be passed to
@@ -60,7 +81,6 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
     !!! tip "Changed in version 0.10.0"
         This is now `SupervisedScorer` and holds the test data used to evaluate the
         model.
-
     """
 
     _scorer: SupervisedScorerCallable[SupervisedModelT, ArrayT]
@@ -100,7 +120,7 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
         return self._scorer(model, *self.test_data.data())
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name}(default={self.default}, range={self.range})"
 
     def __repr__(self) -> str:
         capitalized_name = "".join(s.capitalize() for s in self.name.split(" "))

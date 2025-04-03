@@ -229,6 +229,16 @@ objects for different datasets. You can read more about [setting up the
 cache][getting-started-cache] in the installation guide, and in the
 documentation of the [caching][pydvl.utils.caching] module.
 
+!!! danger "Errors are hidden by default"
+    During semi-value computations, the utility can be evaluated on subsets that
+    break the fitting process. For instance, a classifier might require at least two
+    classes to fit, but the utility is sometimes evaluated on subsets with only one
+    class. This will raise an error with most classifiers. To avoid this, we set by
+    default `catch_errors=True` upon instantiation, which will catch the error and
+    return the scorer's default value instead. While we show a warning to signal that
+    something went wrong, this suppression can lead to unexpected results, so it is
+    important to be aware of this setting and to set it to `False` when testing, or if
+    you are sure that the utility will not be evaluated on problematic subsets.
 
 ### Computing some values
 
@@ -267,25 +277,33 @@ over, sliced, sorted, as well as converted to a [pandas.DataFrame][] using
 
 ### Learning the utility
 
-Since each evaluation of the utility entails a full retrain of the model on a new subset of the training data, it is natural to try to learn this mapping from subsets to scores. This is the idea behind **Data Utility Learning (DUL)**
+Since each evaluation of the utility entails a full retraining of the model on a
+new subset of the training data, it is natural to try to learn this mapping from
+subsets to scores. This is the idea behind **Data Utility Learning (DUL)**
 [@wang_improving_2022] and in pyDVL it's as simple as wrapping the
-`ModelUtility` inside [DataUtilityLearning][pydvl.valuation.utility.DataUtilityLearning]:
+[ModelUtility][pydvl.valuation.utility.ModelUtility] inside a
+[DataUtilityLearning][pydvl.valuation.utility.DataUtilityLearning] object:
 
 ```python
-from pydvl.valuation import ModelUtility, DataUtilityLearning, Dataset
+from pydvl.valuation import *
+from pydvl.valuation.types import Sample
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.datasets import load_iris
 
-dataset = Dataset.from_sklearn(load_iris())
-u = ModelUtility(LogisticRegression(), dataset)
+train, test = Dataset.from_sklearn(load_iris())
+scorer = SupervisedScorer("accuracy", test, default=0.0, range=(0, 1))
+u = ModelUtility(LogisticRegression(), scorer)
 training_budget = 3
-wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
+utility_model = IndicatorUtilityModel(
+    predictor=LinearRegression(), n_data=len(train)
+)
+wrapped_u = DataUtilityLearning(u, training_budget, utility_model)
 
 # First 3 calls will be computed normally
 for i in range(training_budget):
-   _ = wrapped_u((i,))
+    _ = wrapped_u(Sample(None, train.indices[:i]))
 # Subsequent calls will be computed using the learned model for DUL
-wrapped_u((1, 2, 3))
+wrapped_u(Sample(None, train.indices))
 ```
 
 ## Problems of data values { #problems-of-data-values }

@@ -1,9 +1,84 @@
 """
 This module implements a utility function for supervised models.
 
-It is mostly geared towards sci-kit-learn models, but can be used with any object
-that implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has a
+[ModelUtility][pydvl.valuation.utility.modelutility.ModelUtility] holds a model and a
+scorer. Each call to the utility will fit the model on a subset of the training data and
+evaluate the scorer on the test data. It is used by all the valuation methods in
+[pydvl.valuation][pydvl.valuation].
+
+This class is geared towards sci-kit-learn models, but can be used with any object that
+implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has a
 `fit()` method.
+
+!!! danger "Errors are hidden by default"
+    During semi-value computations, the utility can be evaluated on subsets that
+    break the fitting process. For instance, a classifier might require at least two
+    classes to fit, but the utility is sometimes evaluated on subsets with only one
+    class. This will raise an error with most classifiers. To avoid this, we set by
+    default `catch_errors=True` upon instantiation, which will catch the error and
+    return the scorer's default value instead. While we show a warning to signal that
+    something went wrong, this suppression can lead to unexpected results, so it is
+    important to be aware of this setting and to set it to `False` when testing, or if
+    you are sure that the utility will not be evaluated on problematic subsets.
+
+
+## Examples
+
+??? Example "Standard usage"
+    The utility takes a model and a scorer and is passed to the valuation method. Here's
+    the basic usage:
+
+    ```python
+    from joblib import parallel_config
+    from pydvl.valuation import (
+        Dataset, MinUpdates, ModelUtility, SupervisedScorer, TMCShapleyValuation
+    )
+
+    train, test = Dataset.from_arrays(X, y, ...)
+    model = SomeModel()  # Implementing the basic scikit-learn interface
+    scorer =  SupervisedScorer("r2", test, default=0.0, range=(-np.inf, 1.0))
+    utility = ModelUtility(model, scorer, catch_errors=True, show_warnings=True)
+    valuation = TMCShapleyValuation(utility, is_done=MinUpdates(1000))
+    with parallel_config(n_jobs=-1):
+        valuation.fit(train)
+    ```
+
+??? Example "Directly calling the utility"
+    The following code instantiates a utility object and calls it directly. The
+    underlying logistic regression model will be trained on the indices passed as
+    argument, and evaluated on the test data.
+
+    ```python
+    from pydvl.valuation.utility import ModelUtility
+    from pydvl.valuation.dataset import Dataset
+    from pydvl.valuation.scorers import SupervisedScorer
+    from sklearn.linear_model import LinearRegression, LogisticRegression
+    from sklearn.datasets import load_iris
+
+    train, test = Dataset.from_sklearn(load_iris(), random_state=16)
+    scorer =  SupervisedScorer("accuracy", test, default=0.0, range=(0.0, 1.0))
+    u = ModelUtility(LogisticRegression(random_state=16), scorer, catch_errors=True)
+    u(Sample(None, subset=train.indices))
+    ```
+
+??? Example "Enabling the cache"
+    In this example an in-memory cache is used. Note that caching is only useful
+    under certain conditions, and does not really speed typical Monte Carlo
+    approximations. See [the introduction][#getting-started-cache] and the [module
+    documentation][pydvl.utils.caching] for more.
+
+    ```python
+    (...)  # Imports as above
+    cache_backend = InMemoryCacheBackend()  # See other backends in the caching module
+    u = ModelUtility(
+            model=LogisticRegression(random_state=16),
+            scorer=SupervisedScorer("accuracy", test, default=0.0, range=(0.0, 1.0)),
+            cache_backend=cache_backend,
+            catch_errors=True
+        )
+    u(Sample(None, subset=train.indices))
+    u(Sample(None, subset=train.indices))  # The second call does not retrain the model
+    ```
 
 ## Data type of the underlying data arrays
 
@@ -13,26 +88,23 @@ your data needs special handling before being fed to the model from the `Dataset
 can override the
 [sample_to_data()][pydvl.valuation.utility.modelutility.ModelUtility.sample_to_data]
 method. Be sure not to rely on the data being static for this. If you need to transform
-it once before fitting, then override
+it before fitting, then override
 [with_dataset()][pydvl.valuation.utility.base.UtilityBase.with_dataset].
 
-## Caveats with parallel computation
+!!! warning "Caveats with parallel computation"
+    When running in parallel, the utility is copied to each worker, which implies
+    copying the dataset as well, which can obviously be very expensive. In order to
+    alleviate the problem, one can memmap the data to disk. Alas, automatic memmapping
+    by joblib does not work for nested structures like
+    [Dataset][pydvl.valuation.dataset.Dataset] objects, nor for pytorch tensors. For
+    now, it should be possible to [use memmap
+    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
+    but it hasn't been tested.
 
-!!! warning "Read this if your models are minimally large"
-
-When running in parallel, the utility is copied to each worker, and this can have
-different consequences. Assuming you are working on one machine:
-
-1. When working with numpy arrays, joblib will automagically memmap the data if it's
-   beyond a certain size (typically 1MB), and working with `backend="loky"` or
-   `"multiprocessing"`.
-2. When working with torch tensors this will have to be [done
-   manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
-   but it hasn't been tested.
-
-If you are working on a cluster, the data will be copied to each worker, and this can
-be very expensive. In this case, more subclassing of `Dataset` and `Utility` might be
-necessary. Feel free to open an issue if you need help with this.
+    If you are working on a cluster, the data will be copied to each worker. In this
+    case, subclassing of `Dataset` and `Utility` will be necessary to minimize copying,
+    and the solution will depend on your storage solution. Feel free to open an issue if
+    you need help with this.
 """
 
 from __future__ import annotations
@@ -112,38 +184,6 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         cached_func_options: Optional configuration object for cached utility evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
-
-    ??? Example
-        ``` pycon
-        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
-        >>> from pydvl.valuation.dataset import Dataset
-        >>> from pydvl.valuation.scorers import SupervisedScorer
-        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
-        >>> from sklearn.datasets import load_iris
-        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
-        >>> u = ModelUtility(LogisticRegression(random_state=16), SupervisedScorer("accuracy"))
-        >>> u(Sample(None, subset=train.indices))
-        0.9
-        ```
-
-        With caching enabled:
-
-        ```pycon
-        >>> from pydvl.valuation.utility import ModelUtility, DataUtilityLearning
-        >>> from pydvl.valuation.dataset import Dataset
-        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
-        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
-        >>> from sklearn.datasets import load_iris
-        >>> train, test = Dataset.from_sklearn(load_iris(), random_state=16)
-        >>> cache_backend = InMemoryCacheBackend()
-        >>> u = ModelUtility(
-        ...        model=LogisticRegression(random_state=16),
-        ...        scorer=SupervisedScorer("accuracy"),
-        ...        cache_backend=cache_backend)
-        >>> u(Sample(None, subset=train.indices))
-        0.9
-        ```
-
     """
 
     model: ModelT
@@ -154,8 +194,8 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         model: ModelT,
         scorer: Scorer,
         *,
-        catch_errors: bool = False,
-        show_warnings: bool = False,
+        catch_errors: bool = True,
+        show_warnings: bool = True,
         cache_backend: CacheBackend | None = None,
         cached_func_options: CachedFuncConfig | None = None,
         clone_before_fit: bool = True,

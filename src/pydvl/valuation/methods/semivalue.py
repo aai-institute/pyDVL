@@ -13,7 +13,7 @@ details, please refer to the [introduction to semi-values][semi-values-intro].
     read [Sampling strategies for semi-values][semi-values-sampling].
 
 Because almost every method employs Monte Carlo sampling of subsets, our architecture
-allows for implicit importance sampling. Early valuation methods chose samplers to
+allows for importance sampling. Early valuation methods chose samplers to
 implicitly provide the weights $w(k)$ as exactly the sampling probabilities of sets
 $p(S|k)$, e.g. [permutation Shapley][permutation-shapley-intro].
 
@@ -24,34 +24,35 @@ and the utility function.
 For this reason, our implementation allows mix-and-matching of any semi-value coefficient
 with any sampler. For importance sampling, the mechanism is as follows:
 
-* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
-  and implement the `_log_coefficient()` method. This method should return the
-  coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
-  stability. The coefficient is a function of the number of elements in the set $n$ and
-  the size of the subset $k$ for which the coefficient is being computed.
-
 * Choose a sampler to go with the semi-value. The sampler must implement the
-  `log_weight()` method, which returns the logarithm of the sampling probability of a
+  `log_weight()` property, which returns the logarithm of the sampling probability of a
   subset $S$ of size $k$, i.e. $p(S|k).$ Note that this is **not** p(|S|=k).$ The sampler
   also implements an [EvaluationStrategy][pydvl.valuation.samplers.base.EvaluationStrategy]
-  which is used to compute the utility of the sampled subsets in subprocesses. This
-  strategy chooses how to combine the coefficient and the weight, typically by
-  subtracting the log-weights from the log-coefficient.
+  which is used to compute the utility of the sampled subsets in subprocesses.
+
+* Subclass [SemivalueValuation][pydvl.valuation.methods.semivalue.SemivalueValuation]
+  and implement the `log_coefficient()` method. This method should return the final
+  coefficient in log-space, i.e. the natural logarithm of the coefficient, for numerical
+  stability. The coefficient is a function of the number of elements in the set $n$ and
+  the size of the subset $k$ for which the coefficient is being computed, and of the
+  sampler's weight. You can combine the method's coefficient and the weight in any way.
+  For instance, in order to entirely compensate for the sampling distribution one simply
+  subtracts the log-weights from the log-coefficient.
 
 ## Disabling importance sampling
 
 In case you have a sampler that already provides the coefficients you need implicitly
-as the sampling probabilities, you can override the `log_coefficient` property (note the
-absence of an underscore) to return `None`.
-
-
+as the sampling probabilities, you can override the `log_coefficient` property to
+return `None`.
 """
 
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from typing import Any
 
+import numpy as np
 from joblib import Parallel, delayed
 from typing_extensions import Self
 
@@ -70,6 +71,9 @@ from pydvl.valuation.types import SemivalueCoefficient
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["SemivalueValuation"]
+
+
+logger = logging.getLogger(__name__)
 
 
 class SemivalueValuation(Valuation):
@@ -110,10 +114,10 @@ class SemivalueValuation(Valuation):
         self.sampler = sampler
         self.is_done = is_done
         self.skip_converged = skip_converged
+        if skip_converged:  # test whether the sampler supports skipping indices:
+            self.sampler.skip_indices = np.array([], dtype=np.int_)
         self.show_warnings = show_warnings
-        self.tqdm_args: dict[str, Any] = {
-            "desc": f"{self.__class__.__name__}: {str(is_done)}"
-        }
+        self.tqdm_args: dict[str, Any] = {"desc": str(self)}
         # HACK: parse additional args for the progress bar if any (we probably want
         #  something better)
         if isinstance(progress, bool):
@@ -123,23 +127,28 @@ class SemivalueValuation(Valuation):
         else:
             raise TypeError(f"Invalid type for progress: {type(progress)}")
 
+    # TODO: automate str representation for all Valuations (and find something better)
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}-{self.utility.__class__.__name__}-"
+            f"{self.sampler.__class__.__name__}-{self.is_done}"
+        )
+
     @property
     @abstractmethod
     def log_coefficient(self) -> SemivalueCoefficient | None:
         """This property returns the function computing the semi-value coefficient.
 
         Return `None` in subclasses that do not need to correct for the sampling
-        distribution probabilities because of a specific, fixed sampler choice.
-        [Evaluation strategies][pydvl.valuation.samplers.base.EvaluationStrategy] will
-        then ignore the sampler coefficients as well.
+        distribution probabilities because of a specific, fixed sampler choice which
+        already yields the semi-value coefficient.
         """
         ...
 
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
         self.result = ValuationResult.zeros(
-            # TODO: automate str representation for all Valuations (and find something better)
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
+            algorithm=str(self),
             indices=data.indices,
             data_names=data.names,
         )
@@ -160,11 +169,12 @@ class SemivalueValuation(Valuation):
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
-                        self.result = updater(update)
+                        self.result = updater.process(update)
                     if self.is_done(self.result):
                         flag.set()
                         self.sampler.interrupt()
-                        return self
+                        break
                     if self.skip_converged:
                         self.sampler.skip_indices = data.indices[self.is_done.converged]
+        logger.debug(f"Fitting done after {updater.n_updates} value updates.")
         return self

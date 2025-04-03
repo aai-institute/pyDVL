@@ -226,6 +226,6 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: SemivalueCoefficient | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
         return self.in_class.make_strategy(utility, log_coefficient)

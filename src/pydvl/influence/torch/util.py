@@ -570,7 +570,9 @@ def empirical_cross_entropy_loss_fn(
 
 
 @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
-def safe_torch_linalg_eigh(*args: Any, **kwargs: Any) -> tuple[torch.Tensor, torch.Tensor]:
+def safe_torch_linalg_eigh(
+    *args: Any, **kwargs: Any
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
     A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
     by raising a custom `TorchLinalgEighException` with more context,

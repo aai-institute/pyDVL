@@ -112,7 +112,7 @@ class ClasswiseShapleyValuation(Valuation):
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
-        strategy = self.sampler.make_strategy(self.utility)
+        strategy = self.sampler.make_strategy(self.utility, None)
         updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
 
@@ -127,7 +127,7 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result = updater(evaluation)
+                        self.result = updater.process(evaluation)
                     if self.is_done(self.result):
                         flag.set()
                         self.sampler.interrupt()

@@ -19,7 +19,7 @@ from pydvl.utils.numeric import (
     random_subset,
     random_subset_of_size,
     running_moments,
-    )
+)
 from pydvl.utils.types import Seed
 
 

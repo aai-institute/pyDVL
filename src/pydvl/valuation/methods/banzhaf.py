@@ -74,7 +74,7 @@ class BanzhafValuation(SemivalueValuation):
         """Returns the log-coefficient of the Banzhaf valuation."""
 
         def _log_coefficient(n: int, k: int) -> float:
-            return float(-(n - 1) * np.log(2))
+            return float(-(n - 1) * np.log(2) - self.sampler.log_weight(n, k))
 
         return _log_coefficient
 

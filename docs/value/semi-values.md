@@ -12,14 +12,14 @@ weighting schemes. A **semi-value** is any valuation function with the form:
 
 $$
 v_\text{semi}(i) = \sum_{i=1}^n w(k)
-\sum_{S \subseteq D_{-i}^{(k)}} [u(S_{+i}) - u(S)],
+\sum_{S \subseteq D_{-i}^{k}} [u(S_{+i}) - u(S)],
 $$
 
 where the coefficients $w(k)$ satisfy the property:
 
 $$\sum_{k=1}^n \binom{n-1}{k} w(k) = 1,$$
 
-and $D_{-i}^{(k)}$ is the set of all sets $S$ of size $k$ that do not include
+and $D_{-i}^{k}$ is the set of all sets $S$ of size $k$ that do not include
 sample $x_i$, $S_{+i}$ is the set $S$ with $x_i$ added, and $u$ is the utility
 function.
 

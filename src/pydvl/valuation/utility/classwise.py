@@ -1,3 +1,9 @@
+"""
+This module defines the utility used by class-wise Shapley valuation methods.
+
+See [the documentation][classwise-shapley-intro] for more information.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -12,9 +18,9 @@ __all__ = ["ClasswiseModelUtility"]
 
 
 class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
-    """ModelUtility class that is specific to classwise shapley valuation.
+    """ModelUtility class that is specific to class-wise shapley valuation.
 
-    It expects a classwise scorer and a classification task.
+    It expects a class-wise scorer and a classification task.
 
     Args:
         model: Any supervised model. Typical choices can be found in the [sci-kit learn
@@ -61,9 +67,9 @@ class ClasswiseModelUtility(ModelUtility[ClasswiseSample, SupervisedModel]):
         self.scorer: ClasswiseSupervisedScorer
 
     def _utility(self, sample: ClasswiseSample) -> float:
-        # EXPLANATION: We override this method here because we have to
-        #   * We need to set the label on the scorer
-        #   * We need to combine the in-class and out-of-class subsets
+        # We override this method here because we have to:
+        #   - set the label on the scorer
+        #   - combine the in-class and out-of-class subsets
         self.scorer.label = sample.label
         new_sample = sample.with_subset(np.union1d(sample.subset, sample.ooc_subset))
         return super()._utility(new_sample)

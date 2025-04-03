@@ -1,3 +1,7 @@
+"""
+Utilities for composing scoring functions.
+"""
+
 from typing import Callable
 
 from scipy.special import expit

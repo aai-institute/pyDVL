@@ -10,8 +10,10 @@ from pydvl.valuation import IndexSampler
 from pydvl.valuation.result import LogResultUpdater, ValuationResult
 from pydvl.valuation.stopping import (
     AbsoluteStandardError,
+    History,
     HistoryDeviation,
     MaxChecks,
+    MaxSamples,
     MaxTime,
     MaxUpdates,
     MinUpdates,
@@ -175,6 +177,7 @@ def test_max_time():
     done.reset()
     np.testing.assert_allclose(done.completion(), 0, atol=0.01)
     assert not done.converged.any()
+    assert str(done) == "MaxTime(seconds=0.3)"
 
 
 @pytest.mark.parametrize("n_steps", [1, 42])
@@ -205,9 +208,14 @@ def test_history_deviation(n_steps, rtol):
     assert done.completion() == 0.0
     assert not done.converged.any()
 
+    with pytest.raises(ValueError, match="rtol"):
+        HistoryDeviation(n_steps=n_steps, rtol=-0.1)
+
+    with pytest.raises(ValueError, match="rtol"):
+        HistoryDeviation(n_steps=n_steps, rtol=1.1)
+
 
 def test_standard_error():
-    """Test the AbsoluteStandardError stopping criterion."""
     eps = 0.1
     n = 5
 
@@ -227,12 +235,12 @@ def test_standard_error():
     # One value is being left out
     for _ in range(10):
         for idx in range(1, n):
-            updater(ValueUpdate(idx, np.log(1.0), 1))
+            updater.process(ValueUpdate(idx, np.log(1.0), 1))
     assert not done(v)
 
     # Update the final value
     for _ in range(10):
-        updater(ValueUpdate(0, np.log(1.0), 1))
+        updater.process(ValueUpdate(0, np.log(1.0), 1))
     assert done(v)
     assert done.completion() == 1.0
     assert done.converged.all()
@@ -246,6 +254,7 @@ def test_max_checks():
     v = ValuationResult.from_random(size=5)
 
     done = MaxChecks(None)
+    assert done.completion() == 0.0
     for _ in range(10):
         assert not done(v)
     assert done.completion() == 0.0
@@ -270,7 +279,7 @@ def test_rank_correlation():
 
     def update_all():
         for j in range(n):
-            updater(ValueUpdate(j, np.log(arr[j]+0.01*j), 1))
+            updater.process(ValueUpdate(j, np.log(arr[j] + 0.01 * j), 1))
 
     done = RankCorrelation(rtol=0.1, burn_in=n * burn_factor, fraction=1)
     for i in range(n * burn_factor):
@@ -306,7 +315,6 @@ def test_rank_correlation():
     ],
 )
 def test_count(criterion):
-    """Test that the _count attribute and count property of stoppingcriteria are properly updated"""
     assert criterion.count == 0
     criterion(ValuationResult.empty())
     assert criterion.count == 1
@@ -321,25 +329,54 @@ def test_count(criterion):
 
 
 def test_memory():
-    r1 = ValuationResult.from_random(5)
-    r2 = ValuationResult.from_random(5)
-    memory = RollingMemory(n_steps=2, default=np.nan, dtype=np.float64)
+    r1 = np.arange(5)
+    r2 = np.arange(5, 10)
+    r3 = np.arange(10, 15)
+
+    memory = RollingMemory(size=4, default=np.nan, dtype=np.float64)
+    assert len(memory) == 0
 
     assert np.all(memory.data == [])
-    memory.update(r1.values)
-    np.testing.assert_equal(memory.data[-1], r1.values)
-    np.testing.assert_equal(memory[-1], r1.values)
+    memory.update(r1)
+    assert len(memory) == 1
+    np.testing.assert_equal(memory.data[-1], r1)
+    np.testing.assert_equal(memory[-1], r1)
 
-    memory.update(r2.values)
-    tmp = np.vstack((r1.values, r2.values))
+    memory.update(r2)
+    assert len(memory) == 2
+    tmp = np.vstack((r1, r2))
     np.testing.assert_equal(memory.data[-2:], tmp)
     np.testing.assert_equal(memory[-2:], tmp)
 
-    r3 = ValuationResult.from_random(5)
-    memory.update(r3.values)
-    tmp = np.vstack((r2.values, r3.values))
-    np.testing.assert_equal(memory.data[-2:], tmp)
-    np.testing.assert_equal(memory[-2:], tmp)
+    memory.update(r3)
+    assert len(memory) == 3
+    tmp2 = np.vstack((r2, r3))
+    np.testing.assert_equal(memory.data[-2:], tmp2)
+    np.testing.assert_equal(memory[-2:], tmp2)
+    np.testing.assert_equal(memory.data[-3:-1], tmp)
+    np.testing.assert_equal(memory[-3:-1], tmp)
+    np.testing.assert_equal(memory.data[-1:-3:-1], tmp2[::-1])
+    np.testing.assert_equal(memory[-1:-3:-1], tmp2[::-1])
+    np.testing.assert_equal(memory[[-1, -2]], tmp2[::-1])
+    np.testing.assert_equal(memory[[-2, -1]], tmp2)
+
+    mask = np.array([False, True, False, True])
+    np.testing.assert_array_equal(memory[mask], np.vstack((r1, r3)))
+
+    with pytest.raises(IndexError):
+        memory[0]  # noqa
+    with pytest.raises(IndexError):
+        memory[-4]  # noqa
+    with pytest.raises(IndexError):
+        memory[[-1, -6]]  # noqa
+    with pytest.raises(IndexError):
+        memory[[-1, 0]]  # noqa
+    with pytest.raises(TypeError):
+        memory["invalid"]  # noqa
+    with pytest.raises(TypeError):
+        memory[object()]  # noqa
+    with pytest.raises(TypeError):
+        memory[["string"]]  # noqa
 
 
 def test_no_stopping_without_sampler():
@@ -352,25 +389,57 @@ def test_no_stopping_without_sampler():
     assert str(no_stop) == "NoStopping()"
 
 
+def test_history():
+    n_steps = 4
+    size = 5
+    history = History(n_steps=n_steps)
+    for i in range(1, n_steps + 1):
+        result = ValuationResult.from_random(size=size)
+        status = history(result)
+        assert status == Status.Pending
+        assert history.completion() == 0.0
+        np.testing.assert_equal(history.converged, False)
+        assert all(history[-1] == result.values)
+        assert len(history) == i
+    assert history.count == n_steps
+    assert history.data.shape == (n_steps, size)
+
+
+class DummyFiniteSampler(IndexSampler):
+    def __init__(self, total_samples: int = 10, batch_size: int = 1):
+        super().__init__(batch_size=batch_size)
+        self.total_samples = total_samples
+
+    def sample_limit(self, indices):
+        return self.total_samples
+
+    def generate(self, indices):
+        for i in range(self.total_samples):
+            yield i, set()
+
+    def log_weight(self, n, subset_len):
+        return 0.0
+
+    def make_strategy(self, utility, log_coefficient=None):
+        return None
+
+
+class DummyInfiniteSampler(IndexSampler):
+    def sample_limit(self, indices):
+        return None  # Indicates an infinite sampler.
+
+    def generate(self, indices):
+        while True:
+            yield (0, set())
+
+    def log_weight(self, n, subset_len):
+        return 0.0
+
+    def make_strategy(self, utility, log_coefficient=None):
+        return None
+
+
 def test_no_stopping_with_finite_sampler():
-    class DummyFiniteSampler(IndexSampler):
-        def __init__(self, total_samples: int = 10, batch_size: int = 1):
-            super().__init__(batch_size=batch_size)
-            self.total_samples = total_samples
-
-        def sample_limit(self, indices):
-            return self.total_samples
-
-        def generate(self, indices):
-            for i in range(self.total_samples):
-                yield i, set()
-
-        def log_weight(self, n, subset_len):
-            return 0.0
-
-        def make_strategy(self, utility, log_coefficient=None):
-            return None
-
     r = ValuationResult.from_random(5)
     total_samples = 10
     batch_size = 3
@@ -400,28 +469,59 @@ def test_no_stopping_with_finite_sampler():
 
 
 def test_no_stopping_infinite_sampler():
-    class DummyInfiniteSampler(IndexSampler):
-        def sample_limit(self, indices):
-            return None  # Indicates an infinite sampler.
-
-        def generate(self, indices):
-            while True:
-                yield (0, set())
-
-        def log_weight(self, n, subset_len):
-            return 0.0
-
-        def make_strategy(self, utility, log_coefficient=None):
-            return None
-
     sampler = DummyInfiniteSampler(batch_size=1)
     no_stop = NoStopping(sampler=sampler)
 
-    batches = list(islice(sampler.generate_batches(np.array([0])), 10))
-    assert sampler.n_samples == len(batches)
+    _ = list(islice(sampler.generate_batches(np.array([0])), 10))
 
     # Verify that calling the criterion still returns Pending and marks no index as converged.
     result = ValuationResult.from_random(5)
     status = no_stop(result)
     assert status == Status.Pending
+    assert no_stop.completion() == 0.0
     np.testing.assert_equal(no_stop.converged, False)
+
+
+def test_max_samples_pending_and_convergence():
+    sampler = DummyInfiniteSampler(batch_size=1)
+    threshold = 10
+    max_samples = MaxSamples(sampler, n_samples=threshold)
+    result = ValuationResult.from_random(5)  # Create a result with 5 indices
+
+    status = max_samples(result)
+    assert status == Status.Pending
+    np.testing.assert_allclose(max_samples.completion(), 0.0)
+    assert not max_samples.converged.all()
+
+    # Set sampler.n_samples below threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 5))
+    status = max_samples(result)
+    assert status == Status.Pending
+    np.testing.assert_allclose(max_samples.completion(), 5 / threshold)
+    assert not max_samples.converged.all()
+
+    # Set sampler.n_samples exactly equal to threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 10))
+    status = max_samples(result)
+    assert status == Status.Converged
+    np.testing.assert_allclose(max_samples.completion(), 1.0)
+    assert max_samples.converged.all()
+
+    # Set sampler.n_samples above threshold.
+    _ = list(islice(sampler.generate_batches(np.array([0])), 15))
+    status = max_samples(result)
+    assert status == Status.Converged
+    np.testing.assert_allclose(max_samples.completion(), 1.0)
+    assert max_samples.converged.all()
+
+
+def test_max_samples_str_and_invalid():
+    sampler = DummyFiniteSampler(total_samples=0)
+    max_samples = MaxSamples(sampler, 10)
+    expected_str = f"MaxSamples({sampler.__class__.__name__}, n_samples=10)"
+    assert str(max_samples) == expected_str
+
+    with pytest.raises(ValueError):
+        MaxSamples(sampler, 0)
+    with pytest.raises(ValueError):
+        MaxSamples(sampler, -5)

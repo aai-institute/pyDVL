@@ -5,6 +5,10 @@
 
 ### Added
 
+- Simple memory monitor / reporting
+  [PR #663](https://github.com/aai-institute/pyDVL/pull/663)
+- New stopping criterion `MaxSamples`
+  [PR #661](https://github.com/aai-institute/pyDVL/pull/661)
 - Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
   and `DeepSetsUtilityModel` for data utility learning
   [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
@@ -56,8 +60,10 @@
 
 ### Fixed
 
-- Fixed `show_warnings=False` not being respected in subprocesses
+- Fixed `show_warnings=False` not being respected in subprocesses. Introduced
+  `suppress_warninigs` decorator for more flexibility
   [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
+  [PR #662](https://github.com/aai-institute/pyDVL/pull/662)
 - Fixed several bugs in diverse stopping criteria, including: iteration counts,
   computing completion, resetting, nested composition
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
