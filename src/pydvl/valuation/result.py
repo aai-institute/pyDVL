@@ -646,15 +646,33 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if self._algorithm != other._algorithm or self._status != other._status:
             return False
 
-        if self._extra_values != other._extra_values:
+        if set(self._extra_values.keys()) != set(other._extra_values.keys()):
             return False
+
+        for k, v in self._extra_values.items():
+            if k not in other._extra_values:
+                return False
+            if isinstance(v, np.ndarray):
+                if not np.array_equal(v, other._extra_values[k], equal_nan=True):
+                    return False
+            else:
+                try:
+                    if np.isnan(v) and np.isnan(other._extra_values[k]):
+                        continue
+                except TypeError:
+                    if v != other._extra_values[k]:
+                        return False
 
         self_pos = self.positions(self._data_indices)
         other_pos = other.positions(other._data_indices)
 
         if not (
-            np.array_equal(self._values[self_pos], other._values[other_pos])
-            and np.array_equal(self._variances[self_pos], other._variances[other_pos])
+            np.array_equal(
+                self._values[self_pos], other._values[other_pos], equal_nan=True
+            )
+            and np.array_equal(
+                self._variances[self_pos], other._variances[other_pos], equal_nan=True
+            )
             and np.array_equal(self._counts[self_pos], other._counts[other_pos])
             and np.array_equal(self._names[self_pos], other._names[other_pos])
         ):
