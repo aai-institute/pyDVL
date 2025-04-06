@@ -11,7 +11,6 @@ import pytest
 from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
-from pydvl.valuation.base import Valuation
 from pydvl.valuation.result import LogResultUpdater, ValuationResult, ValueItem
 from pydvl.valuation.types import ValueUpdate
 
@@ -702,13 +701,31 @@ def test_names(data_names):
 
 
 @pytest.mark.parametrize("n_samples", [0, 3])
-@pytest.mark.parametrize("n", [0, 5])
-def test_empty(n_samples: int, n: int):
-    v = ValuationResult.empty(n_samples=n_samples)
+def test_empty(n_samples: int):
+    v = ValuationResult.empty(algorithm="test")
+    assert len(v) == 0
+
+    v2 = ValuationResult(values=np.arange(n_samples), algorithm="test")
+    assert v2 == v + v2
+    assert v2 == v2 + v
+
+    v3 = ValuationResult(values=np.arange(n_samples), algorithm="fail")
+    with pytest.raises(ValueError, match="Cannot combine results"):
+        v3 += v
+
+
+@pytest.mark.parametrize("n_samples", [0, 3])
+def test_zeros(n_samples: int):
+    v = ValuationResult.zeros(algorithm="test", size=n_samples)
     assert len(v) == n_samples
-    v2 = ValuationResult(values=np.arange(n))
-    v += v2
-    assert len(v2) == n
+
+    v2 = ValuationResult(values=np.arange(n_samples), algorithm="test")
+    assert v2 == v + v2
+    assert v2 == v2 + v
+
+    v3 = ValuationResult(values=np.arange(n_samples), algorithm="fail")
+    with pytest.raises(ValueError, match="Cannot combine results"):
+        v3 += v
 
 
 @pytest.mark.parametrize("indices", [None, np.array([0, 1, 2])])
