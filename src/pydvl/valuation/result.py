@@ -686,8 +686,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def __add__(self, other: ValuationResult) -> ValuationResult:
         """Adds two ValuationResults.
 
-        The values must have been computed with the same algorithm. An exception
-        to this is if one argument has empty values, in which case the other
+        The values must have been computed with the same algorithm. An exception to this
+        is if one argument has empty or all-zero values, in which case the other
         argument is returned.
 
         !!! danger
@@ -709,9 +709,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """
         self._check_compatible(other)
 
-        if len(self.values) == 0:
+        if len(self.values) == 0 or (all(self.values == 0.0) and all(self.counts == 0)):
             return other
-        if len(other.values) == 0:
+        if len(other.values) == 0 or (
+            all(other.values == 0.0) and all(other.counts == 0)
+        ):
             return self
 
         indices = np.union1d(self._data_indices, other._data_indices).astype(
@@ -909,43 +911,23 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         return cls(**options)  # type: ignore
 
     @classmethod
-    def empty(
-        cls,
-        algorithm: str = "",
-        indices: IndexSetT | None = None,
-        data_names: Sequence[NameT] | NDArray[NameT] | None = None,
-        n_samples: int = 0,
-        **kwargs: dict[str, Any],
-    ) -> ValuationResult:
+    def empty(cls, algorithm: str = "", **kwargs: dict[str, Any]) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.valuation.result.ValuationResult]
         object.
 
         Empty results are characterised by having an empty array of values.
 
-        !!! warning
+        !!! tip
             When a result is added to an empty one, the empty one is entirely discarded.
 
         Args:
             algorithm: Name of the algorithm used to compute the values
-            indices: Optional sequence or array of indices.
-            data_names: Optional sequences or array of names for the data points.
-                Defaults to index numbers if not set.
-            n_samples: Number of valuation result entries.
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.valuation.result.ValuationResult]. Use to
                 override status, extra_values, etc.
         Returns:
             Object with the results.
         """
-        if indices is not None or data_names is not None or n_samples != 0:
-            options: dict[str, Any] = dict(
-                algorithm=algorithm,
-                indices=indices,
-                data_names=data_names,
-                n_samples=n_samples,
-            )
-            return cls.zeros(**(options | kwargs))
-
         options = dict(algorithm=algorithm, status=Status.Pending, values=np.array([]))
         return cls(**(options | kwargs))
 
@@ -955,22 +937,22 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         algorithm: str = "",
         indices: IndexSetT | None = None,
         data_names: Sequence[NameT] | NDArray[NameT] | None = None,
-        n_samples: int = 0,
+        size: int = 0,
         **kwargs: dict[str, Any],
     ) -> ValuationResult:
         """Creates a [ValuationResult][pydvl.valuation.result.ValuationResult] filled
         with zeros.
 
-        Empty results are characterised by having an empty array of values. When
-        another result is added to an empty one, the empty one is ignored.
+        !!! info
+            When a result is added to a zeroed one, the zeroed one is entirely discarded.
 
         Args:
             algorithm: Name of the algorithm used to compute the values
             indices: Data indices to use. A copy will be made. If not given,
-                the indices will be set to the range `[0, n_samples)`.
+                the indices will be set to the range `[0, size)`.
             data_names: Data names to use. A copy will be made. If not given,
                 the names will be set to the string representation of the indices.
-            n_samples: Number of data points whose values are computed. If
+            size: Number of data points whose values are computed. If
                 not given, the length of `indices` will be used.
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.valuation.result.ValuationResult]. Use to
@@ -978,7 +960,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Returns:
             Object with the results.
         """
-        indices = cls._create_indices_array(indices, n_samples)
+        indices = cls._create_indices_array(indices, size)
         data_names = cls._create_names_array(data_names, indices)
 
         options: dict[str, Any] = dict(
@@ -994,10 +976,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     @staticmethod
     def _create_indices_array(
-        indices: Sequence[IndexT] | NDArray[IndexT] | None, n_samples: int
+        indices: Sequence[IndexT] | NDArray[IndexT] | None, size: int
     ) -> NDArray[IndexT]:
         if indices is None:
-            index_array: NDArray[IndexT] = np.arange(n_samples, dtype=np.int_)
+            index_array: NDArray[IndexT] = np.arange(size, dtype=np.int_)
         elif isinstance(indices, np.ndarray):
             index_array = indices.copy()
         else:
