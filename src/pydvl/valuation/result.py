@@ -714,9 +714,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if len(other.values) == 0:
             return self
 
-        indices = np.union1d(self._indices, other._indices).astype(self._indices.dtype)
-        this_pos = np.searchsorted(indices, self._indices)
-        other_pos = np.searchsorted(indices, other._indices)
+        indices = np.union1d(self._data_indices, other._data_indices).astype(
+            self._data_indices.dtype
+        )
+        this_pos = np.searchsorted(indices, self._data_indices)
+        other_pos = np.searchsorted(indices, other._data_indices)
 
         n: NDArray[np.int_] = np.zeros_like(indices, dtype=int)
         m: NDArray[np.int_] = np.zeros_like(indices, dtype=int)
