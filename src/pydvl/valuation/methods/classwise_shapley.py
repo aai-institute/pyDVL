@@ -101,12 +101,8 @@ class ClasswiseShapleyValuation(Valuation):
                 "GroupedDataset is not supported for ClasswiseShapleyValuation"
             )
 
-        self.result = ValuationResult.zeros(
-            # TODO: automate str representation for all Valuations
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
-            indices=data.indices,
-            data_names=data.names,
-        )
+        self.result = self.init_or_check_result(data)
+
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
