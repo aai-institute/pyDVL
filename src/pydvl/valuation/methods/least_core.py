@@ -82,6 +82,8 @@ class LeastCoreValuation(Valuation):
 
     """
 
+    algorithm_name = "Least-Core"
+
     def __init__(
         self,
         utility: UtilityBase,
@@ -166,6 +168,8 @@ class ExactLeastCoreValuation(LeastCoreValuation):
 
     """
 
+    algorithm_name = "Exact-Least-Core"
+
     def __init__(
         self,
         utility: UtilityBase,
@@ -208,6 +212,8 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
 
 
     """
+
+    algorithm_name = "Monte-Carlo-Least-Core"
 
     def __init__(
         self,
