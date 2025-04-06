@@ -458,7 +458,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                     f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
                 ) from e
         if isinstance(key, np.ndarray) and np.issubdtype(key.dtype, np.integer):
-            return key.astype(int).tolist()
+            return cast(list[int], key.astype(int).tolist())
         if isinstance(key, Integral):
             idx = int(key)
             if idx < 0:
@@ -890,7 +890,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         size: int,
         total: float | None = None,
         seed: Seed | None = None,
-        **kwargs: dict[str, Any],
+        **kwargs,
     ) -> ValuationResult:
         """Creates a [ValuationResult][pydvl.valuation.result.ValuationResult] object
         and fills it with an array of random values from a uniform distribution in
@@ -946,7 +946,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Returns:
             Object with the results.
         """
-        options = dict(algorithm=algorithm, status=Status.Pending, values=np.array([]))
+        options: dict[str, Any] = dict(
+            algorithm=algorithm, status=Status.Pending, values=np.array([])
+        )
         return cls(**(options | kwargs))
 
     @classmethod

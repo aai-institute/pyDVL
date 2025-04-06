@@ -147,7 +147,8 @@ class ClasswiseShapleyValuation(Valuation):
         """
         if not self.is_fitted:
             raise ValueError("You must call fit before calling _normalize()")
-
+        assert self.result is not None
+        assert self.utility.training_data is not None
         logger.info("Normalizing valuation result.")
         x, y = self.utility.training_data.data()
         unique_labels = get_unique_labels(y)

@@ -93,6 +93,7 @@ class Valuation(ABC):
                 return self
             raise FileNotFoundError(msg) from e
 
+        assert self.result is not None
         if self.result.algorithm != str(self):
             logger.warning(
                 f"The algorithm of the valuation result {self.result.algorithm} does "
