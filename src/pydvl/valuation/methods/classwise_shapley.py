@@ -1,52 +1,15 @@
 r"""
-Class-wise Shapley (Schoch et al., 2022)[^1] offers a Shapley framework tailored
-for classification problems. Let $D$ be a dataset, $D_{y_i}$ be the subset of
-$D$ with labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The
-key idea is that a sample $(x_i, y_i)$, might enhance the overall performance on
-$D$, while being detrimental for the performance on $D_{y_i}$. The Class-wise
-value is defined as:
+Class-wise Shapley (Schoch et al., 2022)[^1] is a semi-value tailored for classification
+problems.
 
-$$
-v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
-\sum_{S_{y_i}} \binom{|D_{y_i}|-1}{|S_{y_i}|}^{-1}
-[u( S_{y_i} \cup \{i\} | S_{-y_i} ) − u( S_{y_i} | S_{-y_i})],
-$$
-
-where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq
-D_{-y_i}$.
+The core intuition behind the method is that a sample might enhance the overall
+performance of the model, while being detrimental for the performance when the model
+is restricted to items of the same class, and vice versa.
 
 !!! tip "Analysis of Class-wise Shapley"
-    For a detailed analysis of the method, with comparison to other valuation
-    techniques, please refer to the [main documentation][class-wise-shapley].
-
-In practice, the quantity above is estimated using Monte Carlo sampling of
-the powerset and the set of index permutations. This results in the estimator
-
-$$
-v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
-[u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
-$$
-
-with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i},$ $\sigma^{(1)}, \dots,
-\sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\}),$ and $\sigma^{(l)}_{:i}$ denoting
-the set of indices in permutation $\sigma^{(l)}$ before the position where $i$
-appears. The sets $T_{y_i}$ and $T_{-y_i}$ are the training sets for the labels
-$y_i$ and $-y_i$, respectively.
-
-??? info "Notes for derivation of test cases"
-    The unit tests include the following manually constructed data:
-    Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
-    the train set. This specific dataset is chosen as it allows to solve the model
-
-    $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
-
-    in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
-    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy
-    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting
-    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and
-    $\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
-    the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
-    The details of the derivation are left to the eager reader.
+    For a detailed explanation and analysis of the method, with comparison to other
+    valuation techniques, please refer to the [main documentation][classwise-shapley-intro]
+    and to Semmler and de Benito Delgado (2024).[^2]
 
 ## References
 
@@ -55,6 +18,10 @@ $y_i$ and $-y_i$, respectively.
     Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
     the Thirty-Sixth Conference on Neural Information Processing Systems
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
+[^2]: <a name="semmler_re_2024"></a>Semmler, Markus, and Miguel de Benito Delgado.
+    [[Re] Classwise-Shapley Values for Data
+    Valuation](https://openreview.net/forum?id=srFEYJkqD7&noteId=zVi6DINuXT).
+    Transactions on Machine Learning Research, July 2024.
 """
 
 from __future__ import annotations
@@ -69,15 +36,15 @@ from numpy.typing import NDArray
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset, GroupedDataset
+from pydvl.valuation.parallel import (
+    ensure_backend_has_generator_return,
+    make_parallel_flag,
+)
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.classwise import ClasswiseSampler, get_unique_labels
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.utility.classwise import ClasswiseModelUtility
-from pydvl.valuation.utils import (
-    ensure_backend_has_generator_return,
-    make_parallel_flag,
-)
 
 __all__ = ["ClasswiseShapleyValuation"]
 
@@ -89,13 +56,9 @@ T = TypeVar("T")
 class ClasswiseShapleyValuation(Valuation):
     """Class to compute Class-wise Shapley values.
 
-    It proceeds by sampling independent permutations of the index set
-    for each label and index sets sampled from the powerset of the complement
-    (with respect to the currently evaluated label).
-
     Args:
-        utility: Classwise utility object with model and classwise scoring function.
-        sampler: Classwise sampling scheme to use.
+        utility: Class-wise utility object with model and class-wise scoring function.
+        sampler: Class-wise sampling scheme to use.
         is_done: Stopping criterion to use.
         progress: Whether to show a progress bar.
         normalize_values: Whether to normalize values after valuation.
@@ -147,9 +110,9 @@ class ClasswiseShapleyValuation(Valuation):
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
-        self.utility.training_data = data
+        self.utility = self.utility.with_dataset(data)
 
-        strategy = self.sampler.make_strategy(self.utility)
+        strategy = self.sampler.make_strategy(self.utility, None)
         updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
 
@@ -164,13 +127,10 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result = updater(evaluation)
-                        if self.is_done(self.result):
-                            flag.set()
-                            self.sampler.interrupt()
-                            break
-
+                        self.result = updater.process(evaluation)
                     if self.is_done(self.result):
+                        flag.set()
+                        self.sampler.interrupt()
                         break
 
         if self.normalize_values:

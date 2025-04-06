@@ -1,4 +1,5 @@
 *[AM]: Arnoldi Method
+*[AME]: Average Marginal Effect
 *[BCG]: Block Conjugate Gradient
 *[CG]: Conjugate Gradient
 *[CSP]: Constraint Satisfaction Problem
@@ -10,6 +11,7 @@
 *[IF]: Influence Function
 *[iHVP]: inverse Hessian-vector product
 *[K-FAC]: Kronecker-Factored Approximate Curvature
+*[KNN]: K-Nearest Neighbours
 *[LC]: Least Core
 *[LOO]: Leave-One-Out
 *[LiSSA]: Linear-time Stochastic Second-order Algorithm

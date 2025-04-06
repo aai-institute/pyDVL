@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from pydvl.parallel.config import ParallelConfig
+from pydvl.utils.functional import timed
 from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
     AntitheticPermutationSampler,
@@ -29,7 +30,6 @@ from pydvl.value.semivalues import (
 from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
 
 from . import check_values
-from .utils import timed
 
 
 @pytest.mark.parametrize(
@@ -222,7 +222,7 @@ def test_shapley_batch_size(
     parallel_backend: ParallelConfig,
     seed: Seed,
 ):
-    timed_fn = timed(compute_generic_semivalues)
+    timed_fn = timed()(compute_generic_semivalues)
     result_single_batch = timed_fn(
         sampler(test_game.u.data.indices, seed=seed),
         test_game.u,

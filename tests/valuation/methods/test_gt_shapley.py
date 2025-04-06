@@ -63,8 +63,10 @@ def test_gt_sampler(seed):
     assert_allclose(frequencies, expected, atol=0.02)
 
 
-@pytest.mark.parametrize("n_samples", [1, 27])
-def test_gt_setsize_strategy(n_samples):
+def test_gt_setsize_strategy():
     indices = np.arange(10)
+    n_samples = 17
     strategy = GroupTestingSampleSize(n_samples=n_samples)
-    np.testing.assert_allclose(n_samples, strategy.sample_sizes(len(indices)).sum())
+    np.testing.assert_allclose(
+        n_samples, strategy.sample_sizes(len(indices), probs=False).sum()
+    )

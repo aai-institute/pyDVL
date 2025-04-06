@@ -5,7 +5,7 @@ alias:
   text: Example gallery
 ---
 
-## Data valuation
+## Data valuation { #data-valuation-example-gallery }
 
 <div class="grid cards" markdown>
 

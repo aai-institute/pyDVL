@@ -1,16 +1,28 @@
 """
-Class-wise sampler for the [class-wise Shapley][intro-to-cw-shapley] valuation method.
+Class-wise sampler for the [class-wise Shapley][classwise-shapley-intro] valuation method.
 
 The class-wise Shapley method, introduced by Schoch et al., 2022[^1], uses a so-called
 *set-conditional marginal Shapley value* that requires selectively sampling subsets of
 data points with the same or a different class from that of the data point of interest.
 
-This sampling scheme is divided into an outer and an inner sampler. The outer one is any
-subclass of [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] that
-generates subsets of the complement set of the data point of interest. The inner sampler
-is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], typically
-(and in the paper) a
-[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
+This sampling scheme is divided into an outer and an inner sampler.
+
+* The **outer sampler** is any subclass of
+  [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] that generates
+  subsets within the complement set of the data point of interest, and _with a different
+  label_ (so-called "out-of-class" samples, denoted by $S_{-y_i}$ in this documentation).
+* The **inner sampler** is any subclass of
+  [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], typically (and in the
+  paper) a
+  [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler]. It
+  returns so-called "in-class" samples (denoted by $S_{y_i}$ in this documentation) from
+  the set $N_{y_i}$, i.e., the set of all indices with the same label as the data point
+  of interest.
+
+!!! info
+    For more information on the class-wise Shapley method, as well as a summary of the
+    reproduction results by Semmler and de Benito Delgado (2024)[^2] see [the main
+    documentation][classwise-shapley-intro] for the method.
 
 ## References
 
@@ -19,13 +31,17 @@ is any subclass of [IndexSampler][pydvl.valuation.samplers.base.IndexSampler], t
     Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
     the Thirty-Sixth Conference on Neural Information Processing Systems
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
+[^2]: <a name="semmler_classwise_2024"></a>Semmler, Markus, and Miguel de Benito
+    Delgado. [[Re] Classwise-Shapley Values for Data
+    Valuation](https://openreview.net/forum?id=srFEYJkqD7&noteId=zVi6DINuXT).
+    Transactions on Machine Learning Research, July 2024.
 
 """
 
 from __future__ import annotations
 
 from itertools import cycle, islice
-from typing import Callable, Generator, Iterable, Mapping, TypeVar, cast
+from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -34,14 +50,16 @@ from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
 from pydvl.valuation.types import (
+    BatchGenerator,
     ClasswiseSample,
     IndexSetT,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
 
-__all__ = ["ClasswiseSampler", "get_unique_labels"]
+__all__ = ["ClasswiseSampler"]
 
 U = TypeVar("U")
 V = TypeVar("V")
@@ -103,16 +121,19 @@ def get_unique_labels(array: NDArray) -> NDArray:
     )
 
 
-class ClasswiseSampler(IndexSampler):
+class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
     """A sampler that samples elements from a dataset in two steps, based on the labels.
+
+    It proceeds by sampling out-of-class indices (training points with a different
+    label to the point of interest), and in-class indices (training points with the
+    same label as the point of interest).
 
     Used by the [class-wise Shapley valuation
     method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 
     Args:
         in_class: Sampling scheme for elements of a given label.
-        out_of_class: Sampling scheme for elements of different labels,
-            i.e., the complement set.
+        out_of_class: Sampling scheme for elements of different labels.
         min_elements_per_label: Minimum number of elements per label
             to sample from the complement set, i.e., out of class elements.
     """
@@ -136,7 +157,7 @@ class ClasswiseSampler(IndexSampler):
         self.in_class.interrupt()
         self.out_of_class.interrupt()
 
-    def from_data(self, data: Dataset) -> Generator[list[ClasswiseSample], None, None]:
+    def from_data(self, data: Dataset) -> BatchGenerator:
         labels = get_unique_labels(data.data().y)
         n_labels = len(labels)
 
@@ -182,20 +203,20 @@ class ClasswiseSampler(IndexSampler):
                     self._n_samples += len(batch)
                     yield batch
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
-        # This is not needed because this sampler is used
-        # by calling the `from_data` method instead of the `generate_batches` method.
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
+        """This is not needed because this sampler is used by calling the `from_data`
+        method instead of the `generate_batches` method."""
         raise AttributeError("Cannot sample from indices directly.")
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        # CW-Shapley uses the evaluation strategy from the in-class sampler, so this
-        # method should never be called.
+        """CW-Shapley uses the evaluation strategy from the in-class sampler, so this
+        method should never be called."""
         raise AttributeError("The weight should come from the in-class sampler")
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        # The sample list cannot be computed without accessing the label
-        # information and using that to compute the sample limits
-        # of the in-class and out-of-class samplers first.
+        """The sample limit cannot be computed without accessing the label information
+        and using that to compute the sample limits of the in-class and out-of-class
+        samplers first."""
         raise AttributeError(
             "The sample limit cannot be computed without the label information."
         )
@@ -203,6 +224,6 @@ class ClasswiseSampler(IndexSampler):
     def make_strategy(
         self,
         utility: UtilityBase,
-        log_coefficient: Callable[[int, int], float] | None = None,
+        log_coefficient: SemivalueCoefficient | None,
     ) -> EvaluationStrategy[IndexSampler, ValueUpdate]:
         return self.in_class.make_strategy(utility, log_coefficient)

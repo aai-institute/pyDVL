@@ -30,7 +30,7 @@ def call_with_seeds(fun: Callable, *args, seeds: Tuple[Seed, ...], **kwargs) -> 
     return tuple(fun(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
 
 
-class TimedCallable(Protocol):
+class TimedCallable(Protocol[ReturnT]):
     """A callable that has an attribute to keep track of execution time."""
 
     execution_time: float

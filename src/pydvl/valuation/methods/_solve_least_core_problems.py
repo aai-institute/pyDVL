@@ -266,7 +266,7 @@ def _solve_egalitarian_least_core_quadratic_program(
 
     Args:
         subsidy: Minimal subsidy returned by
-            [_solve_least_core_linear_program()][pydvl.value.least_core.common._solve_least_core_linear_program]
+            [_solve_least_core_linear_program()][pydvl.valuation.methods._solve_least_core_problems._solve_least_core_linear_program].
         A_eq: The equality constraint matrix. Each row of `A_eq` specifies the
             coefficients of a linear equality constraint on `x`.
         b_eq: The equality constraint vector. Each element of `A_eq @ x` must equal

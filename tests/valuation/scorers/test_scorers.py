@@ -34,12 +34,12 @@ def scorer(model):
     X = np.array([[1, 2], [3, 4]])
     y = X @ coef
     test_data = Dataset(X, y)
-    return SupervisedScorer("r2", test_data=test_data, default=0)
+    return SupervisedScorer("r2", test_data=test_data, default=0.0)
 
 
 def test_scorer(model, scorer):
     """Tests the Scorer class."""
-    assert str(scorer) == "r2"
+    assert str(scorer) == "r2(default=0.0, range=(-inf, inf))"
     if version.parse(sklearn.__version__) >= version.parse("1.4.0"):
         assert (
             repr(scorer)
@@ -54,7 +54,7 @@ def test_scorer(model, scorer):
 def test_compose_score(model, scorer):
     """Tests the compose_score function."""
     composed = compose_score(scorer, sigmoid, name="squashed r2")
-    assert str(composed) == "squashed r2"
+    assert str(composed) == "squashed r2(default=0.5, range=(0.0, 1.0))"
 
     assert composed.range[0] == 0
     assert composed.range[1] == 1

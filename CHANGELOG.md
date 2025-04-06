@@ -5,6 +5,13 @@
 
 ### Added
 
+- Simple memory monitor / reporting
+  [PR #663](https://github.com/aai-institute/pyDVL/pull/663)
+- New stopping criterion `MaxSamples`
+  [PR #661](https://github.com/aai-institute/pyDVL/pull/661)
+- Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
+  and `DeepSetsUtilityModel` for data utility learning
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Introduced the concept of `ResultUpdater` in order to allow samplers to
   declare the proper strategy to use by valuations 
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -16,8 +23,9 @@
   [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
 - Refactor Classwise Shapley valuation with the interfaces and sampler
   architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616)
-- Refactor KNN Shapley values with the new sampler architecture
+- Refactor KNN Shapley values with the new interface
   [PR #610](https://github.com/aai-institute/pyDVL/pull/610)
+  [PR #645](https://github.com/aai-institute/pyDVL/pull/645)
 - Refactor MSR Banzhaf semivalues with the new sampler architecture.
   [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -52,9 +60,14 @@
 
 ### Fixed
 
+- Fixed `show_warnings=False` not being respected in subprocesses. Introduced
+  `suppress_warninigs` decorator for more flexibility
+  [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
+  [PR #662](https://github.com/aai-institute/pyDVL/pull/662)
 - Fixed several bugs in diverse stopping criteria, including: iteration counts,
-  computing completion and resetting
+  computing completion, resetting, nested composition
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Fixed all weights of all samplers to ensure that mix-and-matching samplers and
   semi-value methods always works, for all possible combinations
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
@@ -76,6 +89,9 @@
 
 ### Changed
 
+- Slicing, comparing and setting of `ValuationResult` behave in a more 
+  natural way
+  [PR #660](https://github.com/aai-institute/pyDVL/pull/660)
 - Switched all semi-value coefficients and sampler weights to log-space in
   order to avoid overflows
   [PR #643](https://github.com/aai-institute/pyDVL/pull/643)
@@ -83,6 +99,10 @@
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
 - Updated Least-Core notebook
   [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Updated Shapley spotify notebook
+  [PR #628](https://github.com/aai-institute/pyDVL/pull/628)
+- Updated Data Utility notebook
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
 - Restructured and generalized `StratifiedSampler` to allow using heuristics,
   thus subsuming Variance-Reduced stratified sampling into a unified framework.
   Implemented the heuristics proposed in that paper
@@ -93,6 +113,7 @@
   `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
   Also, both now return objects of the same type when slicing.
   [PR #631](https://github.com/aai-institute/pyDVL/pull/631)
+  [PR #648](https://github.com/aai-institute/pyDVL/pull/648)
 - Use tighter bounds for the calculation of the minimal sample size that guarantees
   an epsilon-delta approximation in group testing (Jia et al. 2023)
   [PR #602](https://github.com/aai-institute/pyDVL/pull/602)

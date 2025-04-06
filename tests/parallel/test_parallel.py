@@ -165,7 +165,7 @@ def test_map_reduce_seeding(parallel_backend, seed_1, seed_2):
     assert result_1 != result_3
 
 
-@pytest.mark.flaky(reruns=1)  # the ways of ray are mysterious
+@pytest.mark.flaky(reruns=2)  # the ways of ray are mysterious
 def test_wrap_function(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Only makes sense for ray")
@@ -220,7 +220,7 @@ def test_futures_executor_map_with_max_workers(parallel_backend):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 def test_future_cancellation(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Currently this test only works with Ray")

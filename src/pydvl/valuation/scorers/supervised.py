@@ -1,6 +1,6 @@
 """
 This module provides a
-[SupervisedScorer][pydvl.valuation.scorer.supervised.SupervisedScorer] class that wraps
+[SupervisedScorer][pydvl.valuation.scorers.supervised.SupervisedScorer] class that wraps
 scoring functions for supervised problems with additional information.
 
 Supervised scorers can be constructed in the same way as in scikit-learn: either from
@@ -10,11 +10,33 @@ a negated version can be used, see scikit-learn's
 
 [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer] holds the test data used to
 evaluate the model.
+
+!!! example "Named scorer"
+    It is possible to use all named scorers from scikit-learn.
+
+    ```python
+    from pydvl.valuation import Dataset, SupervisedScorer
+
+    train, test = Dataset.from_arrays(X, y, train_size=0.7)
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer("accuracy", test, default=0, range=(0, 1))
+    ```
+
+!!! example "Model scorer"
+    It is also possible to use the `score()` function from the model if it defines one:
+
+    ```python
+    from pydvl.valuation import Dataset, SupervisedScorer
+
+    train, test = Dataset.from_arrays(X, y, train_size=0.7)
+    model = SomeSKLearnModel()
+    scorer = SupervisedScorer(model, test, default=0, range=(-np.inf, 1))
+    ```
 """
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -27,18 +49,21 @@ __all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.base import Scorer
 
+SupervisedModelT = TypeVar(
+    "SupervisedModelT", bound=SupervisedModel, contravariant=True
+)
 
-class SupervisedScorerCallable(Protocol):
-    """Signature for a scorer"""
+
+class SupervisedScorerCallable(Protocol[SupervisedModelT]):
+    """Signature for a supervised scorer"""
 
     def __call__(
-        self, model: SupervisedModel, X: NDArray[Any], y: NDArray[Any]
+        self, model: SupervisedModelT, X: NDArray[Any], y: NDArray[Any]
     ) -> float: ...
 
 
-class SupervisedScorer(Scorer):
-    """A scoring callable that takes a model, data, and labels and returns a
-    scalar.
+class SupervisedScorer(Generic[SupervisedModelT], Scorer):
+    """A scoring callable that takes a model, data, and labels and returns a scalar.
 
     Args:
         scoring: Either a string or callable that can be passed to
@@ -59,14 +84,13 @@ class SupervisedScorer(Scorer):
     !!! tip "Changed in version 0.10.0"
         This is now `SupervisedScorer` and holds the test data used to evaluate the
         model.
-
     """
 
-    _scorer: SupervisedScorerCallable
+    _scorer: SupervisedScorerCallable[SupervisedModelT]
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable | SupervisedModel,
+        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
         test_data: Dataset,
         default: float,
         range: tuple[float, float] = (-np.inf, np.inf),
@@ -90,14 +114,14 @@ class SupervisedScorer(Scorer):
         self.test_data = test_data
         self.default = default
         # TODO: auto-fill from known scorers ?
-        self.range = np.array(range, dtype=np.float64)
+        self.range = range
         self.name = name
 
-    def __call__(self, model: SupervisedModel) -> float:
+    def __call__(self, model: SupervisedModelT) -> float:
         return self._scorer(model, *self.test_data.data())
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name}(default={self.default}, range={self.range})"
 
     def __repr__(self) -> str:
         capitalized_name = "".join(s.capitalize() for s in self.name.split(" "))

@@ -194,7 +194,7 @@ class ValuationResult(
         status: The end status of the algorithm.
         sort: Whether to sort the indices by ascending value. See above how
             this affects usage as an iterable or sequence.
-        extra_values: Additional values that can be passed as keyword arguments.
+        extra_values: Any Additional values that can be passed as keyword arguments.
             This can contain, for example, the least core value.
 
     Raises:
@@ -224,7 +224,7 @@ class ValuationResult(
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
-        **extra_values,
+        **extra_values: Any,
     ):
         if variances is not None and len(variances) != len(values):
             raise ValueError("Lengths of values and variances do not match")
@@ -695,7 +695,7 @@ class ValuationResult(
         size: int,
         total: Optional[float] = None,
         seed: Optional[Seed] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
@@ -705,7 +705,7 @@ class ValuationResult(
             size: Number of values to generate
             total: If set, the values are normalized to sum to this number
                 ("efficiency" property of Shapley values).
-            kwargs: Additional options to pass to the constructor of
+            kwargs: Any Additional options to pass to the constructor of
                 [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
 
         Returns:

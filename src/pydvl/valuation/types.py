@@ -1,3 +1,12 @@
+"""
+This module contains different types used by [pydvl.valuation][]
+
+If you are interested in extending valuation methods, you might need to subclass
+[ValueUpdate][pydvl.valuation.types.ValueUpdate], [Sample][pydvl.valuation.types.Sample]
+or [ClasswiseSample][pydvl.valuation.types.ClasswiseSample]. These are the data types
+used for communication between the samplers on the main process and the workers.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -20,7 +29,10 @@ __all__ = [
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
+    "SemivalueCoefficient",
     "UtilityEvaluation",
+    "ValueUpdate",
+    "ValueUpdateT",
 ]
 
 IndexT: TypeAlias = np.int_
@@ -41,9 +53,10 @@ class ValueUpdate:
     The updates from all workers are converted back to linear space by
     [LogResultUpdater][pydvl.valuation.samplers.base.LogResultUpdater].
 
-    !!! Note
-        The `update` field is kept consistent with `log_update` as `exp(log_update) *
-        sign`, but it's not intended to be used.
+    Attributes:
+        idx: Index of the sample the update corresponds to.
+        log_update: Logarithm of the absolute value of the update.
+        sign: Sign of the update.
     """
 
     idx: IndexT | None
@@ -54,7 +67,6 @@ class ValueUpdate:
         object.__setattr__(self, "idx", idx)
         object.__setattr__(self, "log_update", log_update)
         object.__setattr__(self, "sign", sign)
-        object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
 ValueUpdateT = TypeVar("ValueUpdateT", bound=ValueUpdate, contravariant=True)
@@ -98,7 +110,7 @@ class Sample:
         if self.idx is None:
             raise ValueError("Cannot add idx to subset if idx is None.")
 
-        new_subset = np.array(self.subset.tolist() + [self.idx])
+        new_subset = np.append(self.subset, self.idx)
         return replace(self, subset=new_subset)
 
     def with_idx(self, idx: IndexT) -> Self:
@@ -173,9 +185,9 @@ class ClasswiseSample(Sample):
 
 SampleT = TypeVar("SampleT", bound=Sample)
 
-SampleBatch = Iterable[Sample]
-SampleGenerator = Generator[Sample, None, None]
-BatchGenerator = Generator[SampleBatch, None, None]
+SampleBatch = Iterable[SampleT]
+SampleGenerator = Generator[SampleT, None, None]
+BatchGenerator = Generator[SampleBatch[SampleT], None, None]
 
 
 @dataclass(frozen=True)
@@ -190,3 +202,20 @@ class UtilityEvaluation:
 
 class LossFunction(Protocol):
     def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
+
+
+class SemivalueCoefficient(Protocol):
+    def __call__(self, n: int, k: int) -> float:
+        """A semi-value coefficient is a function of the number of elements in the set,
+        and the size of the subset for which the coefficient is being computed.
+        Because both coefficients and sampler weights can be very large or very small,
+        we perform all computations in log-space to avoid numerical issues.
+
+        Args:
+            n: Total number of elements in the set.
+            k: Size of the subset for which the coefficient is being computed
+
+        Returns:
+            The natural logarithm of the semi-value coefficient.
+        """
+        ...

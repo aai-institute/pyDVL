@@ -1,26 +1,21 @@
 r"""
-This module implements the method described in (Kwon and Zou, 2023)<sup><a
-href="kwon_data_2023">1</a></sup>.
+This module implements the method described in Kwon and Zou, (2023).[^1]
 
-A data point's Data-OOB value is defined for bagging models. It is the average loss of
-the estimators which were not fit on it.
+Data-OOB value is tailored to bagging models. It defines a data point's value as
+the average loss of the estimators which were not fit on it.
 
-Let $w_{bj}\in Z$ be the number of times the j-th datum $(x_j, y_j)$ is selected
-in the b-th bootstrap dataset. The Data-OOB value is computed as follows:
+As such it is not a semi-value, and it is not based on marginal contributions.
 
-$$
-\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i,
-\hat{f}_b(x_i))}{\sum_{b=1}^{B}
-\mathbb{1}(w_{bi}=0)},
-$$
+!!! info
+    For details on the method and a discussion on how and whether to use it by
+    bagging models a posteriori, see the [main
+    documentation][data-oob-intro].
 
-where $T: Y \times Y \rightarrow \mathbb{R}$ is a score function that represents the
-goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
 
 ## References
 
-[^1]: <a name="kwon_data_2023"></a> Kwon, Yongchan, and James Zou. [Data-OOB: Out-of-bag
-      Estimate as a Simple and Efficient Data
+[^1]: <a name="kwon_dataoob_2023"></a> Kwon, Yongchan, and James Zou. [Data-OOB:
+      Out-of-bag Estimate as a Simple and Efficient Data
       Value](https://proceedings.mlr.press/v202/kwon23e.html). In Proceedings of the
       40th International Conference on Machine Learning, 18135–52. PMLR, 2023.
 """
@@ -41,6 +36,7 @@ from sklearn.ensemble._forest import (
     _get_n_samples_bootstrap,
 )
 from sklearn.utils.validation import check_is_fitted
+from typing_extensions import Self
 
 from pydvl.utils.types import BaggingModel, PointwiseScore
 from pydvl.valuation.base import Valuation
@@ -55,8 +51,8 @@ logger = logging.getLogger(__name__)
 class DataOOBValuation(Valuation):
     """Computes Data Out-Of-Bag values.
 
-    This class implements the method described in (Kwon and Zou,
-    2023)<sup><a href="kwon_data_2023">1</a></sup>.
+    This class implements the method described in Kwon and Zou,
+    (2023)<sup><a href="kwon_dataoob_2023">1</a></sup>.
 
     Args:
         model: A fitted bagging model. Bagging models in sklearn include
@@ -66,9 +62,6 @@ class DataOOBValuation(Valuation):
         score: A callable for point-wise comparison of true values with the predictions.
             If `None`, uses point-wise accuracy for classifiers and negative $l_2$
             distance for regressors.
-
-    Returns:
-        Object with the data values.
     """
 
     def __init__(
@@ -80,7 +73,17 @@ class DataOOBValuation(Valuation):
         self.model = model
         self.score = score
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset) -> Self:
+        """Compute the Data-OOB values.
+
+        This requires the bagging model passed upon construction to be fitted.
+
+        Args:
+            data: Data for which to compute values
+
+        Returns:
+            The fitted object.
+        """
         # TODO: automate str representation for all Valuations
         algorithm_name = f"Data-OOB-{str(self.model)}"
         self.result = ValuationResult.empty(
@@ -135,6 +138,7 @@ class DataOOBValuation(Valuation):
                 values=score_array,
                 counts=np.ones_like(score_array, dtype=data.indices.dtype),
             )
+        return self
 
 
 def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:

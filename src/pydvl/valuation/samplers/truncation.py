@@ -1,18 +1,19 @@
 """
 Truncation policies for the interruption of batched computations.
 
-When estimating marginal contribution-based values with permutation sampling, the
-computation can be interrupted early. A naive approach is to stop after a fixed number
-of updates, using
-[FixedTruncation][pydvl.valuation.shapley.truncated.FixedTruncation].
+When estimating values with a
+[PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler], it is
+possible to interrupt the marginal utility updates for one permutation based on
+different heuristics. A naive approach is to stop after a fixed number of updates, using
+[FixedTruncation][pydvl.valuation.samplers.truncation.FixedTruncation].
 
 However, a more successful one is to stop if the utility of the current batch of samples
 is close enough to the total utility of the dataset. This idea is implemented in
-[RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], and was
+[RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation], and was
 introduced as **Truncated Montecarlo Shapley** (TMCS) in Ghobani and Zou (2019)[^1]. A
 slight variation is to use the standard deviation of the utilities to set the tolerance,
 which can be done with
-[DeviationTruncation][pydvl.valuation.shapley.truncated.DeviationTruncation].
+[DeviationTruncation][pydvl.valuation.samplers.truncation.DeviationTruncation].
 
 !!! Danger "Stopping too early"
     Truncation policies can lead to underestimation of values if the utility function
@@ -190,7 +191,7 @@ class DeviationTruncation(TruncationPolicy):
     """Break a computation if the last computed utility is close to the total utility.
 
     This is essentially the same as
-    [RelativeTruncation][pydvl.valuation.shapley.truncated.RelativeTruncation], but with
+    [RelativeTruncation][pydvl.valuation.samplers.truncation.RelativeTruncation], but with
     the tolerance determined by a multiple of the standard deviation of the utilities.
 
     !!! Danger

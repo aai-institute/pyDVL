@@ -1,4 +1,8 @@
 """
+!!! Warning "Deprecation notice"
+    This module is deprecated since v0.10.0. For use with the methods in
+    [pydvl.valuation][] please use [pydvl.valuation.dataset][] instead.
+
 This module contains convenience classes to handle data and groups thereof.
 
 Shapley and Least Core value computations require evaluation of a scoring function
@@ -258,7 +262,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
         [sklearn.utils.Bunch][], as returned by the `load_*`
@@ -319,7 +323,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
@@ -374,7 +378,7 @@ class GroupedDataset(Dataset):
         target_names: Optional[Sequence[str]] = None,
         group_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Class for grouping datasets.
 
@@ -475,7 +479,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "GroupedDataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a
         [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
@@ -541,7 +545,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "Dataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
         as returned by the `make_*` functions in

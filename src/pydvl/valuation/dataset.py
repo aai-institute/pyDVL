@@ -4,41 +4,61 @@ This module contains convenience classes to handle data and groups thereof.
 Value computations with supervised models benefit from a unified interface to handle
 data. This module provides two classes to handle data and labels, as well as feature
 names and other information:
-[Dataset][pydvl.valuation.dataset.Dataset]
-and [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. Objects of both types can
-be used to construct [scorers][pydvl.valuation.scorers] and to fit (most) valuation
-methods.
 
-The underlying data arrays can always be accessed via
-[Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+* [Dataset][pydvl.valuation.dataset.Dataset]
+* [GroupedDataset][pydvl.valuation.dataset.GroupedDataset].
 
-Slicing the object, e.g. `dataset[0]`, will return a new `Dataset` with the data
-corresponding to that slice. Note however that the contents of the new object, i.e.
+Objects of both types can be used to construct [scorers][pydvl.valuation.scorers] (for
+the valuation set) and to `fit` (most) valuation methods.
+
+The underlying data arrays can always be accessed (read-only) via
+[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+
+!!! tip "Logical vs data indices"
+    [Dataset][pydvl.valuation.dataset.Dataset] and
+    [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] use two different types of
+    indices:
+    * **Logical indices**: These are the indices used to access the elements in the
+      `(Grouped)Dataset` objects when slicing or indexing them.
+    * **Data indices**: These are the indices used to access the data points in the
+        underlying data arrays. They are the indices used in the
+        [RawData][pydvl.valuation.dataset.RawData] object returned by
+        [Dataset.data()][pydvl.valuation.dataset.Dataset.data].
+
+## Slicing
+
+Slicing a [Dataset][] object, e.g. `dataset[0]`, will return a new `Dataset` with the
+data corresponding to that slice. Note however that the contents of the new object, i.e.
 `dataset[0].data().x`, may not be the same as `dataset.data().x[0]`, which is the first
 point in the original data array. This is in particular true for
 [GroupedDatasets][pydvl.valuation.dataset.GroupedDataset] where one "logical" index may
 correspond to multiple data points.
 
+Slicing with `None`, i.e. `dataset[None]`, will return a copy of the whole dataset.
 
 ## Grouped datasets and logical indices
 
 As mentioned above, it is also possible to group data points together with
-[GroupedDataset][pydvl.valuation.dataset.dataset.GroupedDataset].
-In order to handle groups correctly, Datasets map "logical" indices to "data" indices
-and vice versa. The latter correspond to indices in the data arrays themselves, while
-the former may map to groups of data points.
+[GroupedDataset][pydvl.valuation.dataset.GroupedDataset]. In order to handle groups
+correctly, Datasets map "logical" indices to "data" indices and vice versa. The latter
+correspond to indices in the data arrays themselves, while the former may map to groups
+of data points.
 
 A call to [GroupedDataset.data(indices)][pydvl.valuation.dataset.GroupedDataset.data]
 will return the data and labels of all samples for the given groups. But
 `grouped_data[0]` will return the data and labels of the first group, not the first data
 point and will therefore be in general different from `grouped_data.data([0])`.
 
-Grouping data can be useful to reduce computation time, e.g. for Shapley-based methods.
+Grouping data can be useful to reduce computation time, e.g. for Shapley-based methods,
+or to look at the importance of certain feature sets for the model.
 
-It is important to keep in mind the distinction between logical and data indices for
-valuation methods that require computation on individual data points, like KNNShapley or
-Data-OOB. In these cases, the logical indices are used to compute the Shapley values,
-while the data indices are used internally by the method.
+!!! tip
+    It is important to keep in mind the distinction between logical and data indices for
+    valuation methods that require computation on individual data points, like
+    [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation] or
+    [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]. In these
+    cases, the logical indices are used to compute the Shapley values, while the data
+    indices are used internally by the method.
 """
 
 from __future__ import annotations
@@ -46,9 +66,10 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Sequence, overload
+from typing import Any, Sequence, overload
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
@@ -61,12 +82,27 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class RawData:
+    """A view on a dataset's raw data. This is not a copy."""
+
     x: NDArray
     y: NDArray
+
+    def __post_init__(self):
+        try:
+            if len(self.x) != len(self.y):
+                raise ValueError("x and y must have the same length")
+        except TypeError as e:
+            raise TypeError("x and y must be numpy arrays") from e
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
+
+    def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
+        return RawData(np.atleast_1d(self.x[item]), np.atleast_1d(self.y[item]))
+
+    def __len__(self):
+        return len(self.x)
 
 
 class Dataset:
@@ -76,12 +112,30 @@ class Dataset:
     data names. It is used to pass data around to valuation methods.
 
     The underlying data arrays can be accessed via
-    [Dataset.data][pydvl.valuation.dataset.Dataset.data], which returns the tuple
-    `(X, y)` as a [RawData][pydvl.valuation.dataset.RawData] object. The data can be
-    accessed by indexing the object directly, e.g. `dataset[0]` will return the data
-    point corresponding to index 0 in `dataset`. For this base class, this is the same
-    as `dataset.data([0])`, which is the first point in the data array, but derived
+    [Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple
+    `(X, y)` as a read-only [RawData][pydvl.valuation.dataset.RawData] object. The data
+    can be accessed by indexing the object directly, e.g. `dataset[0]` will return the
+    data point corresponding to index 0 in `dataset`. For this base class, this is the
+    same as `dataset.data([0])`, which is the first point in the data array, but derived
     classes can behave differently.
+
+    Args:
+        x: training data
+        y: labels for training data
+        feature_names: names of the features of x data
+        target_names: names of the features of y data
+        data_names: names assigned to data points.
+            For example, if the dataset is a time series, each entry can be a
+            timestamp which can be referenced directly instead of using a row
+            number.
+        description: A textual description of the dataset.
+        multi_output: set to `False` if labels are scalars, or to
+            `True` if they are vectors of dimension > 1.
+
+    !!! tip "Changed in version 0.10.0"
+        No longer holds split data, but only x, y.
+    !!! tip "Changed in version 0.10.0"
+        Slicing now return a new `Dataset` object, not raw data.
     """
 
     _indices: NDArray[np.int_]
@@ -99,26 +153,6 @@ class Dataset:
         description: str | None = None,
         multi_output: bool = False,
     ):
-        """Constructs a Dataset from data and labels.
-
-        Args:
-            x: training data
-            y: labels for training data
-            feature_names: names of the features of x data
-            target_names: names of the features of y data
-            data_names: names assigned to data points.
-                For example, if the dataset is a time series, each entry can be a
-                timestamp which can be referenced directly instead of using a row
-                number.
-            description: A textual description of the dataset.
-            multi_output: set to `False` if labels are scalars, or to
-                `True` if they are vectors of dimension > 1.
-
-        !!! tip "Changed in version 0.10.0"
-            No longer holds split data, but only x, y.
-        !!! tip "Changed in version 0.10.0"
-            Slicing now return a new `Dataset` object, not raw data.
-        """
         self._x, self._y = check_X_y(
             x, y, multi_output=multi_output, estimator="Dataset"
         )
@@ -152,7 +186,9 @@ class Dataset:
     def __getitem__(
         self, idx: int | slice | Sequence[int] | NDArray[np.int_]
     ) -> Dataset:
-        if isinstance(idx, int):
+        if idx is None:
+            idx = slice(None)
+        elif isinstance(idx, int):
             idx = [idx]
         return Dataset(
             x=self._x[idx],
@@ -164,6 +200,7 @@ class Dataset:
         )
 
     def feature(self, name: str) -> tuple[slice, int]:
+        """Returns a slice for the feature with the given name."""
         try:
             return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
         except ValueError:
@@ -173,10 +210,11 @@ class Dataset:
         self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> RawData:
         """Given a set of indices, returns the training data that refer to those
-        indices.
+        indices, as a read-only tuple-like structure.
 
-        This is used mainly by [Utility][pydvl.valuation.dataset.utility.Utility] to
-        retrieve subsets of the data from indices.
+        This is used mainly by subclasses of
+        [UtilityBase][pydvl.valuation.utility.base.UtilityBase] to retrieve subsets of
+        the data from indices.
 
         Args:
             indices: Optional indices that will be used to select points from
@@ -250,9 +288,18 @@ class Dataset:
         return self._data_names
 
     @property
-    def dim(self) -> int:
+    def n_features(self) -> int:
         """Returns the number of dimensions of a sample."""
         return int(self._x.shape[1]) if len(self._x.shape) > 1 else 1
+
+    @property
+    @deprecated(
+        target=None,  # cannot set to Dataset.n_features
+        deprecated_in="0.10.0",
+        remove_in="0.11.0",
+    )
+    def dim(self):
+        return self.n_features
 
     def __str__(self):
         return self.description
@@ -264,7 +311,7 @@ class Dataset:
     def from_sklearn(
         cls,
         data: Bunch,
-        train_size: float = 0.8,
+        train_size: int | float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs,
@@ -276,7 +323,7 @@ class Dataset:
         ??? Example
             ```pycon
             >>> from pydvl.valuation.dataset import Dataset
-            >>> from sklearn.datasets import load_boston
+            >>> from sklearn.datasets import load_boston  # noqa
             >>> train, test = Dataset.from_sklearn(load_boston())
             ```
 
@@ -289,6 +336,10 @@ class Dataset:
                 - `target_names` (**optional**): the target names.
                 - `DESCR` (**optional**): a description.
             train_size: size of the training dataset. Used in `train_test_split`
+                float values represent the fraction of the dataset to include in the
+                training split and should be in (0,1). An integer value sets the
+                absolute number of training samples.
+        the value is automatically set to the complement of the test size.
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
@@ -338,7 +389,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> tuple[Dataset, Dataset]:
         """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
@@ -360,8 +411,8 @@ class Dataset:
                 using the y variable as labels. Read more in [sklearn's user
                 guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass e.g. `feature_names`
-                or `target_names`.
+                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass
+                e.g. `feature_names` or `target_names`.
 
         Returns:
             Object with the passed X and y arrays split across training and test sets.
@@ -397,7 +448,7 @@ class GroupedDataset(Dataset):
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
         group_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Class for grouping datasets.
 
@@ -428,7 +479,7 @@ class GroupedDataset(Dataset):
 
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y and group information. Added
-                methods to retrieve indices for groups and vicecersa.
+                methods to retrieve indices for groups and vice versa.
         """
         super().__init__(
             x=x,
@@ -447,7 +498,12 @@ class GroupedDataset(Dataset):
             )
 
         # data index -> abstract index (group id)
-        self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        try:
+            self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        except ValueError as e:
+            raise ValueError(
+                "data_groups must be a mapping from integer data indices to integer group ids"
+            ) from e
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
             {k: [] for k in set(data_groups)}
@@ -460,6 +516,11 @@ class GroupedDataset(Dataset):
             if group_names is not None
             else np.array(list(self.group_to_data.keys()), dtype=np.str_)
         )
+        if len(self._group_names) != len(self.group_to_data):
+            raise ValueError(
+                f"The number of group names ({len(self._group_names)}) "
+                f"does not match the number of groups ({len(self.group_to_data)})"
+            )
 
     def __len__(self):
         return len(self._indices)
@@ -469,13 +530,14 @@ class GroupedDataset(Dataset):
     ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
+        indices = self.data_indices(idx)
         return GroupedDataset(
-            x=self._x[self.data_indices(idx)],
-            y=self._y[self.data_indices(idx)],
-            data_groups=self.data_to_group[self.data_indices(idx)],
+            x=self._x[indices],
+            y=self._y[indices],
+            data_groups=self.data_to_group[indices],
             feature_names=self.feature_names,
             target_names=self.target_names,
-            data_names=self._data_names[self.data_indices(idx)],
+            data_names=self._data_names[indices],
             group_names=self._group_names[idx],
             description="(SLICED): " + self.description,
         )
@@ -564,11 +626,11 @@ class GroupedDataset(Dataset):
     def from_sklearn(
         cls,
         data: Bunch,
-        train_size: float = 0.8,
+        train_size: int | float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
         ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from a
@@ -592,7 +654,10 @@ class GroupedDataset(Dataset):
                 - `feature_names` (**optional**): the feature names.
                 - `target_names` (**optional**): the target names.
                 - `DESCR` (**optional**): a description.
-            train_size: size of the training dataset. Used in `train_test_split`.
+            train_size: size of the training dataset. Used in `train_test_split`
+                float values represent the fraction of the dataset to include in the
+                training split and should be in (0,1). An integer value sets the
+                absolute number of training samples.
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
@@ -655,7 +720,7 @@ class GroupedDataset(Dataset):
         random_state: int | None = None,
         stratify_by_target: bool = False,
         data_groups: Sequence[int] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> tuple[GroupedDataset, GroupedDataset]:
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
         and an ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from X and y
@@ -690,7 +755,7 @@ class GroupedDataset(Dataset):
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
             kwargs: Additional keyword arguments that will be passed to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             Dataset with the passed X and y arrays split across training and
@@ -699,12 +764,12 @@ class GroupedDataset(Dataset):
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
-                constructor.
+            Added kwargs to pass to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
-                objects.
+            Returns a tuple of two
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] objects.
         """
 
         if data_groups is None:
@@ -725,7 +790,11 @@ class GroupedDataset(Dataset):
 
     @classmethod
     def from_dataset(
-        cls, data: Dataset, data_groups: Sequence[int] | NDArray[np.int_]
+        cls,
+        data: Dataset,
+        data_groups: Sequence[int] | NDArray[np.int_],
+        group_names: Sequence[str] | NDArray[np.str_] | None = None,
+        **kwargs: Any,
     ) -> GroupedDataset:
         """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
@@ -746,6 +815,10 @@ class GroupedDataset(Dataset):
             data_groups: An array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
+            group_names: Names of the groups. If not provided, the numerical group ids
+                from `data_groups` will be used.
+            kwargs: Additional arguments to be passed to the
+                [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] constructor.
 
         Returns:
             A [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with the initial
@@ -758,4 +831,6 @@ class GroupedDataset(Dataset):
             feature_names=data.feature_names,
             target_names=data.target_names,
             description=data.description,
+            group_names=group_names,
+            **kwargs,
         )

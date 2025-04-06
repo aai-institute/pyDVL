@@ -45,7 +45,7 @@ def test_games(sampler_class, test_game, rtol, total_atol):
     valuation.fit(test_game.data)
     got = valuation.values()
     expected = test_game.shapley_values()
-    check_total_value(test_game.u, got, atol=total_atol)
+    check_total_value(test_game.u.with_dataset(test_game.data), got, atol=total_atol)
     check_values(got, expected, rtol=rtol)
 
 
@@ -83,7 +83,11 @@ def test_grouped_linear(
     valuation_combinatorial.fit(grouped_dataset)
     values_combinatorial = valuation_combinatorial.values()
 
-    check_total_value(grouped_utility, values_combinatorial, atol=total_atol)
+    check_total_value(
+        grouped_utility.with_dataset(grouped_dataset),
+        values_combinatorial,
+        atol=total_atol,
+    )
 
     valuation_permutation = ShapleyValuation(
         utility=grouped_utility,
@@ -94,7 +98,11 @@ def test_grouped_linear(
     valuation_permutation.fit(grouped_dataset)
     values_permutation = valuation_permutation.values()
 
-    check_total_value(grouped_utility, values_permutation, atol=total_atol)
+    check_total_value(
+        grouped_utility.with_dataset(grouped_dataset),
+        values_permutation,
+        atol=total_atol,
+    )
 
     check_values(values_combinatorial, values_permutation, rtol=rtol)
 
@@ -134,7 +142,7 @@ def test_linear_with_outlier(
     values = valuation_permutation.values()
 
     values.sort()
-    check_total_value(utility, values, atol=total_atol)
+    check_total_value(utility.with_dataset(data_train), values, atol=total_atol)
 
     assert values.indices[0] == outlier_idx
 
@@ -172,7 +180,9 @@ def test_polynomial(
     valuation_combinatorial.fit(data_train)
     values_combinatorial = valuation_combinatorial.values()
 
-    check_total_value(utility, values_combinatorial, atol=total_atol)
+    check_total_value(
+        utility.with_dataset(data_train), values_combinatorial, atol=total_atol
+    )
 
     valuation_permutation = ShapleyValuation(
         utility=utility,
@@ -183,7 +193,9 @@ def test_polynomial(
     valuation_permutation.fit(data_train)
     values_permutation = valuation_permutation.values()
 
-    check_total_value(utility, values_permutation, atol=total_atol)
+    check_total_value(
+        utility.with_dataset(data_train), values_permutation, atol=total_atol
+    )
     check_values(values_combinatorial, values_permutation, rtol=rtol)
 
 
@@ -224,6 +236,6 @@ def test_polynomial_with_outlier(
     valuation.fit(data_train)
     values = valuation.values()
 
-    check_total_value(poly_utility, values, atol=total_atol)
+    check_total_value(poly_utility.with_dataset(data_train), values, atol=total_atol)
 
-    assert values[0].idx == outlier_idx
+    assert values.get(0).idx == outlier_idx

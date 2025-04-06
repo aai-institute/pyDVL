@@ -23,6 +23,11 @@ jobs:
   run-tests:
     runs-on: ubuntu-22.04
     steps:
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        large-packages: false
+        docker-images: false
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0

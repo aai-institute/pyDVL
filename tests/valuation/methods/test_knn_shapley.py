@@ -6,9 +6,9 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.methods import KNNShapleyValuation, ShapleyValuation
-from pydvl.valuation.samplers import PermutationSampler
-from pydvl.valuation.stopping import MinUpdates
-from pydvl.valuation.utility import KNNClassifierUtility
+from pydvl.valuation.samplers import DeterministicUniformSampler
+from pydvl.valuation.stopping import NoStopping
+from pydvl.valuation.utility.knn import KNNClassifierUtility
 
 
 @pytest.fixture(scope="module")
@@ -21,33 +21,29 @@ def data():
     )
 
 
-@pytest.fixture(scope="module")
-def montecarlo_results(data):
+def test_against_exact_shapley(data, n_jobs):
     model = KNeighborsClassifier(n_neighbors=5)
-    data_train, data_test = data
-    utility = KNNClassifierUtility(model=model, test_data=data_test)
-    sampler = PermutationSampler(seed=42)
-    montecarlo_valuation = ShapleyValuation(
-        utility,
-        sampler=sampler,
-        is_done=MinUpdates(1000),
-        progress=False,
+    train, test = data
+
+    utility = KNNClassifierUtility(model=model, test_data=test, clone_before_fit=False)
+    sampler = DeterministicUniformSampler()
+    exact_valuation = ShapleyValuation(
+        utility, sampler=sampler, is_done=NoStopping(), progress=False
     )
-    return montecarlo_valuation.fit(data_train).values()
-
-
-@pytest.mark.parametrize("n_jobs", [1, 2])
-def test_against_montecarlo(n_jobs, data, montecarlo_results):
-    model = KNeighborsClassifier(n_neighbors=5)
-    data_train, data_test = data
-    utility = KNNClassifierUtility(model=model, test_data=data_test)
-    valuation = KNNShapleyValuation(utility, progress=False)
-
     with parallel_config(n_jobs=n_jobs):
-        results = valuation.fit(data_train).values()
+        exact_result = exact_valuation.fit(train).values()
+
+    valuation = KNNShapleyValuation(model=model, test_data=test, progress=False)
+    with parallel_config(n_jobs=n_jobs):
+        results = valuation.fit(train).values()
+
+    eps = float(np.finfo(float).eps)
+    np.testing.assert_allclose(  # type: ignore
+        results.values, exact_result.values, atol=eps, rtol=eps
+    )
 
     np.testing.assert_allclose(
-        results.values, montecarlo_results.values, atol=1e-2, rtol=1e-2
+        results.values, exact_result.values, atol=1e-10, rtol=1e-10
     )
 
 
@@ -56,10 +52,9 @@ def test_unsupported_grouped_dataset(data):
     data_groups = np.zeros(len(train))
     grouped = GroupedDataset.from_dataset(train, data_groups)
 
-    utility = KNNClassifierUtility(
-        model=KNeighborsClassifier(n_neighbors=1), test_data=test
+    valuation = KNNShapleyValuation(
+        model=KNeighborsClassifier(n_neighbors=1), test_data=test, progress=False
     )
-    valuation = KNNShapleyValuation(utility, progress=False)
 
     with pytest.raises(TypeError, match="GroupedDataset is not supported"):
         valuation.fit(grouped)

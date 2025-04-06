@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from concurrent.futures import Executor
 from contextlib import contextmanager
-from typing import Generator
+from typing import Any, Generator
 
 from deprecate import deprecated
 
@@ -24,13 +24,13 @@ __all__ = ["init_executor"]
 def init_executor(
     max_workers: int | None = None,
     config: ParallelConfig | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor for the given parallel configuration.
 
     Args:
         max_workers: Maximum number of concurrent tasks.
-        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+        config: instance of [ParallelConfig][pydvl.parallel.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         kwargs: Other optional parameter that will be passed to the executor.
 

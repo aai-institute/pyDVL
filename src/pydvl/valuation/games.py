@@ -1,7 +1,17 @@
 """
-This module provides several predefined games and, depending on the game,
-the corresponding Shapley values, Least-Core values or both of them, for
-benchmarking purposes.
+This module provides several predefined games used in the literature [^1] and, depending
+on the game, precomputed Shapley, Least-Core, and / or Banzhaf values, for benchmarking
+purposes.
+
+The games are:
+
+- [SymmetricVotingGame][pydvl.valuation.games.SymmetricVotingGame]
+- [AsymmetricVotingGame][pydvl.valuation.games.AsymmetricVotingGame]
+- [ShoesGame][pydvl.valuation.games.ShoesGame]
+- [AirportGame][pydvl.valuation.games.AirportGame]
+- [MinimumSpanningTreeGame][pydvl.valuation.games.MinimumSpanningTreeGame]
+- [MinerGame][pydvl.valuation.games.MinerGame]
+
 
 ## References
 
@@ -9,7 +19,6 @@ benchmarking purposes.
       J., 2009. [Polynomial calculation of the Shapley value based on
       sampling](http://www.sciencedirect.com/science/article/pii/S0305054808000804).
       Computers & Operations Research, 36(5), pp.1726-1730.
-
 """
 
 from __future__ import annotations
@@ -45,11 +54,9 @@ __all__ = [
 class DummyGameDataset(Dataset):
     """Dummy game dataset.
 
-    Initializes a dummy game dataset with n_players and an optional
-    description.
+    Initializes a dummy game dataset with `n_players` and an optional description.
 
-    This class is used internally inside the [Game][pydvl.value.games.Game]
-    class.
+    This class is used internally inside the [Game][pydvl.valuation.games.Game] class.
 
     Args:
         n_players: Number of players that participate in the game.
@@ -69,6 +76,15 @@ class DummyGameDataset(Dataset):
 
 
 class DummyGameUtility(UtilityBase):
+    """Dummy game utility
+
+    This class is used internally inside the [Game][pydvl.valuation.games.Game] class.
+
+    Args:
+        score: Function to compute the score of a coalition.
+        score_range: Minimum and maximum values of the score function.
+    """
+
     def __init__(
         self, score: Callable[[NDArray], float], score_range: tuple[float, float]
     ):
@@ -92,10 +108,10 @@ class DummyGameUtility(UtilityBase):
             score = 0.0
         return score
 
-    def with_dataset(self, dataset: Dataset):
-        copy = type(self)(score=self.score, score_range=self.score_range)
-        copy.training_data = dataset
-        return copy
+    def with_dataset(self, dataset: Dataset, copy: bool = True):
+        utility = type(self)(self.score, self.score_range) if copy else self
+        utility._training_data = dataset
+        return utility
 
 
 class DummyModel(SupervisedModel):

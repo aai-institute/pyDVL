@@ -97,7 +97,7 @@ class RayExecutor(Executor):
         # Work Item Manager Thread
         self._work_item_manager_thread: Optional[_WorkItemManagerThread] = None
 
-    def submit(self, fn: Callable[..., T], /, *args, **kwargs) -> Future[T]:
+    def submit(self, fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> Future[T]:
         r"""Submits a callable to be executed with the given arguments.
 
         Schedules the callable to be executed as fn(\*args, \**kwargs)
@@ -199,7 +199,7 @@ class RayExecutor(Executor):
 
 
 class _WorkItem:
-    """Inspired by code from: [concurrent.futures.thread][]"""
+    """Inspired by code from: [concurrent.futures][]"""
 
     def __init__(
         self,

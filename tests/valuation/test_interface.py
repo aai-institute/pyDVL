@@ -8,6 +8,12 @@ import pytest
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
+from pydvl.valuation import (
+    IndicatorUtilityModel,
+    PowerLawSampleSize,
+    RandomSizeIteration,
+    StratifiedSampler,
+)
 from pydvl.valuation.methods import *
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import AntitheticSampler, PermutationSampler
@@ -19,15 +25,19 @@ from pydvl.valuation.utility import DataUtilityLearning, ModelUtility
 
 @pytest.fixture
 def datasets():
-    train, test = Dataset.from_sklearn(load_iris(), train_size=0.6, random_state=42)
-    return train[:10], test[:10]
+    train, test = Dataset.from_sklearn(
+        load_iris(), train_size=10, random_state=42, stratify_by_target=True
+    )
+    return train, test[:10]
 
 
 @pytest.fixture
 def utility(datasets):
     model = LogisticRegression()
     _, test = datasets
-    utility = ModelUtility(model, SupervisedScorer(model, test, default=0))
+    utility = ModelUtility(
+        model, SupervisedScorer(model, test, default=0), catch_errors=True
+    )
     return utility
 
 
@@ -76,7 +86,7 @@ if not os.getenv("CI"):
 
 
 @pytest.mark.parametrize("n_jobs", n_jobs_list)
-def test_data_beta_shapley_valuation(train_data, utility, n_jobs):
+def test_beta_shapley_valuation(train_data, utility, n_jobs):
     valuation = BetaShapleyValuation(
         utility,
         sampler=AntitheticSampler(),
@@ -97,13 +107,13 @@ def test_data_beta_shapley_valuation(train_data, utility, n_jobs):
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_delta_shapley_valuation(train_data, utility, n_jobs):
-    n_obs = len(train_data)
     valuation = DeltaShapleyValuation(
         utility,
+        sampler=StratifiedSampler(
+            sample_sizes=PowerLawSampleSize(exponent=-2),
+            sample_sizes_iteration=RandomSizeIteration,
+        ),
         is_done=MaxUpdates(5),
-        # FIXME: maybe it's 2*math.ceil(n/3) for the upper bound?
-        lower_bound=n_obs // 3,
-        upper_bound=2 * n_obs // 3,
         progress=False,
     )
     with disable_logging():
@@ -116,8 +126,8 @@ def test_delta_shapley_valuation(train_data, utility, n_jobs):
 
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
-def test_data_banzhaf_valuation(train_data, utility, n_jobs):
-    val_bzf = DataBanzhafValuation(
+def test_banzhaf_valuation(train_data, utility, n_jobs):
+    val_bzf = BanzhafValuation(
         utility,
         sampler=PermutationSampler(RelativeTruncation(rtol=0.1)),
         is_done=MaxUpdates(5),
@@ -150,7 +160,12 @@ def test_group_testing_valuation(train_data, utility, n_jobs):
 
 @pytest.mark.parametrize("n_jobs", [1, 2])
 def test_data_utility_learning(train_data, utility, n_jobs):
-    learned_u = DataUtilityLearning(utility, 10, LinearRegression())
+    utility_model = IndicatorUtilityModel(
+        predictor=LinearRegression(), n_data=len(train_data)
+    )
+    learned_u = DataUtilityLearning(
+        utility=utility, training_budget=3, model=utility_model
+    )
     valuation = ShapleyValuation(
         learned_u,
         sampler=PermutationSampler(

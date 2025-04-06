@@ -12,6 +12,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import gridspec
+from matplotlib.axes import Axes
 from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -21,7 +23,7 @@ from sklearn.preprocessing import TargetEncoder
 
 from pydvl.valuation.dataset import Dataset
 
-from .types import Losses
+from .influence import Losses
 
 logger = logging.getLogger(__name__)
 
@@ -160,14 +162,14 @@ def plot_influences(
 
 def plot_iris(
     data: Dataset,
-    indices: List[int] = None,
-    highlight_indices: Optional[Sequence[int]] = None,
+    indices: list[int] = None,
+    highlight_indices: Sequence[int] | None = None,
     suptitle: str = None,
     legend_title: str = None,
     legend_labels: Sequence[str] = None,
     colors: Iterable = None,
-    colorbar_limits: Optional[Tuple] = None,
-    figsize: Tuple[int, int] = (20, 8),
+    colorbar_limits: tuple | None = None,
+    figsize: tuple[int, int] = (20, 8),
 ):
     """Scatter plots for the iris dataset.
 
@@ -183,12 +185,7 @@ def plot_iris(
             colorbar will only be displayed if there are more than 10 colors.
         figsize: Size of figure for matplotlib
     """
-    if indices is not None:
-        x_train = data.x_train[indices]
-        y_train = data.y_train[indices]
-    else:
-        x_train = data.x_train
-        y_train = data.y_train
+    x_train, y_train = data[indices].data()
 
     sepal_length_indices = data.feature("sepal length (cm)")
     sepal_width_indices = data.feature("sepal width (cm)")
@@ -199,85 +196,93 @@ def plot_iris(
         colors = y_train
     marker_size = 2 * plt.rcParams["lines.markersize"] ** 2
 
-    def _handle_legend(scatter):
-        if len(np.unique(colors)) > 10:
-            plt.colorbar(label=legend_title)
-            if colorbar_limits is not None:
-                plt.clim(*colorbar_limits)
-        else:
-            plt.legend(
-                handles=scatter.legend_elements()[0],
+    is_value_plot = len(np.unique(colors)) > 10
+
+    fig = plt.figure(figsize=figsize)
+    fig.suptitle(suptitle, fontweight="bold")
+
+    if is_value_plot:  # Two columns for the plots and a narrow one for the colorbar
+        gs = gridspec.GridSpec(1, 3, width_ratios=[1, 0.05, 1], wspace=0.3)
+        ax0 = fig.add_subplot(gs[0])
+        cax = fig.add_subplot(gs[1])
+        ax1 = fig.add_subplot(gs[2])
+    else:
+        gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1], wspace=0.3)
+        ax0 = fig.add_subplot(gs[0])
+        ax1 = fig.add_subplot(gs[1])
+
+    def plot_scatter(
+        txt: str,
+        indices_a,
+        indices_b,
+        highlight_indices,
+        add_legend: bool,
+        ax: Axes,
+        ticks_right: bool,
+    ):
+        if ticks_right:
+            ax.yaxis.tick_right()
+            ax.yaxis.set_label_position("right")
+
+        xmin, xmax = x_train[indices_a].min(), x_train[indices_a].max()
+        ymin, ymax = x_train[indices_b].min(), x_train[indices_b].max()
+        xmargin = 0.1 * (xmax - xmin)
+        ymargin = 0.1 * (ymax - ymin)
+        sc = ax.scatter(
+            x_train[indices_a],
+            x_train[indices_b],
+            c=colors,
+            s=marker_size,
+            marker="o",
+            alpha=0.8,
+        )
+        ax.set_xlim(xmin - xmargin, xmax + xmargin)
+        ax.set_ylim(ymin - ymargin, ymax + ymargin)
+        ax.set_xlabel(f"{txt} length")
+        ax.set_ylabel(f"{txt} width")
+        if add_legend:
+            ax.legend(
+                handles=sc.legend_elements()[0],
                 labels=legend_labels,
                 title=legend_title,
             )
 
-    plt.figure(figsize=figsize)
-    plt.suptitle(suptitle)
-    plt.subplot(1, 2, 1)
-    xmin, xmax = (
-        x_train[sepal_length_indices].min(),
-        x_train[sepal_length_indices].max(),
-    )
-    ymin, ymax = (
-        x_train[sepal_width_indices].min(),
-        x_train[sepal_width_indices].max(),
-    )
-    xmargin = 0.1 * (xmax - xmin)
-    ymargin = 0.1 * (ymax - ymin)
-    scatter = plt.scatter(
-        x_train[sepal_length_indices],
-        x_train[sepal_width_indices],
-        c=colors,
-        s=marker_size,
-        marker="o",
-        alpha=0.8,
-    )
-    plt.xlim(xmin - xmargin, xmax + xmargin)
-    plt.ylim(ymin - ymargin, ymax + ymargin)
-    plt.xlabel("Sepal length")
-    plt.ylabel("Sepal width")
-    _handle_legend(scatter)
-    if highlight_indices is not None:
-        scatter = plt.scatter(
-            x_train[sepal_length_indices][highlight_indices],
-            x_train[sepal_width_indices][highlight_indices],
-            facecolors="none",
-            edgecolors="r",
-            s=marker_size * 1.1,
-        )
+        if highlight_indices is not None:
+            ax.scatter(
+                x_train[indices_a][highlight_indices],
+                x_train[indices_b][highlight_indices],
+                facecolors="none",
+                edgecolors="r",
+                s=marker_size * 1.1,
+            )
+        return sc
 
-    plt.subplot(1, 2, 2)
-    xmin, xmax = (
-        x_train[petal_length_indices].min(),
-        x_train[petal_length_indices].max(),
+    plot_scatter(
+        "Sepal",
+        sepal_length_indices,
+        sepal_width_indices,
+        highlight_indices,
+        not is_value_plot,
+        ax0,
+        ticks_right=False,
     )
-    ymin, ymax = (
-        x_train[petal_width_indices].min(),
-        x_train[petal_width_indices].max(),
+    sc1 = plot_scatter(
+        "Petal",
+        petal_length_indices,
+        petal_width_indices,
+        highlight_indices,
+        not is_value_plot,
+        ax1,
+        ticks_right=True,
     )
-    xmargin = 0.1 * (xmax - xmin)
-    ymargin = 0.1 * (ymax - ymin)
-    scatter = plt.scatter(
-        x_train[petal_length_indices],
-        x_train[petal_width_indices],
-        c=colors,
-        marker="o",
-        s=marker_size,
-        alpha=0.8,
-    )
-    plt.xlim(xmin - xmargin, xmax + xmargin)
-    plt.ylim(ymin - ymargin, ymax + ymargin)
-    plt.xlabel("Petal length")
-    plt.ylabel("Petal width")
-    _handle_legend(scatter)
-    if highlight_indices is not None:
-        scatter = plt.scatter(
-            x_train[petal_length_indices][highlight_indices],
-            x_train[petal_width_indices][highlight_indices],
-            facecolors="none",
-            edgecolors="r",
-            s=80,
-        )
+
+    if is_value_plot:
+        cb = fig.colorbar(sc1, cax=cax)
+        cb.set_label(legend_title)
+        cb.ax.yaxis.label.set_rotation(0)
+        cb.ax.yaxis.set_label_coords(0.4, -0.03)  # yikes
+        if colorbar_limits is not None:
+            sc1.set_clim(*colorbar_limits)
 
 
 def load_preprocess_imagenet(
@@ -445,8 +450,7 @@ def plot_losses(losses: Losses):
     """Plots the train and validation loss
 
     Args:
-        training_loss: list of training losses, one per epoch
-        validation_loss: list of validation losses, one per epoch
+        losses: list of losses, one per epoch
     """
     _, ax = plt.subplots()
     ax.plot(losses.training, label="Train")

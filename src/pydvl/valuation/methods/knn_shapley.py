@@ -1,5 +1,15 @@
-"""
-This module contains Shapley computations for K-Nearest Neighbours.
+r"""
+This module contains Shapley computations for K-Nearest Neighbours classifier,
+introduced by Jia et al. (2019).[^1]
+
+In particular it provides
+[KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation] to
+compute exact Shapley values for a KNN classifier in
+$O(n \log n)$ time per test point, as opposed to $O(n^2 \log^2 n)$ if the model were
+simply fed to a generic [ShapleyValuation][pydvl.valuation.methods.shapley.ShapleyValuation]
+object.
+
+See [the documentation][knn-shapley-intro] or the paper for details.
 
 !!! Todo
     Implement approximate KNN computation for sublinear complexity
@@ -22,7 +32,8 @@ import numpy as np
 from joblib.parallel import Parallel, delayed, get_active_backend
 from more_itertools import chunked
 from numpy.typing import NDArray
-from sklearn.neighbors import NearestNeighbors
+from sklearn.base import clone
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from tqdm.auto import tqdm
 from typing_extensions import Self
 
@@ -30,7 +41,6 @@ from pydvl.utils.status import Status
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset, GroupedDataset
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.utility import KNNClassifierUtility
 
 
 class KNNShapleyValuation(Valuation):
@@ -38,28 +48,28 @@ class KNNShapleyValuation(Valuation):
 
     This implements the method described in
     (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
-    It exploits the local structure of K-Nearest Neighbours to reduce the number
-    of calls to the utility function to a constant number per index, thus
-    reducing computation time to $O(n)$.
 
     Args:
-        utility: KNNUtility with a KNN model to extract parameters from. The object
-            will not be modified nor used other than to call [get_params()](
-            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>)
+        model: KNeighborsClassifier model to use for valuation
+        test_data: Dataset containing test data to evaluate the model.
         progress: Whether to display a progress bar.
-
+        clone_before_fit: Whether to clone the model before fitting.
     """
 
-    def __init__(self, utility: KNNClassifierUtility, progress: bool = True):
+    def __init__(
+        self,
+        model: KNeighborsClassifier,
+        test_data: Dataset,
+        progress: bool = True,
+        clone_before_fit: bool = True,
+    ):
         super().__init__()
-        self.utility = utility
+        if not isinstance(model, KNeighborsClassifier):
+            raise TypeError("KNN Shapley requires a K-Nearest Neighbours model")
+        self.model = model
+        self.test_data = test_data
         self.progress = progress
-
-        config = self.utility.model.get_params()
-        self.n_neighbors = config["n_neighbors"]
-
-        del config["weights"]
-        self.helper_model = NearestNeighbors(**config)
+        self.clone_before_fit = clone_before_fit
 
     def fit(self, data: Dataset) -> Self:
         """Calculate exact shapley values for a KNN model on a dataset.
@@ -80,52 +90,49 @@ class KNNShapleyValuation(Valuation):
         with parallel_config(n_jobs=4):
             valuation.fit(data)
         ```
-
         """
 
         if isinstance(data, GroupedDataset):
             raise TypeError("GroupedDataset is not supported by KNNShapleyValuation")
 
         x_train, y_train = data.data()
-        self.helper_model = self.helper_model.fit(x_train)
-        n_test = len(self.utility.test_data)
+        if self.clone_before_fit:
+            self.model = cast(KNeighborsClassifier, clone(self.model))
+        self.model.fit(x_train, y_train)
+
+        n_test = len(self.test_data)
 
         _, n_jobs = get_active_backend()
+        n_jobs = n_jobs or 1  # Handle None if outside a joblib context
         batch_size = (n_test // n_jobs) + (1 if n_test % n_jobs else 0)
-        x_test, y_test = self.utility.test_data.data()
-        generator = zip(chunked(x_test, batch_size), chunked(y_test, batch_size))
-        generator_with_progress = tqdm(
-            generator,
-            total=n_test,
-            disable=not self.progress,
-            position=0,
-        )
+        x_test, y_test = self.test_data.data()
+        batches = zip(chunked(x_test, batch_size), chunked(y_test, batch_size))
 
+        process = delayed(self._compute_values_for_test_points)
         with Parallel(return_as="generator_unordered") as parallel:
             results = parallel(
-                delayed(self._compute_values_for_test_points)(
-                    self.helper_model, np.array(x_test), np.array(y_test), y_train
-                )
-                for x_test, y_test in generator_with_progress
+                process(self.model, x_test, y_test, y_train)
+                for x_test, y_test in batches
             )
             values = np.zeros(len(data))
-            for res in results:
+            # FIXME: this progress bar won't add much since we have n_jobs batches and
+            #  they will all take about the same time
+            for res in tqdm(results, total=n_jobs, disable=not self.progress):
                 values += res
             values /= n_test
 
-        res = ValuationResult(
+        self.result = ValuationResult(
             algorithm="knn_shapley",
             status=Status.Converged,
             values=values,
             data_names=data.names,
         )
 
-        self.result = res
         return self
 
     @staticmethod
     def _compute_values_for_test_points(
-        helper_model: NearestNeighbors,
+        model: NearestNeighbors,
         x_test: NDArray,
         y_test: NDArray,
         y_train: NDArray,
@@ -136,7 +143,7 @@ class KNNShapleyValuation(Valuation):
         averaging the Shapley values of the single test data points.
 
         Args:
-            helper_model: A fitted NearestNeighbors model.
+            model: A fitted NearestNeighbors model.
             x_test: The test data points.
             y_test: The test labels.
             y_train: The labels for the training points to be valued.
@@ -146,10 +153,10 @@ class KNNShapleyValuation(Valuation):
 
         """
         n_obs = len(y_train)
-        n_neighbors = helper_model.get_params()["n_neighbors"]
+        n_neighbors = model.get_params()["n_neighbors"]
 
         # sort data indices from close to far
-        sorted_indices = helper_model.kneighbors(
+        sorted_indices = model.kneighbors(
             x_test, n_neighbors=n_obs, return_distance=False
         )
 

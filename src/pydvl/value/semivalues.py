@@ -785,7 +785,7 @@ def compute_semivalues(
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
 
@@ -816,7 +816,7 @@ def compute_semivalues(
       the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
       href="#wang_data_2023">1</a></sup>.
 
-    See [Data valuation][data-valuation] for an overview of valuation.
+    See [Data valuation][data-valuation-intro] for an overview of valuation.
 
     Args:
         u: Utility object with model, data, and scoring function.

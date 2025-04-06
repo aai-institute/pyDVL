@@ -5,10 +5,10 @@ alias:
   text: Computing Influence Values
 ---
 
-## The influence function
+## The influence function  { #influence-function }
 
 !!! Warning 
-    The code in the package [pydvl.influence][pydvl.influence] is experimental.
+    The code in the package [pydvl.influence][] is experimental.
     Package structure and basic API are bound to change before v1.0.0
 
 The influence function (IF) is a method to quantify the effect (influence) that
@@ -72,7 +72,7 @@ and without re-training the full model.
 pyDVL supports two ways of computing the empirical influence function, namely
 up-weighting of samples and perturbation influences.
 
-### Approximating the influence of a point
+### Approximating the influence of a point  { #influence-of-a-point }
 
 Let's define
 
@@ -89,7 +89,7 @@ $$\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
 -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), $$
 
 where $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})$ is the Hessian of $L$. These quantities are also knows as
+\hat{\theta})$ is the Hessian of $L$. These quantities are also known as
 **influence factors**.
 
 Importantly, notice that this expression is only valid when $\hat{\theta}$ is a
@@ -139,7 +139,7 @@ $$\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
 Similarly to what was done above, we up-weight point $z_{\delta}$, but then we
 also remove the up-weighting for all the features that are not modified by
 $\delta$. From the calculations in
-[the previous section](#approximating-the-influence-of-a-point),
+[the previous section][influence-of-a-point]
 it is then easy to see that
 
 $$\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
@@ -221,12 +221,12 @@ performance of the model on test point $i$.
 
 ### Hessian regularization
 
-Additionally, and as discussed in [the introduction](#the-influence-function),
+Additionally, and as discussed in [the introduction][influence-function],
 in machine learning training rarely converges to a global minimum of the loss.
 Despite good apparent convergence, $\hat{\theta}$ might be located in a region
 with flat curvature or close to a saddle point. In particular, the Hessian might
 have vanishing eigenvalues making its direct inversion impossible. Certain
-methods, such as the [Arnoldi method](#arnoldi-solver) are robust against these
+methods, such as the [Arnoldi method][arnoldi-method] are robust against these
 problems, but most are not.
 
 To circumvent this problem, many approximate methods can be implemented. The
@@ -249,7 +249,7 @@ not to corrupt the outcome too much, the parameter $\lambda$ should be as small
 as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 \lambda \mathbb{I}$.
 
-### Block-diagonal approximation
+### Block-diagonal approximation { #block-diagonal-approximation }
 
 This implementation is capable of using a block-diagonal approximation.
 The full matrix is approximated by a block-diagonal version, which
@@ -304,7 +304,7 @@ with suffix `_by_block`. By default, `block_structure` is set to
 `BlockMode.FULL` and in this case these methods will return a dictionary
 with the empty string being the only key.
 
-### Gauss-Newton approximation
+### Gauss-Newton approximation { #gauss-newton-approximation }
 
 In the computation of the influence values, the inversion of the Hessian can be
 replaced by the inversion of the Gauss-Newton matrix
@@ -353,7 +353,7 @@ point.
 ### Influence factors
 
 The influence factors(refer to
-[the previous section](#approximating-the-influence-of-a-point) for a definition)
+[the previous section][influence-of-a-point] for a definition)
 are typically the most computationally demanding part of influence calculation.
 They can be obtained via calling the `influence_factors` method, saved, and later used 
 for influence calculation on different subsets of the training dataset.

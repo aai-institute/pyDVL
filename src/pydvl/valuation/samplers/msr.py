@@ -1,6 +1,15 @@
 """
 This module implements Maximum Sample Re-use (MSR) sampling for valuation, as described
-in (Wang et al.)<sup><a href="#wang_data_2023">1</a></sup>.
+in Wang and Jia (2023)[^1], where it was introduced specifically for
+[Data Banhzaf][pydvl.valuation.methods.banzhaf].
+
+When used with this method, sample complexity is reduced by a factor of $O(n)$.
+
+!!! warning
+    MSR can be very unstable when used with valuation algorithms other than
+    [Data Banzhaf][pydvl.valuation.methods.banzhaf]. This is because of the
+    instabilities introduced by the correction coefficients. For more, see Appendix C.1
+    of Wang and Jia (2023)[^1].
 
 The idea behind MSR is to update all indices in the dataset with every evaluation of the
 utility function on a sample. Updates are divided into positive, if the index is in the
@@ -8,12 +17,13 @@ sample, and negative, if it is not. The two running means are later combined int
 final result.
 
 Note that this requires defining a special evaluation strategy and result updater, as
-returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy] and
-[result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+returned by the [make_strategy()][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+and [result_updater()][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
 respectively.
 
 For more on the general architecture of samplers see
 [pydvl.valuation.samplers][pydvl.valuation.samplers].
+
 
 ## References
 
@@ -27,19 +37,14 @@ For more on the general architecture of samplers see
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List
 
 import numpy as np
 
+from pydvl.utils.functional import suppress_warnings
 from pydvl.utils.numeric import random_subset
 from pydvl.utils.types import Seed
-from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.samplers.base import (
-    EvaluationStrategy,
-    IndexSampler,
-    LogResultUpdater,
-    ResultUpdater,
-)
+from pydvl.valuation.result import LogResultUpdater, ResultUpdater, ValuationResult
+from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.utils import StochasticSamplerMixin
 from pydvl.valuation.types import (
     IndexSetT,
@@ -48,6 +53,7 @@ from pydvl.valuation.types import (
     Sample,
     SampleBatch,
     SampleGenerator,
+    SemivalueCoefficient,
     ValueUpdate,
 )
 from pydvl.valuation.utility.base import UtilityBase
@@ -57,6 +63,12 @@ __all__ = ["MSRSampler"]
 
 @dataclass(frozen=True)
 class MSRValueUpdate(ValueUpdate):
+    """Update for Maximum Sample Re-use (MSR) valuation (in log space).
+
+    Attributes:
+        in_sample: Whether the index to be updated was in the sample.
+    """
+
     in_sample: bool
 
     def __init__(self, idx: IndexT, log_update: float, sign: int, in_sample: bool):
@@ -67,7 +79,7 @@ class MSRValueUpdate(ValueUpdate):
         object.__setattr__(self, "update", np.exp(log_update) * sign)
 
 
-class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
+class MSRResultUpdater(ResultUpdater[MSRValueUpdate]):
     """Update running means for MSR valuation (in log-space).
 
     This class is used to update two running means for positive and negative updates
@@ -94,7 +106,7 @@ class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
     """
 
     def __init__(self, result: ValuationResult):
-        self.result = result
+        super().__init__(result)
         self.in_sample = ValuationResult.zeros(
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
@@ -102,15 +114,18 @@ class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
             algorithm=result.algorithm, indices=result.indices, data_names=result.names
         )
 
-        self.update_in_sample = LogResultUpdater[MSRValueUpdate](self.in_sample)
-        self.update_out_of_sample = LogResultUpdater[MSRValueUpdate](self.out_of_sample)
+        self.in_sample_updater = LogResultUpdater[MSRValueUpdate](self.in_sample)
+        self.out_of_sample_updater = LogResultUpdater[MSRValueUpdate](
+            self.out_of_sample
+        )
 
-    def __call__(self, update: MSRValueUpdate) -> ValuationResult:
+    def process(self, update: MSRValueUpdate) -> ValuationResult:
         assert update.idx is not None
+        self.n_updates += 1
         if update.in_sample:
-            self.update_in_sample(update)
+            self.in_sample_updater.process(update)
         else:
-            self.update_out_of_sample(update)
+            self.out_of_sample_updater.process(update)
         return self.combine_results()
 
     def combine_results(self) -> ValuationResult:
@@ -146,14 +161,14 @@ class MSRLogResultUpdater(ResultUpdater[MSRValueUpdate]):
         return self.result
 
 
-class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
+class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
     """Sampler for unweighted Maximum Sample Re-use (MSR) valuation.
 
     The sampling is similar to a
-    [UniformSampler][pydvl.valuation.samplers.UniformSampler] but without an outer
+    [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] but without an outer
     index. However,the MSR sampler uses a special evaluation strategy and result updater,
-    as returned by the [make_strategy][pydvl.valuation.samplers.MSRSampler.make_strategy]
-    and [result_updater][pydvl.valuation.samplers.MSRSampler.result_updater] methods,
+    as returned by the [make_strategy()][pydvl.valuation.samplers.msr.MSRSampler.make_strategy]
+    and [result_updater()][pydvl.valuation.samplers.msr.MSRSampler.result_updater] methods,
     respectively.
 
     Two running means are updated separately for positive and negative updates. The two
@@ -168,13 +183,13 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     def __init__(self, batch_size: int = 1, seed: Seed | None = None):
         super().__init__(batch_size=batch_size, seed=seed)
 
-    def _generate(self, indices: IndexSetT) -> SampleGenerator:
+    def generate(self, indices: IndexSetT) -> SampleGenerator:
         while True:
             subset = random_subset(indices, seed=self._rng)
             yield Sample(None, subset)
 
     def log_weight(self, n: int, subset_len: int) -> float:
-        r"""Probability of sampling a set of size k.
+        r"""Probability of sampling a set under MSR.
 
         In the **MSR scheme**, the sampling is done from the full power set $2^N$ (each
         set $S \subseteq N$ with probability $1 / 2^n$), and then for each data point
@@ -183,14 +198,14 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
             * $\mathcal{S}_{\ni i} = \{S \in \mathcal{S}: i \in S\},$ and
             * $\mathcal{S}_{\nni i} = \{S \in \mathcal{S}: i \nin S\}.$.
 
-        When we condition on the event $i \in S$, the remaining part $S_{- i}$ is
-        uniformly distributed over $2^{N_{- i}}$. In other words, the act of
-        partitioning recovers the uniform distribution on $2^{N_{- i}}$ "for free"
+        When we condition on the event $i \in S$, the remaining part $S_{-i}$ is
+        uniformly distributed over $2^{N_{-i}}$. In other words, the act of
+        partitioning recovers the uniform distribution on $2^{N_{-i}}$ "for free"
         because
 
-        $$P (S_{- i} = T \mid i \in S) = \frac{1}{2^{n - 1}},$$
+        $$P (S_{-i} = T \mid i \in S) = \frac{1}{2^{n - 1}},$$
 
-        for each $T \subseteq N_{- i}$.
+        for every $T \subseteq N_{-i}$.
 
         Args:
             n: Size of the index set.
@@ -205,13 +220,31 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[MSRValueUpdate]):
     def make_strategy(
         self,
         utility: UtilityBase,
-        coefficient: Callable[[int, int], float] | None = None,
+        coefficient: SemivalueCoefficient | None = None,
     ) -> MSREvaluationStrategy:
+        """Returns the strategy for this sampler.
+
+        Args:
+            utility: Utility function to evaluate.
+            coefficient: Coefficient function for the utility function.
+        """
         assert coefficient is not None
-        return MSREvaluationStrategy(self, utility, coefficient)
+        return MSREvaluationStrategy(utility, coefficient)
 
     def result_updater(self, result: ValuationResult) -> ResultUpdater:
-        return MSRLogResultUpdater(result)
+        """Returns a callable that updates a valuation result with an MSR value update.
+
+        MSR updates two running means for positive and negative updates separately. The
+        two running means are later combined into a final result.
+
+        Args:
+            result: The valuation result to update with each call of the returned
+                callable.
+        Returns:
+            A callable object that updates the valuation result with very
+                [MSRValueUpdate][pydvl.valuation.samplers.msr.MSRValueUpdate].
+        """
+        return MSRResultUpdater(result)
 
 
 class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
@@ -221,13 +254,14 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
     `n_indices` many updates from it. The updates will be used to update two running
     means that will later be combined into a final value. We use the field
     `ValueUpdate.in_sample` field to inform
-    [MSRResultUpdater][pydvl.valuation.samplers.MSRResultUpdater] of which of the two
-    running means must be updated.
+    [MSRResultUpdater][pydvl.valuation.samplers.msr.MSRResultUpdater] of which of the
+    two running means must be updated.
     """
 
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
     def process(
         self, batch: SampleBatch, is_interrupted: NullaryPredicate
-    ) -> List[MSRValueUpdate]:
+    ) -> list[MSRValueUpdate]:
         updates = []
         for sample in batch:
             updates.extend(self._process_sample(sample))
@@ -235,15 +269,26 @@ class MSREvaluationStrategy(EvaluationStrategy[MSRSampler, MSRValueUpdate]):
                 break
         return updates
 
-    def _process_sample(self, sample: Sample) -> List[MSRValueUpdate]:
+    def _process_sample(self, sample: Sample) -> list[MSRValueUpdate]:
         u = self.utility(sample)
         sign = np.sign(u)
         mask = np.zeros(self.n_indices, dtype=bool)
         mask[sample.subset] = True
-
         updates = []
-        for i, in_sample in enumerate(mask):  # type: int, bool
-            k = len(sample.subset) - int(in_sample)
-            update = self.log_correction(self.n_indices, k) + np.log(u * sign)
-            updates.append(MSRValueUpdate(np.int_(i), update, sign, in_sample))
+        k = len(sample.subset)
+        log_abs_u = -np.inf if u == 0 else np.log(u * sign)
+
+        if k > 0:  # Sample was not empty => there are in-sample indices
+            in_sample_coefficient = self.valuation_coefficient(self.n_indices, k - 1)
+            update = log_abs_u + in_sample_coefficient
+            for i in sample.subset:
+                updates.append(MSRValueUpdate(np.int_(i), update, sign, True))
+
+        if k < self.n_indices:  # Sample != full set => there are out-of-sample indices
+            out_sample_coefficient = self.valuation_coefficient(self.n_indices, k)
+            update = log_abs_u + out_sample_coefficient
+            for i in range(self.n_indices):
+                if not mask[i]:
+                    updates.append(MSRValueUpdate(np.int_(i), update, sign, False))
+
         return updates

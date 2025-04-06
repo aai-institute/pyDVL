@@ -260,25 +260,23 @@ class OperatorBilinearForm(
     BilinearForm[torch.Tensor, TorchBatch, TorchGradientProvider],
 ):
     r"""
-    Base class for bilinear forms based on an instance of
-    [TorchOperator][pydvl.influence.torch.operator.base.TorchOperator]. This means it
-    computes weighted inner products of the form:
+    Base class for bi-linear forms based on an instance of
+    [TensorOperator][pydvl.influence.torch.base.TensorOperator]. This means
+    it computes weighted inner products of the form:
 
     $$ \langle \operatorname{Op}(x), y \rangle $$
 
+    Args:
+        operator: The operator to compute the inner product with.
     """
 
-    def __init__(
-        self,
-        operator: TorchOperatorType,
-    ):
+    def __init__(self, operator: TensorOperator):
         self.operator = operator
 
     def inner_prod(
         self, left: torch.Tensor, right: Optional[torch.Tensor]
     ) -> torch.Tensor:
-        r"""
-        Computes the weighted inner product of two vectors, i.e.
+        r"""Computes the weighted inner product of two vectors, i.e.
 
         $$ \langle \operatorname{Op}(\text{left}), \text{right} \rangle $$
 
@@ -302,19 +300,15 @@ class OperatorBilinearForm(
 
 
 class DictBilinearForm(OperatorBilinearForm):
-    r"""
-    Base class for bilinear forms based on an instance of
-    [TorchOperator][pydvl.influence.torch.operator.base.TorchOperator]. This means it
+    r"""Base class for bi-linear forms based on an instance of
+    [TorchOperator][pydvl.influence.torch.base.TensorOperator]. This means it
     computes weighted inner products of the form:
 
     $$ \langle \operatorname{Op}(x), y \rangle $$
 
     """
 
-    def __init__(
-        self,
-        operator: "TensorDictOperator",
-    ):
+    def __init__(self, operator: TensorDictOperator):
         super().__init__(operator)
 
     def grads_inner_prod(
@@ -435,7 +429,7 @@ class LowRankBilinearForm(OperatorBilinearForm):
     in an efficient way using [torch.autograd][torch.autograd] functionality.
     """
 
-    def __init__(self, operator: "LowRankOperator"):
+    def __init__(self, operator: LowRankOperator):
         super().__init__(operator)
 
     def grads_inner_prod(
@@ -618,6 +612,7 @@ class TensorDictOperator(TensorOperator, ABC):
 
 
 TorchOperatorType = TypeVar("TorchOperatorType", bound=TensorOperator)
+"""Type variable bound to [TensorOperator][pydvl.influence.torch.base.TensorOperator]."""
 
 
 class TorchOperatorGradientComposition(
@@ -628,11 +623,9 @@ class TorchOperatorGradientComposition(
         TorchGradientProvider,
     ]
 ):
-    """
-    Representing a composable block that integrates an [TorchOperator]
-    [pydvl.influence.torch.operator.base.TorchOperator] and
-    a [TorchPerSampleGradientProvider]
-    [pydvl.influence.torch.operator.gradient_provider.TorchPerSampleGradientProvider]
+    """Represents a composable block that integrates a
+    [TorchOperator][pydvl.influence.torch.base.TensorOperator] and
+    a [TorchGradientProvider][pydvl.influence.torch.base.TorchGradientProvider]
 
     This block is designed to be flexible, handling different computational modes via
     an abstract operator and gradient provider.

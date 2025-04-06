@@ -1,4 +1,9 @@
 """
+!!! Warning "Deprecation notice"
+    This module is deprecated since v0.10.0. For use with the methods in
+    [pydvl.valuation][] please use any of the classes in
+    [pydvl.valuation.utility][] instead.
+
 This module contains classes to manage and learn utility functions for the
 computation of values. Please see the documentation on
 [Computing Data Values][computing-data-values] for more information.
@@ -59,7 +64,7 @@ class Utility:
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
-    if it is a Sci-Kit Learn model, otherwise a copy is created using
+    if it is a Scikit-Learn model, otherwise a copy is created using
     [copy.deepcopy][]
 
     Since evaluating the scoring function requires retraining the model and that
@@ -78,7 +83,7 @@ class Utility:
 
     Args:
         model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+            [sci-kit learn documentation](https://scikit-learn.org/stable/supervised_learning.html).
         data: [Dataset][pydvl.utils.dataset.Dataset]
             or [GroupedDataset][pydvl.utils.dataset.GroupedDataset] instance.
         scorer: A scoring object. If None, the `score()` method of the model
@@ -211,7 +216,7 @@ class Utility:
 
         Returns:
             0 if no indices are passed, `default_score` if we fail
-                to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
+                to fit the model or the scorer returns [numpy.nan][]. Otherwise, the score
                 of the model on the test data.
         """
         if not indices:
