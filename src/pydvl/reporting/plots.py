@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 from functools import partial
-from typing import Any, List, Literal, Optional, OrderedDict, Sequence, cast
+from typing import Any, List, Literal, OrderedDict, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import scipy as sp
 from deprecate import deprecated
 from matplotlib.axes import Axes
@@ -15,7 +16,7 @@ from pydvl.valuation.result import ValuationResult
 __all__ = [
     "plot_ci_array",
     "plot_ci_values",
-    "plot_shapley",
+    "plot_result_errors",
     "plot_influence_distribution",
     "plot_influence_distribution_by_label",
     "spearman_correlation",
@@ -25,14 +26,14 @@ __all__ = [
 @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
 def shaded_mean_std(
     data: np.ndarray,
-    abscissa: Optional[Sequence[Any]] = None,
+    abscissa: Sequence[Any] | None = None,
     num_std: float = 1.0,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    ax: Optional[Axes] = None,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    ax: Axes | None = None,
     **kwargs: Any,
 ) -> Axes:
     r"""The usual mean \(\pm\) std deviation plot to aggregate runs of
@@ -84,10 +85,10 @@ def plot_ci_array(
     data: NDArray,
     level: float,
     type: Literal["normal", "t", "auto"] = "normal",
-    abscissa: Optional[Sequence[str]] = None,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    ax: Optional[plt.Axes] = None,
+    abscissa: Sequence[str] | None = None,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    ax: plt.Axes | None = None,
     **kwargs: Any,
 ) -> plt.Axes:
     """Plot values and a confidence interval from a 2D array.
@@ -145,10 +146,10 @@ def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
-    abscissa: Optional[Sequence[Any]] = None,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    ax: Optional[plt.Axes] = None,
+    abscissa: Sequence[Any] | None = None,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    ax: plt.Axes | None = None,
     **kwargs: Any,
 ) -> plt.Axes:
     """Plot values and a confidence interval.
@@ -249,23 +250,21 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     return fig
 
 
-def plot_shapley(
-    df: pd.DataFrame,
+def plot_result_errors(
+    result: ValuationResult,
     *,
     level: float = 0.05,
-    ax: Optional[plt.Axes] = None,
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    prefix: Optional[str] = "data_value",
+    ax: plt.Axes | None = None,
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
 ) -> plt.Axes:
-    r"""Plots the shapley values, as returned from
-    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values],
+    r"""Plots a [ValuationResult][pydvl.pydvl.valuation.result.ValuationResult],
     with error bars corresponding to an $\alpha$-level Normal confidence
     interval.
 
     Args:
-        df: dataframe with the shapley values
+        result: object to plot
         level: confidence level for the error bars
         ax: axes to plot on or None if a new subplots should be created
         title: string, title of the plot
@@ -278,12 +277,10 @@ def plot_shapley(
     if ax is None:
         _, ax = plt.subplots()
 
-    stderr = np.sqrt(
-        df[f"{prefix}_variances"] / np.maximum(1.0, df[f"{prefix}_counts"])
-    )
+    stderr = np.sqrt(result.variances / np.maximum(1.0, result.counts))
     yerr = norm.ppf(1 - level / 2) * stderr
 
-    ax.errorbar(x=df.index, y=df[prefix], yerr=yerr, fmt="o", capsize=6)
+    ax.errorbar(x=result.names, y=result.values, yerr=yerr, fmt="o", capsize=6)
     ax.set_xlabel(xlabel or "")
     ax.set_ylabel(ylabel or "")
     ax.set_title(title or "")
