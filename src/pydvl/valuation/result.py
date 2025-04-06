@@ -453,11 +453,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         ):
             try:
                 return [int(k) for k in key]
-            except TypeError:
+            except TypeError as e:
                 raise TypeError(
                     f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
-                )
-
+                ) from e
+        if isinstance(key, np.ndarray) and np.issubdtype(key.dtype, np.integer):
+            return key.astype(int).tolist()
         if isinstance(key, Integral):
             idx = int(key)
             if idx < 0:
@@ -467,7 +468,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             return [idx]
 
         raise TypeError(
-            f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
+            f"Indices must be integers, integer sequences or ndarrays, or slices. "
+            f"{key=} has type {type(key)}"
         )
 
     @overload
