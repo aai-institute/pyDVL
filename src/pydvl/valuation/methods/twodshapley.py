@@ -40,6 +40,8 @@ class TwoDSample(Sample):
 
 
 class TwoDShapley(Valuation):
+    algorithm_name: str = "2D-Shapley"
+
     def fit(self, data: Dataset):
         # With the right sampler and a subclassed utility, this should follow a very
         # similar pattern to the other methods.

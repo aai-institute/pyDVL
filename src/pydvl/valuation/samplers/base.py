@@ -133,9 +133,10 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
         self._interrupted = True
 
     def __str__(self) -> str:
-        return self.__class__.__name__
+        return f"{self.__class__.__name__}(batch_size={self.batch_size})"
 
     def __repr__(self) -> str:
+        """FIXME: This is not a proper representation of the sampler."""
         return f"{self.__class__.__name__}"
 
     def __len__(self) -> int:

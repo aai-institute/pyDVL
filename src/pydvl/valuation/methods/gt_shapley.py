@@ -155,7 +155,8 @@ class GroupTestingShapleyValuation(Valuation):
             data_names=data.names,
         )
 
-        self.result = solution
+        self.result = self.init_or_check_result(data)
+        self.result += solution
         return self
 
 

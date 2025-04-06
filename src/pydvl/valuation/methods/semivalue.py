@@ -64,7 +64,6 @@ from pydvl.valuation.parallel import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
 )
-from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.types import SemivalueCoefficient
@@ -127,12 +126,9 @@ class SemivalueValuation(Valuation):
         else:
             raise TypeError(f"Invalid type for progress: {type(progress)}")
 
-    # TODO: automate str representation for all Valuations (and find something better)
     def __str__(self):
-        return (
-            f"{self.__class__.__name__}-{self.utility.__class__.__name__}-"
-            f"{self.sampler.__class__.__name__}-{self.is_done}"
-        )
+        name = getattr(self, "algorithm_name", self.__class__.__name__)
+        return f"{name}-{str(self.utility)}-{str(self.sampler)}-{str(self.is_done)}"
 
     @property
     @abstractmethod
@@ -147,11 +143,8 @@ class SemivalueValuation(Valuation):
 
     @suppress_warnings(flag="show_warnings")
     def fit(self, data: Dataset) -> Self:
-        self.result = ValuationResult.zeros(
-            algorithm=str(self),
-            indices=data.indices,
-            data_names=data.names,
-        )
+        self.result = self.init_or_check_result(data)
+
         ensure_backend_has_generator_return()
 
         self.is_done.reset()

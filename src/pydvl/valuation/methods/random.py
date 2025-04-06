@@ -26,21 +26,24 @@ class RandomValuation(Valuation):
     different values.
     """
 
+    algorithm_name: str = "random"
+
     def __init__(self, random_state: Seed):
         super().__init__()
         self.random_state = np.random.default_rng(random_state)
 
-    def fit(self, train: Dataset) -> Self:
+    def fit(self, data: Dataset) -> Self:
         """Dummy fitting that generates a set of random values.
 
         Successive calls will generate different values.
 
         Args:
-            train: used to determine the size of the valuation result
+            data: used to determine the size of the valuation result
         Returns:
             self
         """
-        self.result = ValuationResult.from_random(
-            size=len(train), seed=self.random_state
+        self.result = self.init_or_check_result(data)
+        self.result += ValuationResult.from_random(
+            size=len(data), seed=self.random_state, algorithm=str(self)
         )
         return self

@@ -100,6 +100,7 @@ class LeastCoreValuation(Valuation):
         self._solver_options = solver_options
         self._n_samples = n_samples
         self._progress = progress
+        self.algorithm_name = f"LeastCore-{str(sampler)}"
 
     def fit(self, data: Dataset) -> Self:
         """Calculate the least core valuation on a dataset.
@@ -124,8 +125,6 @@ class LeastCoreValuation(Valuation):
                 sampler=self._sampler, indices=data.indices
             )
 
-        algorithm = str(self._sampler)
-
         problem = create_least_core_problem(
             u=self._utility,
             sampler=self._sampler,
@@ -136,12 +135,13 @@ class LeastCoreValuation(Valuation):
         solution = lc_solve_problem(
             problem=problem,
             u=self._utility,
-            algorithm=algorithm,
+            algorithm=str(self),
             non_negative_subsidy=self._non_negative_subsidy,
             solver_options=self._solver_options,
         )
 
-        self.result = solution
+        self.result = self.init_or_check_result(data)
+        self.result += solution
         return self
 
 

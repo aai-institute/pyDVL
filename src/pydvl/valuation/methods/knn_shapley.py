@@ -56,6 +56,8 @@ class KNNShapleyValuation(Valuation):
         clone_before_fit: Whether to clone the model before fitting.
     """
 
+    algorithm_name: str = "knn_shapley"
+
     def __init__(
         self,
         model: KNeighborsClassifier,
@@ -121,12 +123,14 @@ class KNNShapleyValuation(Valuation):
                 values += res
             values /= n_test
 
-        self.result = ValuationResult(
-            algorithm="knn_shapley",
+        result = ValuationResult(
+            algorithm=str(self),
             status=Status.Converged,
             values=values,
             data_names=data.names,
         )
+        self.result = self.init_or_check_result(data)
+        self.result += result
 
         return self
 
