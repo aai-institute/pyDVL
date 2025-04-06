@@ -11,8 +11,8 @@ import pytest
 from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
-from pydvl.valuation import ValuationResult
-from pydvl.valuation.result import LogResultUpdater, ValueItem
+from pydvl.valuation.base import Valuation
+from pydvl.valuation.result import LogResultUpdater, ValuationResult, ValueItem
 from pydvl.valuation.types import ValueUpdate
 
 
@@ -95,9 +95,11 @@ def test_sorting(values, names, ranks_asc, dummy_values, reverse: bool):
 
 @pytest.mark.parametrize("sort", [None, False, True])
 def test_positions_sorting(sort):
-    v = ValuationResult(values=np.arange(10), indices=np.arange(10, 20), sort=sort)
+    v = ValuationResult(
+        values=np.random.random(10), indices=np.arange(10, 20), sort=sort
+    )
     data_indices = np.array([10, 13, 15])
-    np.all(v.indices[v.positions(data_indices)] == data_indices)
+    assert np.all(v.indices[v.positions(data_indices)] == data_indices)
 
 
 @pytest.mark.parametrize(

@@ -247,7 +247,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Changed the behaviour of sorting, slicing, and indexing.
     """
 
-    _indices: NDArray[IndexT]
+    _data_indices: NDArray[IndexT]
     _values: NDArray[np.float64]
     _counts: NDArray[np.int_]
     _variances: NDArray[np.float64]
@@ -258,7 +258,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     # None for unsorted, True for ascending, False for descending
     _sort_order: bool | None
     _extra_values: dict[str, Any]
-    _sort_positions: NDArray[IndexT]
+    _positions_to_indices: NDArray[IndexT]
 
     def __init__(
         self,
@@ -302,14 +302,18 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._extra_values = extra_values or {}
 
         # Internal indices -> data indices
-        self._indices = self._create_indices_array(indices, len(self._values))
-        self._names = self._create_names_array(data_names, self._indices)
+        self._data_indices = self._create_indices_array(indices, len(self._values))
+        self._names = self._create_names_array(data_names, self._data_indices)
 
         # Data indices -> Internal indices
-        self._positions = {idx: pos for pos, idx in enumerate(self._indices)}
+        self._indices = {idx: pos for pos, idx in enumerate(self._data_indices)}
 
-        # Sorted indices -> Internal indices
-        self._sort_positions = np.arange(len(self._values), dtype=np.int_)
+        # Sorted indices ("positions") -> Internal indices
+        self._positions_to_indices = np.arange(len(self._values), dtype=np.int_)
+
+        # Internal indices -> Sorted indices ("positions")
+        self._indices_to_positions = np.arange(len(self._values), dtype=np.int_)
+
         if sort is not None:
             self.sort(reverse=not sort)
 
@@ -337,16 +341,16 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 [ValueItem.value][pydvl.valuation.result.ValueItem].
         """
         keymap = {
-            "index": "_indices",
+            "index": "_data_indices",
             "value": "_values",
             "variance": "_variances",
             "name": "_names",
-            "stderr": "stderr",
         }
-        self._sort_positions = np.argsort(getattr(self, keymap[key])).astype(int)
+        self._positions_to_indices = np.argsort(getattr(self, keymap[key])).astype(int)
         if reverse:
-            self._sort_positions = self._sort_positions[::-1]
+            self._positions_to_indices = self._positions_to_indices[::-1]
         self._sort_order = not reverse
+        self._indices_to_positions = np.argsort(self._positions_to_indices).astype(int)
 
     def positions(self, data_indices: IndexSetT | list[IndexT]) -> IndexSetT:
         """Return the location (indices) within the `ValuationResult` for the given
@@ -359,13 +363,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         np.all(v.indices[v.positions(data_indices)] == data_indices) == True
         ```
         """
-        indices = [self._positions[idx] for idx in data_indices]
-        return self._sort_positions[indices]
+        indices = [self._indices[idx] for idx in data_indices]
+        return self._indices_to_positions[indices]
 
     @property
     def values(self) -> NDArray[np.float64]:
         """The values, possibly sorted."""
-        return self._values[self._sort_positions]
+        return self._values[self._positions_to_indices]
 
     @property
     def variances(self) -> NDArray[np.float64]:
@@ -375,7 +379,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         variance of the marginals used to compute it.
 
         """
-        return self._variances[self._sort_positions]
+        return self._variances[self._positions_to_indices]
 
     @property
     def stderr(self) -> NDArray[np.float64]:
@@ -387,7 +391,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     @property
     def counts(self) -> NDArray[np.int_]:
         """The raw counts, possibly sorted."""
-        return self._counts[self._sort_positions]
+        return self._counts[self._positions_to_indices]
 
     @property
     def indices(self) -> NDArray[IndexT]:
@@ -396,7 +400,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         If the object is unsorted, then these are the same as declared at
         construction or `np.arange(len(values))` if none were passed.
         """
-        return self._indices[self._sort_positions]
+        return self._data_indices[self._positions_to_indices]
 
     @property
     def names(self) -> NDArray[NameT]:
@@ -404,7 +408,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         If the object is unsorted, then these are the same as declared at
         construction or `np.arange(len(values))` if none were passed.
         """
-        return self._names[self._sort_positions]
+        return self._names[self._positions_to_indices]
 
     @property
     def status(self) -> Status:
@@ -420,7 +424,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             values=self._values.copy(),
             variances=self._variances.copy(),
             counts=self._counts.copy(),
-            indices=self._indices.copy(),
+            indices=self._data_indices.copy(),
             data_names=self._names.copy(),
             algorithm=self._algorithm,
             status=self._status,
@@ -490,13 +494,13 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         positions = self._key_to_positions(key)
 
         # Convert positions to original indices in the sort order
-        sort_indices = self._sort_positions[positions]
+        sort_indices = self._positions_to_indices[positions]
 
         return ValuationResult(
             values=self._values[sort_indices].copy(),
             variances=self._variances[sort_indices].copy(),
             counts=self._counts[sort_indices].copy(),
-            indices=self._indices[sort_indices].copy(),
+            indices=self._data_indices[sort_indices].copy(),
             data_names=self._names[sort_indices].copy(),
             algorithm=self._algorithm,
             status=self._status,
@@ -548,12 +552,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             )
 
         # Convert sorted positions (user-facing) to original indices in the sort order
-        destination = self._sort_positions[positions]
+        destination = self._positions_to_indices[positions]
         # For the source, use the first sorted n items
         source = list(range(len(positions)))
 
         # Check that the operation won't result in duplicate indices or names
-        new_indices = self._indices.copy()
+        new_indices = self._data_indices.copy()
         new_indices[destination] = value.indices[source]
         new_names = self._names.copy()
         new_names[destination] = value.names[source]
@@ -564,12 +568,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             raise ValueError("Operation would result in duplicate names")
 
         # Update data index -> internal index mapping
-        for data_idx in self._indices[destination]:
-            del self._positions[data_idx]
+        for data_idx in self._data_indices[destination]:
+            del self._indices[data_idx]
         for data_idx, dest in zip(value.indices[source], destination):
-            self._positions[data_idx] = dest
+            self._indices[data_idx] = dest
 
-        self._indices[destination] = value.indices[source]
+        self._data_indices[destination] = value.indices[source]
         self._names[destination] = value.names[source]
         self._values[destination] = value.values[source]
         self._variances[destination] = value.variances[source]
@@ -600,11 +604,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             )
 
         try:
-            pos = self._positions[data_idx]
+            pos = self._indices[data_idx]
         except KeyError:
             raise IndexError(f"Index {data_idx} not found in ValuationResult")
 
-        self._indices[pos] = value.idx
+        self._data_indices[pos] = value.idx
         self._names[pos] = value.name
         self._values[pos] = value.value
         self._variances[pos] = value.variance
@@ -616,9 +620,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """Iterate over the results returning [ValueItem][pydvl.valuation.result.ValueItem] objects.
         To sort in place before iteration, use [sort()][pydvl.valuation.result.ValuationResult.sort].
         """
-        for pos in self._sort_positions:
+        for pos in self._positions_to_indices:
             yield ValueItem(
-                self._indices[pos],
+                self._data_indices[pos],
                 self._names[pos],
                 self._values[pos],
                 self._variances[pos],
@@ -626,13 +630,15 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             )
 
     def __len__(self):
-        return len(self._indices)
+        return len(self._data_indices)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ValuationResult):
             raise TypeError(f"Cannot compare ValuationResult with {type(other)}")
 
-        if not np.array_equal(np.sort(self._indices), np.sort(other._indices)):
+        if not np.array_equal(
+            np.sort(self._data_indices), np.sort(other._data_indices)
+        ):
             return False
 
         if self._algorithm != other._algorithm or self._status != other._status:
@@ -641,8 +647,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if self._extra_values != other._extra_values:
             return False
 
-        self_pos = self.positions(self._indices)
-        other_pos = other.positions(other._indices)
+        self_pos = self.positions(self._data_indices)
+        other_pos = other.positions(other._data_indices)
 
         if not (
             np.array_equal(self._values[self_pos], other._values[other_pos])
@@ -798,7 +804,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if data_indices is None:
             positions = None
         else:
-            positions = [self._positions[idx] for idx in data_indices]
+            positions = [self._indices[idx] for idx in data_indices]
         self._values[positions] *= factor
         self._variances[positions] *= factor**2
 
@@ -813,7 +819,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
              IndexError: If the index is not found.
         """
         try:
-            pos = self._positions[data_idx]
+            pos = self._indices[data_idx]
         except KeyError:
             raise IndexError(f"Index {data_idx} not found in ValuationResult")
 
@@ -842,16 +848,16 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """
         column = column or self._algorithm
         df = pd.DataFrame(
-            self._values[self._sort_positions],
+            self._values[self._positions_to_indices],
             index=(
-                self._names[self._sort_positions]
+                self._names[self._positions_to_indices]
                 if use_names
-                else self._indices[self._sort_positions]
+                else self._data_indices[self._positions_to_indices]
             ),
             columns=[column],
         )
-        df[column + "_variances"] = self.variances[self._sort_positions]
-        df[column + "_counts"] = self.counts[self._sort_positions]
+        df[column + "_variances"] = self.variances[self._positions_to_indices]
+        df[column + "_counts"] = self.counts[self._positions_to_indices]
         return df
 
     @classmethod
@@ -1059,8 +1065,8 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
 
         try:
             # FIXME: need data index -> fixed index mapping => maybe we need to expose
-            #  this in ValuationResult?
-            loc: int = self.result._positions[update.idx]
+            #  this in ValuationResult? (this is not result.positions())
+            loc: int = self.result._indices[update.idx]
         except KeyError:
             raise IndexError(f"Index {update.idx} not found in ValuationResult")
 
