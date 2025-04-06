@@ -128,6 +128,11 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
             f"Cannot skip converged indices in {self.__class__.__name__}."
         )
 
+    @property
+    def interrupted(self) -> bool:
+        """Whether the sampler has been interrupted."""
+        return self._interrupted
+
     def interrupt(self):
         """Signals the sampler to stop generating samples after the current batch."""
         self._interrupted = True

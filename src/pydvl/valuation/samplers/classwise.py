@@ -18,6 +18,11 @@ This sampling scheme is divided into an outer and an inner sampler.
   returns so-called "in-class" samples (denoted by $S_{y_i}$ in this documentation) from
   the set $N_{y_i}$, i.e., the set of all indices with the same label as the data point
   of interest.
+    !!! info "Restricting the number of inner samples"
+        Because of the nested sampling procedure, it is necessary to limit the amount
+        of in-class samples to a finite number. This is done by setting the
+        `max_in_class_samples` parameter. For finite samplers, it can be left as `None`
+        to let them run until completion.
 
 !!! info
     For more information on the class-wise Shapley method, as well as a summary of the
@@ -132,10 +137,19 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
     method][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
 
     Args:
-        in_class: Sampling scheme for elements of a given label.
-        out_of_class: Sampling scheme for elements of different labels.
+        in_class: Sampling scheme for elements of a given label (inner sampler).
+            Typically, a
+            [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
+        out_of_class: Sampling scheme for elements of different labels (outer sampler).
+            E.g. a [UniformSampler][pydvl.valuation.samplers.uniform.UniformSampler] or
+            a [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
+        max_in_class_samples: Maximum number of in-class samples to generate per outer
+            iteration. Leave as `None` to sample all in-class samples when using finite
+            samplers. This must be set to a positive integer when using an infinite
+            in-class sampler.
         min_elements_per_label: Minimum number of elements per label
             to sample from the complement set, i.e., out of class elements.
+        batch_size: Number of samples to generate in each batch.
     """
 
     def __init__(
@@ -143,6 +157,7 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
         in_class: IndexSampler,
         out_of_class: PowersetSampler,
         *,
+        max_in_class_samples: int | None = None,
         min_elements_per_label: int = 1,
         batch_size: int = 1,
     ):
@@ -150,16 +165,26 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label
-
-    def interrupt(self) -> None:
-        """Interrupts the current sampler as well as the passed in samplers"""
-        super().interrupt()
-        self.in_class.interrupt()
-        self.out_of_class.interrupt()
+        self.max_in_class_samples = max_in_class_samples
 
     def from_data(self, data: Dataset) -> BatchGenerator:
+        """Generates batches of class-wise samples from the dataset.
+        Args:
+            data: The dataset to sample from.
+        """
         labels = get_unique_labels(data.data().y)
         n_labels = len(labels)
+        self._interrupted = False
+
+        if (
+            self.max_in_class_samples is None
+            and self.in_class.sample_limit(data.indices) is None
+        ):
+            raise ValueError(
+                f"When using an infinite in-class sampler ({str(self.in_class)}), "
+                f"ClasswiseSampler.max_in_class_samples must be set to a positive integer "
+                f"upon construction."
+            )
 
         # HACK: the outer sampler is over full subsets of T_{-y_i}
         # By default, powerset samplers remove the index from the generated
@@ -178,6 +203,8 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
             )
 
         for label, ooc_batch in roundrobin(out_of_class_batch_generators):
+            if self.interrupted:
+                break
             for ooc_sample in ooc_batch:
                 if self.min_elements_per_label > 0:
                     # We make sure that we have at least
@@ -202,6 +229,16 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
                         )
                     self._n_samples += len(batch)
                     yield batch
+                    if self.in_class.interrupted:
+                        break
+                    if (
+                        self.max_in_class_samples is not None
+                        and self.in_class.n_samples >= self.max_in_class_samples
+                    ):
+                        break
+
+    def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
+        raise AttributeError("Cannot sample from indices directly. Call `from_data()`.")
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:
         """This is not needed because this sampler is used by calling the `from_data`
@@ -214,11 +251,15 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
         raise AttributeError("The weight should come from the in-class sampler")
 
     def sample_limit(self, indices: IndexSetT) -> int | None:
-        """The sample limit cannot be computed without accessing the label information
-        and using that to compute the sample limits of the in-class and out-of-class
-        samplers first."""
+        if (
+            self.out_of_class.sample_limit(indices)
+            or self.in_class.sample_limit(indices) is None
+        ):
+            return None
+
         raise AttributeError(
-            "The sample limit cannot be computed without the label information."
+            "When using finite in-class and out-of-class samplers, the sample limit "
+            "cannot be computed without the label information."
         )
 
     def make_strategy(
