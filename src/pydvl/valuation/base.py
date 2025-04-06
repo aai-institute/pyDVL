@@ -130,9 +130,7 @@ class Valuation(ABC):
             raise NotFittedException(type(self))
         assert self.result is not None
 
-        from copy import copy
-
-        r = copy(self.result)
+        r = self.result.copy()
         if sort:
             r.sort()
         return r

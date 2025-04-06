@@ -135,8 +135,7 @@ class ClasswiseShapleyValuation(Valuation):
         return self
 
     def _normalize(self) -> ValuationResult:
-        r"""
-        Normalize a valuation result specific to classwise Shapley.
+        r"""Normalize a class-wise Shapley valuation result.
 
         Each value $v_i$ associated with the sample $(x_i, y_i)$ is normalized by
         multiplying it with $a_S(D_{y_i})$ and dividing by $\sum_{j \in D_{y_i}} v_j$.
@@ -144,13 +143,10 @@ class ClasswiseShapleyValuation(Valuation):
         href="#schoch_csshapley_2022">1</a> </sup>.
 
         Returns:
-            Normalized ValuationResult object.
+            Normalized result.
         """
-        if self.result is None:
+        if not self.is_fitted:
             raise ValueError("You must call fit before calling _normalize()")
-
-        if self.utility.training_data is None:
-            raise ValueError("You should call fit before calling _normalize()")
 
         logger.info("Normalizing valuation result.")
         x, y = self.utility.training_data.data()
