@@ -95,7 +95,6 @@ class ClasswiseShapleyValuation(Valuation):
         self.normalize_values = normalize_values
 
     def fit(self, data: Dataset):
-        # TODO?
         if isinstance(data, GroupedDataset):
             raise ValueError(
                 "GroupedDataset is not supported for ClasswiseShapleyValuation"
@@ -112,13 +111,13 @@ class ClasswiseShapleyValuation(Valuation):
         updater = self.sampler.result_updater(self.result)
         processor = delayed(strategy.process)
 
-        sample_generator = self.sampler.from_data(data)
+        batch_generator = self.sampler.batches_from_data(data)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
                 delayed_evals = parallel(
                     processor(batch=list(batch), is_interrupted=flag)
-                    for batch in sample_generator
+                    for batch in batch_generator
                 )
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):

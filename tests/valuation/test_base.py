@@ -119,7 +119,9 @@ def valuation_methods(seed=42):
         },
     )
 
-    out_of_class_sampler = AntitheticSampler(seed=seed)
+    out_of_class_sampler = AntitheticSampler(
+        index_iteration=NoIndexIteration, seed=seed
+    )
     return [
         pytest.param(
             {

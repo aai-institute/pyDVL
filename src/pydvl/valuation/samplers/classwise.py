@@ -49,6 +49,7 @@ from itertools import cycle, islice
 from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
+from more_itertools import chunked, flatten
 from numpy.typing import NDArray
 
 from pydvl.valuation.dataset import Dataset
@@ -142,7 +143,10 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
             [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
         out_of_class: Sampling scheme for elements of different labels (outer sampler).
             E.g. a [UniformSampler][pydvl.valuation.samplers.uniform.UniformSampler] or
-            a [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler].
+            a [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler]. This
+            sampler must use
+            [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or
+            any subclass thereof.
         max_in_class_samples: Maximum number of in-class samples to generate per outer
             iteration. Leave as `None` to sample all in-class samples when using finite
             samplers. This must be set to a positive integer when using an infinite
@@ -162,19 +166,28 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
         batch_size: int = 1,
     ):
         super().__init__(batch_size=batch_size)
+        # By default, powerset samplers remove the index from the generated
+        # subset but in this case we want all indices.
+        # The index for which we compute the value will be removed by
+        # the in_class sampler instead.
+        if not issubclass(out_of_class._index_iterator_cls, NoIndexIteration):
+            raise ValueError(
+                "The out-of-class sampler must use NoIndexIteration or any subclass. "
+                f"It is currently {out_of_class._index_iterator_cls.__name__}."
+            )
+
         self.in_class = in_class
         self.out_of_class = out_of_class
         self.min_elements_per_label = min_elements_per_label
         self.max_in_class_samples = max_in_class_samples
 
-    def from_data(self, data: Dataset) -> BatchGenerator:
+    def samples_from_data(self, data: Dataset) -> SampleGenerator:
         """Generates batches of class-wise samples from the dataset.
         Args:
             data: The dataset to sample from.
         """
         labels = get_unique_labels(data.data().y)
         n_labels = len(labels)
-        self._interrupted = False
 
         if (
             self.max_in_class_samples is None
@@ -186,14 +199,6 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
                 f"upon construction."
             )
 
-        # HACK: the outer sampler is over full subsets of T_{-y_i}
-        # By default, powerset samplers remove the index from the generated
-        # subset but in this case we want all indices.
-        # The index for which we compute the value will be removed by
-        # the in_class sampler instead.
-        if not issubclass(self.out_of_class._index_iterator_cls, NoIndexIteration):
-            self.out_of_class._index_iterator_cls = NoIndexIteration
-
         out_of_class_batch_generators = {}
 
         for label in labels:
@@ -204,7 +209,7 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
 
         for label, ooc_batch in roundrobin(out_of_class_batch_generators):
             if self.interrupted:
-                break
+                return
             for ooc_sample in ooc_batch:
                 if self.min_elements_per_label > 0:
                     # We make sure that we have at least
@@ -216,26 +221,38 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
                         continue
 
                 with_label = np.where(data.data().y == label)[0]
-                for ic_batch in self.in_class.generate_batches(with_label):
-                    batch: list[ClasswiseSample] = []
-                    for ic_sample in ic_batch:
-                        batch.append(
-                            ClasswiseSample(
-                                idx=ic_sample.idx,
-                                label=label,
-                                subset=ic_sample.subset,
-                                ooc_subset=ooc_sample.subset,
-                            )
-                        )
-                    self._n_samples += len(batch)
-                    yield batch
-                    if self.in_class.interrupted:
-                        break
+                for ic_sample in flatten(self.in_class.generate_batches(with_label)):
+                    yield ClasswiseSample(
+                        idx=ic_sample.idx,
+                        label=label,
+                        subset=ic_sample.subset,
+                        ooc_subset=ooc_sample.subset,
+                    )
                     if (
                         self.max_in_class_samples is not None
                         and self.in_class.n_samples >= self.max_in_class_samples
-                    ):
+                    ) or self.in_class.interrupted:
                         break
+
+    def batches_from_data(self, data: Dataset) -> BatchGenerator:
+        """Batches the samples and yields them."""
+        try:
+            self._len = self.sample_limit(data.indices)
+        except AttributeError:
+            pass
+
+        # Create an empty generator if the indices are empty: `return` acts like a
+        # `break`, and produces an empty generator.
+        if len(data) == 0:
+            return
+
+        self._interrupted = False
+        self._n_samples = 0
+        for batch in chunked(self.samples_from_data(data), self.batch_size):
+            self._n_samples += len(batch)
+            yield batch
+            if self.interrupted:
+                break
 
     def generate_batches(self, indices: IndexSetT) -> BatchGenerator:
         raise AttributeError("Cannot sample from indices directly. Call `from_data()`.")
