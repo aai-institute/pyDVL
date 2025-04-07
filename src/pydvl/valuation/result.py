@@ -35,7 +35,7 @@ they are in the `ValuationResult`. Values, variances and counts are compared.
 
 ## Sorting
 
-Results can also be sorted **in place** by value, variance or number of updates, see
+Results can be sorted (also in-place) by value, variance or number of updates, see
 [sort()][pydvl.valuation.result.ValuationResult.sort]. All the properties
 [ValuationResult.values][pydvl.valuation.result.ValuationResult.values],
 [ValuationResult.variances][pydvl.valuation.result.ValuationResult.variances],
@@ -200,7 +200,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     ## Sorting
 
-    Results can be sorted in-place with
+    Results can be sorted (also in-place) with
     [sort()][pydvl.valuation.result.ValuationResult.sort], or alternatively using
     python's standard `sorted()` and `reversed()` Note that sorting values affects how
     iterators and the object itself as `Sequence` behave: `values[0]` returns a
@@ -329,15 +329,16 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         self._indices_to_positions = np.arange(len(self._values), dtype=np.int_)
 
         if sort is not None:
-            self.sort(reverse=not sort)
+            self.sort(reverse=not sort, inplace=True)
 
     def sort(
         self,
         reverse: bool = False,
         # Need a "Comparable" type here
         key: Literal["value", "variance", "index", "name"] = "value",
-    ) -> None:
-        """Sorts the indices **in place** in ascending order by `key`.
+        inplace: bool = False,
+    ) -> ValuationResult:
+        """Sorts the indices in ascending order by `key`.
 
         Once sorted, iteration over the results, and indexing of all the
         properties
@@ -353,6 +354,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             reverse: Whether to sort in descending order.
             key: The key to sort by. Defaults to
                 [ValueItem.value][pydvl.valuation.result.ValueItem].
+            inplace: Whether to sort the object in place or return a new object.
+        Returns:
+            A new object with the sorted values, or the same object, sorted, if
+                `inplace` is `True`.
         """
         keymap = {
             "index": "_data_indices",
@@ -360,11 +365,15 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             "variance": "_variances",
             "name": "_names",
         }
-        self._positions_to_indices = np.argsort(getattr(self, keymap[key])).astype(int)
+
+        obj = self if inplace else self.copy()
+
+        obj._positions_to_indices = np.argsort(getattr(self, keymap[key])).astype(int)
         if reverse:
-            self._positions_to_indices = self._positions_to_indices[::-1]
-        self._sort_order = not reverse
-        self._indices_to_positions = np.argsort(self._positions_to_indices).astype(int)
+            obj._positions_to_indices = obj._positions_to_indices[::-1]
+        obj._sort_order = not reverse
+        obj._indices_to_positions = np.argsort(obj._positions_to_indices).astype(int)
+        return obj
 
     def positions(self, data_indices: IndexSetT | list[IndexT]) -> IndexSetT:
         """Return the location (indices) within the `ValuationResult` for the given

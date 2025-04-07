@@ -81,15 +81,18 @@ def test_creation():
 )
 @pytest.mark.parametrize("reverse", [False, True])
 def test_sorting(values, names, ranks_asc, dummy_values, reverse: bool):
-    dummy_values.sort(reverse=reverse, key="value")
+    tmp = dummy_values.sort(reverse=reverse, key="value", inplace=True)
+    assert tmp is dummy_values
+
     assert np.all([it.value for it in dummy_values] == sorted(values, reverse=reverse))
     if reverse:
         ranks_asc = list(reversed(ranks_asc))
     assert np.all(dummy_values.indices == ranks_asc)
 
-    dummy_values.sort(key="index")
-    assert np.all(dummy_values.indices == list(range(len(values))))
-    assert np.all([it.value for it in dummy_values] == values)
+    tmp = dummy_values.sort(key="index")
+    assert tmp is not dummy_values
+    assert np.all(tmp.indices == list(range(len(values))))
+    assert np.all([it.value for it in tmp] == values)
 
 
 @pytest.mark.parametrize("sort", [None, False, True])
@@ -116,7 +119,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
         assert np.all(df.index.values == sorted_names)
         assert np.all(df["dummy_valuator"].values == sorted(values))
 
-        dummy_values.sort(reverse=True)
+        dummy_values.sort(reverse=True, inplace=True)
         df = dummy_values.to_dataframe(use_names=True)
         assert np.all(df.index.values == list(reversed(sorted_names)))
         assert np.all(df["dummy_valuator"].values == sorted(values, reverse=True))
@@ -217,7 +220,7 @@ def test_get_idx():
         result.get(5)
     for v, idx in zip(values, indices):
         assert v == result.get(idx).value
-    result.sort()
+    result.sort(inplace=True)
     for v, idx in zip(values, indices):
         assert v == result.get(idx).value
 
@@ -253,7 +256,7 @@ def test_updating():
     np.testing.assert_allclose(saved.variances, [0.0, 1])
 
     # Test after sorting
-    v.sort(reverse=True, key="value")
+    v.sort(reverse=True, key="value", inplace=True)
     np.testing.assert_allclose(v.counts, [3, 2])
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0.0])
@@ -300,7 +303,7 @@ def test_serialization(serialize, deserialize, dummy_values):
     assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
     if len(dummy_values) > 0:
         # Sorting only has an effect over equality on non-empty results
-        dummy_values.sort(reverse=True)
+        dummy_values.sort(reverse=True, inplace=True)
         assert dummy_values != serded  # Order checks
 
 
@@ -309,7 +312,7 @@ def test_copy_and_equality(values, names, dummy_values):
     assert dummy_values == dummy_values
 
     c = dummy_values.copy()
-    dummy_values.sort(reverse=True)
+    dummy_values.sort(reverse=True, inplace=True)
 
     if len(c) > 0:  # Sorting only has an effect over equality on non-empty results
         assert c != dummy_values
@@ -339,7 +342,7 @@ def test_copy_and_equality(values, names, dummy_values):
         variances=c._variances,
         data_names=c._names,
     )
-    c2.sort(reverse=not c._sort_order)
+    c2.sort(reverse=not c._sort_order, inplace=True)
 
     assert c == c2
 
@@ -459,7 +462,7 @@ def test_get_and_setitem():
     assert all(r1.values[2:] == [3.0, 4.0])  # noqa
     assert all(r1.names[2:] == ["c", "d"])  # noqa
 
-    r2.sort(reverse=True, key="value")
+    r2.sort(reverse=True, key="value", inplace=True)
     r1[[0, 1]] = r2
     assert all(r1.indices[:2] == [60, 50])  # noqa
     assert all(r1.values[:2] == [6.0, 5.0])  # noqa
@@ -473,9 +476,9 @@ def test_get_and_setitem():
             indices=np.array([80]), values=np.array([8.0]), data_names=np.array(["e"])
         )
 
-    r1.sort(key="index")
+    r1.sort(key="index", inplace=True)
     r3 = r1[::-1]
-    r1.sort(reverse=True, key="index")
+    r1.sort(reverse=True, key="index", inplace=True)
     assert r3 == r1
 
     # Test negative indexing

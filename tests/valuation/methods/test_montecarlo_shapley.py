@@ -343,8 +343,7 @@ def test_linear_montecarlo_with_outlier(
 
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(train)
-    result = valuation.result
-    result.sort()
+    result = valuation.result.sort()
 
     if sampler_cls is not OwenSampler:
         assert result.status == Status.Converged

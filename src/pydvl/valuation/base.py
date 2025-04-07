@@ -79,7 +79,7 @@ class Valuation(ABC):
         return self._result
 
     @deprecated(
-        target=lambda self: self.result,
+        target=None,
         deprecated_in="0.10.0",
         remove_in="0.11.0",
     )
@@ -99,7 +99,7 @@ class Valuation(ABC):
 
         r = self._result.copy()
         if sort:
-            r.sort()
+            r.sort(inplace=True)
         return r
 
     @property

@@ -138,13 +138,11 @@ def test_linear_with_outlier(
         progress=False,
         is_done=NoStopping(),
     )
-    valuation_permutation.fit(data_train)
-    values = valuation_permutation.result
+    result = valuation_permutation.fit(data_train).result.sort()
 
-    values.sort()
-    check_total_value(utility.with_dataset(data_train), values, atol=total_atol)
+    check_total_value(utility.with_dataset(data_train), result, atol=total_atol)
 
-    assert values.indices[0] == outlier_idx
+    assert result.indices[0] == outlier_idx
 
 
 @pytest.mark.parametrize(
