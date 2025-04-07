@@ -14,6 +14,7 @@ from pydvl.valuation import (
     KNNShapleyValuation,
     MaxSamples,
     ModelUtility,
+    NoIndexIteration,
     PermutationSampler,
     SupervisedScorer,
 )
@@ -46,8 +47,8 @@ def test_save_and_load_file_path():
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_path = temp_file.name
         try:
-            valuation.save(temp_path)
-            loaded_valuation = TestValuation().load(temp_path)
+            valuation.save_result(temp_path)
+            loaded_valuation = TestValuation().load_result(temp_path)
             assert loaded_valuation.is_fitted
             assert loaded_valuation.values() == valuation.values()
         finally:
@@ -62,9 +63,9 @@ def test_save_and_load_path_object():
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             temp_path = Path(temp_dir) / "subdir" / "test.result"
-            valuation.save(temp_path)
+            valuation.save_result(temp_path)
             assert temp_path.exists()
-            loaded_valuation = TestValuation().load(temp_path)
+            loaded_valuation = TestValuation().load_result(temp_path)
             assert loaded_valuation.is_fitted
             assert loaded_valuation.values() == valuation.values()
         finally:
@@ -74,14 +75,14 @@ def test_save_and_load_path_object():
 
 def test_load_nonexistent_file():
     non_existent_file = "this_file_does_not_exist.pkl"
-    valuation = TestValuation().load(non_existent_file, ignore_exists=True)
+    valuation = TestValuation().load_result(non_existent_file, ignore_missing=True)
     assert valuation.result is None
     assert not valuation.is_fitted
 
     with pytest.raises(
         FileNotFoundError, match=f"File '{non_existent_file}' not found"
     ):
-        TestValuation().load(non_existent_file, ignore_exists=False)
+        TestValuation().load_result(non_existent_file, ignore_missing=False)
 
 
 def create_classification_dataset(
@@ -230,6 +231,7 @@ def test_init_result(params, seed):
     assert np.all(result.counts == 0)
 
     valuation.result = result
+    valuation._restored_result = True  # simulate restored result from file
     result2 = valuation.init_or_check_result(train)
     assert result2 is result
 
@@ -248,7 +250,7 @@ def test_init_result_mismatch(params, seed):
         indices=train1.indices,
         data_names=np.array([str(i) for i in train1.indices]),
     )
-
+    valuation._restored_result = True  # simulate restored result from file
     with pytest.raises(ValueError, match="Either the indices or the names"):
         valuation.init_or_check_result(train2)
 
@@ -277,11 +279,11 @@ def test_save_load_with_init_result(params, seed):
         temp_path = temp_file.name
 
         try:
-            valuation.save(temp_path)
+            valuation.save_result(temp_path)
             new_valuation = recursive_make(
                 params["valuation_cls"], params["valuation_kwargs"]
             )
-            new_valuation.load(temp_path)
+            new_valuation.load_result(temp_path)
 
             assert new_valuation.is_fitted
             assert new_valuation.result == valuation.result

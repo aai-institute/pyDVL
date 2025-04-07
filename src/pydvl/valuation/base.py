@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable
 
+from joblib import load as joblib_load
 from typing_extensions import Self
 
 from pydvl.utils.exceptions import NotFittedException
@@ -33,65 +34,77 @@ class Valuation(ABC):
     algorithm_name: str = "Valuation"
 
     def __init__(self) -> None:
+        self._restored_result = False  # HACK: True if the result was loaded from file
         self.result: ValuationResult | None = None
 
     @abstractmethod
     def fit(self, data: Dataset) -> Self: ...
 
     def init_or_check_result(self, data: Dataset) -> ValuationResult:
-        """Initialize the valuation result or check that a previously initialized one
-        (e.g. with `load()`) matches the data.
+        """Initialize the valuation result or check that a previously restored one
+        (with `load_result()`) matches the data.
+
+        Args:
+            data: The dataset to use for initialization or checking
+        Returns:
+            A zeroed valuation result, or a previously loaded one if it matches the data.
+        Raises:
+            ValueError: If the dataset does not match the loaded result.
         """
 
-        if self.result is None:
+        if self.result is None or self._restored_result is False:
             return ValuationResult.zeros(
                 algorithm=str(self),
                 indices=data.indices,
                 data_names=data.names,
             )
-        else:
-            try:
-                assert all(self.result.indices == data.indices)
-                assert all(self.result.names == data.names)
-            except (AssertionError, ValueError) as e:
-                raise ValueError(
-                    "Either the indices or the names of the dataset do not match those of "
-                    "the valuation result. Please reinitialize the valuation method."
-                ) from e
+        try:
+            assert all(self.result.indices == data.indices)
+            assert all(self.result.names == data.names)
+        except (AssertionError, ValueError) as e:
+            raise ValueError(
+                "Either the indices or the names of the dataset do not match those of "
+                "the valuation result. Please reset() the valuation method."
+            ) from e
         return self.result
 
-    def load(
-        self, file: str | os.PathLike | io.IOBase, ignore_exists: bool = True
+    def load_result(
+        self, file: str | os.PathLike | io.IOBase, ignore_missing: bool = True
     ) -> Self:
-        """Load the valuation result from a file or file-like object.
+        """Load a valuation result from a file or file-like object.
 
         The file or stream must be in the format used by `save()`. If the file does not
         exist, the method does nothing and returns the current instance.
 
         !!! warning "Temporary solution"
-            This simple persistence method is only a temporary solution. It does not
-            save any object state other than the result. In particular, interrupting and
-            continuing computation from a stored result will not yield the same result
-            as uninterrupted computation.
+            This simple persistence method is only a temporary solution. Because it does
+            not save any object state other than the result, interrupting and
+            continuing computation from a stored result will not yield the same
+            result as uninterrupted computation due to different random states.
 
         Args:
             file: The name or path of the file to load, or a file-like object.
-            ignore_exists: If `True`, do not raise an error if the file does not exist.
+            ignore_missing: If `True`, do not raise an error if the file does not exist.
         Raises:
             FileNotFoundError: If the file does not exist and `ignore_exists` is `False`.
-            ValueError: If the algorithm of the valuation result does not match the
-                current method.
         """
-        from joblib import load
 
         try:
-            self.result = load(file)
+            self.result = joblib_load(file)
+            self._restored_result = True
+            if not isinstance(self.result, ValuationResult):
+                raise ValueError(
+                    f"Loaded object is not a ValuationResult but {type(self.result)}"
+                )
         except FileNotFoundError as e:
             msg = f"File '{file}' not found. Cannot load valuation result."
-            if ignore_exists:
+            if ignore_missing:
                 logger.debug(msg + " Ignoring.")
                 return self
             raise FileNotFoundError(msg) from e
+        except (ValueError, TypeError, AttributeError, ModuleNotFoundError) as e:
+            # Catch unpickling/deserialization errors
+            raise ValueError(f"Failed to load valid ValuationResult: {e}") from e
 
         assert self.result is not None
         if self.result.algorithm != str(self):
@@ -101,7 +114,7 @@ class Valuation(ABC):
             )
         return self
 
-    def save(self, file: str | os.PathLike | io.IOBase) -> Self:
+    def save_result(self, file: str | os.PathLike | io.IOBase) -> Self:
         """Save the valuation result to a file or file-like object.
 
         The file or stream must be in the format used by `load()`. If the file already
@@ -115,6 +128,14 @@ class Valuation(ABC):
         if isinstance(file, Path):
             os.makedirs(file.parent, exist_ok=True)
         dump(self.result, file)
+        return self
+
+    def reset(self) -> Self:
+        """Reset the valuation method to its initial state.
+
+        This will remove the current valuation result and any other state.
+        """
+        self.result = None
         return self
 
     def values(self, sort: bool = False) -> ValuationResult:
