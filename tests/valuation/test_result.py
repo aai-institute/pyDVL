@@ -369,8 +369,8 @@ def test_extra_values(extra_values):
     result = ValuationResult(**kwargs)
     for k, v in extra_values.items():
         assert getattr(result, k) == v
-    # Making sure that the repr dunder method works when using extra values
-    repr_string = repr(result)
+    # Making sure that the str dunder method works when using extra values
+    repr_string = str(result)
     for k, v in extra_values.items():
         assert k in repr_string
 
@@ -739,3 +739,67 @@ def test_scaling(indices: NDArray | None):
     np.testing.assert_allclose(v.values[indices] * 2, v2.values[indices])
     np.testing.assert_allclose(v.variances[indices] * 4, v2.variances[indices])
     np.testing.assert_allclose(v.counts[indices], v2.counts[indices])
+
+
+def test_pickle_roundtrip():
+    result = ValuationResult.from_random(
+        size=5, algorithm="test", status=Status.Pending
+    )
+    pickled = pickle.dumps(result)
+    unpickled = pickle.loads(pickled)
+    assert result == unpickled
+
+
+def test_upgrade_hook_called():
+    class UpgradableValuationResult(ValuationResult):
+        __version__ = "2.0"
+
+        @classmethod
+        def __upgrade_state__(cls, state):
+            state["upgraded"] = True
+            state["_class_version"] = cls.__version__
+            return state
+
+    instance = UpgradableValuationResult.from_random(
+        size=5, algorithm="upgrade_test", status=Status.Pending
+    )
+
+    # Monkey-patch __getstate__ to simulate a legacy state with an old version.
+    def __getstate__(self):
+        state = super(UpgradableValuationResult, self).__getstate__()
+        state["_class_version"] = "1.0"
+        return state
+
+    instance.__getstate__ = __getstate__.__get__(instance, UpgradableValuationResult)
+
+    # Trigger __setstate__ and the upgrade hook.
+    # Need to use cloudpickle because of the local monkey patch function
+    pickled = cloudpickle.dumps(instance)
+    unpickled = cloudpickle.loads(pickled)
+
+    # Verify that the upgrade hook was applied.
+    assert unpickled.__dict__.get("upgraded") is True
+    assert (
+        unpickled.__dict__.get("_class_version")
+        == UpgradableValuationResult.__version__
+    )
+    assert instance == unpickled
+
+
+def test_version_mismatch_raises():
+    instance = ValuationResult.from_random(
+        size=5, algorithm="test", status=Status.Pending
+    )
+
+    # Monkey-patch __getstate__ to simulate a bad version.
+    def __getstate__(self):
+        state = self.__dict__
+        state["_class_version"] = "bad_version"
+        return state
+
+    instance.__getstate__ = __getstate__.__get__(instance, ValuationResult)
+
+    pickled = pickle.dumps(instance)
+
+    with pytest.raises(ValueError, match="Pickled ValuationResult version mismatch"):
+        pickle.loads(pickled)

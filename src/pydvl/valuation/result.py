@@ -259,6 +259,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     _sort_order: bool | None
     _extra_values: dict[str, Any]
     _positions_to_indices: NDArray[IndexT]
+    _indices_to_positions: NDArray[IndexT]
+
+    __version__: str = "1.0"
 
     def __init__(
         self,
@@ -436,7 +439,9 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """Allows access to extra values as if they were properties of the instance."""
         # This is here to avoid a RecursionError when copying or pickling the object
         if attr == "_extra_values":
-            raise AttributeError()
+            if "_extra_values" in self.__dict__:
+                return self.__dict__["_extra_values"]
+            return {}  # Return empty dict as fallback to prevent pickle from failing
         try:
             return self._extra_values[attr]
         except KeyError as e:
@@ -680,7 +685,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
         return True
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         repr_string = (
             f"{self.__class__.__name__}("
             f"algorithm='{self._algorithm}',"
@@ -694,6 +699,21 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             repr_string += f", {k}={v}"
         repr_string += ")"
         return repr_string
+
+    def __getstate__(self):
+        self.__dict__["_class_version"] = self.__class__.__version__
+        return self.__dict__
+
+    def __setstate__(self, state):
+        # Lazy future proofing: allow user-defined upgrade hook if provided
+        if (upgrade := getattr(self.__class__, "__upgrade_state__", None)) is not None:
+            state = upgrade(state)
+        if state.get("_class_version") != (expected := self.__class__.__version__):
+            raise ValueError(
+                f"Pickled ValuationResult version mismatch: expected {expected}, "
+                f"got {state.get('_class_version')}"
+            )
+        self.__dict__ = state
 
     def _check_compatible(self, other: ValuationResult):
         if not isinstance(other, ValuationResult):
