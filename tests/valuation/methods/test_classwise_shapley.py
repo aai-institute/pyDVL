@@ -187,5 +187,4 @@ def test_classwise_shapley(
         **method_kwargs,
     )
     valuation.fit(train_dataset_manual_derivation)
-    values = valuation.values()
-    check_values(values, exact_solution, **check_kwargs)
+    check_values(valuation.result, exact_solution, **check_kwargs)

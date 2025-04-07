@@ -77,11 +77,14 @@ samples random values uniformly.
 from __future__ import annotations
 
 import collections.abc
+import io
 import logging
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import total_ordering
 from numbers import Integral
+from pathlib import Path
 from typing import (
     Any,
     Generic,
@@ -96,6 +99,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from joblib import dump, load
 from numpy.typing import NDArray
 from typing_extensions import Self
 
@@ -105,7 +109,14 @@ from pydvl.utils.types import Seed
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.types import IndexSetT, IndexT, NameT, ValueUpdate, ValueUpdateT
 
-__all__ = ["LogResultUpdater", "ResultUpdater", "ValuationResult", "ValueItem"]
+__all__ = [
+    "LogResultUpdater",
+    "ResultUpdater",
+    "ValuationResult",
+    "ValueItem",
+    "load_result",
+    "save_result",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -1122,3 +1133,51 @@ class LogResultUpdater(ResultUpdater[ValueUpdateT]):
 
         self.result.set(item.idx, updated_item)
         return self.result
+
+
+def load_result(
+    file: str | os.PathLike | io.IOBase, ignore_missing: bool = False
+) -> ValuationResult | None:
+    """Load a valuation result from a file or file-like object.
+
+    The file or stream must be in the format used by `save()`. If the file does not
+    exist, the method does nothing.
+
+    Args:
+        file: The name or path of the file to load, or a file-like object.
+        ignore_missing: If `True`, do not raise an error if the file does not exist.
+    Raises:
+        FileNotFoundError: If the file does not exist and `ignore_exists` is `False`.
+    """
+
+    try:
+        result = load(file)
+        if not isinstance(result, ValuationResult):
+            raise ValueError(
+                f"Loaded object is not a ValuationResult but {type(result)}"
+            )
+    except FileNotFoundError as e:
+        msg = f"File '{file}' not found. Cannot load valuation result."
+        if ignore_missing:
+            logger.debug(msg + " Ignoring.")
+            return None
+        raise FileNotFoundError(msg) from e
+    except (ValueError, TypeError, AttributeError, ModuleNotFoundError) as e:
+        raise ValueError(f"Failed to load valid ValuationResult: {e}") from e
+
+    return result
+
+
+def save_result(result: ValuationResult, file: str | os.PathLike | io.IOBase):
+    """Save the valuation result to a file or file-like object.
+
+    The file or stream must be in the format used by `load()`. If the file already
+    exists, it will be overwritten.
+
+    Args:
+        result: The valuation result to save.
+        file: The name or path of the file to save to, or a file-like object.
+    """
+    if isinstance(file, Path):
+        os.makedirs(file.parent, exist_ok=True)
+    dump(result, file)

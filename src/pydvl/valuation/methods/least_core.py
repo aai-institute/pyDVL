@@ -31,6 +31,7 @@ from pydvl.valuation.methods._solve_least_core_problems import (
 from pydvl.valuation.methods._utility_values_and_sample_masks import (
     compute_utility_values_and_sample_masks,
 )
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.powerset import (
     DeterministicUniformSampler,
     FiniteNoIndexIteration,
@@ -104,7 +105,7 @@ class LeastCoreValuation(Valuation):
         self._progress = progress
         self.algorithm_name = f"LeastCore-{str(sampler)}"
 
-    def fit(self, data: Dataset) -> Self:
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         """Calculate the least core valuation on a dataset.
 
         This method has to be called before calling `values()`.
@@ -119,9 +120,13 @@ class LeastCoreValuation(Valuation):
         with parallel_config(n_jobs=4):
             valuation.fit(data)
         ```
-
+        Args:
+            data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
         """
+        self._result = self._init_or_check_result(data, continue_from)
         self._utility = self._utility.with_dataset(data)
+
         if self._n_samples is None:
             self._n_samples = _get_default_n_samples(
                 sampler=self._sampler, indices=data.indices
@@ -142,8 +147,7 @@ class LeastCoreValuation(Valuation):
             solver_options=self._solver_options,
         )
 
-        self.result = self.init_or_check_result(data)
-        self.result += solution
+        self._result += solution
         return self
 
 
@@ -189,6 +193,18 @@ class ExactLeastCoreValuation(LeastCoreValuation):
             progress=progress,
         )
 
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
+        """Calculate the exact least core valuation on a dataset.
+
+        This method computes all possible coalitions which makes it only feasible for
+        small datasets (typically less than 20 samples).
+
+        Args:
+            data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
+        """
+        return super().fit(data, continue_from)
+
 
 class MonteCarloLeastCoreValuation(LeastCoreValuation):
     """Class to calculate exact least-core values.
@@ -209,8 +225,6 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
             For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
         progress: Whether to show a progress bar during the construction of the
             least-core problem.
-
-
     """
 
     algorithm_name = "Monte-Carlo-Least-Core"
@@ -235,6 +249,17 @@ class MonteCarloLeastCoreValuation(LeastCoreValuation):
             solver_options=solver_options,
             progress=progress,
         )
+
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
+        """Calculate the Monte Carlo approximation of Least-Core valuation on a dataset.
+
+        This method uses random sampling of coalitions and can handle larger datasets
+        than the exact method, with accuracy depending on the number of samples.
+        Args:
+            data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
+        """
+        return super().fit(data, continue_from)
 
 
 def create_least_core_problem(

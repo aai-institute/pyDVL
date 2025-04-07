@@ -21,9 +21,11 @@ import hashlib
 from dataclasses import dataclass
 
 from numpy.typing import NDArray
+from typing_extensions import Self
 
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.types import IndexT, Sample
 
 
@@ -42,7 +44,7 @@ class TwoDSample(Sample):
 class TwoDShapley(Valuation):
     algorithm_name: str = "2D-Shapley"
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         # With the right sampler and a subclassed utility, this should follow a very
         # similar pattern to the other methods.
         # Note that it should be trivial to generalize to other coefficients, sampling

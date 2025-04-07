@@ -64,6 +64,7 @@ from pydvl.valuation.parallel import (
     ensure_backend_has_generator_return,
     make_parallel_flag,
 )
+from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers import IndexSampler
 from pydvl.valuation.stopping import StoppingCriterion
 from pydvl.valuation.types import SemivalueCoefficient
@@ -142,16 +143,24 @@ class SemivalueValuation(Valuation):
         ...
 
     @suppress_warnings(flag="show_warnings")
-    def fit(self, data: Dataset) -> Self:
-        self.result = self.init_or_check_result(data)
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
+        """Fits the semi-value valuation to the data.
 
+        Access the results through the `result` property.
+
+        Args:
+            data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
+
+        """
+        self._result = self._init_or_check_result(data, continue_from)
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
         strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
-        updater = self.sampler.result_updater(self.result)
+        updater = self.sampler.result_updater(self._result)
         processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
@@ -162,8 +171,8 @@ class SemivalueValuation(Valuation):
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
-                        self.result = updater.process(update)
-                    if self.is_done(self.result):
+                        self._result = updater.process(update)
+                    if self.is_done(self._result):
                         flag.set()
                         self.sampler.interrupt()
                         break

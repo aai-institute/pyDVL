@@ -6,6 +6,8 @@ with [point removal][pydvl.reporting.point_removal], random values are a simple 
 weak) baseline.
 """
 
+from __future__ import annotations
+
 import numpy as np
 from typing_extensions import Self
 
@@ -24,6 +26,9 @@ class RandomValuation(Valuation):
 
     Successive calls to [fit()][pydvl.valuation.base.Valuation.fit] will generate
     different values.
+
+    Args:
+        random_state: Random seed for reproducibility.
     """
 
     algorithm_name: str = "random"
@@ -32,18 +37,19 @@ class RandomValuation(Valuation):
         super().__init__()
         self.random_state = np.random.default_rng(random_state)
 
-    def fit(self, data: Dataset) -> Self:
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         """Dummy fitting that generates a set of random values.
 
         Successive calls will generate different values.
 
         Args:
             data: used to determine the size of the valuation result
-        Returns:
-            self
+            continue_from: (For consistency with other valuation methods) If this
+                argument provided, the result is initialized with this object. The
+                random values are added to the existing values.
         """
-        self.result = self.init_or_check_result(data)
-        self.result += ValuationResult.from_random(
+        self._result = self._init_or_check_result(data, continue_from)
+        self._result += ValuationResult.from_random(
             size=len(data), seed=self.random_state, algorithm=str(self)
         )
         return self

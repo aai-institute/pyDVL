@@ -293,8 +293,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
             )
             for batch in delayed_batches:
                 for evaluation in batch:
-                    self.result.update(evaluation.idx, evaluation.update)
-                if self.is_done(self.result):
+                    self._result.update(evaluation.idx, evaluation.update)
+                if self.is_done(self._result):
                     flag.set()
                     break
         ```

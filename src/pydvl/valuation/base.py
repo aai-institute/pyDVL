@@ -9,14 +9,11 @@ dataset.
 
 from __future__ import annotations
 
-import io
 import logging
-import os.path
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Iterable
 
-from joblib import load as joblib_load
+from deprecate import deprecated
 from typing_extensions import Self
 
 from pydvl.utils.exceptions import NotFittedException
@@ -34,110 +31,58 @@ class Valuation(ABC):
     algorithm_name: str = "Valuation"
 
     def __init__(self) -> None:
-        self._restored_result = False  # HACK: True if the result was loaded from file
-        self.result: ValuationResult | None = None
+        self._result: ValuationResult | None = None
 
     @abstractmethod
-    def fit(self, data: Dataset) -> Self: ...
+    def fit(
+        self, data: Dataset, continue_from: ValuationResult | None = None
+    ) -> Self: ...
 
-    def init_or_check_result(self, data: Dataset) -> ValuationResult:
+    def _init_or_check_result(
+        self, data: Dataset, result: ValuationResult | None = None
+    ) -> ValuationResult:
         """Initialize the valuation result or check that a previously restored one
         (with `load_result()`) matches the data.
 
         Args:
             data: The dataset to use for initialization or checking
+            result: The previously loaded valuation result to check against the data.
         Returns:
             A zeroed valuation result, or a previously loaded one if it matches the data.
         Raises:
             ValueError: If the dataset does not match the loaded result.
         """
 
-        if self.result is None or self._restored_result is False:
+        if result is None:
             return ValuationResult.zeros(
-                algorithm=str(self),
-                indices=data.indices,
-                data_names=data.names,
+                algorithm=str(self), indices=data.indices, data_names=data.names
             )
+
         try:
-            assert all(self.result.indices == data.indices)
-            assert all(self.result.names == data.names)
+            assert all(result.indices == data.indices)
+            assert all(result.names == data.names)
         except (AssertionError, ValueError) as e:
             raise ValueError(
                 "Either the indices or the names of the dataset do not match those of "
-                "the valuation result. Please reset() the valuation method."
+                "the passed valuation result."
             ) from e
-        return self.result
 
-    def load_result(
-        self, file: str | os.PathLike | io.IOBase, ignore_missing: bool = True
-    ) -> Self:
-        """Load a valuation result from a file or file-like object.
+        return result
 
-        The file or stream must be in the format used by `save()`. If the file does not
-        exist, the method does nothing and returns the current instance.
+    @property
+    def result(self) -> ValuationResult:
+        """The current valuation result (not a copy)."""
+        if not self.is_fitted:
+            raise NotFittedException(type(self))
+        assert self._result is not None
 
-        !!! warning "Temporary solution"
-            This simple persistence method is only a temporary solution. Because it does
-            not save any object state other than the result, interrupting and
-            continuing computation from a stored result will not yield the same
-            result as uninterrupted computation due to different random states.
+        return self._result
 
-        Args:
-            file: The name or path of the file to load, or a file-like object.
-            ignore_missing: If `True`, do not raise an error if the file does not exist.
-        Raises:
-            FileNotFoundError: If the file does not exist and `ignore_exists` is `False`.
-        """
-
-        try:
-            self.result = joblib_load(file)
-            self._restored_result = True
-            if not isinstance(self.result, ValuationResult):
-                raise ValueError(
-                    f"Loaded object is not a ValuationResult but {type(self.result)}"
-                )
-        except FileNotFoundError as e:
-            msg = f"File '{file}' not found. Cannot load valuation result."
-            if ignore_missing:
-                logger.debug(msg + " Ignoring.")
-                return self
-            raise FileNotFoundError(msg) from e
-        except (ValueError, TypeError, AttributeError, ModuleNotFoundError) as e:
-            # Catch unpickling/deserialization errors
-            raise ValueError(f"Failed to load valid ValuationResult: {e}") from e
-
-        assert self.result is not None
-        if self.result.algorithm != str(self):
-            logger.warning(
-                f"The algorithm of the valuation result {self.result.algorithm} does "
-                f"not match the current method {str(self)}. Proceed with caution."
-            )
-        return self
-
-    def save_result(self, file: str | os.PathLike | io.IOBase) -> Self:
-        """Save the valuation result to a file or file-like object.
-
-        The file or stream must be in the format used by `load()`. If the file already
-        exists, it will be overwritten.
-
-        Args:
-            file: The name or path of the file to save to, or a file-like object.
-        """
-        from joblib import dump
-
-        if isinstance(file, Path):
-            os.makedirs(file.parent, exist_ok=True)
-        dump(self.result, file)
-        return self
-
-    def reset(self) -> Self:
-        """Reset the valuation method to its initial state.
-
-        This will remove the current valuation result and any other state.
-        """
-        self.result = None
-        return self
-
+    @deprecated(
+        target=lambda self: self.result,
+        deprecated_in="0.10.0",
+        remove_in="0.11.0",
+    )
     def values(self, sort: bool = False) -> ValuationResult:
         """Returns a copy of the valuation result.
 
@@ -150,16 +95,16 @@ class Valuation(ABC):
         """
         if not self.is_fitted:
             raise NotFittedException(type(self))
-        assert self.result is not None
+        assert self._result is not None
 
-        r = self.result.copy()
+        r = self._result.copy()
         if sort:
             r.sort()
         return r
 
     @property
     def is_fitted(self) -> bool:
-        return self.result is not None
+        return self._result is not None
 
     def __str__(self):
         return getattr(self, "algorithm_name", self.__class__.__name__)

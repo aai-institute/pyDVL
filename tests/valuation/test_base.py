@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import os
 import tempfile
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -26,7 +27,7 @@ from pydvl.valuation.methods.least_core import (
     ExactLeastCoreValuation,
     MonteCarloLeastCoreValuation,
 )
-from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.result import ValuationResult, load_result, save_result
 from pydvl.valuation.samplers.classwise import ClasswiseSampler
 from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
 from pydvl.valuation.utility.classwise import ClasswiseModelUtility
@@ -35,54 +36,83 @@ from . import recursive_make
 
 
 class TestValuation(Valuation):
-    def fit(self, data=None):
-        self.result = ValuationResult.from_random(size=10)
+    algorithm_name = "TestValuation"
+
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None):
+        self._result = self._init_or_check_result(data, continue_from)
+        self._result += ValuationResult(
+            indices=data.indices,
+            values=np.ones_like(data.indices),
+            counts=np.ones_like(data.indices),
+            algorithm=str(self),
+        )
         return self
 
 
-def test_save_and_load_file_path():
+def test_save_and_load_file_path(seed, dummy_train_data):
     """Test saving and loading using a file path."""
-    valuation = TestValuation().fit()
+
+    valuation = TestValuation().fit(dummy_train_data)
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_path = temp_file.name
         try:
-            valuation.save_result(temp_path)
-            loaded_valuation = TestValuation().load_result(temp_path)
-            assert loaded_valuation.is_fitted
-            assert loaded_valuation.values() == valuation.values()
+            save_result(valuation.result, temp_path)
+            loaded_result = load_result(temp_path)
+
+            continued_valuation = TestValuation().fit(
+                dummy_train_data, continue_from=loaded_result
+            )
+
+            assert np.all(continued_valuation.result.counts == 2)
+
+            fresh_valuation = TestValuation().fit(dummy_train_data)
+            assert np.all(fresh_valuation.result.counts == 1)
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
 
-def test_save_and_load_path_object():
-    """Test saving and loading using a Path object."""
-    valuation = TestValuation().fit()
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        try:
-            temp_path = Path(temp_dir) / "subdir" / "test.result"
-            valuation.save_result(temp_path)
-            assert temp_path.exists()
-            loaded_valuation = TestValuation().load_result(temp_path)
-            assert loaded_valuation.is_fitted
-            assert loaded_valuation.values() == valuation.values()
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
-
-def test_load_nonexistent_file():
+def test_load_nonexistent_file(dummy_train_data):
+    """Test loading a nonexistent file."""
     non_existent_file = "this_file_does_not_exist.pkl"
-    valuation = TestValuation().load_result(non_existent_file, ignore_missing=True)
-    assert valuation.result is None
-    assert not valuation.is_fitted
 
+    # Should return None when ignore_missing=True
+    loaded_result = load_result(non_existent_file, ignore_missing=True)
+    assert loaded_result is None
+
+    # Should raise error when ignore_missing=False
     with pytest.raises(
         FileNotFoundError, match=f"File '{non_existent_file}' not found"
     ):
-        TestValuation().load_result(non_existent_file, ignore_missing=False)
+        load_result(non_existent_file, ignore_missing=False)
+
+    valuation = TestValuation().fit(dummy_train_data, continue_from=None)
+    np.testing.assert_allclose(valuation.result.counts, 1)
+
+
+def test_continue_from_mismatch():
+    """Test that continuing from mismatched indices raises an error."""
+    np.random.seed(42)
+
+    # Create two datasets with different sizes
+    data1, _ = Dataset.from_arrays(np.random.rand(10, 2), np.random.randint(0, 2, 10))
+    data2, _ = Dataset.from_arrays(np.random.rand(15, 2), np.random.randint(0, 2, 15))
+
+    valuation = TestValuation().fit(data1)
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_path = temp_file.name
+        try:
+            save_result(valuation.result, temp_path)
+            loaded_result = load_result(temp_path)
+
+            # Try to continue with mismatched data
+            with pytest.raises(ValueError, match="Either the indices or the names"):
+                TestValuation().fit(data2, continue_from=loaded_result)
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 
 def create_classification_dataset(
@@ -102,7 +132,6 @@ def create_classification_dataset(
 
 def valuation_methods(seed=42):
     log_regression = lambda rs=seed: LogisticRegression(max_iter=10, random_state=rs)
-    train, test = create_classification_dataset(n_samples=12, random_state=seed)
 
     model_utility = (
         ModelUtility,
@@ -112,7 +141,7 @@ def valuation_methods(seed=42):
                 SupervisedScorer,
                 {
                     "scoring": "accuracy",
-                    "test_data": test,
+                    "test_data": lambda d: d,
                     "default": 0,
                     "range": (0, 1),
                 },
@@ -128,12 +157,12 @@ def valuation_methods(seed=42):
             {
                 "valuation_cls": DataOOBValuation,
                 "valuation_kwargs": {
-                    "model": lambda: BaggingClassifier(
+                    "model": lambda test_data: BaggingClassifier(
                         estimator=log_regression(seed),
                         n_estimators=10,
                         random_state=seed,
                         max_samples=0.5,
-                    ).fit(*test.data())
+                    ).fit(*test_data.data())
                 },
             },
             id="DataOOBValuation",
@@ -150,7 +179,7 @@ def valuation_methods(seed=42):
                                 ClasswiseSupervisedScorer,
                                 {
                                     "scoring": "accuracy",
-                                    "test_data": test,
+                                    "test_data": lambda d: d,
                                     "default": 0,
                                     "range": (0, 1),
                                 },
@@ -203,7 +232,7 @@ def valuation_methods(seed=42):
                 "valuation_cls": KNNShapleyValuation,
                 "valuation_kwargs": {
                     "model": KNeighborsClassifier(n_neighbors=3),
-                    "test_data": test,
+                    "test_data": lambda d: d,
                     "progress": False,
                 },
             },
@@ -217,78 +246,18 @@ def test_init_result(params, seed):
     """Test that init_result correctly initializes ValuationResult objects"""
     train, test = create_classification_dataset(n_samples=8, random_state=seed)
 
-    valuation = recursive_make(params["valuation_cls"], params["valuation_kwargs"])
+    valuation = recursive_make(
+        params["valuation_cls"],
+        params["valuation_kwargs"],
+        test_data=test,
+        # this is weird: it's for the constructor of BaggingClassifier above
+        model=test,
+    )
 
-    result = valuation.init_or_check_result(train)
+    result = valuation._init_or_check_result(train)
 
-    assert isinstance(result, ValuationResult)
-    assert result.algorithm == str(valuation)
-    assert len(result) == len(train)
-    assert np.array_equal(result.indices, train.indices)
-    assert np.array_equal(result.names, np.array([str(i) for i in train.indices]))
-    assert np.all(result.values == 0)
-    assert np.all(result.variances == 0)
-    assert np.all(result.counts == 0)
+    np.testing.assert_allclose(result.counts, 0)
+    np.testing.assert_allclose(result.values, 0)
 
-    valuation.result = result
-    valuation._restored_result = True  # simulate restored result from file
-    result2 = valuation.init_or_check_result(train)
+    result2 = valuation._init_or_check_result(train, result)
     assert result2 is result
-
-
-@pytest.mark.parametrize("params", valuation_methods())
-def test_init_result_mismatch(params, seed):
-    """Test that init_result raises errors on mismatched indices or names"""
-    # Create datasets
-    train1, test1 = create_classification_dataset(n_samples=8, random_state=seed)
-    train2, test2 = create_classification_dataset(n_samples=6, random_state=seed)
-
-    # Create valuation object and initialize with data1
-    valuation = recursive_make(params["valuation_cls"], params["valuation_kwargs"])
-    valuation.result = ValuationResult.zeros(
-        algorithm=str(valuation),
-        indices=train1.indices,
-        data_names=np.array([str(i) for i in train1.indices]),
-    )
-    valuation._restored_result = True  # simulate restored result from file
-    with pytest.raises(ValueError, match="Either the indices or the names"):
-        valuation.init_or_check_result(train2)
-
-    # Test with matching indices but different names
-    altered_names = np.array([f"alt_{i}" for i in train1.indices])
-    valuation.result = ValuationResult.zeros(
-        algorithm=str(valuation),
-        indices=train1.indices,
-        data_names=altered_names,
-    )
-
-    with pytest.raises(ValueError, match="Either the indices or the names"):
-        valuation.init_or_check_result(train1)
-
-
-@pytest.mark.parametrize("params", valuation_methods())
-def test_save_load_with_init_result(params, seed):
-    """Test init_result in conjunction with save and load methods"""
-
-    train, test = create_classification_dataset(n_samples=8, random_state=seed)
-
-    valuation = recursive_make(params["valuation_cls"], params["valuation_kwargs"])
-    valuation.fit(train)
-
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_path = temp_file.name
-
-        try:
-            valuation.save_result(temp_path)
-            new_valuation = recursive_make(
-                params["valuation_cls"], params["valuation_kwargs"]
-            )
-            new_valuation.load_result(temp_path)
-
-            assert new_valuation.is_fitted
-            assert new_valuation.result == valuation.result
-
-            new_valuation.init_or_check_result(train)  # Test with the same dataset
-        finally:
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)

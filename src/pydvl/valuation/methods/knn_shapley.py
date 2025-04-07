@@ -73,7 +73,7 @@ class KNNShapleyValuation(Valuation):
         self.progress = progress
         self.clone_before_fit = clone_before_fit
 
-    def fit(self, data: Dataset) -> Self:
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         """Calculate exact shapley values for a KNN model on a dataset.
 
         This fit method bypasses direct evaluations of the utility function and
@@ -92,10 +92,15 @@ class KNNShapleyValuation(Valuation):
         with parallel_config(n_jobs=4):
             valuation.fit(data)
         ```
-        """
+        Args:
+            data: The dataset to use for valuation.
+            continue_from: A previously saved valuation result to continue from.
 
+        """
         if isinstance(data, GroupedDataset):
             raise TypeError("GroupedDataset is not supported by KNNShapleyValuation")
+
+        self._result = self._init_or_check_result(data, continue_from)
 
         x_train, y_train = data.data()
         if self.clone_before_fit:
@@ -123,14 +128,12 @@ class KNNShapleyValuation(Valuation):
                 values += res
             values /= n_test
 
-        result = ValuationResult(
+        self._result += ValuationResult(
             algorithm=str(self),
             status=Status.Converged,
             values=values,
             data_names=data.names,
         )
-        self.result = self.init_or_check_result(data)
-        self.result += result
 
         return self
 

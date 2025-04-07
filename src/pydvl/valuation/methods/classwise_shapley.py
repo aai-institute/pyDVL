@@ -94,21 +94,20 @@ class ClasswiseShapleyValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
         self.normalize_values = normalize_values
 
-    def fit(self, data: Dataset):
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None):
         if isinstance(data, GroupedDataset):
             raise ValueError(
                 "GroupedDataset is not supported for ClasswiseShapleyValuation"
             )
 
-        self.result = self.init_or_check_result(data)
-
+        self._result = self._init_or_check_result(data, continue_from)
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
         strategy = self.sampler.make_strategy(self.utility, None)
-        updater = self.sampler.result_updater(self.result)
+        updater = self.sampler.result_updater(self._result)
         processor = delayed(strategy.process)
 
         batch_generator = self.sampler.batches_from_data(data)
@@ -122,8 +121,8 @@ class ClasswiseShapleyValuation(Valuation):
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result = updater.process(evaluation)
-                    if self.is_done(self.result):
+                        self._result = updater.process(evaluation)
+                    if self.is_done(self._result):
                         flag.set()
                         self.sampler.interrupt()
                         break
@@ -146,7 +145,7 @@ class ClasswiseShapleyValuation(Valuation):
         """
         if not self.is_fitted:
             raise ValueError("You must call fit before calling _normalize()")
-        assert self.result is not None
+        assert self._result is not None
         assert self.utility.training_data is not None
         logger.info("Normalizing valuation result.")
         x, y = self.utility.training_data.data()
@@ -163,8 +162,8 @@ class ClasswiseShapleyValuation(Valuation):
                 self.utility.model
             )
 
-            sigma = np.sum(self.result.values[indices_label_set])
+            sigma = np.sum(self._result.values[indices_label_set])
             if sigma != 0:
-                self.result.scale(in_class_acc / sigma, data_indices=indices_label_set)
+                self._result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 
-        return self.result
+        return self._result
