@@ -183,6 +183,7 @@ plugins:
             show_symbol_type_heading: true
             show_root_full_path: true
             show_root_heading: true
+            filters: ["!^_[^_]"]
   - bibtex:
       bib_file: "docs/assets/pydvl.bib"
       csl_file: "docs/assets/elsevier-harvard.csl"
