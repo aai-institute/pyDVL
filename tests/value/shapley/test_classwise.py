@@ -455,7 +455,7 @@ def dataset_left_right_margins(
 
 
 @pytest.mark.flaky(reruns=2)
-@pytest.mark.parametrize("n_samples", [500], ids=lambda x: "n_samples={}".format(x))
+@pytest.mark.parametrize("n_samples", [100], ids=lambda x: "n_samples={}".format(x))
 def test_old_vs_new(
     n_samples: int,
     seed,
@@ -481,10 +481,14 @@ def test_old_vs_new(
     new_test_data = Dataset(old_data.x_test, old_data.y_test)
 
     in_class_sampler = PermutationSampler(seed=seed)
-    out_of_class_sampler = UniformSampler(seed=seed, index_iteration=NoIndexIteration)
+    out_of_class_sampler = UniformSampler(
+        seed=seed,
+        index_iteration=NoIndexIteration,
+    )
     sampler = ClasswiseSampler(
         in_class=in_class_sampler,
         out_of_class=out_of_class_sampler,
+        max_in_class_samples=n_samples,
     )
     new_u = ClasswiseModelUtility(
         model,
@@ -494,7 +498,7 @@ def test_old_vs_new(
     valuation = ClasswiseShapleyValuation(
         new_u,
         sampler=sampler,
-        is_done=MaxUpdates(n_samples),
+        is_done=MaxUpdates(n_samples * len(new_train_data)),
     )
     valuation.fit(new_train_data)
     check_values(valuation.values(), old_values, atol=1e-1, rtol=1e-1)
