@@ -5,7 +5,7 @@
 
 ### Added
 
-    - Simple result serialization to resume computation of values
+- Simple result serialization to resume computation of values
   [PR #666](https://github.com/aai-institute/pyDVL/pull/666)
 - Simple memory monitor / reporting
   [PR #663](https://github.com/aai-institute/pyDVL/pull/663)
