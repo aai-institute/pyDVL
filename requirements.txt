@@ -11,3 +11,4 @@ psutil
 tqdm
 matplotlib
 typing_extensions
+-c requirements-constraints.txt
