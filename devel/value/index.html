@@ -3515,6 +3515,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#retrieving-and-restoring-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retrieving and restoring results
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#problems-of-data-values" class="md-nav__link">
     <span class="md-ellipsis">
       Problems of data values
@@ -3781,7 +3790,7 @@ all we need to do after the previous steps is to instantiate a
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="k">with</span> <span class="n">parallel_config</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">shapley</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="n">results</span> <span class="o">=</span> <span class="n">shapley</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="n">result</span> <span class="o">=</span> <span class="n">shapley</span><span class="o">.</span><span class="n">result</span>
 </span></code></pre></div>
 </details>
 <p>Note our use of <a class="autorefs autorefs-external" href="https://joblib.readthedocs.io/en/stable/generated/joblib.parallel_config.html#joblib.parallel_config">joblib.parallel_config</a> in the example in order to
@@ -3817,6 +3826,14 @@ subsets to scores. This is the idea behind <strong>Data Utility Learning (<abbr 
 </span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="c1"># Subsequent calls will be computed using the learned model for DUL</span>
 </span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="n">wrapped_u</span><span class="p">(</span><span class="n">Sample</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">train</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
 </span></code></pre></div>
+<h2 id="retrieving-and-restoring-results">Retrieving and restoring results<a class="headerlink" href="#retrieving-and-restoring-results" title="Permanent link">&para;</a></h2>
+<p>Calling <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-method&quot;&gt;&lt;/code&gt;&amp;nbsp;fit" href="../api/pydvl/valuation/methods/banzhaf/#pydvl.valuation.methods.banzhaf.BanzhafValuation.fit">fit()</a> on any valuation object populates
+the <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-attribute&quot;&gt;&lt;/code&gt;&amp;nbsp;result" href="../api/pydvl/valuation/base/#pydvl.valuation.base.Valuation.result">result</a> property with a
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;ValuationResult" href="../api/pydvl/valuation/result/#pydvl.valuation.result.ValuationResult">ValuationResult</a>. This object can be persisted
+to disk using <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-function&quot;&gt;&lt;/code&gt;&amp;nbsp;save_result" href="../api/pydvl/valuation/result/#pydvl.valuation.result.save_result">save_result()</a>, and
+restored using <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-function&quot;&gt;&lt;/code&gt;&amp;nbsp;load_result" href="../api/pydvl/valuation/result/#pydvl.valuation.result.load_result">load_result()</a>. This can then be
+passed to subsequent calls to <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-method&quot;&gt;&lt;/code&gt;&amp;nbsp;fit" href="../api/pydvl/valuation/methods/banzhaf/#pydvl.valuation.methods.banzhaf.BanzhafValuation.fit">fit()</a> to continue
+the computation from the last saved state.</p>
 <h2 id="problems-of-data-values">Problems of data values<a class="headerlink" href="#problems-of-data-values" title="Permanent link">&para;</a></h2>
 <p>There are a number of factors that affect how useful values can be for your
 project. In particular, regression can be especially tricky, but the particular
@@ -3957,7 +3974,7 @@ can also introduce issues in the low-value regime.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2025-04-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 7, 2025 14:13:18">2025-04-07</span>
   </span>
 
     
@@ -3967,7 +3984,7 @@ can also introduce issues in the low-value regime.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-08-24</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 24, 2023 20:32:15">2023-08-24</span>
   </span>
 
     
