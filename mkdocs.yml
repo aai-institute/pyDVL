@@ -93,18 +93,19 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
-#  - pub-debugger:
-#      file_log:
-#        enabled: false
-#      zip_log:
-#        enabled: false
-#      console_log:
-#        enabled: true
-#        log_level: WARNING
-#        show_code_link: false
-#        show_entry_time: false
-#        show_logger_name: true
-#        show_deprecation_warnings: false
+  - pub-debugger:
+      file_log:
+        enabled: false
+      zip_log:
+        enabled: false
+      console_log:
+        enabled: true
+        log_level: WARNING
+        show_code_link: false
+        show_entry_time: false
+        show_logger_name: true
+        show_deprecation_warnings: false
+        #filter_logger_names: ["mkdocs.plugins.griffe"]
   - search
   - autorefs
   - glightbox:
