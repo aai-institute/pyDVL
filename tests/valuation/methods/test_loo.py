@@ -33,6 +33,6 @@ def test_loo(dummy_utility, dummy_train_data, analytic_loo, n_jobs):
     valuation = LOOValuation(utility=dummy_utility, progress=False)
     with joblib.parallel_config(backend="loky", n_jobs=n_jobs):
         valuation.fit(dummy_train_data)
-    got = valuation.values()
+    got = valuation.result
     check_total_value(dummy_utility.with_dataset(dummy_train_data), got, rtol=0.1)
     check_values(got, analytic_loo, rtol=0.1)

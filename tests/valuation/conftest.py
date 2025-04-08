@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from joblib import parallel_config
 from numpy.typing import NDArray
+from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
@@ -74,6 +75,14 @@ def num_samples():
 @pytest.fixture(scope="function")
 def polynomial_pipeline(coefficients):
     return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
+
+
+@pytest.fixture
+def iris_data(train_size: float | int = 10):
+    train, test = Dataset.from_sklearn(
+        load_iris(), train_size=train_size, random_state=42, stratify_by_target=True
+    )
+    return train, test[:10]
 
 
 @pytest.fixture(scope="function")
@@ -211,7 +220,7 @@ def linear_shapley(
         )
         with parallel_config(n_jobs=1):
             valuation.fit(train)
-        exact_result = valuation.values()
+        exact_result = valuation.result
         cache.set(u_cache_key, utility)
         cache.set(exact_result_cache_key, exact_result)
     return utility, exact_result

@@ -41,7 +41,7 @@ class LOOValuation(SemivalueValuation):
     algorithm_name = "Leave-One-Out"
 
     def __init__(self, utility: UtilityBase, progress: bool = False):
-        self.result: ValuationResult | None = None
+        self._result: ValuationResult | None = None
         super().__init__(
             utility,
             LOOSampler(batch_size=1, index_iteration=FiniteSequentialIndexIteration),

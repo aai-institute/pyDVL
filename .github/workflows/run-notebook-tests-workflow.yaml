@@ -26,7 +26,7 @@ jobs:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
       with:
-        large-packages: false
+        large-packages: true
         docker-images: false
     - uses: actions/checkout@v4
       with:

@@ -176,7 +176,7 @@ def test_classwise_sampler(data, expected_batches):
         in_class=in_class_sampler, out_of_class=out_of_class_sampler
     )
 
-    batches = list(sampler.from_data(data))
+    batches = list(sampler.batches_from_data(data))
     assert len(batches) == len(expected_batches), (
         f"{len(batches)=} != {len(expected_batches)=}"
     )

@@ -20,6 +20,7 @@ from pydvl.valuation import (
     ClasswiseShapleyValuation,
     ClasswiseSupervisedScorer,
     Dataset,
+    NoIndexIteration,
     PermutationSampler,
     UniformSampler,
 )
@@ -480,7 +481,7 @@ def test_old_vs_new(
     new_test_data = Dataset(old_data.x_test, old_data.y_test)
 
     in_class_sampler = PermutationSampler(seed=seed)
-    out_of_class_sampler = UniformSampler(seed=seed)
+    out_of_class_sampler = UniformSampler(seed=seed, index_iteration=NoIndexIteration)
     sampler = ClasswiseSampler(
         in_class=in_class_sampler,
         out_of_class=out_of_class_sampler,

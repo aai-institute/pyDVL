@@ -126,8 +126,7 @@ def plot_ci_array(
             if abscissa is not None
             else np.arange(n, dtype=str)
         ),
-    )
-    dummy.sort(key="index")
+    ).sort(key="index", inplace=True)
 
     return plot_ci_values(
         dummy,
