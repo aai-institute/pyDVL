@@ -121,7 +121,7 @@ class GroupTestingShapleyValuation(Valuation):
         )
         self._epsilon = epsilon
 
-    def fit(self, data: Dataset) -> Self:
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         """Calculate the group-testing valuation on a dataset.
 
         This method has to be called before calling `values()`.
@@ -138,6 +138,7 @@ class GroupTestingShapleyValuation(Valuation):
         ```
 
         """
+        self._result = self._init_or_check_result(data, continue_from)
         self._utility = self._utility.with_dataset(data)
 
         problem = create_group_testing_problem(
@@ -155,7 +156,7 @@ class GroupTestingShapleyValuation(Valuation):
             data_names=data.names,
         )
 
-        self.result = solution
+        self._result += solution
         return self
 
 

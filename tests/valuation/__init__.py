@@ -36,8 +36,8 @@ def check_exact(
 ):
     """Compares ranks and values."""
 
-    values.sort()
-    exact_values.sort()
+    values = values.sort()
+    exact_values = exact_values.sort()
 
     np.testing.assert_equal(values.indices, exact_values.indices, "Ranks do not match")
     np.testing.assert_allclose(
@@ -73,8 +73,8 @@ def check_values(
     :param extra_values_names: Sequence of names of extra values that should
         also be compared.
     """
-    values.sort()
-    exact_values.sort()
+    values = values.sort()
+    exact_values = exact_values.sort()
 
     np.testing.assert_allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
     for name in extra_values_names:
@@ -104,8 +104,8 @@ def check_rank_correlation(
 
     k = k or len(values)
 
-    values.sort()
-    exact_values.sort()
+    values = values.sort()
+    exact_values = exact_values.sort()
 
     top_k = np.array([it.idx for it in values[-k:]])
     top_k_exact = np.array([it.idx for it in exact_values[-k:]])

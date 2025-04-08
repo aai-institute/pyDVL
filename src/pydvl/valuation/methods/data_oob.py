@@ -64,6 +64,8 @@ class DataOOBValuation(Valuation):
             distance for regressors.
     """
 
+    algorithm_name: str = "Data-OOB"
+
     def __init__(
         self,
         model: BaggingModel,
@@ -72,25 +74,22 @@ class DataOOBValuation(Valuation):
         super().__init__()
         self.model = model
         self.score = score
+        self.algorithm_name = f"Data-OOB-{str(self.model)}"
 
-    def fit(self, data: Dataset) -> Self:
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
         """Compute the Data-OOB values.
 
         This requires the bagging model passed upon construction to be fitted.
 
         Args:
             data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
 
         Returns:
             The fitted object.
         """
-        # TODO: automate str representation for all Valuations
-        algorithm_name = f"Data-OOB-{str(self.model)}"
-        self.result = ValuationResult.empty(
-            algorithm=algorithm_name,
-            indices=data.indices,
-            data_names=data.names,
-        )
+
+        self._result = self._init_or_check_result(data, continue_from)
 
         check_is_fitted(
             self.model,
@@ -131,8 +130,8 @@ class DataOOBValuation(Valuation):
         for est, oob_indices in zip(estimators, unsampled_indices):
             subset = data[oob_indices].data()
             score_array = self.score(y_true=subset.y, y_pred=est.predict(subset.x))
-            self.result += ValuationResult(
-                algorithm=algorithm_name,
+            self._result += ValuationResult(
+                algorithm=str(self),
                 indices=oob_indices,
                 names=data[oob_indices].names,
                 values=score_array,

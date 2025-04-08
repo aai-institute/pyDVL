@@ -94,12 +94,12 @@ def removal_job(
     train, test = data_factory(random_state=random_state)
     valuation = valuation_factory(train=train, random_state=random_state)
     valuation.fit(train)
-    values = valuation.values()
+    result = valuation.result
 
     utility = utility_factory(test=test, random_state=random_state)
     low_scores: dict = compute_removal_score(
         utility,
-        values,
+        result,
         train,
         percentages=removal_percentages,
         remove_best=False,
@@ -108,7 +108,7 @@ def removal_job(
 
     high_scores: dict = compute_removal_score(
         utility,
-        values,
+        result,
         train,
         percentages=removal_percentages,
         remove_best=True,
