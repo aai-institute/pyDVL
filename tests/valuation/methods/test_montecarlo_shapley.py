@@ -221,7 +221,7 @@ def test_games(
 
     valuation.fit(test_game.data)
 
-    result = valuation.values()
+    result = valuation.result
     expected = test_game.shapley_values()
 
     check_total_value(
@@ -262,7 +262,7 @@ def test_seed(
         valuation = recursive_make(valuation_cls, valuation_kwargs, seed=s)
 
         valuation.fit(test_game.data)
-        values.append(valuation.values())
+        values.append(valuation.result)
 
     values_1, values_2, values_3 = values
 
@@ -289,13 +289,13 @@ def test_hoeffding_bound_montecarlo(
         valuation = ShapleyValuation(
             utility=u, sampler=sampler, progress=False, is_done=MaxChecks(n_samples)
         )
-        valuation.fit(dummy_train_data)
-        values = valuation.values()
+
+        result = valuation.fit(dummy_train_data).result
 
         check_total_value(
-            u.with_dataset(dummy_train_data), values, atol=len(dummy_train_data) * eps
+            u.with_dataset(dummy_train_data), result, atol=len(dummy_train_data) * eps
         )
-        check_rank_correlation(values, exact_values, threshold=0.8)
+        check_rank_correlation(result, exact_values, threshold=0.8)
 
 
 @pytest.mark.slow
@@ -343,8 +343,7 @@ def test_linear_montecarlo_with_outlier(
 
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(train)
-    result = valuation.values()
-    result.sort()
+    result = valuation.result.sort()
 
     if sampler_cls is not OwenSampler:
         assert result.status == Status.Converged
@@ -399,7 +398,6 @@ def test_grouped_linear_montecarlo_shapley(
     )
     with parallel_config(n_jobs=n_jobs):
         valuation.fit(grouped_linear_dataset)
-    values = valuation.values()
 
     exact_valuation = ShapleyValuation(
         utility=utility,
@@ -408,6 +406,5 @@ def test_grouped_linear_montecarlo_shapley(
         is_done=NoStopping(),
     )
     exact_valuation.fit(grouped_linear_dataset)
-    exact_values = exact_valuation.values()
 
-    check_values(values, exact_values, rtol=rtol)
+    check_values(valuation.result, exact_valuation.result, rtol=rtol)

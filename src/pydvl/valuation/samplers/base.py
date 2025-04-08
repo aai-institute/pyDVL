@@ -128,14 +128,20 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
             f"Cannot skip converged indices in {self.__class__.__name__}."
         )
 
+    @property
+    def interrupted(self) -> bool:
+        """Whether the sampler has been interrupted."""
+        return self._interrupted
+
     def interrupt(self):
         """Signals the sampler to stop generating samples after the current batch."""
         self._interrupted = True
 
     def __str__(self) -> str:
-        return self.__class__.__name__
+        return f"{self.__class__.__name__}(batch_size={self.batch_size})"
 
     def __repr__(self) -> str:
+        """FIXME: This is not a proper representation of the sampler."""
         return f"{self.__class__.__name__}"
 
     def __len__(self) -> int:
@@ -287,8 +293,8 @@ class EvaluationStrategy(ABC, Generic[SamplerT, ValueUpdateT]):
             )
             for batch in delayed_batches:
                 for evaluation in batch:
-                    self.result.update(evaluation.idx, evaluation.update)
-                if self.is_done(self.result):
+                    self._result.update(evaluation.idx, evaluation.update)
+                if self.is_done(self._result):
                     flag.set()
                     break
         ```

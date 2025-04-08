@@ -199,8 +199,7 @@ valuation = ShapleyValuation(utility, sampler, stopping, progress=True)
 with parallel_config(n_jobs=32):
     valuation.fit(train)
 
-result = valuation.values()
-df = result.to_dataframe(column="shapley")
+result = valuation.result
 ```
 
 ### Deprecation notice

@@ -596,6 +596,14 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler):
     By symmetry, the probability of sampling a set $S$ is the same as the probability of
     sampling its complement $S^c$, so that $p(S)$ in `log_weight` is the same as in the
     [PowersetSampler][pydvl.valuation.samplers.powerset.PowersetSampler] class.
+
+    Args:
+        batch_size: The number of samples to generate per batch. Batches are
+            processed together by `process()` in the evaluation strategy
+            [PowersetEvaluationStrategy][pydvl.valuation.samplers.powerset.PowersetEvaluationStrategy].
+        index_iteration: the strategy to use for iterating over indices to update.
+        seed: Seed for the random number generator. Passed to
+            [numpy.random.default_rng][].
     """
 
     def generate(self, indices: IndexSetT) -> SampleGenerator:

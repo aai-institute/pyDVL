@@ -130,15 +130,6 @@ def memcached_client(
 
 
 @pytest.fixture(scope="function")
-def housing_dataset(num_points, num_features) -> Dataset:
-    dataset = datasets.fetch_california_housing()
-    dataset.data = dataset.data[:num_points, :num_features]
-    dataset.feature_names = dataset.feature_names[:num_features]
-    dataset.target = dataset.target[:num_points]
-    return Dataset.from_sklearn(dataset, train_size=0.5)
-
-
-@pytest.fixture(scope="function")
 def linear_dataset(a: float, b: float, num_points: int):
     """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
     x in [-1,1]

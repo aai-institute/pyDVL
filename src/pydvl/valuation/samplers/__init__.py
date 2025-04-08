@@ -67,14 +67,14 @@ evaluation method retrieves through
 
             strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
             processor = delayed(strategy.process)
-            updater = self.sampler.result_updater(self.result)
+            updater = self.sampler.result_updater(self._result)
 
             delayed_batches = Parallel()(
                 processor(batch=list(batch), is_interrupted=flag) for batch in self.sampler
             )
             for batch in delayed_batches:
                 for evaluation in batch:
-                    self.result = updater(evaluation)
+                    self._result = updater(evaluation)
                 ...
     ```
 

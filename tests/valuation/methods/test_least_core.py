@@ -90,17 +90,17 @@ def test_randomized_least_core_methods(
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
     )
-    valuation.fit(data=test_game.data)
-    values = valuation.values()
+
+    result = valuation.fit(data=test_game.data).result
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
-        check_values(values, exact_values)
+        check_values(result, exact_values)
         # Sometimes the subsidy is negative but really close to zero
         # Due to numerical errors
-        if values.subsidy < 0:
-            assert_almost_equal(values.subsidy, 0.0, decimal=5)
+        if result.subsidy < 0:
+            assert_almost_equal(result.subsidy, 0.0, decimal=5)
     else:
-        check_values(values, exact_values, extra_values_names=["subsidy"])
+        check_values(result, exact_values, extra_values_names=["subsidy"])
 
 
 @pytest.mark.flaky(reruns=1)
@@ -120,17 +120,16 @@ def test_montecarlo_least_core(test_game, max_samples, non_negative_subsidy, see
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
     )
-    valuation.fit(data=test_game.data)
-    values = valuation.values()
+    result = valuation.fit(data=test_game.data).result
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
-        check_values(values, exact_values)
+        check_values(result, exact_values)
         # Sometimes the subsidy is negative but really close to zero
         # Due to numerical errors
-        if values.subsidy < 0:
-            assert_almost_equal(values.subsidy, 0.0, decimal=5)
+        if result.subsidy < 0:
+            assert_almost_equal(result.subsidy, 0.0, decimal=5)
     else:
-        check_values(values, exact_values, extra_values_names=["subsidy"])
+        check_values(result, exact_values, extra_values_names=["subsidy"])
 
 
 @pytest.mark.parametrize(
@@ -161,18 +160,19 @@ def test_exact_least_core_via_general_least_core_valuation(
         n_samples=powerset_size,
         progress=False,
     )
-    valuation.fit(data=test_game.data)
-    values = valuation.values()
-    check_total_value(test_game.u.with_dataset(test_game.data), values)
+
+    result = valuation.fit(data=test_game.data).result
+
+    check_total_value(test_game.u.with_dataset(test_game.data), result)
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
-        check_values(values, exact_values)
+        check_values(result, exact_values)
         # Sometimes the subsidy is negative but really close to zero
         # Due to numerical errors
-        if values.subsidy < 0:
-            assert_almost_equal(values.subsidy, 0.0, decimal=5)
+        if result.subsidy < 0:
+            assert_almost_equal(result.subsidy, 0.0, decimal=5)
     else:
-        check_values(values, exact_values, extra_values_names=["subsidy"])
+        check_values(result, exact_values, extra_values_names=["subsidy"])
 
 
 @pytest.mark.parametrize(
@@ -193,18 +193,19 @@ def test_exact_least_core(test_game, non_negative_subsidy):
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
     )
-    valuation.fit(data=test_game.data)
-    values = valuation.values()
-    check_total_value(test_game.u.with_dataset(test_game.data), values)
+
+    result = valuation.fit(data=test_game.data).result
+
+    check_total_value(test_game.u.with_dataset(test_game.data), result)
     exact_values = test_game.least_core_values()
     if non_negative_subsidy:
-        check_values(values, exact_values)
+        check_values(result, exact_values)
         # Sometimes the subsidy is negative but really close to zero
         # Due to numerical errors
-        if values.subsidy < 0:
-            assert_almost_equal(values.subsidy, 0.0, decimal=5)
+        if result.subsidy < 0:
+            assert_almost_equal(result.subsidy, 0.0, decimal=5)
     else:
-        check_values(values, exact_values, extra_values_names=["subsidy"])
+        check_values(result, exact_values, extra_values_names=["subsidy"])
 
 
 @pytest.mark.parametrize(

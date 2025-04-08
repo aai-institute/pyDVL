@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 import joblib
 import pytest
-from sklearn.datasets import load_iris
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from pydvl.valuation import (
@@ -24,17 +23,9 @@ from pydvl.valuation.utility import DataUtilityLearning, ModelUtility
 
 
 @pytest.fixture
-def datasets():
-    train, test = Dataset.from_sklearn(
-        load_iris(), train_size=10, random_state=42, stratify_by_target=True
-    )
-    return train, test[:10]
-
-
-@pytest.fixture
-def utility(datasets):
+def utility(iris_data):
     model = LogisticRegression()
-    _, test = datasets
+    _, test = iris_data
     utility = ModelUtility(
         model, SupervisedScorer(model, test, default=0), catch_errors=True
     )
@@ -42,8 +33,8 @@ def utility(datasets):
 
 
 @pytest.fixture
-def train_data(datasets):
-    train, _ = datasets
+def train_data(iris_data):
+    train, _ = iris_data
     return train
 
 
@@ -54,7 +45,7 @@ def test_loo_valuation(train_data, utility, n_jobs):
         with joblib.parallel_backend("loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 
@@ -73,7 +64,7 @@ def test_shapley_valuation(train_data, utility, n_jobs):
         with joblib.parallel_backend("loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 
@@ -99,7 +90,7 @@ def test_beta_shapley_valuation(train_data, utility, n_jobs):
         with joblib.parallel_backend("loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
     assert got.status is Status.Converged
@@ -120,7 +111,7 @@ def test_delta_shapley_valuation(train_data, utility, n_jobs):
         with joblib.parallel_backend("loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 
@@ -136,7 +127,7 @@ def test_banzhaf_valuation(train_data, utility, n_jobs):
     with joblib.parallel_backend("loky", n_jobs=n_jobs):
         val_bzf.fit(train_data)
 
-    got = val_bzf.values()
+    got = val_bzf.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 
@@ -153,7 +144,7 @@ def test_group_testing_valuation(train_data, utility, n_jobs):
         with joblib.parallel_config(backend="loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 
@@ -178,7 +169,7 @@ def test_data_utility_learning(train_data, utility, n_jobs):
         with joblib.parallel_backend("loky", n_jobs=n_jobs):
             valuation.fit(train_data)
 
-    got = valuation.values()
+    got = valuation.result
     assert isinstance(got, ValuationResult)
     assert len(got) == len(train_data)
 

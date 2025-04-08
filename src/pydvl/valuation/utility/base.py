@@ -60,3 +60,9 @@ class UtilityBase(Generic[SampleT], ABC):
             The evaluation of the utility for the sample
         """
         ...
+
+    def __str__(self):
+        """Returns a string representation of the utility.
+        Subclasses should override this method to provide a more informative string
+        """
+        return f"{self.__class__.__name__}"

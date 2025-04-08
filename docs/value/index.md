@@ -264,7 +264,7 @@ all we need to do after the previous steps is to instantiate a
     with parallel_config(n_jobs=-1):
         shapley.fit(train)
 
-    results = shapley.values()
+    result = shapley.result
     ```
 
 Note our use of [joblib.parallel_config][] in the example in order to
@@ -305,6 +305,17 @@ for i in range(training_budget):
 # Subsequent calls will be computed using the learned model for DUL
 wrapped_u(Sample(None, train.indices))
 ```
+
+## Retrieving and restoring results
+
+Calling [fit()][pydvl.valuation.base.Valuation.fit] on any valuation object populates
+the [result][pydvl.valuation.base.Valuation.result] property with a
+[ValuationResult][pydvl.valuation.result.ValuationResult]. This object can be persisted
+to disk using [save_result()][pydvl.valuation.result.save_result], and
+restored using [load_result()][pydvl.valuation.result.load_result]. This can then be
+passed to subsequent calls to [fit()][pydvl.valuation.base.Valuation.fit] to continue
+the computation from the last saved state.
+
 
 ## Problems of data values { #problems-of-data-values }
 
