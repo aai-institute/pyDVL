@@ -112,13 +112,13 @@ jobs:
       group_number: ${{ matrix.group_number }}
     needs: [ code-quality ]
 
-  push-docs-and-release-testpypi:
-    name: Publish documentation # and maybe release package to TestPyPI
+  publish-docs:
+    name: Publish documentation
     runs-on: ubuntu-22.04
     needs: [docs, group-tests, notebook-tests]
-    if: ${{ github.ref == 'refs/heads/develop' }}
+    if: ${{ github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'  }}
     concurrency:
-      group: publish
+      group: publish-docs
     steps:
       - uses: actions/checkout@v4
         with:
@@ -140,14 +140,37 @@ jobs:
           title: Development
           email: ${{ env.GITHUB_BOT_EMAIL }}
           username: ${{ env.GITHUB_BOT_USERNAME }}
-      # Deactivated until we solve the issue with the credentials (Jan. 2025)
-      # - name: Build and publish to TestPyPI
-      #   env:
-      #     TWINE_USERNAME: __token__
-      #     TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-      #   run: |
-      #     set -x
-      #     export BUILD_NUMBER=$GITHUB_RUN_NUMBER
-      #     bump2version --no-tag --no-commit --verbose --serialize '{major}.{minor}.{patch}.{release}{$BUILD_NUMBER}' boguspart
-      #     python setup.py sdist bdist_wheel
-      #     twine upload -r testpypi --verbose --non-interactive dist/*
+
+
+  publish-testpypi:
+    name: Publish package to TestPyPI
+    runs-on: ubuntu-22.04
+    needs: [group-tests, notebook-tests]
+    if: ${{ github.ref == 'refs/heads/develop' && github.event_name != 'pull_request' }}
+    concurrency:
+      group: publish-testpypi
+    permissions:
+      id-token: write
+    environment:
+      name: testpypi
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Setup Python 3.9
+        uses: ./.github/actions/python
+        with:
+          python_version: 3.9
+      - name: Bump version and build package
+        run: |
+          set -x
+          BUILD_NUMBER=$GITHUB_RUN_NUMBER
+          bump2version --no-tag --no-commit --verbose --serialize '{major}.{minor}.{patch}.{release}{$BUILD_NUMBER}' boguspart
+          python setup.py sdist bdist_wheel
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          print-hash: true
+          verbose: true
