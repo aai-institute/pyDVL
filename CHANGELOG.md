@@ -160,6 +160,8 @@
     - renaming `PreConditioner` -> `Preconditioner`
     - fit to `TensorOperator`
     [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Bumped `zarr` dependency to v3
+    [PR #668](https://github.com/aai-institute/pyDVL/pull/668) 
   
   
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
