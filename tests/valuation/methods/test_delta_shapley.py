@@ -143,7 +143,7 @@ def test_delta_shapley(
     )
 
     valuation.fit(train)
-    result = valuation.values()
+    result = valuation.result
     exact_result = SubsetSizeConstantUtility.exact_delta_shapley(
         n_indices, lower_bound, upper_bound
     )

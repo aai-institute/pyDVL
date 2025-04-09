@@ -57,7 +57,7 @@ denotes the set $S$ with $x_i$ added.[^not1]
 
     with parallel_config(n_jobs=-1):
         valuation.fit(train)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 We can convert the return value to a
@@ -92,7 +92,7 @@ and others are preferred, but if desired, usage follows the same pattern:
     valuation = ShapleyValuation(utility, sampler, stopping)
     with parallel_config(n_jobs=16):
         valuation.fit(training_data)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 Note the usage of the object [MaxSamples][pydvl.value.stopping.MaxSamples] as
@@ -173,7 +173,7 @@ a way to reduce the variance of the estimator.
     )
     with parallel_config(n_jobs=-4):
         valuation.fit(training_data)
-    results = valuation.values()
+    results = valuation.result
     ```
 
 ## Permutation Shapley  { #permutation-shapley-intro }
@@ -263,7 +263,7 @@ You can see this method in action in
     valuation = TMCShapleyValuation(utility, truncation, stopping)
     with parallel_config(n_jobs=16):
         valuation.fit(training_data)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 ## Other approximation methods

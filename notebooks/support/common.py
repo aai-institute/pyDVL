@@ -26,6 +26,7 @@ from pydvl.valuation.dataset import Dataset
 from .influence import Losses
 
 logger = logging.getLogger(__name__)
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def plot_gaussian_blobs(
@@ -593,9 +594,11 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
     checks whether `filename` exists and if so, loads the output from it, and if
     not it calls the function and saves the output to `filename`.
 
-    The decorated function accepts an additional keyword argument `_force_reload`
-    which, if set to `True`, calls the wrapped function to recompute the output and
-    overwrites the cached file.
+    The decorated function accepts two additional keyword arguments:
+
+        _force_rebuild: if set to `True`, calls the wrapped function to recompute the
+            output and overwrites the cached file.
+        _silent: if `False`, prints messages about the cache status.
 
     Args:
         fun: Function to wrap.
@@ -629,7 +632,7 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
     return decorator
 
 
-@filecache(path=Path("adult_data_raw.pkl"))
+@filecache(path=DATA_DIR / "adult_data_raw.pkl")
 def load_adult_data_raw() -> pd.DataFrame:
     """
     Downloads the adult dataset from UCI and returns it as a pandas DataFrame.

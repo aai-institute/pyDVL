@@ -2,7 +2,6 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-# read the contents of README file
 repository_root = Path(__file__).parent
 long_description = (repository_root / "README.md").read_text()
 
@@ -17,7 +16,7 @@ setup(
     install_requires=[
         line
         for line in open("requirements.txt").readlines()
-        if not line.startswith("--")
+        if not line.startswith("-") and not line.startswith("#")
     ],
     setup_requires=["wheel"],
     tests_require=["pytest"],

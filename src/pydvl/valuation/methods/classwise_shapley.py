@@ -94,41 +94,35 @@ class ClasswiseShapleyValuation(Valuation):
             self.tqdm_args.update(progress if isinstance(progress, dict) else {})
         self.normalize_values = normalize_values
 
-    def fit(self, data: Dataset):
-        # TODO?
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None):
         if isinstance(data, GroupedDataset):
             raise ValueError(
                 "GroupedDataset is not supported for ClasswiseShapleyValuation"
             )
 
-        self.result = ValuationResult.zeros(
-            # TODO: automate str representation for all Valuations
-            algorithm=f"{self.__class__.__name__}-{self.utility.__class__.__name__}-{self.sampler.__class__.__name__}-{self.is_done}",
-            indices=data.indices,
-            data_names=data.names,
-        )
+        self._result = self._init_or_check_result(data, continue_from)
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
         strategy = self.sampler.make_strategy(self.utility, None)
-        updater = self.sampler.result_updater(self.result)
+        updater = self.sampler.result_updater(self._result)
         processor = delayed(strategy.process)
 
-        sample_generator = self.sampler.from_data(data)
+        batch_generator = self.sampler.batches_from_data(data)
 
         with Parallel(return_as="generator_unordered") as parallel:
             with make_parallel_flag() as flag:
                 delayed_evals = parallel(
                     processor(batch=list(batch), is_interrupted=flag)
-                    for batch in sample_generator
+                    for batch in batch_generator
                 )
 
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for evaluation in batch:
-                        self.result = updater.process(evaluation)
-                    if self.is_done(self.result):
+                        self._result = updater.process(evaluation)
+                    if self.is_done(self._result):
                         flag.set()
                         self.sampler.interrupt()
                         break
@@ -139,8 +133,7 @@ class ClasswiseShapleyValuation(Valuation):
         return self
 
     def _normalize(self) -> ValuationResult:
-        r"""
-        Normalize a valuation result specific to classwise Shapley.
+        r"""Normalize a class-wise Shapley valuation result.
 
         Each value $v_i$ associated with the sample $(x_i, y_i)$ is normalized by
         multiplying it with $a_S(D_{y_i})$ and dividing by $\sum_{j \in D_{y_i}} v_j$.
@@ -148,14 +141,12 @@ class ClasswiseShapleyValuation(Valuation):
         href="#schoch_csshapley_2022">1</a> </sup>.
 
         Returns:
-            Normalized ValuationResult object.
+            Normalized result.
         """
-        if self.result is None:
+        if not self.is_fitted:
             raise ValueError("You must call fit before calling _normalize()")
-
-        if self.utility.training_data is None:
-            raise ValueError("You should call fit before calling _normalize()")
-
+        assert self._result is not None
+        assert self.utility.training_data is not None
         logger.info("Normalizing valuation result.")
         x, y = self.utility.training_data.data()
         unique_labels = get_unique_labels(y)
@@ -171,8 +162,8 @@ class ClasswiseShapleyValuation(Valuation):
                 self.utility.model
             )
 
-            sigma = np.sum(self.result.values[indices_label_set])
+            sigma = np.sum(self._result.values[indices_label_set])
             if sigma != 0:
-                self.result.scale(in_class_acc / sigma, data_indices=indices_label_set)
+                self._result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 
-        return self.result
+        return self._result

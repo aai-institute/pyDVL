@@ -57,7 +57,7 @@ the original paper and should be instantiated with
     valuation = ShapleyValuation(utility, sampler, stopping, progress=True)
     with parallel_config(n_jobs=8):
         valuation.fit(train)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 ## Infinite (uniform) Owen Sampler
@@ -84,7 +84,7 @@ for semi-value computation remains the same.
     valuation = ShapleyValuation(utility, sampler, stopping,  progress=True)
     with parallel_config(n_jobs=-1)
         valuation.fit(dataset)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 ## Antithetic Owen Sampler

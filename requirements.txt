@@ -11,3 +11,4 @@ psutil
 tqdm
 matplotlib
 typing_extensions
+numcodecs<0.16.0

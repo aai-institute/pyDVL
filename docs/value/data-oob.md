@@ -46,8 +46,7 @@ the values. It is therefore very fast, and can be used to value large datasets.
     model = RandomForestClassifier(...)
     model.fit(*train.data())
     valuation = DataOOBValuation(model)
-    valuation.fit(train)
-    values = valuation.values()
+    result = valuation.fit(train).result
     ```
 
 The object returned by `values()` is a

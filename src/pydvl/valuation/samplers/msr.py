@@ -228,7 +228,6 @@ class MSRSampler(StochasticSamplerMixin, IndexSampler[Sample, MSRValueUpdate]):
             utility: Utility function to evaluate.
             coefficient: Coefficient function for the utility function.
         """
-        assert coefficient is not None
         return MSREvaluationStrategy(utility, coefficient)
 
     def result_updater(self, result: ValuationResult) -> ResultUpdater:

@@ -5,6 +5,8 @@
 
 ### Added
 
+- Simple result serialization to resume computation of values
+  [PR #666](https://github.com/aai-institute/pyDVL/pull/666)
 - Simple memory monitor / reporting
   [PR #663](https://github.com/aai-institute/pyDVL/pull/663)
 - New stopping criterion `MaxSamples`
@@ -90,8 +92,9 @@
 ### Changed
 
 - Slicing, comparing and setting of `ValuationResult` behave in a more 
-  natural way
-  [PR #660](https://github.com/aai-institute/pyDVL/pull/660)
+  natural and consistent way
+  [PR #660](https://github.com/aai-institute/pyDVL/pull/660) 
+  [PR #666](https://github.com/aai-institute/pyDVL/pull/666)
 - Switched all semi-value coefficients and sampler weights to log-space in
   order to avoid overflows
   [PR #643](https://github.com/aai-institute/pyDVL/pull/643)

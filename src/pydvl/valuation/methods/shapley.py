@@ -40,7 +40,7 @@ it.
     valuation = ShapleyValuation(utility, sampler, is_done=stopping)
     with parallel_config(n_jobs=16):
         valuation.fit(training_data)
-    result = valuation.values()
+    result = valuation.result
     ```
 
 ## Choosing samplers

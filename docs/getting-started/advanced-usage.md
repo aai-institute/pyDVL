@@ -51,7 +51,7 @@ the valuation object.
     with parallel_config(backend="ray", n_jobs=128):
         shapley.fit(train)
 
-    results = shapley.values()
+    results = shapley.result
     ```
 
 Note that you will have to install additional dependencies (see

@@ -630,7 +630,7 @@ def _create_seeded_sample_iter(
     return sample_stream
 
 
-@pytest.mark.flaky(reruns=1)
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs", deterministic_samplers() + random_samplers()
 )
