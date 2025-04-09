@@ -2,606 +2,606 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://pydvl.org/stable/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/CHANGELOG/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/CONTRIBUTING/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/array/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/base_influence_function_model/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/influence_calculator/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/types/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/batch_operation/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/functional/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/influence_function_model/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/operator/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/preconditioner/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/influence/torch/util/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/reporting/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/reporting/plots/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/reporting/point_removal/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/reporting/scores/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/dataset/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/exceptions/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/functional/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/monitor/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/numeric/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/progress/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/score/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/status/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/types/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/utility/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/config/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/disk/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/memcached/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/utils/caching/memory/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/dataset/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/games/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/parallel/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/result/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/stopping/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/types/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/banzhaf/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/beta_shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/classwise_shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/data_oob/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/delta_shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/gt_shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/knn_shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/least_core/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/loo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/random/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/semivalue/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/methods/shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/classwise/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/msr/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/owen/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/permutation/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/powerset/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/stratified/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/truncation/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/samplers/utils/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/scorers/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/scorers/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/scorers/classwise/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/scorers/supervised/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/scorers/utils/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/base/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/classwise/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/deepset/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/knn/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/learning/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/api/pydvl/valuation/utility/modelutility/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/backend/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/config/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/map_reduce/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/backends/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/backends/joblib/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/backends/ray/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/futures/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/parallel/futures/ray/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/games/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/result/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/sampler/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/semivalues/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/stopping/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/least_core/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/least_core/common/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/least_core/montecarlo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/least_core/naive/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/loo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/loo/loo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/oob/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/oob/oob/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/classwise/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/common/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/gt/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/knn/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/montecarlo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/naive/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/owen/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/truncated/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/deprecated/pydvl/value/shapley/types/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/data_oob/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/influence_imagenet/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/influence_sentiment_analysis/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/influence_synthetic/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/influence_wine/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/least_core_basic/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/msr_banzhaf_digits/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/shapley_basic_spotify/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/shapley_knn_flowers/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/examples/shapley_utility_learning/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/advanced-usage/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/applications/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/benchmarking/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/first-steps/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/glossary/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/getting-started/methods/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/influence/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/influence/influence_function_model/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/influence/scaling_computation/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/beta-shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/classwise-shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/data-banzhaf/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/data-oob/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/delta-shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/dul/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/group-testing-shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/knn-shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/loo/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/owen/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/sampling-weights/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/semi-values/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/shapley/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
     <url>
          <loc>https://pydvl.org/stable/value/the-core/</loc>
-         <lastmod>2025-04-08</lastmod>
+         <lastmod>2025-04-09</lastmod>
     </url>
 </urlset>
