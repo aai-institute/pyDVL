@@ -165,7 +165,7 @@ jobs:
       - name: Bump version and build package
         run: |
           set -x
-          BUILD_NUMBER=$GITHUB_RUN_NUMBER
+          export BUILD_NUMBER=$GITHUB_RUN_NUMBER
           bump2version --no-tag --no-commit --verbose --serialize '{major}.{minor}.{patch}.{release}{$BUILD_NUMBER}' boguspart
           python setup.py sdist bdist_wheel
       - name: Publish to TestPyPI
