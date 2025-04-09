@@ -205,8 +205,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     python's standard `sorted()` and `reversed()` Note that sorting values affects how
     iterators and the object itself as `Sequence` behave: `values[0]` returns a
     [ValueItem][pydvl.valuation.result.ValueItem] with the highest or lowest ranking
-    point if this object is sorted by descending or ascending value, respectively.the methods If
-    unsorted, `values[0]` returns the `ValueItem` at position 0, which has data index
+    point if this object is sorted by descending or ascending value, respectively.
+    If unsorted, `values[0]` returns the `ValueItem` at position 0, which has data index
     `indices[0]` in the [Dataset][pydvl.utils.dataset.Dataset].
 
     The same applies to direct indexing of the `ValuationResult`: the index
@@ -333,8 +333,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     def sort(
         self,
-        reverse: bool = False,
-        # Need a "Comparable" type here
+        reverse: bool = False,  # Need a "Comparable" type here
         key: Literal["value", "variance", "index", "name"] = "value",
         inplace: bool = False,
     ) -> ValuationResult:
@@ -382,9 +381,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         Sorting is taken into account. This operation is the inverse of indexing the
         [indices][pydvl.valuation.result.ValuationResult.indices] property:
 
-        ```python
-        np.all(v.indices[v.positions(data_indices)] == data_indices) == True
-        ```
+            np.all(v.indices[v.positions(data_indices)] == data_indices) == True
         """
         indices = [self._indices[idx] for idx in data_indices]
         return self._indices_to_positions[indices]
@@ -418,10 +415,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
     @property
     def indices(self) -> NDArray[IndexT]:
-        """The indices for the values, possibly sorted.
+        """The data indices, possibly sorted.
 
-        If the object is unsorted, then these are the same as declared at
-        construction or `np.arange(len(values))` if none were passed.
+        If the object is unsorted, then these are the same as declared at construction.
+        If no data indices were manually assigned, then they are just consecutive
+        integers starting from zero.
         """
         return self._data_indices[self._positions_to_indices]
 
@@ -480,7 +478,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
                 return [int(k) for k in key]
             except TypeError as e:
                 raise TypeError(
-                    f"Indices must be integers, sequences or slices. {key=} has type {type(key)}"
+                    f"Indices must be integers, sequences or slices. {key=} has "
+                    f"type {type(key)}"
                 ) from e
         if isinstance(key, np.ndarray) and np.issubdtype(key.dtype, np.integer):
             return cast(list[int], key.astype(int).tolist())
@@ -568,14 +567,16 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if not isinstance(value, ValuationResult):
             raise TypeError(
                 f"Value must be a ValuationResult, got {type(value)}. "
-                f"To set individual ValueItems, use the set() method instead."
+                f"To set individual ValueItems, use the set() method "
+                f"instead."
             )
 
         positions = self._key_to_positions(key)
 
         if len(value) != len(positions):
             raise ValueError(
-                f"Cannot set {len(positions)} positions with a ValuationResult of length {len(value)}"
+                f"Cannot set {len(positions)} positions with a ValuationResult of "
+                f"length {len(value)}"
             )
 
         # Convert sorted positions (user-facing) to original indices in the sort order
@@ -610,7 +611,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """Set a [ValueItem][pydvl.valuation.result.ValueItem] in the result by its data
         index.
 
-        This is the complement to the [get()][pydvl.valuation.result.ValuationResult.get]
+        This is the complement to the [get()][
+        pydvl.valuation.result.ValuationResult.get]
         method and allows setting individual `ValueItems` directly by their data index
         rather than (sort-) position.
 
@@ -627,7 +629,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         """
         if value.idx != data_idx:
             raise ValueError(
-                f"ValueItem's idx ({value.idx}) doesn't match the provided data_idx ({data_idx})"
+                f"ValueItem's idx ({value.idx}) doesn't match the provided "
+                f"data_idx ({data_idx})"
             )
 
         try:
@@ -644,8 +647,10 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         return self
 
     def __iter__(self) -> Iterator[ValueItem]:
-        """Iterate over the results returning [ValueItem][pydvl.valuation.result.ValueItem] objects.
-        To sort in place before iteration, use [sort()][pydvl.valuation.result.ValuationResult.sort].
+        """Iterate over the results returning
+        [ValueItem][pydvl.valuation.result.ValueItem] objects. To sort in
+        place before iteration, use
+        [sort()][pydvl.valuation.result.ValuationResult.sort].
         """
         for pos in self._positions_to_indices:
             yield ValueItem(
@@ -710,7 +715,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             f"{self.__class__.__name__}("
             f"algorithm='{self._algorithm}',"
             f"status='{self._status.value}',"
-            f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
+            f"values="
+            f"{np.array_str(self.values, precision=4, suppress_small=True)},"
             f"indices={np.array_str(self.indices)},"
             f"names={np.array_str(self.names)},"
             f"counts={np.array_str(self.counts)}"
@@ -818,7 +824,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
                 logger.warning(
-                    f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
+                    f"Casting ValuationResult.names from {other._names.dtype} to "
+                    f"{self._names.dtype}"
                 )
                 other._names = other._names.astype(self._names.dtype)
             else:
@@ -1004,7 +1011,8 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         with zeros.
 
         !!! info
-            When a result is added to a zeroed one, the zeroed one is entirely discarded.
+            When a result is added to a zeroed one, the zeroed one is entirely
+            discarded.
 
         Args:
             algorithm: Name of the algorithm used to compute the values
