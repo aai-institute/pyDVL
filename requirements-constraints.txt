@@ -1,3 +1,0 @@
-numpy<2
-numcodecs<0.16.0
-zarr<3
