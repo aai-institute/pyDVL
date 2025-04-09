@@ -37,40 +37,51 @@ original Shapley value, although the actual speed-up depends on the model and
 the dataset.
 
 
-!!! Example "Computing classwise Shapley values"
-    Like all other game-theoretic valuation methods, CWS requires a
-    [Utility][pydvl.utils.utility.Utility] object constructed with model and
-    dataset, with the peculiarity of requiring a specific
-    [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]. The entry
-    point is the function
-    [compute_classwise_shapley_values][pydvl.value.shapley.classwise.compute_classwise_shapley_values]:
+??? Example "Computing classwise Shapley values"
+    CWS is implemented in
+    [ClasswiseShapleyValuation][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
+    To construct this object the model is passed inside a
+    [ClasswiseModelUtility][pydvl.valuation.utility.classwise.ClasswiseModelUtility]
+    together with a
+    [ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer]
+    The two samplers required by the method are wrapped by a
+    [ClasswiseSampler][pydvl.valuation.samplers.classwise.ClasswiseSampler].
 
+    The following example illustrates how to replicate the algorithm in Appendix
+    A of [@schoch_csshapley_2022].
     ```python
-    from pydvl.value import *
+    from pydvl.valuation import *
     
+    seed = 42
     model = ...
-    data = Dataset(...)
-    scorer = ClasswiseScorer(...)
-    utility = Utility(model, data, scorer)
-    values = compute_classwise_shapley_values(
-        utility,
-        done=HistoryDeviation(n_steps=500, rtol=5e-2) | MaxUpdates(5000),
-        truncation=RelativeTruncation(utility, rtol=0.01),
-        done_sample_complements=MaxChecks(1),
-        normalize_values=True
+    train, test = Dataset.from_arrays(X, y, train_size=0.6, random_state=seed)
+    n_labels = len(get_unique_labels(train.data().y))
+    scorer = ClasswiseSupervisedScorer("accuracy", test)
+    utility = ClasswiseModelUtility(model, scorer)
+    sampler = ClasswiseSampler(
+        in_class=PermutationSampler(
+            truncation=RelativeTruncation(rtol=0.01, burn_in_fraction=0.3), seed=seed
+        ),
+        out_of_class=UniformSampler(index_iteration=NoIndexIteration),
+        max_in_class_samples=1,
+    )
+    # 500 permutations per label as in the paper
+    stopping = MaxSamples(sampler, 500*n_labels)
+    # Save the history in valuation.stopping.criteria[1]
+    stopping |= History(n_steps=5000),
+    valuation = ClasswiseShapleyValuation(
+        utility=utility, sampler=sampler, is_done=stopping, normalize_values=True
     )
     ```
 
 
 ### The class-wise scorer
 
-In order to use the classwise Shapley value, one needs to define a
-[ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]. This scorer
-is defined as
+In order to use the class-wise Shapley value, one needs to instantiate a
+[ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer].
+This scorer is defined as
 
-$$
-u(S) = f(a_S(D_{y_i})) g(a_S(D_{-y_i})),
-$$
+$$ u(S) = f(a_S(D_{y_i})) \ g(a_S(D_{-y_i})), $$
 
 where $f$ and $g$ are monotonically increasing functions, $a_S(D_{y_i})$ is the
 **in-class accuracy**, and $a_S(D_{-y_i})$ is the **out-of-class accuracy** (the
@@ -81,18 +92,21 @@ The authors show that $f(x)=x$ and $g(x)=e^x$ have favorable properties and are
 therefore the defaults, but we leave the option to set different functions $f$
 and $g$ for an exploration with different base scores. 
 
-!!! Example "The default class-wise scorer"
-    Constructing the CWS scorer requires choosing a metric and the functions $f$
-    and $g$:
+??? example "The default class-wise scorer"
+    The CWS scorer requires choosing a metric and the functions $f$ and $g,$
+    which by default are set to the values in the paper:
 
     ```python
     import numpy as np
-    from pydvl.value.shapley.classwise import ClasswiseScorer
+    from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
     
-    # These are the defaults
+    _, test = Dataset.from_sklearn(...)
     identity = lambda x: x
-    scorer = ClasswiseScorer(
+    scorer = ClasswiseSupervisedScorer(
         "accuracy",
+        default=0.0,
+        range=(0.0, 1.0),
+        test_data=test,
         in_class_discount_fn=identity,
         out_of_class_discount_fn=np.exp
     )

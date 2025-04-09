@@ -127,12 +127,9 @@ class SemivalueValuation(Valuation):
         else:
             raise TypeError(f"Invalid type for progress: {type(progress)}")
 
-    # TODO: automate str representation for all Valuations (and find something better)
     def __str__(self):
-        return (
-            f"{self.__class__.__name__}-{self.utility.__class__.__name__}-"
-            f"{self.sampler.__class__.__name__}-{self.is_done}"
-        )
+        name = getattr(self, "algorithm_name", self.__class__.__name__)
+        return f"{name}-{str(self.utility)}-{str(self.sampler)}-{str(self.is_done)}"
 
     @property
     @abstractmethod
@@ -146,19 +143,24 @@ class SemivalueValuation(Valuation):
         ...
 
     @suppress_warnings(flag="show_warnings")
-    def fit(self, data: Dataset) -> Self:
-        self.result = ValuationResult.zeros(
-            algorithm=str(self),
-            indices=data.indices,
-            data_names=data.names,
-        )
+    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
+        """Fits the semi-value valuation to the data.
+
+        Access the results through the `result` property.
+
+        Args:
+            data: Data for which to compute values
+            continue_from: A previously computed valuation result to continue from.
+
+        """
+        self._result = self._init_or_check_result(data, continue_from)
         ensure_backend_has_generator_return()
 
         self.is_done.reset()
         self.utility = self.utility.with_dataset(data)
 
         strategy = self.sampler.make_strategy(self.utility, self.log_coefficient)
-        updater = self.sampler.result_updater(self.result)
+        updater = self.sampler.result_updater(self._result)
         processor = delayed(strategy.process)
 
         with Parallel(return_as="generator_unordered") as parallel:
@@ -169,8 +171,8 @@ class SemivalueValuation(Valuation):
                 )
                 for batch in Progress(delayed_evals, self.is_done, **self.tqdm_args):
                     for update in batch:
-                        self.result = updater.process(update)
-                    if self.is_done(self.result):
+                        self._result = updater.process(update)
+                    if self.is_done(self._result):
                         flag.set()
                         self.sampler.interrupt()
                         break

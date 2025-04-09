@@ -25,6 +25,7 @@ import pytest
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pydvl.valuation import FiniteNoIndexIteration
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods import ClasswiseShapleyValuation
 from pydvl.valuation.result import ValuationResult
@@ -149,7 +150,8 @@ def test_dataset_manual_derivation(train_dataset_manual_derivation) -> Dataset:
     return Dataset(x_test, y_test)
 
 
-@pytest.mark.parametrize("n_samples", [500], ids=lambda x: f"n_samples={x}")
+@pytest.mark.parametrize("batch_size", [1, 5])
+@pytest.mark.parametrize("n_samples", [100], ids=lambda x: f"n_samples={x}")
 @pytest.mark.parametrize(
     "exact_solution",
     [
@@ -162,23 +164,27 @@ def test_classwise_shapley(
     train_dataset_manual_derivation: Dataset,
     exact_solution: tuple[dict, ValuationResult, dict],
     n_samples: int,
+    batch_size: int,
     request,
 ):
     method_kwargs, exact_solution, check_kwargs = request.getfixturevalue(
         exact_solution
     )
     in_class_sampler = DeterministicPermutationSampler()
-    out_of_class_sampler = DeterministicUniformSampler()
+    out_of_class_sampler = DeterministicUniformSampler(
+        index_iteration=FiniteNoIndexIteration
+    )
     sampler = ClasswiseSampler(
-        in_class=in_class_sampler, out_of_class=out_of_class_sampler
+        in_class=in_class_sampler,
+        out_of_class=out_of_class_sampler,
+        batch_size=batch_size,
     )
     valuation = ClasswiseShapleyValuation(
         classwise_shapley_utility,
         sampler=sampler,
         is_done=MaxUpdates(n_samples),
-        progress=True,
+        progress=False,
         **method_kwargs,
     )
     valuation.fit(train_dataset_manual_derivation)
-    values = valuation.values()
-    check_values(values, exact_solution, **check_kwargs)
+    check_values(valuation.result, exact_solution, **check_kwargs)

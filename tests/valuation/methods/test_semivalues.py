@@ -108,7 +108,7 @@ def test_games(
         **valuation_kwargs,
     )
     valuation.fit(test_game.data)
-    result = valuation.values()
+    result = valuation.result
     exact_result = test_game.__getattribute__(exact_values_attr)()
 
     # import matplotlib.pyplot as plt

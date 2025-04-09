@@ -11,8 +11,7 @@ import pytest
 from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
-from pydvl.valuation import ValuationResult
-from pydvl.valuation.result import LogResultUpdater, ValueItem
+from pydvl.valuation.result import LogResultUpdater, ValuationResult, ValueItem
 from pydvl.valuation.types import ValueUpdate
 
 
@@ -82,22 +81,27 @@ def test_creation():
 )
 @pytest.mark.parametrize("reverse", [False, True])
 def test_sorting(values, names, ranks_asc, dummy_values, reverse: bool):
-    dummy_values.sort(reverse=reverse, key="value")
+    tmp = dummy_values.sort(reverse=reverse, key="value", inplace=True)
+    assert tmp is dummy_values
+
     assert np.all([it.value for it in dummy_values] == sorted(values, reverse=reverse))
     if reverse:
         ranks_asc = list(reversed(ranks_asc))
     assert np.all(dummy_values.indices == ranks_asc)
 
-    dummy_values.sort(key="index")
-    assert np.all(dummy_values.indices == list(range(len(values))))
-    assert np.all([it.value for it in dummy_values] == values)
+    tmp = dummy_values.sort(key="index")
+    assert tmp is not dummy_values
+    assert np.all(tmp.indices == list(range(len(values))))
+    assert np.all([it.value for it in tmp] == values)
 
 
 @pytest.mark.parametrize("sort", [None, False, True])
 def test_positions_sorting(sort):
-    v = ValuationResult(values=np.arange(10), indices=np.arange(10, 20), sort=sort)
+    v = ValuationResult(
+        values=np.random.random(10), indices=np.arange(10, 20), sort=sort
+    )
     data_indices = np.array([10, 13, 15])
-    np.all(v.indices[v.positions(data_indices)] == data_indices)
+    assert np.all(v.indices[v.positions(data_indices)] == data_indices)
 
 
 @pytest.mark.parametrize(
@@ -115,7 +119,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
         assert np.all(df.index.values == sorted_names)
         assert np.all(df["dummy_valuator"].values == sorted(values))
 
-        dummy_values.sort(reverse=True)
+        dummy_values.sort(reverse=True, inplace=True)
         df = dummy_values.to_dataframe(use_names=True)
         assert np.all(df.index.values == list(reversed(sorted_names)))
         assert np.all(df["dummy_valuator"].values == sorted(values, reverse=True))
@@ -216,7 +220,7 @@ def test_get_idx():
         result.get(5)
     for v, idx in zip(values, indices):
         assert v == result.get(idx).value
-    result.sort()
+    result.sort(inplace=True)
     for v, idx in zip(values, indices):
         assert v == result.get(idx).value
 
@@ -252,7 +256,7 @@ def test_updating():
     np.testing.assert_allclose(saved.variances, [0.0, 1])
 
     # Test after sorting
-    v.sort(reverse=True, key="value")
+    v.sort(reverse=True, key="value", inplace=True)
     np.testing.assert_allclose(v.counts, [3, 2])
     np.testing.assert_allclose(v.values, [3, 1])
     np.testing.assert_allclose(v.variances, [1, 0.0])
@@ -299,7 +303,7 @@ def test_serialization(serialize, deserialize, dummy_values):
     assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
     if len(dummy_values) > 0:
         # Sorting only has an effect over equality on non-empty results
-        dummy_values.sort(reverse=True)
+        dummy_values.sort(reverse=True, inplace=True)
         assert dummy_values != serded  # Order checks
 
 
@@ -308,7 +312,7 @@ def test_copy_and_equality(values, names, dummy_values):
     assert dummy_values == dummy_values
 
     c = dummy_values.copy()
-    dummy_values.sort(reverse=True)
+    dummy_values.sort(reverse=True, inplace=True)
 
     if len(c) > 0:  # Sorting only has an effect over equality on non-empty results
         assert c != dummy_values
@@ -338,7 +342,7 @@ def test_copy_and_equality(values, names, dummy_values):
         variances=c._variances,
         data_names=c._names,
     )
-    c2.sort(reverse=not c._sort_order)
+    c2.sort(reverse=not c._sort_order, inplace=True)
 
     assert c == c2
 
@@ -368,8 +372,8 @@ def test_extra_values(extra_values):
     result = ValuationResult(**kwargs)
     for k, v in extra_values.items():
         assert getattr(result, k) == v
-    # Making sure that the repr dunder method works when using extra values
-    repr_string = repr(result)
+    # Making sure that the str dunder method works when using extra values
+    repr_string = str(result)
     for k, v in extra_values.items():
         assert k in repr_string
 
@@ -458,7 +462,7 @@ def test_get_and_setitem():
     assert all(r1.values[2:] == [3.0, 4.0])  # noqa
     assert all(r1.names[2:] == ["c", "d"])  # noqa
 
-    r2.sort(reverse=True, key="value")
+    r2.sort(reverse=True, key="value", inplace=True)
     r1[[0, 1]] = r2
     assert all(r1.indices[:2] == [60, 50])  # noqa
     assert all(r1.values[:2] == [6.0, 5.0])  # noqa
@@ -472,9 +476,9 @@ def test_get_and_setitem():
             indices=np.array([80]), values=np.array([8.0]), data_names=np.array(["e"])
         )
 
-    r1.sort(key="index")
+    r1.sort(key="index", inplace=True)
     r3 = r1[::-1]
-    r1.sort(reverse=True, key="index")
+    r1.sort(reverse=True, key="index", inplace=True)
     assert r3 == r1
 
     # Test negative indexing
@@ -700,13 +704,31 @@ def test_names(data_names):
 
 
 @pytest.mark.parametrize("n_samples", [0, 3])
-@pytest.mark.parametrize("n", [0, 5])
-def test_empty(n_samples: int, n: int):
-    v = ValuationResult.empty(n_samples=n_samples)
+def test_empty(n_samples: int):
+    v = ValuationResult.empty(algorithm="test")
+    assert len(v) == 0
+
+    v2 = ValuationResult(values=np.arange(n_samples), algorithm="test")
+    assert v2 == v + v2
+    assert v2 == v2 + v
+
+    v3 = ValuationResult(values=np.arange(n_samples), algorithm="fail")
+    with pytest.raises(ValueError, match="Cannot combine results"):
+        v3 += v
+
+
+@pytest.mark.parametrize("n_samples", [0, 3])
+def test_zeros(n_samples: int):
+    v = ValuationResult.zeros(algorithm="test", size=n_samples)
     assert len(v) == n_samples
-    v2 = ValuationResult(values=np.arange(n))
-    v += v2
-    assert len(v2) == n
+
+    v2 = ValuationResult(values=np.arange(n_samples), algorithm="test")
+    assert v2 == v + v2
+    assert v2 == v2 + v
+
+    v3 = ValuationResult(values=np.arange(n_samples), algorithm="fail")
+    with pytest.raises(ValueError, match="Cannot combine results"):
+        v3 += v
 
 
 @pytest.mark.parametrize("indices", [None, np.array([0, 1, 2])])
@@ -720,3 +742,67 @@ def test_scaling(indices: NDArray | None):
     np.testing.assert_allclose(v.values[indices] * 2, v2.values[indices])
     np.testing.assert_allclose(v.variances[indices] * 4, v2.variances[indices])
     np.testing.assert_allclose(v.counts[indices], v2.counts[indices])
+
+
+def test_pickle_roundtrip():
+    result = ValuationResult.from_random(
+        size=5, algorithm="test", status=Status.Pending
+    )
+    pickled = pickle.dumps(result)
+    unpickled = pickle.loads(pickled)
+    assert result == unpickled
+
+
+def test_upgrade_hook_called():
+    class UpgradableValuationResult(ValuationResult):
+        __version__ = "2.0"
+
+        @classmethod
+        def __upgrade_state__(cls, state):
+            state["upgraded"] = True
+            state["_class_version"] = cls.__version__
+            return state
+
+    instance = UpgradableValuationResult.from_random(
+        size=5, algorithm="upgrade_test", status=Status.Pending
+    )
+
+    # Monkey-patch __getstate__ to simulate a legacy state with an old version.
+    def __getstate__(self):
+        state = super(UpgradableValuationResult, self).__getstate__()
+        state["_class_version"] = "1.0"
+        return state
+
+    instance.__getstate__ = __getstate__.__get__(instance, UpgradableValuationResult)
+
+    # Trigger __setstate__ and the upgrade hook.
+    # Need to use cloudpickle because of the local monkey patch function
+    pickled = cloudpickle.dumps(instance)
+    unpickled = cloudpickle.loads(pickled)
+
+    # Verify that the upgrade hook was applied.
+    assert unpickled.__dict__.get("upgraded") is True
+    assert (
+        unpickled.__dict__.get("_class_version")
+        == UpgradableValuationResult.__version__
+    )
+    assert instance == unpickled
+
+
+def test_version_mismatch_raises():
+    instance = ValuationResult.from_random(
+        size=5, algorithm="test", status=Status.Pending
+    )
+
+    # Monkey-patch __getstate__ to simulate a bad version.
+    def __getstate__(self):
+        state = self.__dict__
+        state["_class_version"] = "bad_version"
+        return state
+
+    instance.__getstate__ = __getstate__.__get__(instance, ValuationResult)
+
+    pickled = pickle.dumps(instance)
+
+    with pytest.raises(ValueError, match="Pickled ValuationResult version mismatch"):
+        pickle.loads(pickled)

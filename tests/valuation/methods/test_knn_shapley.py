@@ -31,11 +31,11 @@ def test_against_exact_shapley(data, n_jobs):
         utility, sampler=sampler, is_done=NoStopping(), progress=False
     )
     with parallel_config(n_jobs=n_jobs):
-        exact_result = exact_valuation.fit(train).values()
+        exact_result = exact_valuation.fit(train).result
 
     valuation = KNNShapleyValuation(model=model, test_data=test, progress=False)
     with parallel_config(n_jobs=n_jobs):
-        results = valuation.fit(train).values()
+        results = valuation.fit(train).result
 
     eps = float(np.finfo(float).eps)
     np.testing.assert_allclose(  # type: ignore
