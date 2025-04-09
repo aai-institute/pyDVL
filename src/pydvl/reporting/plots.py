@@ -257,6 +257,7 @@ def plot_result_errors(
     title: str | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
+    legend_label: str | None = None,
 ) -> plt.Axes:
     r"""Plots a [ValuationResult][pydvl.pydvl.valuation.result.ValuationResult],
     with error bars corresponding to an $\alpha$-level Normal confidence
@@ -279,7 +280,14 @@ def plot_result_errors(
     stderr = np.sqrt(result.variances / np.maximum(1.0, result.counts))
     yerr = norm.ppf(1 - level / 2) * stderr
 
-    ax.errorbar(x=result.names, y=result.values, yerr=yerr, fmt="o", capsize=6)
+    ax.errorbar(
+        x=result.names,
+        y=result.values,
+        yerr=yerr,
+        fmt="o",
+        capsize=6,
+        label=legend_label,
+    )
     ax.set_xlabel(xlabel or "")
     ax.set_ylabel(ylabel or "")
     ax.set_title(title or "")
