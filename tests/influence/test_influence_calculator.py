@@ -2,10 +2,10 @@ import dask.array as da
 import numpy as np
 import pytest
 import torch
-import zarr
 from distributed import Client
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+from zarr.storage import MemoryStore
 
 from pydvl.influence import DaskInfluenceCalculator, InfluenceMode
 from pydvl.influence.base_influence_function_model import (
@@ -306,7 +306,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
 
     torch_factors = inf_model.influence_factors(x_test, y_test)
 
-    zarr_factors_store = zarr.MemoryStore()
+    zarr_factors_store = MemoryStore()
     seq_factors_from_zarr = seq_factors_lazy_array.to_zarr(
         zarr_factors_store, TorchNumpyConverter(), return_stored=True
     )
@@ -331,7 +331,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
     seq_values_from_factors = seq_values_from_factors_lazy_array.compute(
         aggregator=NestedTorchCatAggregator()
     )
-    zarr_values_from_factors_store = zarr.MemoryStore()
+    zarr_values_from_factors_store = MemoryStore()
     seq_values_from_factors_from_zarr = seq_values_from_factors_lazy_array.to_zarr(
         zarr_values_from_factors_store, TorchNumpyConverter(), return_stored=True
     )
@@ -347,7 +347,7 @@ def test_sequential_calculator(model_and_data, test_case, mocker):
     )
     seq_values = seq_values_lazy_array.compute(aggregator=NestedTorchCatAggregator())
 
-    zarr_values_store = zarr.MemoryStore()
+    zarr_values_store = MemoryStore()
     seq_values_from_zarr = seq_values_lazy_array.to_zarr(
         zarr_values_store, TorchNumpyConverter(), return_stored=True
     )
