@@ -85,6 +85,7 @@ from dataclasses import dataclass
 from functools import total_ordering
 from numbers import Integral
 from pathlib import Path
+from pickle import dump, load
 from typing import (
     Any,
     Generic,
@@ -99,7 +100,6 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-from joblib import dump, load
 from numpy.typing import NDArray
 from typing_extensions import Self
 
