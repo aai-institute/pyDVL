@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements
 
 
 ### Added
