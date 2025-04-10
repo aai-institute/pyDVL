@@ -1,0 +1,130 @@
+.announcement {
+    align-items: center;
+    display: flex;
+    overflow-x: auto;
+}
+
+.announcement-content {
+    box-sizing: border-box;
+    min-width: 100%;
+    padding: .5rem;
+    text-align: center;
+    white-space: nowrap;
+    color: white;
+    font-size: larger;
+}
+
+/* Indentation. */
+div.doc-contents:not(.first) {
+  padding-left: 25px;
+  border-left: .05rem solid var(--md-typeset-table-color);
+}
+
+/* Mark external links as such. */
+a.autorefs-external::after {
+  /* https://primer.style/octicons/arrow-up-right-24 */
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="rgb(0, 0, 0)" d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  content: ' ';
+
+  display: inline-block;
+  position: relative;
+  top: 0.1em;
+  margin-left: 0.2em;
+  margin-right: 0.1em;
+
+  height: 1em;
+  width: 1em;
+  border-radius: 100%;
+  background-color: var(--md-typeset-a-color);
+}
+
+a.autorefs-external:hover::after {
+  background-color: var(--md-accent-fg-color);
+}
+
+/* Headers */
+.md-typeset h1 {
+  font-size: 2.5em;
+  font-weight: 500;
+}
+
+.md-typeset h2 {
+  font-size: 1.3em;
+  font-weight: 300;
+}
+
+.md-typeset h3 {
+  font-size: 1.1em;
+  font-weight: 300;
+}
+
+/* Highlight function names in red */
+.highlight > :first-child  {
+    color: #b30000;
+}
+
+/* Highlight svg logos on hover */
+/* The filter was generated using this link: https://codepen.io/sosuke/pen/Pjoqqp */
+.nt-card-image:hover,
+.nt-card-image:focus {
+  filter: invert(32%) sepia(93%) saturate(1535%) hue-rotate(220deg) brightness(102%) contrast(99%);
+}
+
+.md-header__button.md-logo {
+    padding: 0;
+}
+
+.md-header__button.md-logo img, .md-header__button.md-logo svg {
+  height: 1.9rem;
+}
+
+/* Prevent selection of >>>, ... and output in Python code blocks */
+.highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
+    user-select: none;
+}
+
+/* Remove cell input and output prompt */
+.jp-InputArea-prompt, .jp-OutputArea-prompt {
+    display: none !important;
+}
+
+/* Alert boxes */
+.alert {
+  border-radius: 0.375rem;
+  padding: 1rem;
+  position: relative;
+  margin: auto;
+  text-align: center;
+}
+
+.alert-info {
+  background: var(--md-typeset-ins-color);
+  border: 0.1rem solid var(--md-primary-fg-color);
+}
+
+.alert-warning {
+  background: var(--md-warning-bg-color);
+  border: 0.1rem solid var(--md-primary-fg-color);
+  color: black;
+}
+
+body[data-md-color-scheme="default"] .invertible img {
+}
+
+body[data-md-color-scheme="slate"] .invertible img {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+body[data-md-color-scheme="slate"] .celltag_invertible-output img {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+/* Rendered dataframe from jupyter */
+table.dataframe {
+    display: block;
+    max-width: -moz-fit-content;
+    max-width: fit-content;
+    margin: 0 auto;
+    overflow-x: auto;
+    white-space: nowrap;
+}

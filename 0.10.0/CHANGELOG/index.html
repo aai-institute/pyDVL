@@ -1,0 +1,5148 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://pydvl.org/stable/CHANGELOG/">
+      
+      
+        <link rel="prev" href="../CONTRIBUTING/">
+      
+      
+        <link rel="next" href="../deprecated/">
+      
+      
+      <link rel="icon" href="../assets/signet.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.11">
+    
+    
+      
+        <title>Changelog - pyDVL</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.4af4bdda.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../css/extra.css">
+    
+      <link rel="stylesheet" href="../css/grid-cards.css">
+    
+      <link rel="stylesheet" href="../css/ansi-colours.css">
+    
+      <link rel="stylesheet" href="../css/pandas-dataframe.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+
+
+
+    
+    
+    
+    
+    <script async defer
+            src="https://scripts.simpleanalyticscdn.com/latest.js"
+            data-collect-dnt="true"
+            data-hostname="pydvl.org"></script>
+    <noscript>
+        <img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=True&hostname=pydvl.org&path=CHANGELOG/"
+             alt=""
+             referrerpolicy="no-referrer-when-downgrade">
+    </noscript>
+
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="Changelog - pyDVL" >
+      
+        <meta  property="og:description"  content="None" >
+      
+        <meta  property="og:image"  content="https://pydvl.org/stable/assets/images/social/CHANGELOG.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://pydvl.org/stable/CHANGELOG/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="Changelog - pyDVL" >
+      
+        <meta  name="twitter:description"  content="None" >
+      
+        <meta  name="twitter:image"  content="https://pydvl.org/stable/assets/images/social/CHANGELOG.png" >
+      
+    
+    
+   <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+<div class="announcement">
+    <aside class="announcement-content">
+        pyDVL is in an early stage of development. Expect changes to functionality and the API until version 1.0.0.
+    </aside>
+</div>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="pyDVL" class="md-header__button md-logo" aria-label="pyDVL" data-md-component="logo">
+      
+  <img src="../assets/signet.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            pyDVL
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/aai-institute/pyDVL" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    aai-institute/pyDVL
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../value/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Data Valuation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../influence/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  The Influence Function
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../api/pydvl/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Code
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/methods/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Methods
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../getting-started/glossary/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Glossary
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="pyDVL" class="md-nav__button md-logo" aria-label="pyDVL" data-md-component="logo">
+      
+  <img src="../assets/signet.svg" alt="logo">
+
+    </a>
+    pyDVL
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/aai-institute/pyDVL" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    aai-institute/pyDVL
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/first-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    First steps
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/applications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Applications
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Benchmarking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/advanced-usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Advanced usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Data Valuation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Data Valuation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/loo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Leave-One-Out
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Shapley values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/classwise-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Class-wise Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/semi-values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Semi-values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/beta-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Beta Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/data-banzhaf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Banzhaf
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/delta-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Delta Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/knn-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    KNN-Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/group-testing-shapley/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Group Testing Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/owen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Owen-Shapley values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/the-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Least Core
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/data-oob/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data-OOB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/dul/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Utility Learning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../value/sampling-weights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sampling strategies for semi-values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    The Influence Function
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            The Influence Function
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../influence/influence_function_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Influence Function Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../influence/scaling_computation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Scaling Computation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Data Valuation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            Data Valuation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/shapley_basic_spotify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Shapley values
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/shapley_knn_flowers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    KNN Shapley
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/shapley_utility_learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data utility learning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/msr_banzhaf_digits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Banzhaf semivalues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/least_core_basic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Least Core
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/data_oob/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data OOB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Influence Function
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Influence Function
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/influence_imagenet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    For CNNs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/influence_synthetic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    For mislabeled data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/influence_wine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    For outlier detection
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/influence_sentiment_analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    For language models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../deprecated/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Code
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Code
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1" id="__nav_6_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/valuation/methods/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Data Valuation
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1_2" id="__nav_6_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Data Valuation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dataset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/games/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Games
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Parallel
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Result
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/stopping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Stopping
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_2_9" id="__nav_6_1_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Samplers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            Samplers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/classwise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Classwise
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/msr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Msr
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/owen/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Owen
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/permutation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Permutation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/powerset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Powerset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/stratified/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Stratified
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/truncation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Truncation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/samplers/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_2_10" id="__nav_6_1_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Scorers
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            Scorers
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/scorers/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/scorers/classwise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Classwise
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/scorers/supervised/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Supervised
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/scorers/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_2_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_2_11" id="__nav_6_1_2_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Utility
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_2_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_2_11">
+            <span class="md-nav__icon md-icon"></span>
+            Utility
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/classwise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Classwise
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/deepset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deepset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/knn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Knn
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Learning
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/valuation/utility/modelutility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Modelutility
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/influence/torch/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Influence Function
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1_3" id="__nav_6_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            Influence Function
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/influence/array/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Array
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/influence/base_influence_function_model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base influence function model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/influence/influence_calculator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Influence calculator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/influence/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_4" id="__nav_6_1_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reporting
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            Reporting
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/plots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Plots
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/point_removal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Point removal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/reporting/scores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Scores
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/pydvl/utils/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Utilities
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_1_5" id="__nav_6_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Utilities
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_5_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_1_5_2" id="__nav_6_1_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Caching
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Caching
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Base
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/disk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Disk
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memcached/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Memcached
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/caching/memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exceptions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/functional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Functional
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/numeric/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Numeric
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/progress/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Progress
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pydvl/utils/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Status
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Contributing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v0100-new-valuation-interface-improved-docs-new-methods-breaking-changes-and-tons-of-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#092-bug-fixes-logging-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.2 - 🏗 Bug fixes, logging improvement
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.2 - 🏗 Bug fixes, logging improvement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#091-bug-fixes-logging-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.1 - Bug fixes, logging improvement
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.1 - Bug fixes, logging improvement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#090-new-methods-better-docs-and-bugfixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#081-new-method-and-notebook-games-with-exact-shapley-values-bug-fixes-and-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.8.1 - 🆕 🏗 New method and notebook, Games with exact shapley values, bug fixes and cleanup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8.1 - 🆕 🏗 New method and notebook, Games with exact shapley values, bug fixes and cleanup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#080-new-interfaces-scaling-computation-bug-fixes-and-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#071-new-methods-bug-fixes-and-improvements-for-local-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#070-documentation-and-if-overhaul-new-methods-and-bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#061-bug-fixes-and-small-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.6.1 - 🏗 Bug fixes and small improvements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#060-new-algorithms-cleanup-and-bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#050-fixes-nicer-interfaces-and-more-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-new-algorithms-and-more-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.4.0 - 🏭💥 New algorithms and more breaking changes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.3.0 - 💥 Breaking changes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-better-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.2.0 - 📚 Better docs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.2.0 - 📚 Better docs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-first-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.1.0 - 🎉 first release
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Methods
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Glossary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v0100-new-valuation-interface-improved-docs-new-methods-breaking-changes-and-tons-of-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#092-bug-fixes-logging-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.2 - 🏗 Bug fixes, logging improvement
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.2 - 🏗 Bug fixes, logging improvement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#091-bug-fixes-logging-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.1 - Bug fixes, logging improvement
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.1 - Bug fixes, logging improvement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#090-new-methods-better-docs-and-bugfixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#081-new-method-and-notebook-games-with-exact-shapley-values-bug-fixes-and-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.8.1 - 🆕 🏗 New method and notebook, Games with exact shapley values, bug fixes and cleanup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8.1 - 🆕 🏗 New method and notebook, Games with exact shapley values, bug fixes and cleanup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#080-new-interfaces-scaling-computation-bug-fixes-and-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#071-new-methods-bug-fixes-and-improvements-for-local-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#070-documentation-and-if-overhaul-new-methods-and-bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#061-bug-fixes-and-small-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.6.1 - 🏗 Bug fixes and small improvements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#060-new-algorithms-cleanup-and-bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#050-fixes-nicer-interfaces-and-more-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-new-algorithms-and-more-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.4.0 - 🏭💥 New algorithms and more breaking changes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.3.0 - 💥 Breaking changes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-better-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.2.0 - 📚 Better docs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.2.0 - 📚 Better docs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Added
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fixed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-first-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      0.1.0 - 🎉 first release
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h2 id="v0100-new-valuation-interface-improved-docs-new-methods-breaking-changes-and-tons-of-improvements">v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements<a class="headerlink" href="#v0100-new-valuation-interface-improved-docs-new-methods-breaking-changes-and-tons-of-improvements" title="Permanent link">&para;</a></h2>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Simple result serialization to resume computation of values
+  <a href="https://github.com/aai-institute/pyDVL/pull/666">PR #666</a></li>
+<li>Simple memory monitor / reporting
+  <a href="https://github.com/aai-institute/pyDVL/pull/663">PR #663</a></li>
+<li>New stopping criterion <code>MaxSamples</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/661">PR #661</a></li>
+<li>New pseudo-stopping criterion <code>History</code> to record value updates during fitting
+  <a href="https://github.com/aai-institute/pyDVL/pull/653">PR #653</a></li>
+<li>Introduced <code>UtilityModel</code> and two implementations <code>IndicatorUtilityModel</code>
+  and <code>DeepSetsUtilityModel</code> for data utility learning
+  <a href="https://github.com/aai-institute/pyDVL/pull/650">PR #650</a></li>
+<li>Introduced the concept of <code>ResultUpdater</code> in order to allow samplers to
+  declare the proper strategy to use by valuations 
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Added Banzhaf precomputed values to some games.
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Introduced new <code>IndexIterations</code>, for consistent usage across all
+  <code>PowersetSamplers</code> <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Added <code>run_removal_experiment</code> for easy removal experiments
+  <a href="https://github.com/aai-institute/pyDVL/pull/636">PR #636</a></li>
+<li>Refactor Classwise Shapley valuation with the interfaces and sampler
+  architecture <a href="https://github.com/aai-institute/pyDVL/pull/616">PR #616</a></li>
+<li>Refactor <abbr title="K-Nearest Neighbours">KNN</abbr> Shapley values with the new interface
+  <a href="https://github.com/aai-institute/pyDVL/pull/610">PR #610</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/645">PR #645</a></li>
+<li>Refactor <abbr title="Maximum Sample Reuse">MSR</abbr> Banzhaf semivalues with the new sampler architecture.
+  <a href="https://github.com/aai-institute/pyDVL/pull/605">PR #605</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/653">PR #653</a></li>
+<li>Refactor group-testing shapley values with new sampler architecture
+  <a href="https://github.com/aai-institute/pyDVL/pull/602">PR #602</a></li>
+<li>Refactor least-core data valuation methods with more supported sampling
+  methods and consistent interface.
+  <a href="https://github.com/aai-institute/pyDVL/pull/580">PR #580</a></li>
+<li>Refactor Owen-Shapley valuation with new sampler architecture. Enable use of
+  <code>OwenSamplers</code> with all semi-values
+  <a href="https://github.com/aai-institute/pyDVL/pull/597">PR #597</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>New method <code>InverseHarmonicMeanInfluence</code>, implementation for the paper
+  <code>DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
+    Diffusion Models</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/582">PR #582</a></li>
+<li>Add new backend implementations for influence computation to account for
+  block-diagonal approximations
+  <a href="https://github.com/aai-institute/pyDVL/pull/582">PR #582</a></li>
+<li>Extend <code>DirectInfluence</code> with block-diagonal and Gauss-Newton approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/591">PR #591</a></li>
+<li>Extend <code>LissaInfluence</code> with block-diagonal and Gauss-Newton approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/593">PR #593</a></li>
+<li>Extend <code>NystroemSketchInfluence</code> with block-diagonal and Gauss-Newton
+  approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/596">PR #596</a></li>
+<li>Extend <code>ArnoldiInfluence</code> with block-diagonal and Gauss-Newton
+  approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/598">PR #598</a></li>
+<li>Extend <code>CgInfluence</code> with block-diagonal and Gauss-Newton approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/601">PR #601</a></li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed <code>show_warnings=False</code> not being respected in subprocesses. Introduced
+  <code>suppress_warninigs</code> decorator for more flexibility
+  <a href="https://github.com/aai-institute/pyDVL/pull/647">PR #647</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/662">PR #662</a></li>
+<li>Fixed several bugs in diverse stopping criteria, including: iteration counts,
+  computing completion, resetting, nested composition
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/650">PR #650</a></li>
+<li>Fixed all weights of all samplers to ensure that mix-and-matching samplers and
+  semi-value methods always works, for all possible combinations
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Fixed a bug whereby progress bars would not report the last step and remain
+  incomplete <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Fixed the analysis of the adult dataset in the Data-<abbr title="Out-of-Bag">OOB</abbr> notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/636">PR #636</a></li>
+<li>Replace <code>np.float_</code> with <code>np.float64</code> and <code>np.alltrue</code> with <code>np.all</code>,
+  as the old aliases are removed in NumPy 2.0
+  <a href="https://github.com/aai-institute/pyDVL/pull/604">PR #604</a></li>
+<li>Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
+  as the probability of an element being sampled
+  <a href="https://github.com/aai-institute/pyDVL/pull/597">PR #597</a></li>
+<li>Fix a bug in the calculation of variance estimates for <abbr title="Maximum Sample Reuse">MSR</abbr> Banzhaf
+  <a href="https://github.com/aai-institute/pyDVL/pull/605">PR #605</a></li>
+<li>Fix a bug in <abbr title="K-Nearest Neighbours">KNN</abbr> Shapley values. See <a href="https://github.com/aai-institute/pyDVL/issues/613">Issue 613</a> for details.</li>
+<li>Backport the <abbr title="K-Nearest Neighbours">KNN</abbr> Shapley fix to the <code>value</code> module
+  <a href="https://github.com/aai-institute/pyDVL/pull/633">PR #633</a> </li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Major rewrite of the documentation for the new interface in 0.10.0
+  <a href="https://github.com/aai-institute/pyDVL/pull/653">PR #653</a></li>
+<li>Slicing, comparing and setting of <code>ValuationResult</code> behave in a more 
+  natural and consistent way. Several bug fixes.
+  <a href="https://github.com/aai-institute/pyDVL/pull/653">PR #653</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/660">PR #660</a> 
+  <a href="https://github.com/aai-institute/pyDVL/pull/666">PR #666</a></li>
+<li>Switched all semi-value coefficients and sampler weights to log-space in
+  order to avoid overflows
+  <a href="https://github.com/aai-institute/pyDVL/pull/643">PR #643</a></li>
+<li>Updated and rewrote some of the <abbr title="Maximum Sample Reuse">MSR</abbr> banzhaf notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Updated Least-Core notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Updated Shapley spotify notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/628">PR #628</a></li>
+<li>Updated Data Utility notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/650">PR #650</a></li>
+<li>Restructured and generalized <code>StratifiedSampler</code> to allow using heuristics,
+  thus subsuming Variance-Reduced stratified sampling into a unified framework.
+  Implemented the heuristics proposed in that paper
+  <a href="https://github.com/aai-institute/pyDVL/pull/641">PR #641</a></li>
+<li>Uniformly distribute test points across processes for KNNShapley. Fail for
+  <code>GroupedDataset</code> <a href="https://github.com/aai-institute/pyDVL/pull/632">PR #632</a></li>
+<li>Introduced the concept of logical vs data indices for <code>Dataset</code>, and
+  <code>GroupedDataset</code>, fixing inconsistencies in how the latter operates on indices.
+  Also, both now return objects of the same type when slicing.
+  <a href="https://github.com/aai-institute/pyDVL/pull/631">PR #631</a>
+  <a href="https://github.com/aai-institute/pyDVL/pull/648">PR #648</a></li>
+<li>Use tighter bounds for the calculation of the minimal sample size that guarantees
+  an epsilon-delta approximation in group testing (Jia et al. 2023)
+  <a href="https://github.com/aai-institute/pyDVL/pull/602">PR #602</a></li>
+<li>Dropped black, isort and pylint from the CI pipeline, in favour of ruff
+  <a href="https://github.com/aai-institute/pyDVL/pull/633">PR #633</a></li>
+<li><strong>Breaking Changes</strong></li>
+<li>Changed <code>DataOOBValuation</code> to only accept bagged models
+    <a href="https://github.com/aai-institute/pyDVL/pull/636">PR #636</a></li>
+<li>Dropped support for python 3.8 after EOL
+    <a href="https://github.com/aai-institute/pyDVL/pull/633">PR #633</a></li>
+<li>Rename parameter <code>hessian_regularization</code> of <code>DirectInfluence</code>
+    to <code>regularization</code> and change the type annotation to allow
+    for block-wise regularization parameters
+    <a href="https://github.com/aai-institute/pyDVL/pull/591">PR #591</a></li>
+<li>Rename parameter <code>hessian_regularization</code> of <code>LissaInfluence</code>
+    to <code>regularization</code> and change the type annotation to allow
+    for block-wise regularization parameters
+    <a href="https://github.com/aai-institute/pyDVL/pull/593">PR #593</a></li>
+<li>Remove parameter <code>h0</code> from init of <code>LissaInfluence</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/593">PR #593</a></li>
+<li>Rename parameter <code>hessian_regularization</code> of <code>NystroemSketchInfluence</code>
+    to <code>regularization</code> and change the type annotation to allow
+    for block-wise regularization parameters
+    <a href="https://github.com/aai-institute/pyDVL/pull/596">PR #596</a></li>
+<li>Renaming of parameters of <code>ArnoldiInfluence</code>,
+    <code>hessian_regularization</code> -&gt; <code>regularization</code> (modify type annotation),
+    <code>rank_estimate</code> -&gt; <code>rank</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/598">PR #598</a></li>
+<li>Remove functions remove obsolete functions 
+    <code>lanczos_low_rank_hessian_approximation</code>, <code>model_hessian_low_rank</code>
+    from <code>influence.torch.functional</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/598">PR #598</a></li>
+<li>Renaming of parameters of <code>CgInfluence</code>,
+    <code>hessian_regularization</code> -&gt; <code>regularization</code> (modify type annotation),
+    <code>pre_conditioner</code> -&gt; <code>preconditioner</code>,
+    <code>use_block_cg</code> -&gt; <code>solve_simultaneously</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/601">PR #601</a></li>
+<li>Remove parameter <code>x0</code> from <code>CgInfluence</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/601">PR #601</a></li>
+<li>Rename module 
+    <code>influence.torch.pre_conditioner</code> -&gt; <code>influence.torch.preconditioner</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/601">PR #601</a></li>
+<li>Refactor preconditioner:<ul>
+<li>renaming <code>PreConditioner</code> -&gt; <code>Preconditioner</code></li>
+<li>fit to <code>TensorOperator</code>
+<a href="https://github.com/aai-institute/pyDVL/pull/601">PR #601</a></li>
+</ul>
+</li>
+<li>Bumped <code>zarr</code> dependency to v3
+    <a href="https://github.com/aai-institute/pyDVL/pull/668">PR #668</a> </li>
+</ul>
+<h2 id="092-bug-fixes-logging-improvement">0.9.2 - 🏗  Bug fixes, logging improvement<a class="headerlink" href="#092-bug-fixes-logging-improvement" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Add progress bars to the computation of <code>LazyChunkSequence</code> and
+  <code>NestedLazyChunkSequence</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/567">PR #567</a></li>
+<li>Add a device fixture for <code>pytest</code>, which depending on the availability and
+  user input (<code>pytest --with-cuda</code>) resolves to cuda device
+  <a href="https://github.com/aai-institute/pyDVL/pull/574">PR #574</a></li>
+</ul>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed logging issue in decorator <code>log_duration</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/567">PR #567</a></li>
+<li>Fixed missing move of tensors to model device in <code>EkfacInfluence</code>
+  implementation <a href="https://github.com/aai-institute/pyDVL/pull/570">PR #570</a></li>
+<li>Missing move to device of <code>preconditioner</code> in <code>CgInfluence</code> implementation
+  <a href="https://github.com/aai-institute/pyDVL/pull/572">PR #572</a></li>
+<li>Raise a more specific error message, when a <code>RunTimeError</code> occurs in
+  <code>torch.linalg.eigh</code>, so the user can check if it is related to a known
+  issue
+  <a href="https://github.com/aai-institute/pyDVL/pull/578">PR #578</a></li>
+<li>Fix an edge case (empty train data) in the test
+  <code>test_classwise_scorer_accuracies_manual_derivation</code>, which resulted
+  in undefined behavior (<code>np.nan</code> to <code>int</code> conversion with different results
+  depending on OS)
+  <a href="https://github.com/aai-institute/pyDVL/pull/579">PR #579</a></li>
+</ul>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Changed logging behavior of iterative methods <code>LissaInfluence</code> and
+  <code>CgInfluence</code> to warn on not achieving desired tolerance within <code>maxiter</code>,
+  add parameter <code>warn_on_max_iteration</code> to set the level for this information
+  to <code>logging.DEBUG</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/567">PR #567</a></li>
+</ul>
+<h2 id="091-bug-fixes-logging-improvement">0.9.1 - Bug fixes, logging improvement<a class="headerlink" href="#091-bug-fixes-logging-improvement" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>FutureWarning</code> for <code>ParallelConfig</code> constantly raised without actually
+  instantiating the object
+  <a href="https://github.com/aai-institute/pyDVL/pull/562">PR #562</a></li>
+</ul>
+<h2 id="090-new-methods-better-docs-and-bugfixes">0.9.0 - 🆕 New methods, better docs and bugfixes 📚🐞<a class="headerlink" href="#090-new-methods-better-docs-and-bugfixes" title="Permanent link">&para;</a></h2>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New method <code>MSR Banzhaf</code> with accompanying notebook, and new stopping
+  criterion <code>RankCorrelation</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/520">PR #520</a></li>
+<li>New method: <code>NystroemSketchInfluence</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/504">PR #504</a></li>
+<li>New preconditioned block variant of conjugate gradient
+  <a href="https://github.com/aai-institute/pyDVL/pull/507">PR #507</a></li>
+<li>Improvements to documentation: fixes, links, text, example gallery, LFS and
+  more <a href="https://github.com/aai-institute/pyDVL/pull/532">PR #532</a>,
+  <a href="https://github.com/aai-institute/pyDVL/pull/543">PR #543</a></li>
+<li>Glossary of data valuation and influence terms in the documentation
+  [PR #537](https://github.com/aai-institute/pyDVL/pull/537</li>
+<li>Documentation about writing notes for new features, changes or deprecations
+  <a href="https://github.com/aai-institute/pyDVL/pull/557">PR #557</a></li>
+</ul>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Bug in <code>LissaInfluence</code>, when not using CPU device
+  <a href="https://github.com/aai-institute/pyDVL/pull/495">PR #495</a></li>
+<li>Memory issue with <code>CgInfluence</code> and <code>ArnoldiInfluence</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/498">PR #498</a></li>
+<li>Raising specific error message with install instruction, when trying to load
+  <code>pydvl.utils.cache.memcached</code> without <code>pymemcache</code> installed.
+  If <code>pymemcache</code> is available, all symbols from <code>pydvl.utils.cache.memcached</code>
+  are available through <code>pydvl.utils.cache</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/509">PR #509</a></li>
+</ul>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Add property <code>model_dtype</code> to instances of type <code>TorchInfluenceFunctionModel</code></li>
+<li>Bump versions of CI actions to avoid warnings
+  <a href="https://github.com/aai-institute/pyDVL/pull/502">PR #502</a></li>
+<li>Add Python Version 3.11 to supported versions
+  <a href="https://github.com/aai-institute/pyDVL/pull/510">PR #510</a></li>
+<li>Documentation improvements and cleanup
+  <a href="https://github.com/aai-institute/pyDVL/pull/521">PR #521</a>,
+  <a href="https://github.com/aai-institute/pyDVL/pull/522">PR #522</a></li>
+<li>Simplified parallel backend configuration
+  <a href="https://github.com/mkdocstrings/mkdocstrings/issues/615">PR #549</a></li>
+</ul>
+<h2 id="081-new-method-and-notebook-games-with-exact-shapley-values-bug-fixes-and-cleanup">0.8.1 - 🆕 🏗  New method and notebook, Games with exact shapley values, bug fixes and cleanup<a class="headerlink" href="#081-new-method-and-notebook-games-with-exact-shapley-values-bug-fixes-and-cleanup" title="Permanent link">&para;</a></h2>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Implement new method: <code>EkfacInfluence</code>
+  <a href="https://github.com/aai-institute/pyDVL/issues/451">PR #451</a></li>
+<li>New notebook to showcase ekfac for LLMs
+  <a href="https://github.com/aai-institute/pyDVL/pull/483">PR #483</a></li>
+<li>Implemented exact games in Castro et al. 2009 and 2017
+  <a href="https://github.com/appliedAI-Initiative/pyDVL/pull/341">PR #341</a></li>
+</ul>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Bug in using <code>DaskInfluenceCalcualator</code> with <code>TorchnumpyConverter</code>
+  for single dimensional arrays
+  <a href="https://github.com/aai-institute/pyDVL/pull/485">PR #485</a></li>
+<li>Fix implementations of <code>to</code> methods of <code>TorchInfluenceFunctionModel</code>
+  implementations <a href="https://github.com/aai-institute/pyDVL/pull/487">PR #487</a></li>
+<li>Fixed bug with checking for converged values in semivalues
+  <a href="https://github.com/appliedAI-Initiative/pyDVL/pull/341">PR #341</a></li>
+</ul>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Add applications of data valuation section, display examples more prominently,
+  make all sections visible in table of contents, use mkdocs material cards
+  in the home page <a href="https://github.com/aai-institute/pyDVL/pull/492">PR #492</a></li>
+</ul>
+<h2 id="080-new-interfaces-scaling-computation-bug-fixes-and-improvements">0.8.0 - 🆕 New interfaces, scaling computation, bug fixes and improvements 🎁<a class="headerlink" href="#080-new-interfaces-scaling-computation-bug-fixes-and-improvements" title="Permanent link">&para;</a></h2>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New cache backends: InMemoryCacheBackend and DiskCacheBackend
+  <a href="https://github.com/aai-institute/pyDVL/pull/458">PR #458</a></li>
+<li>New influence function interface <code>InfluenceFunctionModel</code></li>
+<li>Data parallel computation with <code>DaskInfluenceCalculator</code>
+  <a href="https://github.com/aai-institute/pyDVL/issues/26">PR #26</a></li>
+<li>Sequential batch-wise computation and write to disk with
+  <code>SequentialInfluenceCalculator</code>
+  <a href="https://github.com/aai-institute/pyDVL/issues/377">PR #377</a></li>
+<li>Adapt notebooks to new influence abstractions
+  <a href="https://github.com/aai-institute/pyDVL/issues/430">PR #430</a></li>
+</ul>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Refactor and simplify caching implementation
+  <a href="https://github.com/aai-institute/pyDVL/pull/458">PR #458</a></li>
+<li>Simplify display of computation progress
+  <a href="https://github.com/aai-institute/pyDVL/pull/466">PR #466</a></li>
+<li>Improve readme and explain better the examples
+  <a href="https://github.com/aai-institute/pyDVL/pull/465">PR #465</a></li>
+<li>Simplify and improve tests, add CodeCov code coverage
+  <a href="https://github.com/aai-institute/pyDVL/pull/429">PR #429</a></li>
+<li><strong>Breaking Changes</strong></li>
+<li>Removed <code>compute_influences</code> and all related code.
+    Replaced by new <code>InfluenceFunctionModel</code> interface. Removed modules:<ul>
+<li>influence.general</li>
+<li>influence.inversion</li>
+<li>influence.twice_differentiable</li>
+<li>influence.torch.torch_differentiable</li>
+</ul>
+</li>
+</ul>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Import bug in README <a href="https://github.com/aai-institute/pyDVL/issues/457">PR #457</a></li>
+</ul>
+<h2 id="071-new-methods-bug-fixes-and-improvements-for-local-tests">0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪<a class="headerlink" href="#071-new-methods-bug-fixes-and-improvements-for-local-tests" title="Permanent link">&para;</a></h2>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New method: Class-wise Shapley values
+  <a href="https://github.com/aai-institute/pyDVL/pull/338">PR #338</a></li>
+<li>New method: Data-<abbr title="Out-of-Bag">OOB</abbr> by @BastienZim
+  <a href="https://github.com/aai-institute/pyDVL/pull/426">PR #426</a>,
+  <a href="https://github.com/aai-institute/pyDVL/pull/431">PR $431</a></li>
+<li>Added <code>AntitheticPermutationSampler</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/439">PR #439</a></li>
+<li>Faster semi-value computation with per-index check of stopping criteria (optional)
+  <a href="https://github.com/aai-institute/pyDVL/pull/437">PR #437</a></li>
+</ul>
+<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fix initialization of <code>data_names</code> in <code>ValuationResult.zeros()</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/443">PR #443</a></li>
+</ul>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No longer using docker within tests to start a memcached server
+  <a href="https://github.com/aai-institute/pyDVL/pull/444">PR #444</a></li>
+<li>Using pytest-xdist for faster local tests
+  <a href="https://github.com/aai-institute/pyDVL/pull/440">PR #440</a></li>
+<li>Improvements and fixes to notebooks
+  <a href="https://github.com/aai-institute/pyDVL/pull/436">PR #436</a></li>
+<li>Refactoring of parallel module. Old imports will stop working in v0.9.0
+  <a href="https://github.com/aai-institute/pyDVL/pull/421">PR #421</a></li>
+</ul>
+<h2 id="070-documentation-and-if-overhaul-new-methods-and-bug-fixes">0.7.0 - 📚🆕 Documentation and <abbr title="Influence Function">IF</abbr> overhaul, new methods and bug fixes 💥🐞<a class="headerlink" href="#070-documentation-and-if-overhaul-new-methods-and-bug-fixes" title="Permanent link">&para;</a></h2>
+<p>This is our first β release! We have worked hard to deliver improvements across
+the board, with a focus on documentation and usability. We have also reworked
+the internals of the <code>influence</code> module, improved parallelism and handling of
+randomness.</p>
+<h3 id="added_6">Added<a class="headerlink" href="#added_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Implemented solving the Hessian equation via spectral low-rank approximation
+  <a href="https://github.com/aai-institute/pyDVL/pull/365">PR #365</a></li>
+<li>Enabled parallel computation for Leave-One-Out values
+  <a href="https://github.com/aai-institute/pyDVL/pull/406">PR #406</a></li>
+<li>Added more abbreviations to documentation
+  <a href="https://github.com/aai-institute/pyDVL/pull/415">PR #415</a></li>
+<li>Added seed to functions from <code>pydvl.utils.numeric</code>, <code>pydvl.value.shapley</code> and
+  <code>pydvl.value.semivalues</code>. Introduced new type <code>Seed</code> and conversion function
+  <code>ensure_seed_sequence</code>.
+  <a href="https://github.com/aai-institute/pyDVL/pull/396">PR #396</a></li>
+<li>Added <code>batch_size</code> parameter to <code>compute_banzhaf_semivalues</code>,
+  <code>compute_beta_shapley_semivalues</code>, <code>compute_shapley_semivalues</code> and
+  <code>compute_generic_semivalues</code>.
+  <a href="https://github.com/aai-institute/pyDVL/pull/428">PR #428</a></li>
+<li>Added classwise Shapley as proposed by (Schoch et al. 2021)
+  [https://arxiv.org/abs/2211.06800]
+  <a href="https://github.com/aai-institute/pyDVL/pull/338">PR #338</a></li>
+</ul>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
+  <a href="https://github.com/aai-institute/pyDVL/pull/352">PR #352</a></li>
+<li>Made ray an optional dependency, relying on joblib as default parallel backend
+  <a href="https://github.com/aai-institute/pyDVL/pull/408">PR #408</a></li>
+<li>Decoupled <code>ray.init</code> from <code>ParallelConfig</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/383">PR #373</a></li>
+<li><strong>Breaking Changes</strong></li>
+<li>Signature change: return information about Hessian inversion from
+    <code>compute_influence_factors</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/376">PR #375</a></li>
+<li>Major changes to <abbr title="Influence Function">IF</abbr> interface and functionality. Foundation for a framework
+    abstraction for <abbr title="Influence Function">IF</abbr> computation.
+    <a href="https://github.com/aai-institute/pyDVL/pull/278">PR #278</a>
+    <a href="https://github.com/aai-institute/pyDVL/pull/394">PR #394</a></li>
+<li>Renamed <code>semivalues</code> to <code>compute_generic_semivalues</code>
+    <a href="https://github.com/aai-institute/pyDVL/pull/413">PR #413</a></li>
+<li>New <code>joblib</code> backend as default instead of ray. Simplify MapReduceJob.
+    <a href="https://github.com/aai-institute/pyDVL/pull/355">PR #355</a></li>
+<li>Bump torch dependency for influence package to 2.0
+    <a href="https://github.com/aai-institute/pyDVL/pull/365">PR #365</a></li>
+</ul>
+<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixes to parallel computation of generic semi-values: properly handle all
+  samplers and stopping criteria, irrespective of parallel backend.
+  <a href="https://github.com/aai-institute/pyDVL/pull/372">PR #372</a></li>
+<li>Optimises memory usage in <abbr title="Influence Function">IF</abbr> calculation
+  <a href="https://github.com/aai-institute/pyDVL/pull/376">PR #375</a></li>
+<li>Fix adding valuation results with overlapping indices and different lengths
+  <a href="https://github.com/aai-institute/pyDVL/pull/370">PR #370</a></li>
+<li>Fixed bugs in conjugate gradient and <code>linear_solve</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/358">PR #358</a></li>
+<li>Fix installation of dev requirements for Python3.10
+  <a href="https://github.com/aai-institute/pyDVL/pull/382">PR #382</a></li>
+<li>Improvements to <abbr title="Influence Function">IF</abbr> documentation
+  <a href="https://github.com/aai-institute/pyDVL/pull/371">PR #371</a></li>
+</ul>
+<h2 id="061-bug-fixes-and-small-improvements">0.6.1 - 🏗 Bug fixes and small improvements<a class="headerlink" href="#061-bug-fixes-and-small-improvements" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Fix parsing keyword arguments of <code>compute_semivalues</code> dispatch function
+  <a href="https://github.com/aai-institute/pyDVL/pull/333">PR #333</a></li>
+<li>Create new <code>RayExecutor</code> class based on the concurrent.futures API,
+  use the new class to fix an issue with Truncated Monte Carlo Shapley
+  (<abbr title="Truncated Monte Carlo Shapley">TMCS</abbr>) starting too many processes and dying, plus other small changes
+  <a href="https://github.com/aai-institute/pyDVL/pull/329">PR #329</a></li>
+<li>Fix creation of GroupedDataset objects using the <code>from_arrays</code>
+  and <code>from_sklearn</code> class methods
+  <a href="https://github.com/aai-institute/pyDVL/pull/334">PR #324</a></li>
+<li>Fix release job not triggering on CI when a new tag is pushed
+  <a href="https://github.com/aai-institute/pyDVL/pull/331">PR #331</a></li>
+<li>Added alias <code>ApproShapley</code> from Castro et al. 2009 for permutation Shapley
+  <a href="https://github.com/aai-institute/pyDVL/pull/332">PR #332</a></li>
+</ul>
+<h2 id="060-new-algorithms-cleanup-and-bug-fixes">0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗<a class="headerlink" href="#060-new-algorithms-cleanup-and-bug-fixes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Fixes in <code>ValuationResult</code>: bugs around data names, semantics of
+  <code>empty()</code>, new method <code>zeros()</code> and normalised random values
+  <a href="https://github.com/aai-institute/pyDVL/pull/327">PR #327</a></li>
+<li><strong>New method</strong>: Implements generalised semi-values for data valuation,
+  including Data Banzhaf and Beta Shapley, with configurable sampling strategies
+  <a href="https://github.com/aai-institute/pyDVL/pull/319">PR #319</a></li>
+<li>Adds kwargs parameter to <code>from_array</code> and <code>from_sklearn</code> Dataset and
+  GroupedDataset class methods
+  <a href="https://github.com/aai-institute/pyDVL/pull/316">PR #316</a></li>
+<li>PEP-561 conformance: added <code>py.typed</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/307">PR #307</a></li>
+<li>Removed default non-negativity constraint on least core subsidy
+  and added instead a <code>non_negative_subsidy</code> boolean flag.
+  Renamed <code>options</code> to <code>solver_options</code> and pass it as dict.
+  Change default least-core solver to SCS with 10000 max_iters.
+  <a href="https://github.com/aai-institute/pyDVL/pull/304">PR #304</a></li>
+<li>Cleanup: removed unnecessary decorator <code>@unpackable</code>
+  <a href="https://github.com/aai-institute/pyDVL/pull/233">PR #233</a></li>
+<li>Stopping criteria: fixed problem with <code>StandardError</code> and enable proper
+  composition of index convergence statuses. Fixed a bug with <code>n_jobs</code> in
+  <code>truncated_montecarlo_shapley</code>.
+  <a href="https://github.com/aai-institute/pyDVL/pull/300">PR #300</a> and
+  <a href="https://github.com/aai-institute/pyDVL/pull/305">PR #305</a></li>
+<li>Shuffling code around to allow for simpler user imports, some cleanup and
+  documentation fixes.
+  <a href="https://github.com/aai-institute/pyDVL/pull/284">PR #284</a></li>
+<li><strong>Bug fix</strong>: Warn instead of raising an error when <code>n_iterations</code>
+  is less than the size of the dataset in Monte Carlo Least Core
+  <a href="https://github.com/aai-institute/pyDVL/pull/281">PR #281</a></li>
+</ul>
+<h2 id="050-fixes-nicer-interfaces-and-more-breaking-changes">0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒<a class="headerlink" href="#050-fixes-nicer-interfaces-and-more-breaking-changes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
+  and extended tests.
+  <a href="https://github.com/aai-institute/pyDVL/pull/267">PR #267</a></li>
+<li>Added <code>Scorer</code> class for a cleaner interface. Fixed minor bugs around
+  Group-Testing Shapley, added more tests and switched to cvxpy for the solver.
+  <a href="https://github.com/aai-institute/pyDVL/pull/264">PR #264</a></li>
+<li>Generalised stopping criteria for valuation algorithms. Improved classes
+  <code>ValuationResult</code> and <code>Status</code> with more operations. Some minor issues fixed.
+  <a href="https://github.com/aai-institute/pyDVL/pull/250">PR #252</a></li>
+<li>Fixed a bug whereby <code>compute_shapley_values</code> would only spawn one process when
+  using <code>n_jobs=-1</code> and Monte Carlo methods.
+  <a href="https://github.com/aai-institute/pyDVL/pull/270">PR #270</a></li>
+<li>Bugfix in <code>RayParallelBackend</code>: wrong semantics for <code>kwargs</code>.
+  <a href="https://github.com/aai-institute/pyDVL/pull/268">PR #268</a></li>
+<li>Splitting of problem preparation and solution in Least-Core computation.
+  Umbrella function for <abbr title="Least Core">LC</abbr> methods.
+  <a href="https://github.com/aai-institute/pyDVL/pull/257">PR #257</a></li>
+<li>Operations on <code>ValuationResult</code> and <code>Status</code> and some cleanup
+  <a href="https://github.com/aai-institute/pyDVL/pull/248">PR #248</a></li>
+<li><strong>Bug fix and minor improvements</strong>: Fixes bug in <abbr title="Truncated Monte Carlo Shapley">TMCS</abbr> with remote Ray cluster,
+  raises an error for dummy sequential parallel backend with <abbr title="Truncated Monte Carlo Shapley">TMCS</abbr>, clones model
+  inside <code>Utility</code> before fitting by default, with flag <code>clone_before_fit</code>
+  to disable it, catches all warnings in <code>Utility</code> when <code>show_warnings</code> is
+  <code>False</code>. Adds Miner and Gloves toy games utilities
+  <a href="https://github.com/aai-institute/pyDVL/pull/247">PR #247</a></li>
+</ul>
+<h2 id="040-new-algorithms-and-more-breaking-changes">0.4.0 - 🏭💥 New algorithms and more breaking changes<a class="headerlink" href="#040-new-algorithms-and-more-breaking-changes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>GH action to mark issues as stale
+  <a href="https://github.com/aai-institute/pyDVL/pull/201">PR #201</a></li>
+<li>Disabled caching of Utility values as well as repeated evaluations by default
+  <a href="https://github.com/aai-institute/pyDVL/pull/211">PR #211</a></li>
+<li>Test and officially support Python version 3.9 and 3.10
+  <a href="https://github.com/aai-institute/pyDVL/pull/208">PR #208</a></li>
+<li><strong>Breaking change:</strong> Introduces a class ValuationResult to gather and inspect
+  results from all valuation algorithms
+  <a href="https://github.com/aai-institute/pyDVL/pull/214">PR #214</a></li>
+<li>Fixes bug in Influence calculation with multidimensional input and adds new
+  example notebook
+  <a href="https://github.com/aai-institute/pyDVL/pull/195">PR #195</a></li>
+<li><strong>Breaking change</strong>: Passes the input to <code>MapReduceJob</code> at initialization,
+  removes <code>chunkify_inputs</code> argument from <code>MapReduceJob</code>, removes <code>n_runs</code>
+  argument from <code>MapReduceJob</code>, calls the parallel backend's <code>put()</code> method for
+  each generated chunk in <code>_chunkify()</code>, renames ParallelConfig's <code>num_workers</code>
+  attribute to <code>n_local_workers</code>, fixes a bug in <code>MapReduceJob</code>'s chunkification
+  when <code>n_runs</code> &gt;= <code>n_jobs</code>, and defines a sequential parallel backend to run
+  all jobs in the current thread
+  <a href="https://github.com/aai-institute/pyDVL/pull/232">PR #232</a></li>
+<li><strong>New method</strong>: Implements exact and monte carlo Least Core for data valuation,
+  adds <code>from_arrays()</code> class method to the <code>Dataset</code> and <code>GroupedDataset</code>
+  classes, adds <code>extra_values</code> argument to <code>ValuationResult</code>, adds
+  <code>compute_removal_score()</code> and <code>compute_random_removal_score()</code> helper functions
+  <a href="https://github.com/aai-institute/pyDVL/pull/237">PR #237</a></li>
+<li><strong>New method</strong>: Group Testing Shapley for valuation, from <em>Jia et al. 2019</em>
+  <a href="https://github.com/aai-institute/pyDVL/pull/240">PR #240</a></li>
+<li>Fixes bug in ray initialization in <code>RayParallelBackend</code> class
+  <a href="https://github.com/aai-institute/pyDVL/pull/239">PR #239</a></li>
+<li>Implements "Egalitarian Least Core", adds <a href="https://www.cvxpy.org/">cvxpy</a> as a
+  dependency and uses it instead of scipy as optimizer
+  <a href="https://github.com/aai-institute/pyDVL/pull/243">PR #243</a></li>
+</ul>
+<h2 id="030-breaking-changes">0.3.0 - 💥 Breaking changes<a class="headerlink" href="#030-breaking-changes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Simplified and fixed powerset sampling and testing
+  <a href="https://github.com/aai-institute/pyDVL/pull/181">PR #181</a></li>
+<li>Simplified and fixed publishing to PyPI from CI
+  <a href="https://github.com/aai-institute/pyDVL/pull/183">PR #183</a></li>
+<li>Fixed bug in release script and updated contributing docs.
+  <a href="https://github.com/aai-institute/pyDVL/pull/184">PR #184</a></li>
+<li>Added Pull Request template
+  <a href="https://github.com/aai-institute/pyDVL/pull/185">PR #185</a></li>
+<li>Modified Pull Request template to automatically link PR to issue
+  <a href="https://github.com/aai-institute/pyDVL/pull/186">PR ##186</a></li>
+<li>First implementation of Owen Sampling, squashed scores, better testing
+  <a href="https://github.com/aai-institute/pyDVL/pull/194">PR #194</a></li>
+<li>Improved documentation on caching, Shapley, caveats of values, bibtex
+  <a href="https://github.com/aai-institute/pyDVL/pull/194">PR #194</a></li>
+<li><strong>Breaking change:</strong> Rearranging of modules to accommodate for new methods
+  <a href="https://github.com/aai-institute/pyDVL/pull/194">PR #194</a></li>
+</ul>
+<h2 id="020-better-docs">0.2.0 - 📚 Better docs<a class="headerlink" href="#020-better-docs" title="Permanent link">&para;</a></h2>
+<p>Mostly API documentation and notebooks, plus some bugfixes.</p>
+<h3 id="added_7">Added<a class="headerlink" href="#added_7" title="Permanent link">&para;</a></h3>
+<p>In <a href="https://github.com/aai-institute/pyDVL/pull/161">PR #161</a>:
+- Support for $$ math in sphinx docs.
+- Usage of sphinx extension for external links (introducing new directives like
+  <code>:gh:</code>, <code>:issue:</code> and <code>:tfl:</code> to construct standardised links to external
+  resources).
+- Only update auto-generated documentation files if there are changes. Some
+  minor additions to <code>update_docs.py</code>.
+- Parallelization of exact combinatorial Shapley.
+- Integrated <abbr title="K-Nearest Neighbours">KNN</abbr> shapley into the main interface <code>compute_shapley_values</code>.</p>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<p>In <a href="https://github.com/aai-institute/pyDVL/pull/161">PR #161</a>:
+- Improved main docs and Shapley notebooks. Added or fixed many docstrings,
+  readme and documentation for contributors. Typos, grammar and style in code,
+  documentation and notebooks.
+- Internal renaming and rearranging in the parallelization and caching modules.</p>
+<h3 id="fixed_8">Fixed<a class="headerlink" href="#fixed_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Bug in random matrix generation
+  <a href="https://github.com/aai-institute/pyDVL/pull/161">PR #161</a>.</li>
+<li>Bugs in MapReduceJob's <code>_chunkify</code> and <code>_backpressure</code> methods
+  <a href="https://github.com/aai-institute/pyDVL/pull/176">PR #176</a>.</li>
+</ul>
+<h2 id="010-first-release">0.1.0 - 🎉 first release<a class="headerlink" href="#010-first-release" title="Permanent link">&para;</a></h2>
+<p>This is very first release of pyDVL.</p>
+<p>It contains:</p>
+<ul>
+<li>
+<p>Data Valuation Methods:</p>
+</li>
+<li>
+<p>Leave-One-Out</p>
+</li>
+<li>Influence Functions</li>
+<li>Shapley:<ul>
+<li>Exact Permutation and Combinatorial</li>
+<li>Montecarlo Permutation and Combinatorial</li>
+<li>Truncated Montecarlo Permutation</li>
+</ul>
+</li>
+<li>Caching of results with Memcached</li>
+<li>Parallelization of computations with Ray</li>
+<li>Documentation</li>
+<li>Notebooks containing examples of different use cases</li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 9, 2025 17:09:48">2025-04-09</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 1, 2021 17:26:59">2021-04-01</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../CONTRIBUTING/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Contributing">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Contributing
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../deprecated/" class="md-footer__link md-footer__link--next" aria-label="Next: Deprecated API">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Deprecated API
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+        
+        <a href="https://appliedai-institute.de">
+            Copyright &copy; AppliedAI Institute gGmbH
+        </a>
+        
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/aai-institute/pyDVL" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/pyDVL/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 404c11.1 0 20.1 9.1 20.1 20.3 0 11.3-9 20.4-20.1 20.4-11 0-20.1-9.2-20.1-20.4.1-11.3 9.1-20.3 20.1-20.3M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.7-142.6c-11.1 0-20.1-9.1-20.1-20.3.1-11.3 9-20.4 20.1-20.4 11 0 20.1 9.2 20.1 20.4s-9 20.3-20.1 20.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/aai_transferlab" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh" target="_blank" rel="noopener" title="de.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "content.tooltips", "navigation.indexes", "navigation.instant", "navigation.path", "navigation.sections", "navigation.tabs", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
+</html>
