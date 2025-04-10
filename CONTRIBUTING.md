@@ -674,7 +674,7 @@ Then, a new release can be created using the script
 part):
 
 ```shell
-build_scripts/release-version.sh 0.1.6
+build_scripts/release-version.sh v0.1.6
 ```
 
 To find out how to use the script, pass the `-h` or `--help` flags:

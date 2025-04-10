@@ -1168,8 +1168,11 @@ def load_result(
     """
 
     try:
-        with open(file, "rb") as f:
-            result = load(f)
+        if isinstance(file, (os.PathLike, str)):
+            with open(file, "rb") as f:
+                result = load(f)
+        else:
+            result = load(file)
         if not isinstance(result, ValuationResult):
             raise ValueError(
                 f"Loaded object is not a ValuationResult but {type(result)}"
@@ -1198,5 +1201,8 @@ def save_result(result: ValuationResult, file: str | os.PathLike | io.IOBase):
     """
     if isinstance(file, Path):
         os.makedirs(file.parent, exist_ok=True)
-    with open(file, "wb") as f:
-        dump(result, f, protocol=5)
+    if isinstance(file, (os.PathLike, str)):
+        with open(file, "wb") as f:
+            dump(result, f, protocol=5)
+    else:
+        dump(result, file, protocol=5)
