@@ -11,7 +11,7 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.9.3.dev0",
+    version="0.10.0",
     description="The Python Data Valuation Library",
     install_requires=[
         line

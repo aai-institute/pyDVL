@@ -8,4 +8,4 @@ The two main modules you will want to look at are [valuation][pydvl.valuation] a
 [influence][pydvl.influence].
 """
 
-__version__ = "0.9.3.dev0"
+__version__ = "0.10.0"
