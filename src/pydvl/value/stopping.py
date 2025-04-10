@@ -152,8 +152,7 @@ logger = logging.getLogger(__name__)
 class StoppingCriterionCallable(Protocol):
     """Signature for a stopping criterion"""
 
-    def __call__(self, result: ValuationResult) -> Status:
-        ...
+    def __call__(self, result: ValuationResult) -> Status: ...
 
 
 class StoppingCriterion(abc.ABC):
@@ -575,7 +574,7 @@ class HistoryDeviation(StoppingCriterion):
         pin_converged: If `True`, once an index has converged, it is pinned
     """
 
-    _memory: NDArray[np.float_]
+    _memory: NDArray[np.float64]
 
     def __init__(
         self,
@@ -666,7 +665,7 @@ class RankCorrelation(StoppingCriterion):
             raise ValueError("rtol must be in (0, 1)")
         self.rtol = rtol
         self.burn_in = burn_in
-        self._memory: NDArray[np.float_] | None = None
+        self._memory: NDArray[np.float64] | None = None
         self._corr = 0.0
         self._completion = 0.0
         self._iterations = 0

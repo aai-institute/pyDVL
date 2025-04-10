@@ -1,21 +1,23 @@
-griffe==0.42.1
-mike==2.0.0
+griffe>=0.49
+# markdown > 3.7:
+markdown @ git+https://github.com/Python-Markdown/markdown.git@1caf02892487cead069cb0c4bcdd1e876ca6b590
 markdown-captions
-mkdocs==1.5.3
-mkdocstrings[python]>=0.24
-mkdocstrings-python==1.9.0
-# There is a bug in version 0.8.0 with type hints
-# https://github.com/aai-institute/pyDVL/actions/runs/8598810209/job/23560394768
-mkdocs-alias-plugin==0.7.1
-mkdocs-autorefs==1.0.1
-mkdocs-bibtex==2.15.0
-mkdocs-gen-files
+mike==2.1.3
+mistune==3.1.2
+mkdocs==1.6.1
+mkdocstrings[python]==0.28.2
+mkdocstrings-python==1.16.2
+mkdocs-alias-plugin==0.9.0
+mkdocs-autorefs==1.4.0
+mkdocs-bibtex==4.2.3
+mkdocs-gen-files==0.5.0
 mkdocs-git-revision-date-localized-plugin
-mkdocs-glightbox==0.3.7
-mkdocs-literate-nav
-mkdocs-material[imaging]==9.5.16
-mkdocs-section-index==0.3.8
-mkdocs-macros-plugin
+mkdocs-glightbox==0.4.0
+mkdocs-literate-nav==0.6.1
+mkdocs-material[imaging]==9.6.11
+mkdocs-publisher==1.4.7
+mkdocs-section-index==0.3.9
+mkdocs-macros-plugin==1.3.7
 mknotebooks==0.8.0
 pygments
 pypandoc; sys_platform == 'darwin'

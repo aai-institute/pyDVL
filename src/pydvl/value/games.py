@@ -11,6 +11,7 @@ benchmarking purposes.
       Computers & Operations Research, 36(5), pp.1726-1730.
 
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -92,13 +93,13 @@ class DummyModel(SupervisedModel):
     def __init__(self) -> None:
         pass
 
-    def fit(self, x: NDArray, y: NDArray) -> None:
+    def fit(self, x: NDArray, y: NDArray | None) -> None:
         pass
 
     def predict(self, x: NDArray) -> NDArray:  # type: ignore
         pass
 
-    def score(self, x: NDArray, y: NDArray) -> float:
+    def score(self, x: NDArray, y: NDArray | None) -> float:
         # Dummy, will be overriden
         return 0
 
@@ -148,8 +149,7 @@ class Game(ABC):
         )
 
     @abstractmethod
-    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        ...
+    def _score(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float: ...
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(n_players={self.n_players})"

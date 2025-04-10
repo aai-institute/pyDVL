@@ -12,13 +12,13 @@ class FittedLinearModel:
     def __init__(self, coef: NDArray):
         self.coef = coef
 
-    def predict(self, X):
+    def predict(self, X: NDArray) -> NDArray:
         return X @ self.coef
 
-    def fit(self, X, y):
+    def fit(self, X: NDArray, y: NDArray):
         pass
 
-    def score(self, X, y):
+    def score(self, X: NDArray, y: NDArray) -> float:
         return np.linalg.norm(X @ self.coef - y)
 
 
@@ -56,7 +56,7 @@ def test_squashed_r2():
     """Tests the squashed_r2 scorer."""
     assert str(squashed_r2) == "squashed r2"
     assert repr(squashed_r2) == "SquashedR2 (scorer=r2)"
-    assert np.allclose(squashed_r2.range, (0, 1))
+    np.testing.assert_allclose(squashed_r2.range, (0, 1))
 
     coef = np.array([1, 2])
     X = np.array([[1, 2], [3, 4]])
@@ -71,7 +71,7 @@ def test_squashed_variance():
         repr(squashed_variance)
         == "SquashedExplainedVariance (scorer=explained_variance)"
     )
-    assert np.allclose(squashed_variance.range, (0, 1))
+    np.testing.assert_allclose(squashed_variance.range, (0, 1))
 
     coef = np.array([1, 2])
     X = np.array([[1, 2], [3, 4]])

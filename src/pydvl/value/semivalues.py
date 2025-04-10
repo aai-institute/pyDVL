@@ -85,6 +85,7 @@ instead.
     [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://proceedings.mlr.press/v206/wang23e.html).
     In: Proceedings of The 26th International Conference on Artificial Intelligence and Statistics, pp. 6388-6421.
 """
+
 from __future__ import annotations
 
 import logging
@@ -267,8 +268,8 @@ class MSRFutureProcessor(FutureProcessor):
         Then, this processor computes marginals based on the utility value and the index set provided.
 
         The final formula that gives the Banzhaf semivalue using MSR is:
-        $$\hat{\phi}_{MSR}(i) = \frac{1}{|\mathbf{S}_{\ni i}|} \sum_{S \in \mathbf{S}_{\ni i}} U(S)
-        - \frac{1}{|\mathbf{S}_{\not{\ni} i}|} \sum_{S \in \mathbf{S}_{\not{\ni} i}} U(S)$$
+        $$\\hat{\\phi}_{MSR}(i) = \frac{1}{|\\mathbf{S}_{\ni i}|} \\sum_{S \\in \\mathbf{S}_{\ni i}} U(S)
+        - \frac{1}{|\\mathbf{S}_{\not{\ni} i}|} \\sum_{S \\in \\mathbf{S}_{\not{\ni} i}} U(S)$$
 
         Args:
             future_result: Result of the parallel computing jobs comprised of
@@ -784,7 +785,7 @@ def compute_semivalues(
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
 
@@ -815,7 +816,7 @@ def compute_semivalues(
       the Banzhaf semi-value as introduced in (Wang and Jia, 2022)<sup><a
       href="#wang_data_2023">1</a></sup>.
 
-    See [Data valuation][data-valuation] for an overview of valuation.
+    See [Data valuation][data-valuation-intro] for an overview of valuation.
 
     Args:
         u: Utility object with model, data, and scoring function.

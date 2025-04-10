@@ -20,8 +20,7 @@ def test_creating_dataset_from_sklearn(train_size):
 def test_creating_dataset_subsclassfrom_sklearn(train_size):
     data = load_wine()
 
-    class TestDataset(Dataset):
-        ...
+    class TestDataset(Dataset): ...
 
     dataset = TestDataset.from_sklearn(data, train_size=train_size)
     assert isinstance(dataset, TestDataset)
@@ -61,8 +60,7 @@ def test_creating_grouped_dataset_from_sklearn_failure(train_size):
 def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
     data = load_wine()
 
-    class TestGroupedDataset(GroupedDataset):
-        ...
+    class TestGroupedDataset(GroupedDataset): ...
 
     data_groups = np.random.randint(low=0, high=3, size=len(data.data)).flatten()
     n_groups = len(np.unique(data_groups))

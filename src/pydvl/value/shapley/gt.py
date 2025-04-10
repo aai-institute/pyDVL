@@ -10,7 +10,7 @@ computed with guarantees.
     of evaluations of the utility required). We recommend other Monte Carlo
     methods instead.
 
-You can read more [in the documentation][data-valuation].
+You can read more [in the documentation][data-valuation-intro].
 
 !!! tip "New in version 0.4.0"
 
@@ -22,6 +22,7 @@ You can read more [in the documentation][data-valuation].
     In: Proceedings of the 22nd International Conference on Artificial
     Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
+
 import logging
 from collections import namedtuple
 from typing import Iterable, Optional, Tuple, TypeVar, Union, cast
@@ -49,7 +50,7 @@ __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
 
 log = logging.getLogger(__name__)
 
-T = TypeVar("T", NDArray[np.float_], float)
+T = TypeVar("T", NDArray[np.float64], float)
 GTConstants = namedtuple("GTConstants", ["kk", "Z", "q", "q_tot", "T"])
 
 
@@ -263,10 +264,10 @@ def group_testing_shapley(
     samples_per_job = max(1, n_samples // parallel_backend.effective_n_jobs(n_jobs))
 
     def reducer(
-        results_it: Iterable[Tuple[NDArray, NDArray]]
+        results_it: Iterable[Tuple[NDArray, NDArray]],
     ) -> Tuple[NDArray, NDArray]:
         return np.concatenate(list(x[0] for x in results_it)).astype(
-            np.float_
+            np.float64
         ), np.concatenate(list(x[1] for x in results_it)).astype(np.int_)
 
     seed_sequence = ensure_seed_sequence(seed)
@@ -309,11 +310,11 @@ def group_testing_shapley(
         values = (
             np.nan * np.ones_like(u.data.indices)
             if not hasattr(v.value, "__len__")
-            else v.value
+            else cast(NDArray[np.float64], v.value)
         )
         status = Status.Failed
     else:
-        values = v.value
+        values = cast(NDArray[np.float64], v.value)
         status = Status.Converged
 
     return ValuationResult(

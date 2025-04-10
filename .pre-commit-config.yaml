@@ -1,17 +1,17 @@
 fail_fast: false
 
 repos:
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.1
     hooks:
-      - id: black-jupyter
-        language_version: python3
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
+      - id: ruff
+        # HACK: ruff-pre-commit ignores pyproject.toml
+        # https://github.com/astral-sh/ruff-pre-commit/issues/54
+        args: [ "--extend-per-file-ignores", "tests/**/*.py:F811",
+                "--extend-per-file-ignores", "tests/**/*.py:F401" ]
+      - id: ruff-format
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
     hooks:
       - id: nbstripout
-        args: ["--keep-output", "--keep-count", "--drop-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm"]
+        args: [ "--keep-output", "--keep-count", "--drop-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm" ]

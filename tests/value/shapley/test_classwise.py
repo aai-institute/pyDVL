@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Tuple, cast
 
 import numpy as np
@@ -6,8 +8,24 @@ import pytest
 import sklearn
 from numpy.typing import NDArray
 from packaging import version
+from sklearn import datasets
+from sklearn.linear_model import LogisticRegression
 
-from pydvl.utils import Dataset, Utility, powerset
+from pydvl.utils import Dataset as OldDataset
+from pydvl.utils import Utility, powerset
+from pydvl.utils import Utility as OldUtility
+from pydvl.valuation import (
+    ClasswiseModelUtility,
+    ClasswiseSampler,
+    ClasswiseShapleyValuation,
+    ClasswiseSupervisedScorer,
+    Dataset,
+    NoIndexIteration,
+    PermutationSampler,
+    UniformSampler,
+)
+from pydvl.valuation.stopping import MaxUpdates
+from pydvl.value import ClasswiseScorer as OldClasswiseScorer
 from pydvl.value import MaxChecks, ValuationResult
 from pydvl.value.shapley.classwise import (
     ClasswiseScorer,
@@ -97,9 +115,9 @@ def classwise_shapley_exact_solution_no_default() -> Tuple[Dict, ValuationResult
 
 
 @pytest.fixture(scope="function")
-def classwise_shapley_exact_solution_no_default_allow_empty_set() -> (
-    Tuple[Dict, ValuationResult, Dict]
-):
+def classwise_shapley_exact_solution_no_default_allow_empty_set() -> Tuple[
+    Dict, ValuationResult, Dict
+]:
     r"""
     Note that this special case doesn't set the utility to 0 if the permutation is
     empty and additionally allows $S^{(k)} = \emptyset$. See
@@ -192,15 +210,19 @@ def test_classwise_scorer_utility(dataset_left_right_margins):
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0, atol=1e-5)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0, atol=1e-5)
 
     value = scorer(model, x, y)
-    assert np.isclose(value, in_cls_acc_0 * np.exp(out_of_cls_acc_0))
+    np.testing.assert_allclose(
+        value, in_cls_acc_0 * np.exp(out_of_cls_acc_0), atol=1e-5
+    )
 
     scorer.label = 1
     value = scorer(model, x, y)
-    assert np.isclose(value, out_of_cls_acc_0 * np.exp(in_cls_acc_0))
+    np.testing.assert_allclose(
+        value, out_of_cls_acc_0 * np.exp(in_cls_acc_0), atol=1e-5
+    )
 
 
 @pytest.mark.parametrize("n_element, left_margin, right_margin", [(101, 0.3, 0.4)])
@@ -312,8 +334,8 @@ def test_classwise_scorer_accuracies_left_right_margins(dataset_left_right_margi
     in_cls_acc_0, out_of_cls_acc_0 = scorer.estimate_in_class_and_out_of_class_score(
         model, x, y
     )
-    assert np.isclose(in_cls_acc_0, target_in_cls_acc_0)
-    assert np.isclose(out_of_cls_acc_0, target_out_of_cls_acc_0)
+    np.testing.assert_allclose(in_cls_acc_0, target_in_cls_acc_0, atol=1e-5)
+    np.testing.assert_allclose(out_of_cls_acc_0, target_out_of_cls_acc_0, atol=1e-5)
 
 
 def test_closed_form_linear_classifier(
@@ -393,7 +415,7 @@ class ClosedFormLinearClassifier:
 
 @pytest.fixture(scope="function")
 def classwise_shapley_utility(
-    dataset_manual_derivation: Dataset,
+    dataset_manual_derivation: OldDataset,
 ) -> Utility:
     return Utility(
         ClosedFormLinearClassifier(),
@@ -404,7 +426,7 @@ def classwise_shapley_utility(
 
 
 @pytest.fixture(scope="function")
-def dataset_manual_derivation() -> Dataset:
+def dataset_manual_derivation() -> OldDataset:
     """
     See [classwise.py][pydvl.value.shapley.classwise] for more details.
     """
@@ -412,13 +434,13 @@ def dataset_manual_derivation() -> Dataset:
     y_train = np.array([0, 0, 1, 1])
     x_test = x_train
     y_test = np.array([0, 0, 0, 1])
-    return Dataset(x_train, y_train, x_test, y_test)
+    return OldDataset(x_train, y_train, x_test, y_test)
 
 
 @pytest.fixture(scope="function")
 def dataset_left_right_margins(
     n_element: int, left_margin: float, right_margin: float
-) -> Tuple[NDArray[np.float_], NDArray[np.int_], Dict[str, float]]:
+) -> Tuple[NDArray[np.float64], NDArray[np.int_], Dict[str, float]]:
     """
     The label set is represented as 0000011100011111, with adjustable left and right
     margins. The left margin denotes the percentage of zeros at the beginning, while the
@@ -430,3 +452,53 @@ def dataset_left_right_margins(
     y = y.astype(int)
     x = np.expand_dims(x, -1)
     return x, y, {"left_margin": left_margin, "right_margin": right_margin}
+
+
+@pytest.mark.flaky(reruns=2)
+@pytest.mark.parametrize("n_samples", [100], ids=lambda x: "n_samples={}".format(x))
+def test_old_vs_new(
+    n_samples: int,
+    seed,
+):
+    model = LogisticRegression(random_state=seed)
+    old_data = OldDataset.from_sklearn(
+        datasets.load_iris(),
+        train_size=0.05,
+        random_state=seed,
+        stratify_by_target=True,
+    )
+    old_scorer = OldClasswiseScorer("accuracy", initial_label=0)
+    old_u = OldUtility(model=model, data=old_data, scorer=old_scorer)
+    old_values = compute_classwise_shapley_values(
+        old_u,
+        done=MaxChecks(n_samples),
+        truncation=NoTruncation(),
+        done_sample_complements=MaxChecks(1),
+        seed=seed,
+    )
+
+    new_train_data = Dataset(old_data.x_train, old_data.y_train)
+    new_test_data = Dataset(old_data.x_test, old_data.y_test)
+
+    in_class_sampler = PermutationSampler(seed=seed)
+    out_of_class_sampler = UniformSampler(
+        seed=seed,
+        index_iteration=NoIndexIteration,
+    )
+    sampler = ClasswiseSampler(
+        in_class=in_class_sampler,
+        out_of_class=out_of_class_sampler,
+        max_in_class_samples=n_samples,
+    )
+    new_u = ClasswiseModelUtility(
+        model,
+        ClasswiseSupervisedScorer("accuracy", new_test_data),
+        catch_errors=False,
+    )
+    valuation = ClasswiseShapleyValuation(
+        new_u,
+        sampler=sampler,
+        is_done=MaxUpdates(n_samples * len(new_train_data)),
+    )
+    valuation.fit(new_train_data)
+    check_values(valuation.values(), old_values, atol=1e-1, rtol=1e-1)

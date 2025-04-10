@@ -39,7 +39,7 @@ Usage:
     -r, --remote <remote>   The remote on which to release, default is origin
 
   Positional options:
-    VERSION_STR   Version to release, e.g. v0.1.2.
+    VERSION_STR   Version to release, e.g. 0.1.2 (tag will be v0.1.2)
                   If not specified, 'bumpversion' is used to determine release version number.
 
   Prerequisites:

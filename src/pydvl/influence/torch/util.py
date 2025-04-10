@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 import logging
 import math
+import warnings
+from collections import OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import (
+    Any,
+    Callable,
     Collection,
     Dict,
     Iterable,
@@ -42,11 +49,16 @@ __all__ = [
     "align_with_model",
     "flatten_dimensions",
     "TorchNumpyConverter",
-    "TorchCatAggregator",
-    "NestedTorchCatAggregator",
     "torch_dataset_to_dask_array",
     "EkfacRepresentation",
     "empirical_cross_entropy_loss_fn",
+    "LossType",
+    "ModelParameterDictBuilder",
+    "BlockMode",
+    "ModelInfoMixin",
+    "safe_torch_linalg_eigh",
+    "SecondOrderMode",
+    "get_model_parameters",
 ]
 
 
@@ -189,7 +201,9 @@ def align_structure(
     return tangent_dict
 
 
-def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
+def align_with_model(
+    x: TorchTensorContainerType, model: torch.nn.Module
+) -> Dict[str, torch.Tensor]:
     """
     Aligns an input to the model's parameter structure, i.e. transforms it into a dict
     with the same keys as model.named_parameters() and matching tensor shapes
@@ -205,7 +219,7 @@ def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
         ValueError: If `x` cannot be aligned to match the model's parameters .
 
     """
-    model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
+    model_params = get_model_parameters(model, detach=False)
     return align_structure(model_params, x)
 
 
@@ -285,7 +299,7 @@ def torch_dataset_to_dask_array(
 
     def _infer_data_len(d_set: Dataset):
         try:
-            n_data = len(d_set)
+            n_data = len(d_set)  # type:ignore
             if total_size is not None and n_data != total_size:
                 raise ValueError(
                     f"The number of samples in the dataset ({n_data}), derived "
@@ -412,7 +426,7 @@ class TorchCatAggregator(SequenceAggregator[torch.Tensor]):
     def __call__(
         self,
         tensor_sequence: LazyChunkSequence[torch.Tensor],
-    ):
+    ) -> torch.Tensor:
         """
         Aggregates tensors from a single-level generator into a single tensor by
         concatenating them. This method is a straightforward way to combine a sequence
@@ -444,7 +458,7 @@ class NestedTorchCatAggregator(NestedSequenceAggregator[torch.Tensor]):
 
     def __call__(
         self, nested_sequence_of_tensors: NestedLazyChunkSequence[torch.Tensor]
-    ):
+    ) -> torch.Tensor:
         """
         Aggregates tensors from a nested generator structure into a single tensor by
         concatenating. Each inner generator is first concatenated along dimension 1 into
@@ -496,6 +510,7 @@ class EkfacRepresentation:
         evecs_g: The g eigenvectors of the ekfac representation.
         diags: The diagonal elements of the factorized Hessian matrix.
     """
+
     layer_names: Iterable[str]
     layers_module: Iterable[torch.nn.Module]
     evecs_a: Iterable[torch.Tensor]
@@ -555,7 +570,9 @@ def empirical_cross_entropy_loss_fn(
 
 
 @catch_and_raise_exception(RuntimeError, lambda e: TorchLinalgEighException(e))
-def safe_torch_linalg_eigh(*args, **kwargs):
+def safe_torch_linalg_eigh(
+    *args: Any, **kwargs: Any
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
     A wrapper around `torch.linalg.eigh` that safely handles potential runtime errors
     by raising a custom `TorchLinalgEighException` with more context,
@@ -574,7 +591,7 @@ def safe_torch_linalg_eigh(*args, **kwargs):
         TorchLinalgEighException: If a `RuntimeError` occurs during the execution of
             `torch.linalg.eigh`.
     """
-    return torch.linalg.eigh(*args, **kwargs)
+    return cast(tuple[torch.Tensor, torch.Tensor], torch.linalg.eigh(*args, **kwargs))
 
 
 class TorchLinalgEighException(Exception):
@@ -598,3 +615,193 @@ class TorchLinalgEighException(Exception):
             f" Inspect the original exception message: \n{str(original_exception)}"
         )
         super().__init__(err_msg)
+
+
+LossType = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+
+
+class BlockMode(Enum):
+    """
+    Enumeration for different modes of grouping model parameters.
+
+    Attributes:
+        LAYER_WISE: Groups parameters by layers of the model.
+        PARAMETER_WISE: Groups parameters individually.
+        FULL: Groups all parameters together.
+    """
+
+    LAYER_WISE = "layer_wise"
+    PARAMETER_WISE = "parameter_wise"
+    FULL = "full"
+
+
+class SecondOrderMode(Enum):
+    HESSIAN = "hessian"
+    GAUSS_NEWTON = "gauss_newton"
+
+
+@dataclass
+class ModelParameterDictBuilder:
+    """
+    A builder class for creating ordered dictionaries of model parameters based on
+    specified block modes or custom blocking structures.
+
+    Attributes:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+    """
+
+    model: torch.nn.Module
+    detach: bool = True
+
+    def _optional_detach(self, p: torch.nn.Parameter):
+        if self.detach:
+            return p.detach()
+        return p
+
+    def _extract_parameter_by_name(self, name: str) -> torch.nn.Parameter:
+        for k, p in self.model.named_parameters():
+            if k == name:
+                return p
+        else:
+            raise ValueError(f"Parameter {name} not found in the model.")
+
+    def build(
+        self, block_structure: OrderedDict[str, List[str]]
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        structure represented by an ordered dictionary, where the keys are block
+        identifiers and the values are lists of model parameter names contained in
+        this block.
+
+        Args:
+            block_structure: The block structure specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+        parameter_dict = {}
+
+        for block_name, parameter_names in block_structure.items():
+            inner_ordered_dict = {}
+            for parameter_name in parameter_names:
+                parameter = self._extract_parameter_by_name(parameter_name)
+                if parameter.requires_grad:
+                    inner_ordered_dict[parameter_name] = self._optional_detach(
+                        parameter
+                    )
+                else:
+                    warnings.warn(
+                        f"The parameter {parameter_name} from the block "
+                        f"{block_name} is mark as not trainable in the model "
+                        f"and will be excluded from the computation."
+                    )
+            parameter_dict[block_name] = inner_ordered_dict
+
+        return parameter_dict
+
+    def build_from_block_mode(
+        self, block_mode: BlockMode
+    ) -> Dict[str, Dict[str, torch.nn.Parameter]]:
+        """
+        Builds an ordered dictionary of model parameters based on the specified block
+        mode or custom blocking structure represented by an ordered dictionary, where
+        the keys are block identifiers and the values are lists of model parameter names
+        contained in this block.
+
+        Args:
+            block_mode: The block mode specifying how to group the parameters.
+
+        Returns:
+            An ordered dictionary of ordered dictionaries, where the outer dictionary's
+            keys are block identifiers and the inner dictionaries map parameter names
+            to parameters.
+        """
+
+        block_mode_mapping = {
+            BlockMode.FULL: self._build_full,
+            BlockMode.PARAMETER_WISE: self._build_parameter_wise,
+            BlockMode.LAYER_WISE: self._build_layer_wise,
+        }
+
+        parameter_dict_func = block_mode_mapping.get(block_mode, None)
+
+        if parameter_dict_func is None:
+            raise ValueError(f"Unknown block mode {block_mode}.")
+
+        return self.build(parameter_dict_func())
+
+    def _build_full(self):
+        parameter_dict = OrderedDict()
+        parameter_dict[""] = [
+            n for n, p in self.model.named_parameters() if p.requires_grad
+        ]
+        return parameter_dict
+
+    def _build_parameter_wise(self):
+        parameter_dict = OrderedDict()
+        for k, v in self.model.named_parameters():
+            if v.requires_grad:
+                parameter_dict[k] = [k]
+        return parameter_dict
+
+    def _build_layer_wise(self):
+        parameter_dict = OrderedDict()
+        for name, submodule in self.model.named_children():
+            layer_parameter_names = []
+            for param_name, param in submodule.named_parameters():
+                if param.requires_grad:
+                    layer_parameter_names.append(f"{name}.{param_name}")
+            if layer_parameter_names:
+                parameter_dict[name] = layer_parameter_names
+        return parameter_dict
+
+
+class ModelInfoMixin:
+    """
+    A mixin class for classes that contain information about a model.
+    """
+
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.parameters()).device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return next(self.model.parameters()).dtype
+
+    @property
+    def n_parameters(self) -> int:
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+
+def get_model_parameters(
+    model: torch.nn.Module, detach: bool = True, require_grad_only: bool = True
+) -> Dict[str, torch.Tensor]:
+    """
+    Returns a dictionary of model parameters, optionally restricted to parameters
+    requiring gradients and optionally detaching them from the computation
+    graph.
+
+    Args:
+        model: The neural network model.
+        detach: Whether to detach the parameters from the computation graph.
+        require_grad_only: Whether to include only parameters that require gradients.
+
+    Returns:
+        A dict of named model parameters.
+    """
+
+    parameter_dict = {}
+    for k, p in model.named_parameters():
+        if require_grad_only and not p.requires_grad:
+            continue
+        parameter_dict[k] = p.detach() if detach else p
+
+    return parameter_dict

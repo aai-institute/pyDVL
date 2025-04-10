@@ -6,13 +6,12 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import DataUtilityLearning, Scorer, Utility, powerset
+from pydvl.utils import Dataset, DataUtilityLearning, Scorer, Utility, powerset
 from pydvl.utils.caching import CachedFuncConfig, InMemoryCacheBackend
 
 
 @pytest.mark.parametrize("show_warnings", [False, True])
-@pytest.mark.parametrize("num_points, num_features", [(4, 4)])
-def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
+def test_utility_show_warnings(show_warnings, recwarn):
     class WarningModel:
         def fit(self, x, y):
             warnings.warn("Warning model fit")
@@ -28,7 +27,7 @@ def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
 
     utility = Utility(
         model=WarningModel(),
-        data=housing_dataset,
+        data=Dataset.from_arrays(np.zeros((4, 4)), np.zeros(4)),
         show_warnings=show_warnings,
     )
     utility([0])
@@ -134,7 +133,7 @@ def test_utility_serialization(linear_dataset, use_cache):
         cache_backend=cache,
     )
     u_unpickled = pickle.loads(pickle.dumps(u))
-    assert type(u.model) == type(u_unpickled.model)
-    assert type(u.scorer) == type(u_unpickled.scorer)
-    assert type(u.data) == type(u_unpickled.data)
+    assert type(u.model) is type(u_unpickled.model)
+    assert type(u.scorer) is type(u_unpickled.scorer)
+    assert type(u.data) is type(u_unpickled.data)
     assert (u.data.x_train == u_unpickled.data.x_train).all()

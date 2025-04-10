@@ -15,10 +15,10 @@ If you are interested in setting up a similar project, consider the template
 
 ## Local development
 
-This project uses [black](https://github.com/psf/black) to format code and
+This project uses [ruff](https://github.com/astral-sh/ruff) to lint and format code and
 [pre-commit](https://pre-commit.com/) to invoke it as a git pre-commit hook.
-Consider installing any of [black's IDE
-integrations](https://black.readthedocs.io/en/stable/integrations/editors.html)
+Consider installing any of [ruff's IDE
+integrations](https://docs.astral.sh/ruff/editors/setup/)
 to make your life easier.
 
 Run the following to set up the pre-commit git hook to run before pushes:
@@ -47,7 +47,7 @@ pip install -r requirements-dev.txt -r requirements-docs.txt
 With conda:
 
 ```shell
-conda create -n pydvl python=3.8
+conda create -n pydvl python=3.9
 conda activate pydvl
 pip install -r requirements-dev.txt -r requirements-docs.txt
 ```
@@ -83,16 +83,16 @@ If you use remote execution, don't forget to exclude data paths from deployment
 ## Testing
 
 Automated builds, tests, generation of documentation and publishing are handled
-by [CI pipelines](#CI). Before pushing your changes to the remote we recommend
+by [CI pipelines](#ci). Before pushing your changes to the remote we recommend
 to execute `tox` locally in order to detect mistakes early on and to avoid
 failing pipelines. tox will:
 * run the test suite
 * build the documentation
 * build and test installation of the package.
-* generate coverage and pylint reports in html, as well as badges.
+* generate coverage reports in html, as well as badges.
 
-You can configure pytest, coverage and pylint by adjusting
-[pyproject.toml](pyproject.toml).
+You can configure pytest, coverage and ruff by adjusting
+[pyproject.toml](https://github.com/aai-institute/pyDVL/blob/develop/pyproject.toml).
 
 Besides the usual unit tests, most algorithms are tested using pytest. This
 requires ray for the parallelization and Memcached for caching. Please install
@@ -132,11 +132,11 @@ There are a few important arguments:
   of slow tests.
 
 - `--with-cuda` sets the device fixture in [tests/influence/torch/conftest.py](
-  tests/influence/torch/conftest.py) to `cuda` if it is available.
-  Using this fixture within tests, you can run parts of your tests on a `cuda` 
-  device. Be aware, that you still have to take care of the usage of the device
-  manually in a specific test. Setting this flag does not result in
-  running all tests on a GPU.
+  https://github.com/aai-institute/pyDVL/blob/develop/tests/influence/torch/conftest.py)
+  to `cuda` if it is available. Using this fixture within tests, you can run parts
+  of your tests on a `cuda` device. Be aware, that you still have to take care of
+  the usage of the device manually in a specific test. Setting this flag does not
+  result in running all tests on a GPU.
 
 ### Markers
 
@@ -297,6 +297,33 @@ the environment variable `DYLD_FALLBACK_LIBRARY_PATH`:
 export DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH:/opt/homebrew/lib
 ```
 
+### Automatic API documentation
+
+We use [mkdocstrings](https://mkdocstrings.github.io/) to automatically generate
+API documentation from docstrings, following almost verbatim [this
+recipe](https://mkdocstrings.github.io/recipes/#automatic-code-reference-pages):
+Stubs are generated for all modules on the fly using
+[generate_api_docs.py](https://github.com/aai-institute/pyDVL/blob/develop/build_scripts/generate_api_docs.py) thanks to the pluging
+[mkdocstrings-gen-files](https://github.com/oprypin/mkdocs-gen-files) and
+navigation is generated for
+[mkdocs-literate-nav](https://github.com/oprypin/mkdocs-literate-nav).
+
+With some renaming and using
+[section-index](https://github.com/oprypin/mkdocs-section-index) `__init__.py`
+files are used as entry points for the documentation of a module.
+
+Since very often we re-export symbols in the `__init__.py` files, the automatic
+generation of the documentation skips **all** symbols in those files. If you
+want to document any in particular you can do so by **overriding
+mkdocs_genfiles**: Create a file under `docs/api/pydvl/module/index.md` and add
+your documentation there. For example, to document the whole module and every
+(re-)exported symbol just add this to the file:
+
+```markdown
+::: pydvl.module
+```
+
+
 ### Adding new pages
 
 Navigation is configured in `mkdocs.yaml` using the nav section. We use the
@@ -384,7 +411,8 @@ library](https://www.zotero.org/groups/2703043/transferlab/library). All other
 contributors just add the bibtex data, and a maintainer will add it to the group
 library upon merging.
 
-To add a citation inside a markdown file, use the notation `[@citekey]`. Alas,
+To add a citation inside a markdown file, use the notation `[@ citekey]` (with
+no space). Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
 example, in `pydvl.value.shapley.montecarlo` we have:
@@ -440,7 +468,7 @@ use braces for legibility like in the first example.
 ### Abbreviations
 
 We keep the abbreviations used in the documentation inside the
-[docs_include/abbreviations.md](docs_includes%2Fabbreviations.md) file.
+[docs_include/abbreviations.md](https://github.com/aai-institute/pyDVL/blob/develop/docs_includes/abbreviations.md) file.
 
 The syntax for abbreviations is:
 
@@ -537,11 +565,11 @@ on the job id to be unique (but then you'll see warnings for the workflows
 without that job id).
 
 ```shell
-# Run only the main tests for python 3.8 after a push event (implicit) 
+# Run only the main tests for python 3.9 after a push event (implicit) 
 act -W .github/workflows/run-tests-workflow.yaml \
     -j run-tests \
     --input tests_to_run=base\
-    --input python_version=3.8
+    --input python_version=3.9
 ```
 
 Other common flags are: 
@@ -569,7 +597,7 @@ act -j lint
 act --artifact-server-path /tmp/artifacts
 
 # Run a job in a specific workflow (useful if you have duplicate job names)
-act -j lint -W .github/workflows/tox.yml
+act -j lint -W .github/workflows/publish.yml
 
 # Run in dry-run mode:
 act -n
@@ -648,8 +676,18 @@ part):
 ```shell
 build_scripts/release-version.sh 0.1.6
 ```
+This will:
 
-To find out how to use the script, pass the `-h` or `--help` flags:
+ - Pull latest remote version of develop (fast-forward only) from origin
+ - Create a branch `release/v0.1.6`
+ - Bump version number: 0.1.5.dev1234 ⟶   0.1.6
+ - Merge release branch into master locally and on origin
+ - Tag as `v0.1.6`
+ - Bump version number again to next development pre-release
+ - Merge release branch into develop locally and on origin
+ - Delete release branch
+
+For usage details, pass the `-h` or `--help` flags:
 
 ```shell
 build_scripts/release-version.sh --help
@@ -659,11 +697,10 @@ If running in interactive mode (without `-y|--yes`), the script will output a
 summary of pending changes and ask for confirmation before executing the
 actions.
 
-Once this is done, a tag will be created on the repository. You should then
-create a GitHub
+Once the script is done, you should then create a GitHub
 [release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release)
-for that tag. That will a trigger a CI pipeline that will automatically create a
-package and publish it from CI to PyPI.
+for the tag that was created. That will a trigger a CI pipeline that will
+automatically create a package and publish it from CI to PyPI.
 
 ### Manual release process
 
@@ -727,9 +764,10 @@ PYPI_PASSWORD
 The first 2 are used after tests run on the develop branch's CI workflow 
 to automatically publish packages to [TestPyPI](https://test.pypi.org/).
 
-The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
-workflow to publish packages to [PyPI](https://pypi.org/) from `develop` after
-a GitHub release.
+The last 2 are used in the
+[publish.yaml](https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml)
+CI workflow to publish packages to [PyPI](https://pypi.org/) from `develop`
+after a GitHub release.
 
 #### Publish to TestPyPI
 
@@ -738,6 +776,5 @@ the build part of the version number without commiting or tagging the change
 and then publish a package to TestPyPI from CI using Twine. The version
 has the GitHub run number appended. 
 
-For more details refer to the files
-[.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
-[.github/workflows/tox.yaml](.github/workflows/tox.yaml).
+For more details refer to the file
+[.github/workflows/publish.yaml](https://github.com/aai-institute/pyDVL/blob/develop/.github/workflows/publish.yaml).

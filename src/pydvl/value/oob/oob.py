@@ -1,11 +1,12 @@
 """
 ## References
 
-[^1]: <a name="kwon_data_2023"></a>Kwon et al.
+[^1]: <a name="kwon_dataoob_2023"></a>Kwon et al.
 [Data-OOB: Out-of-bag Estimate as a Simple and Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html).
 In: Published at ICML 2023
 
 """
+
 from typing import Optional, TypeVar
 
 import numpy as np
@@ -15,7 +16,7 @@ from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from tqdm.auto import tqdm
 
 from pydvl.utils import Seed, Utility
-from pydvl.utils.types import LossFunction
+from pydvl.utils.types import PointwiseScore
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_data_oob"]
@@ -28,7 +29,7 @@ def compute_data_oob(
     *,
     n_est: int = 10,
     max_samples: float = 0.8,
-    loss: Optional[LossFunction] = None,
+    loss: Optional[PointwiseScore] = None,
     n_jobs: Optional[int] = None,
     seed: Optional[Seed] = None,
     progress: bool = False,
@@ -36,7 +37,7 @@ def compute_data_oob(
     r"""Computes Data out of bag values
 
     This implements the method described in
-    (Kwon and Zou, 2023)<sup><a href="kwon_data_2023">1</a></sup>.
+    (Kwon and Zou, 2023)<sup><a href="#kwon_dataoob_2023">1</a></sup>.
     It fits several base estimators provided through u.model through a bagging
     process. The point value corresponds to the average loss of estimators which
     were not fit on it.

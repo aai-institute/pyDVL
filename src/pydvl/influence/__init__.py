@@ -1,7 +1,7 @@
 """
 This package contains algorithms for the computation of the influence function.
 
-See [The Influence function][the-influence-function] for an introduction to the
+See [The Influence function][influence-function] for an introduction to the
 concepts and methods implemented here.
 
 !!! Warning
@@ -10,9 +10,10 @@ concepts and methods implemented here.
     probably change.
 
 """
-from .base_influence_function_model import InfluenceMode
-from .influence_calculator import (
+
+from .influence_calculator import (  # noqa: F401
     DaskInfluenceCalculator,
     DisableClientSingleThreadCheck,
     SequentialInfluenceCalculator,
 )
+from .types import InfluenceMode  # noqa: F401

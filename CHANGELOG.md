@@ -1,13 +1,186 @@
 # Changelog
 
+## v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements
+
+
+### Added
+
+- Simple result serialization to resume computation of values
+  [PR #666](https://github.com/aai-institute/pyDVL/pull/666)
+- Simple memory monitor / reporting
+  [PR #663](https://github.com/aai-institute/pyDVL/pull/663)
+- New stopping criterion `MaxSamples`
+  [PR #661](https://github.com/aai-institute/pyDVL/pull/661)
+- New pseudo-stopping criterion `History` to record value updates during fitting
+  [PR #653](https://github.com/aai-institute/pyDVL/pull/653)
+- Introduced `UtilityModel` and two implementations `IndicatorUtilityModel`
+  and `DeepSetsUtilityModel` for data utility learning
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
+- Introduced the concept of `ResultUpdater` in order to allow samplers to
+  declare the proper strategy to use by valuations 
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Added Banzhaf precomputed values to some games.
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Introduced new `IndexIterations`, for consistent usage across all
+  `PowersetSamplers` [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Added `run_removal_experiment` for easy removal experiments
+  [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
+- Refactor Classwise Shapley valuation with the interfaces and sampler
+  architecture [PR #616](https://github.com/aai-institute/pyDVL/pull/616)
+- Refactor KNN Shapley values with the new interface
+  [PR #610](https://github.com/aai-institute/pyDVL/pull/610)
+  [PR #645](https://github.com/aai-institute/pyDVL/pull/645)
+- Refactor MSR Banzhaf semivalues with the new sampler architecture.
+  [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+  [PR #653](https://github.com/aai-institute/pyDVL/pull/653)
+- Refactor group-testing shapley values with new sampler architecture
+  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
+- Refactor least-core data valuation methods with more supported sampling
+  methods and consistent interface.
+  [PR #580](https://github.com/aai-institute/pyDVL/pull/580)
+- Refactor Owen-Shapley valuation with new sampler architecture. Enable use of
+  `OwenSamplers` with all semi-values
+  [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- New method `InverseHarmonicMeanInfluence`, implementation for the paper
+  `DataInf: Efficiently Estimating Data Influence in LoRA-tuned LLMs and
+    Diffusion Models`
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Add new backend implementations for influence computation to account for
+  block-diagonal approximations
+  [PR #582](https://github.com/aai-institute/pyDVL/pull/582)
+- Extend `DirectInfluence` with block-diagonal and Gauss-Newton approximation
+  [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+- Extend `LissaInfluence` with block-diagonal and Gauss-Newton approximation
+  [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+- Extend `NystroemSketchInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
+- Extend `ArnoldiInfluence` with block-diagonal and Gauss-Newton
+  approximation
+  [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+- Extend `CgInfluence` with block-diagonal and Gauss-Newton approximation
+  [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+
+### Fixed
+
+- Fixed `show_warnings=False` not being respected in subprocesses. Introduced
+  `suppress_warninigs` decorator for more flexibility
+  [PR #647](https://github.com/aai-institute/pyDVL/pull/647)
+  [PR #662](https://github.com/aai-institute/pyDVL/pull/662)
+- Fixed several bugs in diverse stopping criteria, including: iteration counts,
+  computing completion, resetting, nested composition
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
+- Fixed all weights of all samplers to ensure that mix-and-matching samplers and
+  semi-value methods always works, for all possible combinations
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Fixed a bug whereby progress bars would not report the last step and remain
+  incomplete [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Fixed the analysis of the adult dataset in the Data-OOB notebook
+  [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
+- Replace `np.float_` with `np.float64` and `np.alltrue` with `np.all`,
+  as the old aliases are removed in NumPy 2.0
+  [PR #604](https://github.com/aai-institute/pyDVL/pull/604)
+- Fix a bug in pydvl.utils.numeric.random_subset where 1 - q was used instead of q
+  as the probability of an element being sampled
+  [PR #597](https://github.com/aai-institute/pyDVL/pull/597)
+- Fix a bug in the calculation of variance estimates for MSR Banzhaf
+  [PR #605](https://github.com/aai-institute/pyDVL/pull/605)
+- Fix a bug in KNN Shapley values. See [Issue 613](https://github.com/aai-institute/pyDVL/issues/613) for details.
+- Backport the KNN Shapley fix to the `value` module
+  [PR #633](https://github.com/aai-institute/pyDVL/pull/633) 
+
+### Changed
+
+- Major rewrite of the documentation for the new interface in 0.10.0
+  [PR #653](https://github.com/aai-institute/pyDVL/pull/653)
+- Slicing, comparing and setting of `ValuationResult` behave in a more 
+  natural and consistent way. Several bug fixes.
+  [PR #653](https://github.com/aai-institute/pyDVL/pull/653)
+  [PR #660](https://github.com/aai-institute/pyDVL/pull/660) 
+  [PR #666](https://github.com/aai-institute/pyDVL/pull/666)
+- Switched all semi-value coefficients and sampler weights to log-space in
+  order to avoid overflows
+  [PR #643](https://github.com/aai-institute/pyDVL/pull/643)
+- Updated and rewrote some of the MSR banzhaf notebook
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Updated Least-Core notebook
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Updated Shapley spotify notebook
+  [PR #628](https://github.com/aai-institute/pyDVL/pull/628)
+- Updated Data Utility notebook
+  [PR #650](https://github.com/aai-institute/pyDVL/pull/650)
+- Restructured and generalized `StratifiedSampler` to allow using heuristics,
+  thus subsuming Variance-Reduced stratified sampling into a unified framework.
+  Implemented the heuristics proposed in that paper
+  [PR #641](https://github.com/aai-institute/pyDVL/pull/641)
+- Uniformly distribute test points across processes for KNNShapley. Fail for
+  `GroupedDataset` [PR #632](https://github.com/aai-institute/pyDVL/pull/632)
+- Introduced the concept of logical vs data indices for `Dataset`, and
+  `GroupedDataset`, fixing inconsistencies in how the latter operates on indices.
+  Also, both now return objects of the same type when slicing.
+  [PR #631](https://github.com/aai-institute/pyDVL/pull/631)
+  [PR #648](https://github.com/aai-institute/pyDVL/pull/648)
+- Use tighter bounds for the calculation of the minimal sample size that guarantees
+  an epsilon-delta approximation in group testing (Jia et al. 2023)
+  [PR #602](https://github.com/aai-institute/pyDVL/pull/602)
+- Dropped black, isort and pylint from the CI pipeline, in favour of ruff
+  [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
+- **Breaking Changes**
+  - Changed `DataOOBValuation` to only accept bagged models
+    [PR #636](https://github.com/aai-institute/pyDVL/pull/636)
+  - Dropped support for python 3.8 after EOL
+    [PR #633](https://github.com/aai-institute/pyDVL/pull/633)
+  - Rename parameter `hessian_regularization` of `DirectInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #591](https://github.com/aai-institute/pyDVL/pull/591)
+  - Rename parameter `hessian_regularization` of `LissaInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+  - Remove parameter `h0` from init of `LissaInfluence`
+    [PR #593](https://github.com/aai-institute/pyDVL/pull/593)
+  - Rename parameter `hessian_regularization` of `NystroemSketchInfluence`
+    to `regularization` and change the type annotation to allow
+    for block-wise regularization parameters
+    [PR #596](https://github.com/aai-institute/pyDVL/pull/596)
+  - Renaming of parameters of `ArnoldiInfluence`,
+    `hessian_regularization` -> `regularization` (modify type annotation),
+    `rank_estimate` -> `rank`
+    [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+  - Remove functions remove obsolete functions 
+    `lanczos_low_rank_hessian_approximation`, `model_hessian_low_rank`
+    from `influence.torch.functional`
+    [PR #598](https://github.com/aai-institute/pyDVL/pull/598)
+  - Renaming of parameters of `CgInfluence`,
+    `hessian_regularization` -> `regularization` (modify type annotation),
+    `pre_conditioner` -> `preconditioner`,
+    `use_block_cg` -> `solve_simultaneously`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Remove parameter `x0` from `CgInfluence`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Rename module 
+    `influence.torch.pre_conditioner` -> `influence.torch.preconditioner`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Refactor preconditioner:
+    - renaming `PreConditioner` -> `Preconditioner`
+    - fit to `TensorOperator`
+    [PR #601](https://github.com/aai-institute/pyDVL/pull/601)
+  - Bumped `zarr` dependency to v3
+    [PR #668](https://github.com/aai-institute/pyDVL/pull/668) 
+  
+  
 ## 0.9.2 - 🏗  Bug fixes, logging improvement
 
 ### Added
 
 - Add progress bars to the computation of `LazyChunkSequence` and
-  `NestedLazyChunkSequence` 
+  `NestedLazyChunkSequence`
   [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
-- Add a device fixture for `pytest`, which depending on the availability and 
+- Add a device fixture for `pytest`, which depending on the availability and
   user input (`pytest --with-cuda`) resolves to cuda device
   [PR #574](https://github.com/aai-institute/pyDVL/pull/574)
 
@@ -15,15 +188,15 @@
 
 - Fixed logging issue in decorator `log_duration`
   [PR #567](https://github.com/aai-institute/pyDVL/pull/567)
-- Fixed missing move of tensors to model device in `EkfacInfluence` 
+- Fixed missing move of tensors to model device in `EkfacInfluence`
   implementation [PR #570](https://github.com/aai-institute/pyDVL/pull/570)
 - Missing move to device of `preconditioner` in `CgInfluence` implementation
   [PR #572](https://github.com/aai-institute/pyDVL/pull/572)
-- Raise a more specific error message, when a `RunTimeError` occurs in 
+- Raise a more specific error message, when a `RunTimeError` occurs in
   `torch.linalg.eigh`, so the user can check if it is related to a known
   issue
   [PR #578](https://github.com/aai-institute/pyDVL/pull/578)
-- Fix an edge case (empty train data) in the test 
+- Fix an edge case (empty train data) in the test
   `test_classwise_scorer_accuracies_manual_derivation`, which resulted
   in undefined behavior (`np.nan` to `int` conversion with different results
   depending on OS)
@@ -41,7 +214,7 @@
 
 ### Fixed
 
-- `FutureWarning` for `ParallelConfig` constantly raised without actually 
+- `FutureWarning` for `ParallelConfig` constantly raised without actually
   instantiating the object
   [PR #562](https://github.com/aai-institute/pyDVL/pull/562)
 
@@ -57,7 +230,7 @@
 - New preconditioned block variant of conjugate gradient
   [PR #507](https://github.com/aai-institute/pyDVL/pull/507)
 - Improvements to documentation: fixes, links, text, example gallery, LFS and
-  more [PR #532](https://github.com/aai-institute/pyDVL/pull/532), 
+  more [PR #532](https://github.com/aai-institute/pyDVL/pull/532),
   [PR #543](https://github.com/aai-institute/pyDVL/pull/543)
 - Glossary of data valuation and influence terms in the documentation
   [PR #537](https://github.com/aai-institute/pyDVL/pull/537
@@ -70,11 +243,11 @@
   [PR #495](https://github.com/aai-institute/pyDVL/pull/495)
 - Memory issue with `CgInfluence` and `ArnoldiInfluence`
   [PR #498](https://github.com/aai-institute/pyDVL/pull/498)
-- Raising specific error message with install instruction, when trying to load 
+- Raising specific error message with install instruction, when trying to load
   `pydvl.utils.cache.memcached` without `pymemcache` installed.
-  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached` 
+  If `pymemcache` is available, all symbols from `pydvl.utils.cache.memcached`
   are available through `pydvl.utils.cache`
-  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)  
+  [PR #509](https://github.com/aai-institute/pyDVL/pull/509)
 
 ### Changed
 
@@ -103,9 +276,9 @@
 ### Fixed
 
 - Bug in using `DaskInfluenceCalcualator` with `TorchnumpyConverter`
-  for single dimensional arrays 
+  for single dimensional arrays
   [PR #485](https://github.com/aai-institute/pyDVL/pull/485)
-- Fix implementations of `to` methods of `TorchInfluenceFunctionModel` 
+- Fix implementations of `to` methods of `TorchInfluenceFunctionModel`
   implementations [PR #487](https://github.com/aai-institute/pyDVL/pull/487)
 - Fixed bug with checking for converged values in semivalues
   [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
@@ -125,15 +298,15 @@
 - New influence function interface `InfluenceFunctionModel`
 - Data parallel computation with `DaskInfluenceCalculator`
   [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
-- Sequential batch-wise computation and write to disk with 
-  `SequentialInfluenceCalculator` 
+- Sequential batch-wise computation and write to disk with
+  `SequentialInfluenceCalculator`
   [PR #377](https://github.com/aai-institute/pyDVL/issues/377)
 - Adapt notebooks to new influence abstractions
   [PR #430](https://github.com/aai-institute/pyDVL/issues/430)
 
 ### Changed
 
-- Refactor and simplify caching implementation 
+- Refactor and simplify caching implementation
   [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 - Simplify display of computation progress
   [PR #466](https://github.com/aai-institute/pyDVL/pull/466)
@@ -158,8 +331,8 @@
 
 - New method: Class-wise Shapley values
   [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
-- New method: Data-OOB by @BastienZim 
-  [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
+- New method: Data-OOB by @BastienZim
+  [PR #426](https://github.com/aai-institute/pyDVL/pull/426),
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
 - Added `AntitheticPermutationSampler`
   [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
@@ -198,7 +371,7 @@ randomness.
 - Added more abbreviations to documentation
   [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
 - Added seed to functions from `pydvl.utils.numeric`, `pydvl.value.shapley` and
-  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
+  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function
   `ensure_seed_sequence`.
   [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
 - Added `batch_size` parameter to `compute_banzhaf_semivalues`,
@@ -215,7 +388,7 @@ randomness.
   [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend
   [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
-- Decoupled `ray.init` from `ParallelConfig` 
+- Decoupled `ray.init` from `ParallelConfig`
   [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
 - **Breaking Changes**
   - Signature change: return information about Hessian inversion from
@@ -257,7 +430,7 @@ randomness.
   (TMCS) starting too many processes and dying, plus other small changes
   [PR #329](https://github.com/aai-institute/pyDVL/pull/329)
 - Fix creation of GroupedDataset objects using the `from_arrays`
-  and `from_sklearn` class methods 
+  and `from_sklearn` class methods
   [PR #324](https://github.com/aai-institute/pyDVL/pull/334)
 - Fix release job not triggering on CI when a new tag is pushed
   [PR #331](https://github.com/aai-institute/pyDVL/pull/331)
@@ -314,13 +487,13 @@ randomness.
   [PR #268](https://github.com/aai-institute/pyDVL/pull/268)
 - Splitting of problem preparation and solution in Least-Core computation.
   Umbrella function for LC methods.
-  [PR #257](https://github.com/aai-institute/pyDVL/pull/257) 
+  [PR #257](https://github.com/aai-institute/pyDVL/pull/257)
 - Operations on `ValuationResult` and `Status` and some cleanup
   [PR #248](https://github.com/aai-institute/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
-  inside `Utility` before fitting by default, with flag `clone_before_fit` 
-  to disable it, catches all warnings in `Utility` when `show_warnings` is 
+  inside `Utility` before fitting by default, with flag `clone_before_fit`
+  to disable it, catches all warnings in `Utility` when `show_warnings` is
   `False`. Adds Miner and Gloves toy games utilities
   [PR #247](https://github.com/aai-institute/pyDVL/pull/247)
 
@@ -330,7 +503,7 @@ randomness.
   [PR #201](https://github.com/aai-institute/pyDVL/pull/201)
 - Disabled caching of Utility values as well as repeated evaluations by default
   [PR #211](https://github.com/aai-institute/pyDVL/pull/211)
-- Test and officially support Python version 3.9 and 3.10 
+- Test and officially support Python version 3.9 and 3.10
   [PR #208](https://github.com/aai-institute/pyDVL/pull/208)
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms

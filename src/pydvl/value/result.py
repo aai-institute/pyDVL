@@ -194,7 +194,7 @@ class ValuationResult(
         status: The end status of the algorithm.
         sort: Whether to sort the indices by ascending value. See above how
             this affects usage as an iterable or sequence.
-        extra_values: Additional values that can be passed as keyword arguments.
+        extra_values: Any Additional values that can be passed as keyword arguments.
             This can contain, for example, the least core value.
 
     Raises:
@@ -202,9 +202,9 @@ class ValuationResult(
     """
 
     _indices: NDArray[IndexT]
-    _values: NDArray[np.float_]
+    _values: NDArray[np.float64]
     _counts: NDArray[np.int_]
-    _variances: NDArray[np.float_]
+    _variances: NDArray[np.float64]
     _data: Dataset
     _names: NDArray[NameT]
     _algorithm: str
@@ -216,15 +216,15 @@ class ValuationResult(
     def __init__(
         self,
         *,
-        values: NDArray[np.float_],
-        variances: Optional[NDArray[np.float_]] = None,
+        values: NDArray[np.float64],
+        variances: Optional[NDArray[np.float64]] = None,
         counts: Optional[NDArray[np.int_]] = None,
         indices: Optional[NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
-        **extra_values,
+        **extra_values: Any,
     ):
         if variances is not None and len(variances) != len(values):
             raise ValueError("Lengths of values and variances do not match")
@@ -299,20 +299,20 @@ class ValuationResult(
         self._sort_order = reverse
 
     @property
-    def values(self) -> NDArray[np.float_]:
+    def values(self) -> NDArray[np.float64]:
         """The values, possibly sorted."""
         return self._values[self._sort_positions]
 
     @property
-    def variances(self) -> NDArray[np.float_]:
+    def variances(self) -> NDArray[np.float64]:
         """The variances, possibly sorted."""
         return self._variances[self._sort_positions]
 
     @property
-    def stderr(self) -> NDArray[np.float_]:
+    def stderr(self) -> NDArray[np.float64]:
         """The raw standard errors, possibly sorted."""
         return cast(
-            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+            NDArray[np.float64], np.sqrt(self.variances / np.maximum(1, self.counts))
         )
 
     @property
@@ -358,16 +358,13 @@ class ValuationResult(
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
-        ...
+    def __getitem__(self, key: int) -> ValueItem: ...
 
     @overload
-    def __getitem__(self, key: slice) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: slice) -> List[ValueItem]: ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
-        ...
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]: ...
 
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
@@ -393,16 +390,13 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: int, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: slice, value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: slice, value: ValueItem) -> None: ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
-        ...
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None: ...
 
     def __setitem__(
         self, key: Union[slice, Iterable[int], int], value: ValueItem
@@ -557,10 +551,10 @@ class ValuationResult(
         # taken from the result with the name.
         if self._names.dtype != other._names.dtype:
             if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
-                other._names = other._names.astype(self._names.dtype)
                 logger.warning(
                     f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
                 )
+                other._names = other._names.astype(self._names.dtype)
             else:
                 raise TypeError(
                     f"Cannot cast ValuationResult.names from "
@@ -579,7 +573,7 @@ class ValuationResult(
             other_shared_names = np.take(other_names, both_pos)
 
             if np.any(this_shared_names != other_shared_names):
-                raise ValueError(f"Mismatching names in ValuationResults")
+                raise ValueError("Mismatching names in ValuationResults")
 
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names
@@ -616,7 +610,11 @@ class ValuationResult(
         except KeyError:
             raise IndexError(f"Index {idx} not found in ValuationResult")
         val, var = running_moments(
-            self._values[pos], self._variances[pos], self._counts[pos], new_value
+            self._values[pos],
+            self._variances[pos],
+            self._counts[pos],
+            new_value,
+            unbiased=False,
         )
         self[pos] = ValueItem(
             index=cast(IndexT, idx),  # FIXME
@@ -686,6 +684,9 @@ class ValuationResult(
         )
         df[column + "_stderr"] = self.stderr[self._sort_positions]
         df[column + "_updates"] = self.counts[self._sort_positions]
+        # HACK for compatibility with updated support code in the notebooks
+        df[column + "_variances"] = self.variances[self._sort_positions]
+        df[column + "_counts"] = self.counts[self._sort_positions]
         return df
 
     @classmethod
@@ -694,7 +695,7 @@ class ValuationResult(
         size: int,
         total: Optional[float] = None,
         seed: Optional[Seed] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
@@ -704,7 +705,7 @@ class ValuationResult(
             size: Number of values to generate
             total: If set, the values are normalized to sum to this number
                 ("efficiency" property of Shapley values).
-            kwargs: Additional options to pass to the constructor of
+            kwargs: Any Additional options to pass to the constructor of
                 [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
 
         Returns:

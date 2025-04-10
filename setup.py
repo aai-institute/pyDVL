@@ -2,7 +2,6 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-# read the contents of README file
 repository_root = Path(__file__).parent
 long_description = (repository_root / "README.md").read_text()
 
@@ -12,12 +11,12 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.9.2",
+    version="0.10.0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
         for line in open("requirements.txt").readlines()
-        if not line.startswith("--")
+        if not line.startswith("-") and not line.startswith("#")
     ],
     setup_requires=["wheel"],
     tests_require=["pytest"],
@@ -28,7 +27,9 @@ setup(
             "torch>=2.0.0",
             "dask>=2023.5.0",
             "distributed>=2023.5.0",
-            "zarr>=2.16.1",
+            "zarr>=2,<3; python_version<'3.11'",
+            "numcodecs<0.16.0; python_version<'3.11'",
+            "zarr>=3,<4; python_version>='3.11'",
         ],
         "ray": ["ray>=0.8"],
     },
@@ -40,10 +41,10 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Typing :: Typed",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",

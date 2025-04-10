@@ -24,8 +24,7 @@ into memory.
 ```python
 from pydvl.influence import SequentialInfluenceCalculator
 from pydvl.influence.torch.util import (
-    NestedTorchCatAggregator, 
-    TorchNumpyConverter,
+    TorchNumpyConverter, NestedTorchCatAggregator,
 )
 from pydvl.influence.torch import CgInfluence
 

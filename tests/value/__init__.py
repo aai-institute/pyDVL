@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import spearmanr
 
 from pydvl.utils import Utility
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 
 
 def polynomial(coefficients, x):

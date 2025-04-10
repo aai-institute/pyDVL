@@ -1,0 +1,4 @@
+mypy==1.15.0
+types-tqdm==4.67.0.20241221
+pandas-stubs
+numpy<2

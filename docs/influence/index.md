@@ -5,10 +5,10 @@ alias:
   text: Computing Influence Values
 ---
 
-## The influence function
+## The influence function  { #influence-function }
 
 !!! Warning 
-    The code in the package [pydvl.influence][pydvl.influence] is experimental.
+    The code in the package [pydvl.influence][] is experimental.
     Package structure and basic API are bound to change before v1.0.0
 
 The influence function (IF) is a method to quantify the effect (influence) that
@@ -72,7 +72,7 @@ and without re-training the full model.
 pyDVL supports two ways of computing the empirical influence function, namely
 up-weighting of samples and perturbation influences.
 
-### Approximating the influence of a point
+### Approximating the influence of a point  { #influence-of-a-point }
 
 Let's define
 
@@ -89,7 +89,7 @@ $$\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
 -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), $$
 
 where $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})$ is the Hessian of $L$. These quantities are also knows as
+\hat{\theta})$ is the Hessian of $L$. These quantities are also known as
 **influence factors**.
 
 Importantly, notice that this expression is only valid when $\hat{\theta}$ is a
@@ -139,7 +139,7 @@ $$\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
 Similarly to what was done above, we up-weight point $z_{\delta}$, but then we
 also remove the up-weighting for all the features that are not modified by
 $\delta$. From the calculations in
-[the previous section](#approximating-the-influence-of-a-point),
+[the previous section][influence-of-a-point]
 it is then easy to see that
 
 $$\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
@@ -210,9 +210,9 @@ on test point $z_{\text{test}}[i]$.
 !!! Warning
     Compared to the mathematical definitions above, we switch the ordering
     of $z$ and $z_{\text{test}}$, in order to make the input ordering consistent
-    with the dimensions of the resulting tensor. More concrete if the first
-    dimension of $z_{\text{test}}$ is $N$ and that of $z$, the resulting tensor
-    is of shape $N \times M$
+    with the dimensions of the resulting tensor. More precisely, if the first
+    dimension of $z_{\text{test}}$ is $N$ and that of $z$ is $M$, then the
+    resulting tensor is of shape $N \times M$
 
 A large positive influence indicates that training point $j$
 tends to improve the performance of the model on test point $i$, and vice versa,
@@ -221,12 +221,12 @@ performance of the model on test point $i$.
 
 ### Hessian regularization
 
-Additionally, and as discussed in [the introduction](#the-influence-function),
+Additionally, and as discussed in [the introduction][influence-function],
 in machine learning training rarely converges to a global minimum of the loss.
 Despite good apparent convergence, $\hat{\theta}$ might be located in a region
 with flat curvature or close to a saddle point. In particular, the Hessian might
 have vanishing eigenvalues making its direct inversion impossible. Certain
-methods, such as the [Arnoldi method](#arnoldi-solver) are robust against these
+methods, such as the [Arnoldi method][arnoldi-method] are robust against these
 problems, but most are not.
 
 To circumvent this problem, many approximate methods can be implemented. The
@@ -238,7 +238,7 @@ from torch.utils.data import DataLoader
 from pydvl.influence.torch import DirectInfluence
 
 training_data_loader = DataLoader(...)
-infl_model = DirectInfluence(model, loss, hessian_regularization=0.01)
+infl_model = DirectInfluence(model, loss, regularization=0.01)
 infl_model = infl_model.fit(training_data_loader)
 ```
 
@@ -248,6 +248,88 @@ zero and therefore the matrix is invertible. In order for this regularization
 not to corrupt the outcome too much, the parameter $\lambda$ should be as small
 as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 \lambda \mathbb{I}$.
+
+### Block-diagonal approximation { #block-diagonal-approximation }
+
+This implementation is capable of using a block-diagonal approximation.
+The full matrix is approximated by a block-diagonal version, which
+reduces both the time and memory consumption.
+The blocking structure can be specified via the `block_structure` parameter.
+The `block_structure` parameter can either be a
+[BlockMode][pydvl.influence.torch.util.BlockMode] enum (which provides
+layer-wise or parameter-wise blocking) or a custom block structure defined
+by an ordered dictionary with the keys being the block identifiers (arbitrary
+strings) and the values being lists of parameter names contained in the block.
+```python
+from torch.utils.data import DataLoader
+from pydvl.influence.torch import DirectInfluence, BlockMode, SecondOrderMode
+
+training_data_loader = DataLoader(...)
+# layer-wise block-diagonal approximation
+infl_model = DirectInfluence(model, loss,
+                             regularization=0.1,
+                             block_structure=BlockMode.LAYER_WISE)
+
+block_structure = OrderedDict((
+    ("custom_block1", ["0.weight", "1.bias"]), 
+    ("custom_block2", ["1.weight", "0.bias"]),
+))
+# custom block-diagonal structure
+infl_model = DirectInfluence(model, loss,
+                             regularization=0.1,
+                             block_structure=block_structure)
+infl_model = infl_model.fit(training_data_loader)
+```
+If you would like to apply a block-specific regularization, you can provide a
+dictionary with the block names as keys and the regularization values as values.
+If no value is provided for a specific key, no regularization is applied for
+the corresponding block.
+
+```python
+regularization =  {
+"custom_block1": 0.1,
+"custom_block2": 0.2,
+}
+infl_model = DirectInfluence(model, loss,
+                             regularization=regularization,
+                             block_structure=block_structure)
+infl_model = infl_model.fit(training_data_loader)
+```
+Accordingly, if you choose a layer-wise or parameter-wise structure
+(by providing `BlockMode.LAYER_WISE` or `BlockMode.PARAMETER_WISE` for
+`block_structure`) the keys must be the layer names or parameter names,
+respectively.
+You can retrieve the block-wise influence information from the methods
+with suffix `_by_block`. By default, `block_structure` is set to
+`BlockMode.FULL` and in this case these methods will return a dictionary
+with the empty string being the only key.
+
+### Gauss-Newton approximation { #gauss-newton-approximation }
+
+In the computation of the influence values, the inversion of the Hessian can be
+replaced by the inversion of the Gauss-Newton matrix
+
+$$ G_{\hat{\theta}}=n^{-1} \sum_{i=1}^n \nabla_{\theta}L(z_i, \hat{\theta})
+    \nabla_{\theta}L(z_i, \hat{\theta})^T $$
+
+so the computed values are of the form
+
+$$\nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
+G_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta}). $$
+
+The parameter `second_orer_mode` is used to configure this approximation.
+```python
+from torch.utils.data import DataLoader
+from pydvl.influence.torch import DirectInfluence, BlockMode, SecondOrderMode
+
+training_data_loader = DataLoader(...)
+infl_model = DirectInfluence(model, loss,
+                             regularization={"layer_1": 0.1, "layer_2": 0.2},
+                             block_structure=BlockMode.LAYER_WISE,
+                             second_order_mode=SecondOrderMode.GAUSS_NEWTON)
+infl_model = infl_model.fit(training_data_loader)
+```
+
 
 ### Perturbation influences
 
@@ -271,7 +353,7 @@ point.
 ### Influence factors
 
 The influence factors(refer to
-[the previous section](#approximating-the-influence-of-a-point) for a definition)
+[the previous section][influence-of-a-point] for a definition)
 are typically the most computationally demanding part of influence calculation.
 They can be obtained via calling the `influence_factors` method, saved, and later used 
 for influence calculation on different subsets of the training dataset.

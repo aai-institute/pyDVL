@@ -185,12 +185,10 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
                 yield np.random.choice(self._outer_indices, size=1).item()
 
     @overload
-    def __getitem__(self, key: slice) -> PowersetSampler[IndexT]:
-        ...
+    def __getitem__(self, key: slice) -> PowersetSampler[IndexT]: ...
 
     @overload
-    def __getitem__(self, key: list[int]) -> PowersetSampler[IndexT]:
-        ...
+    def __getitem__(self, key: list[int]) -> PowersetSampler[IndexT]: ...
 
     def __getitem__(self, key: slice | list[int]) -> PowersetSampler[IndexT]:
         if isinstance(key, slice) or isinstance(key, Iterable):
@@ -212,8 +210,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
         return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[SampleT]:
-        ...
+    def __iter__(self) -> Iterator[SampleT]: ...
 
     @classmethod
     @abc.abstractmethod
@@ -221,12 +218,12 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
         r"""Factor by which to multiply Monte Carlo samples, so that the
         mean converges to the desired expression.
 
-        By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$
+        By the Law of Large Numbers, the sample mean of $\Delta_i(S_j)$
         converges to the expectation under the distribution from which $S_j$ is
         sampled.
 
-        $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
-           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (
+        $$ \frac{1}{m}  \sum_{j = 1}^m \Delta_i (S_j) c (S_j) \longrightarrow
+           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\Delta_i (S) c (
            S)]$$
 
         We add a factor $c(S_j)$ in order to have this expectation coincide with

@@ -1,7 +1,11 @@
-datasets==2.14.6
-distributed==2023.4.0
-pillow==10.3.0
-torch==2.0.1
-torchvision==0.15.2
-transformers==4.38.0
-zarr==2.16.1
+datasets==2.21.0
+dask==2024.8.0
+distributed==2024.8.0
+imblearn
+pillow==10.4.0
+torch==2.2.0
+torchvision==0.17.0
+transformers==4.44.2
+zarr>=2,<3; python_version<'3.11'
+numcodecs<0.16.0; python_version<'3.11'
+zarr>=3,<4; python_version>='3.11'

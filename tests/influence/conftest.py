@@ -45,10 +45,10 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
 
 
 def linear_derivative_analytical(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
-) -> NDArray[np.float_]:
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+) -> NDArray[np.float64]:
     """
     Given a linear model it returns the first order derivative wrt its parameters.
     More precisely, given a couple of matrices $A(\theta)$ and $b(\theta')$, with
@@ -71,10 +71,10 @@ def linear_derivative_analytical(
 
 
 def linear_hessian_analytical(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
-    x: NDArray[np.float_],
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
+    x: NDArray[np.float64],
     lam: float = 0.0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """
     Given a linear model it returns the hessian wrt. its parameters.
     More precisely, given a couple of matrices $A(\theta)$ and $b(\theta')$, with
@@ -103,10 +103,10 @@ def linear_hessian_analytical(
 
 
 def linear_mixed_second_derivative_analytical(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
-) -> NDArray[np.float_]:
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+) -> NDArray[np.float64]:
     """
     Given a linear model it returns a second order partial derivative wrt its
     parameters .
@@ -137,13 +137,13 @@ def linear_mixed_second_derivative_analytical(
 
 
 def linear_analytical_influence_factors(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
-    x_test: NDArray[np.float_],
-    y_test: NDArray[np.float_],
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    x_test: NDArray[np.float64],
+    y_test: NDArray[np.float64],
     hessian_regularization: float = 0,
-) -> NDArray[np.float_]:
+) -> NDArray[np.float64]:
     """
     Given a linear model it calculates its influence factors.
     :param linear_model: A tuple of arrays representing the linear model.
@@ -165,13 +165,13 @@ def linear_analytical_influence_factors(
 
 
 def add_noise_to_linear_model(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
     train_set_size: int,
     test_set_size: int,
     noise: float = 0.01,
 ) -> Tuple[
-    Tuple[NDArray[np.float_], NDArray[np.float_]],
-    Tuple[NDArray[np.float_], NDArray[np.float_]],
+    Tuple[NDArray[np.float64], NDArray[np.float64]],
+    Tuple[NDArray[np.float64], NDArray[np.float64]],
 ]:
     A, b = linear_model
     o_d, i_d = tuple(A.shape)
@@ -199,11 +199,11 @@ def add_noise_to_linear_model(
 
 
 def analytical_linear_influences(
-    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
-    x: NDArray[np.float_],
-    y: NDArray[np.float_],
-    x_test: NDArray[np.float_],
-    y_test: NDArray[np.float_],
+    linear_model: Tuple[NDArray[np.float64], NDArray[np.float64]],
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    x_test: NDArray[np.float64],
+    y_test: NDArray[np.float64],
     mode: InfluenceMode = InfluenceMode.Up,
     hessian_regularization: float = 0,
 ):
@@ -237,16 +237,14 @@ def analytical_linear_influences(
             x,
             y,
         )
-        result: NDArray = np.einsum(
-            "ia,ja->ij", s_test_analytical, train_grads_analytical
-        )
+        result = np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
     elif mode == InfluenceMode.Perturbation:
         train_second_deriv_analytical = linear_mixed_second_derivative_analytical(
             linear_model,
             x,
             y,
         )
-        result: NDArray = np.einsum(
+        result = np.einsum(
             "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
         )
     return result

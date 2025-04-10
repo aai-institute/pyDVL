@@ -1,0 +1,54 @@
+name: Run Legacy Tests
+
+on:
+  workflow_call:
+    inputs:
+      split_size:
+        description: "Determines the number of groups into which the tests should be split"
+        type: string
+        default: 4
+      group_number:
+        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
+        type: string
+        required: true
+      python_version:
+        description: "Determines which Python version to use"
+        type: string
+        required: true
+
+
+env:
+  PY_COLORS: 1
+
+jobs:
+  run-legacy-tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          large-packages: false
+          docker-images: false
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python ${{ inputs.python_version }}
+        uses: ./.github/actions/python
+        with:
+          python_version: ${{ inputs.python_version }}
+      - name: Cache Tox Directory for Tests
+        uses: actions/cache@v4
+        with:
+          key: tox-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
+          path: .tox
+      - name: Set up memcached
+        uses: niden/actions-memcached@v7
+      - name: Test Group ${{ inputs.group_number }}
+        run: tox -e legacy-tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          env_vars: OS,PYTHON
+          verbose: false

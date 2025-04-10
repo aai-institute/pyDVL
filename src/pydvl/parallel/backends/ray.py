@@ -31,7 +31,7 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
     """
 
     _joblib_backend_name: str = "ray"
-    """Name of the backend to use for joblib inside [MapReduceJob][pydvl.parallel.mapreduce.MapReduceJob]."""
+    """Name of the backend to use for joblib inside [MapReduceJob][pydvl.parallel.map_reduce.MapReduceJob]."""
 
     @deprecated(
         target=True,
@@ -107,7 +107,7 @@ class RayParallelBackend(ParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, fun: Callable, **kwargs) -> Callable:
+    def wrap(self, fun: Callable, **kwargs: dict[str, Any]) -> Callable:
         """Wraps a function as a ray remote.
 
         Args:

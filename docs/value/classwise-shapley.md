@@ -1,8 +1,9 @@
 ---
 title: Class-wise Shapley
+alias: classwise-shapley-intro
 ---
 
-# Class-wise Shapley
+# Class-wise Shapley { #classwise-shapley-intro }
 
 Class-wise Shapley (CWS) [@schoch_csshapley_2022] offers a Shapley framework
 tailored for classification problems.  Given a sample $x_i$ with label $y_i \in
@@ -14,10 +15,8 @@ label. To address this issue, the authors introduced
 
 $$
 v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}}
-\left [
 \frac{1}{|D_{y_i}|}\sum_{S_{y_i}} \binom{|D_{y_i}|-1}{|S_{y_i}|}^{-1}
-\delta(S_{y_i} | S_{-y_i})
-\right ],
+\delta(S_{y_i} | S_{-y_i}),
 $$
 
 where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq
@@ -38,40 +37,51 @@ original Shapley value, although the actual speed-up depends on the model and
 the dataset.
 
 
-!!! Example "Computing classwise Shapley values"
-    Like all other game-theoretic valuation methods, CWS requires a
-    [Utility][pydvl.utils.utility.Utility] object constructed with model and
-    dataset, with the peculiarity of requiring a specific
-    [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]. The entry
-    point is the function
-    [compute_classwise_shapley_values][pydvl.value.shapley.classwise.compute_classwise_shapley_values]:
+??? Example "Computing classwise Shapley values"
+    CWS is implemented in
+    [ClasswiseShapleyValuation][pydvl.valuation.methods.classwise_shapley.ClasswiseShapleyValuation].
+    To construct this object the model is passed inside a
+    [ClasswiseModelUtility][pydvl.valuation.utility.classwise.ClasswiseModelUtility]
+    together with a
+    [ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer]
+    The two samplers required by the method are wrapped by a
+    [ClasswiseSampler][pydvl.valuation.samplers.classwise.ClasswiseSampler].
 
+    The following example illustrates how to replicate the algorithm in Appendix
+    A of [@schoch_csshapley_2022].
     ```python
-    from pydvl.value import *
+    from pydvl.valuation import *
     
+    seed = 42
     model = ...
-    data = Dataset(...)
-    scorer = ClasswiseScorer(...)
-    utility = Utility(model, data, scorer)
-    values = compute_classwise_shapley_values(
-        utility,
-        done=HistoryDeviation(n_steps=500, rtol=5e-2) | MaxUpdates(5000),
-        truncation=RelativeTruncation(utility, rtol=0.01),
-        done_sample_complements=MaxChecks(1),
-        normalize_values=True
+    train, test = Dataset.from_arrays(X, y, train_size=0.6, random_state=seed)
+    n_labels = len(get_unique_labels(train.data().y))
+    scorer = ClasswiseSupervisedScorer("accuracy", test)
+    utility = ClasswiseModelUtility(model, scorer)
+    sampler = ClasswiseSampler(
+        in_class=PermutationSampler(
+            truncation=RelativeTruncation(rtol=0.01, burn_in_fraction=0.3), seed=seed
+        ),
+        out_of_class=UniformSampler(index_iteration=NoIndexIteration),
+        max_in_class_samples=1,
+    )
+    # 500 permutations per label as in the paper
+    stopping = MaxSamples(sampler, 500*n_labels)
+    # Save the history in valuation.stopping.criteria[1]
+    stopping |= History(n_steps=5000),
+    valuation = ClasswiseShapleyValuation(
+        utility=utility, sampler=sampler, is_done=stopping, normalize_values=True
     )
     ```
 
 
 ### The class-wise scorer
 
-In order to use the classwise Shapley value, one needs to define a
-[ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]. This scorer
-is defined as
+In order to use the class-wise Shapley value, one needs to instantiate a
+[ClasswiseSupervisedScorer][pydvl.valuation.scorers.classwise.ClasswiseSupervisedScorer].
+This scorer is defined as
 
-$$
-u(S) = f(a_S(D_{y_i})) g(a_S(D_{-y_i})),
-$$
+$$ u(S) = f(a_S(D_{y_i})) \ g(a_S(D_{-y_i})), $$
 
 where $f$ and $g$ are monotonically increasing functions, $a_S(D_{y_i})$ is the
 **in-class accuracy**, and $a_S(D_{-y_i})$ is the **out-of-class accuracy** (the
@@ -82,18 +92,21 @@ The authors show that $f(x)=x$ and $g(x)=e^x$ have favorable properties and are
 therefore the defaults, but we leave the option to set different functions $f$
 and $g$ for an exploration with different base scores. 
 
-!!! Example "The default class-wise scorer"
-    Constructing the CWS scorer requires choosing a metric and the functions $f$
-    and $g$:
+??? example "The default class-wise scorer"
+    The CWS scorer requires choosing a metric and the functions $f$ and $g,$
+    which by default are set to the values in the paper:
 
     ```python
     import numpy as np
-    from pydvl.value.shapley.classwise import ClasswiseScorer
+    from pydvl.valuation.scorers.classwise import ClasswiseSupervisedScorer
     
-    # These are the defaults
+    _, test = Dataset.from_sklearn(...)
     identity = lambda x: x
-    scorer = ClasswiseScorer(
+    scorer = ClasswiseSupervisedScorer(
         "accuracy",
+        default=0.0,
+        range=(0.0, 1.0),
+        test_data=test,
         in_class_discount_fn=identity,
         out_of_class_discount_fn=np.exp
     )
@@ -150,18 +163,21 @@ As a scalar summary of this curve, [@schoch_csshapley_2022] define **Weighted
 Accuracy Drop** (WAD) as:
 
 $$
-\text{WAD} =  \sum_{j=1}^{n} \left ( \frac{1}{j} \sum_{i=1}^{j} 
-a_{T_{-\{1 \colon i-1 \}}}(D) - a_{T_{-\{1 \colon i \}}}(D) \right)
-= a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 \colon j \}}}(D)}{j} ,
+\begin{aligned}
+\text{wad} &= \sum_{j=1}^{n} \frac{1}{j} \sum_{i=1}^{j}
+  \left( a_{T_{-\{1 : i-1 \}}}(D) - a_{T_{-\{1 : i \}}}(D) \right) \\
+   &= a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 : j \}}}(D)}{j} ,
+\end{aligned}
 $$
 
+
 where $a_T(D)$ is the accuracy of the model (trained on $T$) evaluated on $D$
-and $T_{-\{1 \colon j \}}$ is the set $T$ without elements from $\{1, \dots , j
+and $T_{-\{1 : j \}}$ is the set $T$ without elements from $\{1, \dots , j
 \}$.
 
 We run the point removal experiment for a logistic regression model five times
-and compute WAD for each run, then report the mean $\mu_\text{WAD}$ and standard
-deviation $\sigma_\text{WAD}$.
+and compute WAD for each run, then report the mean $\mu_\text{wad}$ and standard
+deviation $\sigma_\text{wad}$.
 
 ![Mean WAD for best-point removal on logistic regression. Values
 computed using LOO, CWS, Beta Shapley, and TMCS

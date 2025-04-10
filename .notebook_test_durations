@@ -1,12 +1,12 @@
 {
-    "notebooks/data_oob.ipynb::": 14.514983271001256,
-    "notebooks/influence_imagenet.ipynb::": 15.937124550999215,
-    "notebooks/influence_sentiment_analysis.ipynb::": 26.479645616000198,
-    "notebooks/influence_synthetic.ipynb::": 6.61773010700017,
-    "notebooks/influence_wine.ipynb::": 16.312171267998565,
-    "notebooks/least_core_basic.ipynb::": 14.375480750999486,
-    "notebooks/msr_banzhaf_digits.ipynb::": 106.6507187110019,
-    "notebooks/shapley_basic_spotify.ipynb::": 15.657225806997303,
-    "notebooks/shapley_knn_flowers.ipynb::": 3.9943819290019746,
-    "notebooks/shapley_utility_learning.ipynb::": 25.939783253001224
+    "notebooks/data_oob.ipynb::": 13.150942041,
+    "notebooks/influence_imagenet.ipynb::": 17.281671249999995,
+    "notebooks/influence_sentiment_analysis.ipynb::": 19.578478917000005,
+    "notebooks/influence_synthetic.ipynb::": 7.191153166999996,
+    "notebooks/influence_wine.ipynb::": 11.610076332999995,
+    "notebooks/least_core_basic.ipynb::": 14.069404709000011,
+    "notebooks/msr_banzhaf_digits.ipynb::": 86.62082037599998,
+    "notebooks/shapley_basic_spotify.ipynb::": 15.088616748999982,
+    "notebooks/shapley_knn_flowers.ipynb::": 6.810235208000023,
+    "notebooks/shapley_utility_learning.ipynb::": 24.370409832999997
 }

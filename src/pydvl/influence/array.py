@@ -6,11 +6,13 @@ lazy arrays. Concrete implementations are provided for handling chunked lazy arr
 (chunked in one resp. two dimensions), with support for efficient storage and retrieval
 using the Zarr library.
 """
+
 from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
 from typing import (
+    Any,
     Callable,
     Generator,
     Generic,
@@ -28,7 +30,7 @@ from tqdm import tqdm
 from zarr.storage import StoreLike
 
 from ..utils import log_duration
-from .base_influence_function_model import TensorType
+from .types import TensorType
 
 
 class NumpyConverter(Generic[TensorType], ABC):
@@ -158,7 +160,7 @@ class LazyChunkSequence(Generic[TensorType]):
         self.len_generator = len_generator
 
     @log_duration(log_level=logging.INFO)
-    def compute(self, aggregator: Optional[SequenceAggregator] = None):
+    def compute(self, aggregator: Optional[SequenceAggregator] = None) -> Any:
         """
         Computes and optionally aggregates the chunks of the array using the provided
         aggregator. This method initiates the generation of chunks and then
@@ -277,7 +279,7 @@ class NestedLazyChunkSequence(Generic[TensorType]):
         self.len_outer_generator = len_outer_generator
 
     @log_duration(log_level=logging.INFO)
-    def compute(self, aggregator: Optional[NestedSequenceAggregator] = None):
+    def compute(self, aggregator: Optional[NestedSequenceAggregator] = None) -> Any:
         """
         Computes and optionally aggregates the chunks of the array using the provided
         aggregator. This method initiates the generation of chunks and then

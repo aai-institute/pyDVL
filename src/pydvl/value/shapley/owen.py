@@ -24,7 +24,7 @@ from pydvl.parallel import (
 from pydvl.utils import Utility, random_powerset
 from pydvl.utils.progress import repeat_indices
 from pydvl.utils.types import Seed
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import MinUpdates
 
 __all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
@@ -51,7 +51,7 @@ def _owen_sampling_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""This is the algorithm as detailed in the paper: to compute the outer
     integral over q ∈ [0,1], use uniformly distributed points for evaluation
@@ -83,21 +83,25 @@ def _owen_sampling_shapley(
     result = ValuationResult.zeros(
         algorithm="owen_sampling_shapley_" + str(method),
         indices=np.array(indices, dtype=np.int_),
-        data_names=[u.data.data_names[i] for i in indices],
+        data_names=u.data.data_names[indices],
     )
 
     rng = np.random.default_rng(seed)
     done = MinUpdates(1)
 
     for idx in repeat_indices(
-        indices, result=result, done=done, disable=not progress, position=job_id
+        indices,
+        result=result,  # type:ignore
+        done=done,  # type:ignore
+        disable=not progress,
+        position=job_id,
     ):
         e = np.zeros(max_q)
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         for j, q in enumerate(q_steps):
             for s in random_powerset(subset, n_samples=n_samples, q=q, seed=rng):
                 marginal = u({idx}.union(s)) - u(s)
-                if method == OwenAlgorithm.Antithetic and q != 0.5:
+                if method == OwenAlgorithm.Antithetic:
                     s_complement = np.setxor1d(subset, s, assume_unique=True)
                     marginal += u({idx}.union(s_complement)) - u(s_complement)
                     marginal /= 2
@@ -128,7 +132,7 @@ def owen_sampling_shapley(
     parallel_backend: Optional[ParallelBackend] = None,
     config: Optional[ParallelConfig] = None,
     progress: bool = False,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
     (Okhrati and Lipani, 2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.

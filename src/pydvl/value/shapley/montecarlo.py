@@ -40,6 +40,7 @@ as done in Truncated MonteCarlo Shapley (TMCS).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -153,7 +154,7 @@ def permutation_montecarlo_shapley(
     $$
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears (see [[data-valuation]] for details).
+    the position where $i$ appears (see [[data-valuation-intro]] for details).
 
     This implements the method described in (Ghorbani and Zou, 2019)<sup><a
     href="#ghorbani_data_2019">1</a></sup> with a double stopping criterion.
@@ -292,7 +293,11 @@ def _combinatorial_montecarlo_shapley(
     rng = np.random.default_rng(seed)
 
     for idx in repeat_indices(
-        indices, result=result, done=done, disable=not progress, position=job_id
+        indices,
+        result=result,  # type:ignore
+        done=done,  # type:ignore
+        disable=not progress,
+        position=job_id,
     ):
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
@@ -327,7 +332,7 @@ def combinatorial_montecarlo_shapley(
 
     This consists of randomly sampling subsets of the power set of the training
     indices in [u.data][pydvl.utils.utility.Utility], and computing their
-    marginal utilities. See [Data valuation][data-valuation] for details.
+    marginal utilities. See [Data valuation][data-valuation-intro] for details.
 
     Note that because sampling is done with replacement, the approximation is
     poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$

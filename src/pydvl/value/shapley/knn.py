@@ -17,7 +17,6 @@ This module contains Shapley computations for K-Nearest Neighbours.
 from typing import Dict, Union
 
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from tqdm.auto import tqdm
 
@@ -31,10 +30,11 @@ __all__ = ["knn_shapley"]
 def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
-    It exploits the local structure of K-Nearest Neighbours to reduce the number
-    of calls to the utility function to a constant number per index, thus
-    reducing computation time to $O(n)$.
+    This implements the method described in (Jia, R. et al., 2019)<sup><a
+    href="#jia_efficient_2019a">1</a></sup>. It exploits the local structure of
+    K-Nearest Neighbours to reduce the value computation to sorting of the training
+    points by distance to the test point and applying a recursive formula,
+    thus reducing computation time to $O(n_test n_train log(n_train)$.
 
     Args:
         u: Utility with a KNN model to extract parameters from. The object
@@ -73,28 +73,26 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     # closest to farthest
     _, indices = nns.kneighbors(u.data.x_test)
 
-    values: NDArray[np.float_] = np.zeros_like(u.data.indices, dtype=np.float_)
+    res = np.zeros_like(u.data.indices, dtype=np.float64)
     n = len(u.data)
     yt = u.data.y_train
     iterator = enumerate(zip(u.data.y_test, indices), start=1)
     for j, (y, ii) in tqdm(iterator, disable=not progress):
-        value_at_x = int(yt[ii[-1]] == y) / n
-        values[ii[-1]] += (value_at_x - values[ii[-1]]) / j
-        for i in range(n - 2, n_neighbors, -1):  # farthest to closest
-            value_at_x = (
-                values[ii[i + 1]] + (int(yt[ii[i]] == y) - int(yt[ii[i + 1]] == y)) / i
-            )
-            values[ii[i]] += (value_at_x - values[ii[i]]) / j
-        for i in range(n_neighbors, -1, -1):  # farthest to closest
-            value_at_x = (
-                values[ii[i + 1]]
-                + (int(yt[ii[i]] == y) - int(yt[ii[i + 1]] == y)) / n_neighbors
-            )
-            values[ii[i]] += (value_at_x - values[ii[i]]) / j
+        values = np.zeros_like(u.data.indices, dtype=np.float64)
+        idx = ii[-1]
+        values[idx] = int(yt[idx] == y) / n
+
+        for i in range(n - 1, 0, -1):
+            prev_idx = idx
+            idx = ii[i - 1]
+            values[idx] = values[prev_idx] + (
+                int(yt[idx] == y) - int(yt[prev_idx] == y)
+            ) / max(n_neighbors, i)
+        res += values
 
     return ValuationResult(
         algorithm="knn_shapley",
         status=Status.Converged,
-        values=values,
+        values=res,
         data_names=u.data.data_names,
     )

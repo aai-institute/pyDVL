@@ -1,6 +1,6 @@
 from .caching import *
-from .config import *
 from .dataset import *
+from .functional import *
 from .numeric import *
 from .progress import *
 from .score import *

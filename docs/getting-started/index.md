@@ -11,12 +11,12 @@ If you want to jump straight in, [install pyDVL](#installation)
 and then check out [[examples|the examples]]. You will probably want to install
 with support for [influence function computation](#installation-influences).
 
-We have introductions to the ideas behind [[data-valuation|Data valuation]] and
+We have introductions to the ideas behind [[data-valuation-intro|Data valuation]] and
 [[influence-function|Influence functions]], as well as a short overview of
-[common applications](applications).
+[common applications](applications.md).
 
 
-## Installing pyDVL { # installation }
+## Installing pyDVL { #installation }
 
 To install the latest release use:
 
@@ -40,7 +40,7 @@ python -c "import pydvl; print(pydvl.__version__)"
 
 ## Dependencies
 
-pyDVL requires Python >= 3.8, [numpy](https://numpy.org/),
+pyDVL requires Python >= 3.9, [numpy](https://numpy.org/),
 [scikit-learn](https://scikit-learn.org/stable/), [scipy](https://scipy.org/),
 [cvxpy](https://www.cvxpy.org/) for the core methods, and
 [joblib](https://joblib.readthedocs.io/en/stable/) for parallelization locally.
@@ -55,8 +55,13 @@ that can be optionally installed:
 
 ### Influence functions { #installation-influences }
 
-To use the module on influence functions, [pydvl.influence][pydvl.influence],
-run:
+!!! tip "pytorch dependency"
+    While only [pydvl.influence][] completely depends on PyTorch, some valuation
+    methods in [pydvl.valuation][] use PyTorch as well (e.g.
+    [DeepSets][deep-sets-intro]). If you want to use these, you can also follow
+    the instructions below.
+
+To use the module on influence functions, [pydvl.influence][], run:
 
 ```shell
 pip install pyDVL[influence]

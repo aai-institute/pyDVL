@@ -141,6 +141,7 @@ pylint.html
 runs/
 data/models/
 *.pkl
+!data/*.pkl
 
 # Docs
 docs_build

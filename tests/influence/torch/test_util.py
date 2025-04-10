@@ -4,9 +4,10 @@ from typing import Any, Dict, Tuple
 import numpy as np
 import pytest
 
+from pydvl.influence.torch.operator import MatrixOperator
+
 torch = pytest.importorskip("torch")
-import torch.nn
-from numpy.typing import NDArray
+import torch.nn  # noqa: F811
 from scipy.stats import pearsonr, spearmanr
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
@@ -14,18 +15,18 @@ from torch.utils.data import DataLoader, TensorDataset
 from pydvl.influence.torch.functional import (
     create_batch_hvp_function,
     create_hvp_function,
-    lanzcos_low_rank_hessian_approx,
+    operator_spectral_approximation,
 )
 from pydvl.influence.torch.util import (
+    BlockMode,
+    ModelParameterDictBuilder,
     TorchLinalgEighException,
     TorchTensorContainerType,
     align_structure,
-    flatten_dimensions,
     safe_torch_linalg_eigh,
     torch_dataset_to_dask_array,
 )
 from tests.conftest import is_osx_arm64
-from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
 @dataclass
@@ -81,40 +82,6 @@ test_parameters = [
 ]
 
 
-def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
-    """
-    Given numpy arrays representing the model $xA^t + b$, the function returns the corresponding torch model
-    :param A:
-    :param b:
-    :return:
-    """
-    output_dimension, input_dimension = tuple(A.shape)
-    model = torch.nn.Linear(input_dimension, output_dimension)
-    model.eval()
-    model.weight.data = torch.as_tensor(A, dtype=torch.get_default_dtype())
-    model.bias.data = torch.as_tensor(b, dtype=torch.get_default_dtype())
-    return model
-
-
-@pytest.fixture
-def model_data(request):
-    dimension, condition_number, train_size = request.param
-    A, b = linear_model(dimension, condition_number)
-    x = torch.rand(train_size, dimension[-1])
-    y = torch.rand(train_size, dimension[0])
-    torch_model = linear_torch_model_from_numpy(A, b)
-    vec = flatten_dimensions(
-        tuple(
-            torch.rand(*p.shape)
-            for name, p in torch_model.named_parameters()
-            if p.requires_grad
-        )
-    )
-    H_analytical = linear_hessian_analytical((A, b), x.numpy())
-    H_analytical = torch.as_tensor(H_analytical)
-    return torch_model, x, y, vec, H_analytical.to(torch.float32)
-
-
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "model_data, tol",
@@ -158,17 +125,15 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     [astuple(tp) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_lanzcos_low_rank_hessian_approx(
+def test_operator_spectral_approximation(
     model_data, batch_size: int, rank_estimate, regularization
 ):
     _, _, _, vec, H_analytical = model_data
-
     reg_H_analytical = H_analytical + regularization * torch.eye(H_analytical.shape[0])
-    low_rank_approx = lanzcos_low_rank_hessian_approx(
-        lambda z: reg_H_analytical @ z,
-        reg_H_analytical.shape,
-        rank_estimate=rank_estimate,
-    )
+
+    op = MatrixOperator(reg_H_analytical)
+
+    low_rank_approx = operator_spectral_approximation(op, rank=rank_estimate)
     approx_result = low_rank_approx.projections @ (
         torch.diag_embed(low_rank_approx.eigen_vals)
         @ (low_rank_approx.projections.t() @ vec.t())
@@ -177,15 +142,15 @@ def test_lanzcos_low_rank_hessian_approx(
 
 
 @pytest.mark.torch
-def test_lanzcos_low_rank_hessian_approx_exception():
+def test_operator_spectral_approximation_exception():
     """
-    In case cuda is not available, and cupy is not installed, the call should raise an import exception
+    In case cuda is not available, and cupy is not installed, the call should raise an
+    import exception
     """
+    op = MatrixOperator(torch.randn(3, 3))
     if not torch.cuda.is_available():
         with pytest.raises(ImportError):
-            lanzcos_low_rank_hessian_approx(
-                lambda x: x, (3, 3), eigen_computation_on_gpu=True
-            )
+            operator_spectral_approximation(op, rank=2, eigen_computation_on_gpu=True)
 
 
 @pytest.mark.parametrize(
@@ -265,10 +230,10 @@ def test_torch_dataset_to_dask_array(
                 for k, c in enumerate(x_da[0].chunks[1:])
             ]
         )
-        assert np.allclose(x_torch.numpy(), x_da[0].compute())
+        np.testing.assert_allclose(x_torch.numpy(), x_da[0].compute())
 
     y_da = torch_dataset_to_dask_array(data_set, chunk_size=chunk_size)[1]
-    assert np.allclose(y_torch.numpy(), y_da.compute())
+    np.testing.assert_allclose(y_torch.numpy(), y_da.compute())
     assert y_da.shape == y_torch.shape
     assert sum(y_da.chunks[0]) == total_size
     assert all(
@@ -318,3 +283,41 @@ def test_safe_torch_linalg_eigh():
 def test_safe_torch_linalg_eigh_exception():
     with pytest.raises(TorchLinalgEighException):
         safe_torch_linalg_eigh(torch.randn([53000, 53000]))
+
+
+class TestModelParameterDictBuilder:
+    class SimpleModel(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.fc1 = torch.nn.Linear(5, 10)
+            self.fc2 = torch.nn.Linear(10, 5)
+            self.fc1.weight.requires_grad = False
+
+    @pytest.fixture
+    def model(self):
+        return TestModelParameterDictBuilder.SimpleModel()
+
+    @pytest.mark.parametrize("block_mode", [mode for mode in BlockMode])
+    def test_build(self, block_mode, model):
+        builder = ModelParameterDictBuilder(
+            model=model,
+            detach=True,
+        )
+        param_dict = builder.build_from_block_mode(block_mode)
+
+        if block_mode is BlockMode.FULL:
+            assert "" in param_dict
+            assert "fc1.weight" not in param_dict[""]
+        elif block_mode is BlockMode.PARAMETER_WISE:
+            assert "fc2.bias" in param_dict
+            assert len(param_dict["fc2.bias"]) > 0
+            assert "fc1.weight" not in param_dict
+        elif block_mode is BlockMode.LAYER_WISE:
+            assert "fc2" in param_dict
+            assert "fc2.bias" in param_dict["fc2"]
+            assert "fc1.weight" not in param_dict["fc1"]
+            assert "fc1.bias" in param_dict["fc1"]
+
+        assert all(
+            (not p.requires_grad for q in param_dict.values() for p in q.values())
+        )

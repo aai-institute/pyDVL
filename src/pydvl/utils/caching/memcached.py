@@ -182,8 +182,7 @@ class MemcachedCacheBackend(CacheBackend):
             raise
         except AssertionError as e:
             logger.error(  # type: ignore
-                f"@memcached: Failure saving dummy value "
-                f"to {config.server}: {str(e)}"
+                f"@memcached: Failure saving dummy value to {config.server}: {str(e)}"
             )
             raise
 

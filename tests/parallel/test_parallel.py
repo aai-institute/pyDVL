@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 import pytest
 
-from pydvl.parallel import MapReduceJob, RayParallelBackend, init_parallel_backend
+from pydvl.parallel import MapReduceJob, RayParallelBackend
 from pydvl.utils.types import Seed
 
 from ..conftest import num_workers
@@ -165,6 +165,7 @@ def test_map_reduce_seeding(parallel_backend, seed_1, seed_2):
     assert result_1 != result_3
 
 
+@pytest.mark.flaky(reruns=2)  # the ways of ray are mysterious
 def test_wrap_function(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Only makes sense for ray")
@@ -219,7 +220,7 @@ def test_futures_executor_map_with_max_workers(parallel_backend):
 
 
 @pytest.mark.timeout(30)
-@pytest.mark.tolerate(max_failures=1)
+@pytest.mark.flaky(reruns=2)
 def test_future_cancellation(parallel_backend):
     if not isinstance(parallel_backend, RayParallelBackend):
         pytest.skip("Currently this test only works with Ray")

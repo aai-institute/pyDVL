@@ -62,7 +62,8 @@ def test_games(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
+    "a, b, num_points",
+    [(2, 0, 21)],  # training set will have 0.3 * 21 ~= 6 samples
 )
 @pytest.mark.parametrize("scorer, total_atol", [(squashed_r2, 0.2)])
 @pytest.mark.parametrize(

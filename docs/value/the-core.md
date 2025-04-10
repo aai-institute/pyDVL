@@ -1,8 +1,11 @@
 ---
 title: The Least Core for Data Valuation
+alias:
+  name: least-core-intro
+  title: The Least Core for Data Valuation
 ---
 
-# Core values
+# Core values  { #least-core-intro }
 
 Shapley values define a fair way to distribute payoffs amongst all participants
 (training points) when they form a grand coalition, i.e. when the model is
@@ -61,18 +64,30 @@ _egalitarian least core_.
 
 ## Exact Least Core
 
-This first algorithm is just a verbatim implementation of the definition, in
-[compute_least_core_values][pydvl.value.least_core.compute_least_core_values].
+This first algorithm is just a verbatim implementation of the definition above.
+It is available through
+[ExactLeastCoreValuation][pydvl.valuation.methods.least_core.ExactLeastCoreValuation].
 It computes all constraints for the linear problem by evaluating the utility on
 every subset of the training data, and returns as exact a value as the utility
 function allows (see what this means in [Problems of Data
 Values][problems-of-data-values]).
 
-```python
-from pydvl.value import compute_least_core_values
+??? example "Computing exact Least-Core values"
+    ```python
+    from joblib import parallel_config
+    from pydvl.valuation import (
+        Dataset, ExactLeastCoreValuation, ModelUtility, SupervisedScorer
+    )
+    
+    train, test = Dataset.from_arrays(...)
+    model = ...
+    scorer = SupervisedScorer(model, test, default=..)
+    utility = ModelUtility(model, scorer)
+    valuation = ExactLeastCoreValuation(utility, subsidy)
 
-values = compute_least_core_values(utility, mode="exact")
-```
+    with parallel_config(n_jobs=12):
+        valuation.fit(data)
+    ```
 
 ## Monte Carlo Least Core
 
@@ -91,39 +106,33 @@ $$
 $$
 
 where $e^{*}$ is the optimal least core subsidy. This approximation is
-also implemented in
-[compute_least_core_values][pydvl.value.least_core.compute_least_core_values]:
+implemented in
+[MonteCarloLeastCoreValuation][pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation]
+and it's usage follows the same pattern as above:
 
-```python
-from pydvl.value import compute_least_core_values
+??? example "Computing approximate Least-Core values"
+    ```python
+    from joblib import parallel_config
+    from pydvl.valuation import (
+        Dataset, MonteCarloLeastCoreValuation, ModelUtility, SupervisedScorer
+    )
+    
+    train, test = Dataset.from_arrays(...)
+    model = ...
+    scorer = SupervisedScorer(model, test, default=..)
+    utility = ModelUtility(model, scorer)
+    valuation = MonteCarloLeastCoreValuation(utility, subsidy)
 
-values = compute_least_core_values(
-   utility, mode="montecarlo", n_iterations=n_iterations
-)
-```
+    with parallel_config(n_jobs=12):
+        valuation.fit(data)
+    ```
 
 !!! Note
     Although any number is supported, it is best to choose `n_iterations` to be
     at least equal to the number of data points.
 
-Because computing the Least Core values requires the solution of a linear and a
-quadratic problem *after* computing all the utility values, we offer the
-possibility of splitting the latter from the former. This is useful when running
-multiple experiments: use
-[mclc_prepare_problem][pydvl.value.least_core.montecarlo.mclc_prepare_problem] to prepare a
-list of problems to solve, then solve them in parallel with
-[lc_solve_problems][pydvl.value.least_core.common.lc_solve_problems].
 
-```python
-from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
-
-n_experiments = 10
-problems = [mclc_prepare_problem(utility, n_iterations=n_iterations)
-    for _ in range(n_experiments)]
-values = lc_solve_problems(problems)
-```
-
-## Method comparison
+# Method comparison { #least-core-comparison }
 
 The TransferLab team reproduced the results of the original paper in a
 publication for the 2022 MLRC [@benmerzoug_re_2023].

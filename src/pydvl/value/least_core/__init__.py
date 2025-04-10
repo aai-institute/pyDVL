@@ -3,7 +3,7 @@
 
 This package holds all routines for the computation of Least Core data values.
 
-Please refer to [Data valuation][data-valuation] for an overview.
+Please refer to [Data valuation][data-valuation-intro] for an overview.
 
 In addition to the standard interface via
 [compute_least_core_values()][pydvl.value.least_core.compute_least_core_values], because computing the
@@ -20,7 +20,7 @@ parallelized itself, so preparing the problems should be done in sequence in thi
 case. The solution of the linear systems can then be done in parallel.
 
 """
-import warnings
+
 from enum import Enum
 from typing import Optional
 
@@ -53,7 +53,7 @@ def compute_least_core_values(
     """Umbrella method to compute Least Core values with any of the available
     algorithms.
 
-    See [Data valuation][data-valuation] for an overview.
+    See [Data valuation][data-valuation-intro] for an overview.
 
     The following algorithms are available. Note that the exact method can only
     work with very small datasets and is thus intended only for testing.

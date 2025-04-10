@@ -6,7 +6,7 @@
   shortjournal = {JMLR},
   volume = {18},
   eprint = {1602.03943},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {1--40},
   url = {https://www.jmlr.org/papers/v18/16-491.html},
   abstract = {First-order stochastic methods are the state-of-the-art in large-scale machine learning optimization owing to efficient per-iteration complexity. Second-order methods, while able to provide faster convergence, have been much less explored due to the high cost of computing the second-order information. In this paper we develop second-order stochastic methods for optimization problems in machine learning that match the per-iteration cost of gradient based methods, and in certain settings improve upon the overall running time over popular first-order methods. Furthermore, our algorithm has the desirable property of being implementable in time linear in the sparsity of the input data.},
@@ -67,7 +67,7 @@
   author = {Broderick, Tamara and Giordano, Ryan and Meager, Rachael},
   date = {2021-11-03},
   eprint = {2011.14999},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   url = {https://arxiv.org/abs/2011.14999},
   abstract = {We propose a method to assess the sensitivity of econometric analyses to the removal of a small fraction of the data. Manually checking the influence of all possible small subsets is computationally infeasible, so we provide an approximation to find the most influential subset. Our metric, the "Approximate Maximum Influence Perturbation," is automatically computable for common methods including (but not limited to) OLS, IV, MLE, GMM, and variational Bayes. We provide finite-sample error bounds on approximation performance. At minimal extra cost, we provide an exact finite-sample lower bound on sensitivity. We find that sensitivity is driven by a signal-to-noise ratio in the inference problem, is not reflected in standard errors, does not disappear asymptotically, and is not due to misspecification. While some empirical applications are robust, results of several economics papers can be overturned by removing less than 1\% of the sample.},
   langid = {english},
@@ -118,11 +118,12 @@
   date = {2018},
   volume = {31},
   eprint = {1806.03884},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   publisher = {Curran Associates, Inc.},
   url = {https://proceedings.neurips.cc/paper/2018/hash/48000647b315f6f00f913caa757a70b3-Abstract.html},
   urldate = {2024-01-12},
-  abstract = {Optimization algorithms that leverage gradient covariance information, such as variants of natural gradient descent (Amari, 1998), offer the prospect of yielding more effective descent directions. For models with many parameters, the covari- ance matrix they are based on becomes gigantic, making them inapplicable in their original form. This has motivated research into both simple diagonal approxima- tions and more sophisticated factored approximations such as KFAC (Heskes, 2000; Martens \& Grosse, 2015; Grosse \& Martens, 2016). In the present work we draw inspiration from both to propose a novel approximation that is provably better than KFAC and amendable to cheap partial updates. It consists in tracking a diagonal variance, not in parameter coordinates, but in a Kronecker-factored eigenbasis, in which the diagonal approximation is likely to be more effective. Experiments show improvements over KFAC in optimization speed for several deep network architectures.}
+  abstract = {Optimization algorithms that leverage gradient covariance information, such as variants of natural gradient descent (Amari, 1998), offer the prospect of yielding more effective descent directions. For models with many parameters, the covari- ance matrix they are based on becomes gigantic, making them inapplicable in their original form. This has motivated research into both simple diagonal approxima- tions and more sophisticated factored approximations such as KFAC (Heskes, 2000; Martens \& Grosse, 2015; Grosse \& Martens, 2016). In the present work we draw inspiration from both to propose a novel approximation that is provably better than KFAC and amendable to cheap partial updates. It consists in tracking a diagonal variance, not in parameter coordinates, but in a Kronecker-factored eigenbasis, in which the diagonal approximation is likely to be more effective. Experiments show improvements over KFAC in optimization speed for several deep network architectures.},
+  keywords = {notion}
 }
 
 @inproceedings{ghorbani_data_2019,
@@ -132,7 +133,7 @@
   author = {Ghorbani, Amirata and Zou, James},
   date = {2019-05-24},
   eprint = {1904.02868},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {2242--2251},
   publisher = {PMLR},
   issn = {2640-3498},
@@ -175,7 +176,8 @@
   urldate = {2024-02-26},
   abstract = {The essential difficulty of gradient-based bilevel optimization using implicit differentiation is to estimate the inverse Hessian vector product with respect to neural network parameters. This paper proposes to tackle this problem by the Nyström method and the Woodbury matrix identity, exploiting the low-rankness of the Hessian. Compared to existing methods using iterative approximation, such as conjugate gradient and the Neumann series approximation, the proposed method avoids numerical instability and can be efficiently computed in matrix operations without iterations. As a result, the proposed method works stably in various tasks and is faster than iterative approximations. Throughout experiments including large-scale hyperparameter optimization and meta learning, we demonstrate that the Nyström method consistently achieves comparable or even superior performance to other approaches. The source code is available from https://github.com/moskomule/hypergrad.},
   eventtitle = {International {{Conference}} on {{Artificial Intelligence}} and {{Statistics}}},
-  langid = {english}
+  langid = {english},
+  keywords = {notion}
 }
 
 @article{ji_breakdownfree_2017,
@@ -249,7 +251,7 @@
   author = {Koh, Pang Wei and Liang, Percy},
   date = {2017-07-17},
   eprint = {1703.04730},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {1885--1894},
   publisher = {PMLR},
   url = {https://proceedings.mlr.press/v70/koh17a.html},
@@ -281,7 +283,7 @@
   date = {2022-01-18},
   volume = {151},
   eprint = {2110.14049},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   publisher = {PMLR},
   location = {Valencia, Spain},
   url = {https://arxiv.org/abs/2110.14049},
@@ -290,6 +292,18 @@
   eventtitle = {{{AISTATS}} 2022},
   langid = {english},
   keywords = {notion}
+}
+
+@inproceedings{kwon_datainf_2023,
+  title = {{{DataInf}}: {{Efficiently Estimating Data Influence}} in {{LoRA-tuned LLMs}} and {{Diffusion Models}}},
+  shorttitle = {{{DataInf}}},
+  author = {Kwon, Yongchan and Wu, Eric and Wu, Kevin and Zou, James},
+  date = {2023-10-13},
+  doi = {10.48550/arXiv.2310.00902},
+  url = {https://openreview.net/forum?id=9m02ib92Wz},
+  urldate = {2023-10-27},
+  abstract = {Quantifying the impact of training data points is crucial for understanding the outputs of machine learning models and for improving the transparency of the AI pipeline. The influence function is a principled and popular data attribution method, but its computational cost often makes it challenging to use. This issue becomes more pronounced in the setting of large language models and text-to-image models. In this work, we propose DataInf, an efficient influence approximation method that is practical for large-scale generative AI models. Leveraging an easy-to-compute closed-form expression, DataInf outperforms existing influence computation algorithms in terms of computational and memory efficiency. Our theoretical analysis shows that DataInf is particularly well-suited for parameter-efficient fine-tuning techniques such as LoRA. Through systematic empirical evaluations, we show that DataInf accurately approximates influence scores and is orders of magnitude faster than existing methods. In applications to RoBERTa-large, Llama-2-13B-chat, and stable-diffusion-v1.5 models, DataInf effectively identifies the most influential fine-tuning examples better than other approximate influence scores. Moreover, it can help to identify which data points are mislabeled.},
+  eventtitle = {The {{Twelfth International Conference}} on {{Learning Representations}}}
 }
 
 @inproceedings{kwon_dataoob_2023,
@@ -303,7 +317,7 @@
   issn = {2640-3498},
   url = {https://proceedings.mlr.press/v202/kwon23e.html},
   urldate = {2023-09-06},
-  abstract = {Data valuation is a powerful framework for providing statistical insights into which data are beneficial or detrimental to model training. Many Shapley-based data valuation methods have shown promising results in various downstream tasks, however, they are well known to be computationally challenging as it requires training a large number of models. As a result, it has been recognized as infeasible to apply to large datasets. To address this issue, we propose Data-OOB, a new data valuation method for a bagging model that utilizes the out-of-bag estimate. The proposed method is computationally efficient and can scale to millions of data by reusing trained weak learners. Specifically, Data-OOB takes less than 2.25 hours on a single CPU processor when there are \$10\^{}6\$ samples to evaluate and the input dimension is 100. Furthermore, Data-OOB has solid theoretical interpretations in that it identifies the same important data point as the infinitesimal jackknife influence function when two different points are compared. We conduct comprehensive experiments using 12 classification datasets, each with thousands of sample sizes. We demonstrate that the proposed method significantly outperforms existing state-of-the-art data valuation methods in identifying mislabeled data and finding a set of helpful (or harmful) data points, highlighting the potential for applying data values in real-world applications.},
+  abstract = {Data valuation is a powerful framework for providing statistical insights into which data are beneficial or detrimental to model training. Many Shapley-based data valuation methods have shown promising results in various downstream tasks, however, they are well known to be computationally challenging as it requires training a large number of models. As a result, it has been recognized as infeasible to apply to large datasets. To address this issue, we propose Data-OOB, a new data valuation method for a bagging model that utilizes the out-of-bag estimate. The proposed method is computationally efficient and can scale to millions of data by reusing trained weak learners. Specifically, Data-OOB takes less than 2.25 hours on a single CPU processor when there are \$10\textasciicircum 6\$ samples to evaluate and the input dimension is 100. Furthermore, Data-OOB has solid theoretical interpretations in that it identifies the same important data point as the infinitesimal jackknife influence function when two different points are compared. We conduct comprehensive experiments using 12 classification datasets, each with thousands of sample sizes. We demonstrate that the proposed method significantly outperforms existing state-of-the-art data valuation methods in identifying mislabeled data and finding a set of helpful (or harmful) data points, highlighting the potential for applying data values in real-world applications.},
   eventtitle = {International {{Conference}} on {{Machine Learning}}},
   langid = {english},
   keywords = {notion}
@@ -315,7 +329,7 @@
   author = {Kwon, Yongchan and Rivas, Manuel A. and Zou, James},
   date = {2021-03-18},
   eprint = {2007.01357},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {793--801},
   publisher = {PMLR},
   issn = {2640-3498},
@@ -347,7 +361,7 @@
   date = {2014-02-12},
   journaltitle = {ArXiv13064265 Cs},
   eprint = {1306.4265},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   eprintclass = {cs},
   url = {https://arxiv.org/abs/1306.4265},
   urldate = {2020-11-16},
@@ -390,7 +404,7 @@
   author = {Okhrati, Ramin and Lipani, Aldo},
   date = {2021-01},
   eprint = {2010.12082},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {7992--7999},
   publisher = {IEEE},
   issn = {1051-4651},
@@ -411,7 +425,7 @@
   volume = {36},
   number = {8},
   eprint = {2112.03052},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   pages = {8179--8186},
   issn = {2374-3468},
   doi = {10.1609/aaai.v36i8.20791},
@@ -435,6 +449,19 @@
   eventtitle = {Advances in {{Neural Information Processing Systems}}  ({{NeurIPS}} 2022)},
   langid = {english},
   keywords = {notion}
+}
+
+@article{semmler_re_2024,
+  title = {[{{Re}}] {{Classwise-Shapley}} Values for Data Valuation},
+  author = {Semmler, Markus and de Benito Delgado, Miguel},
+  date = {2024-07},
+  journaltitle = {Transactions on Machine Learning Research},
+  shortjournal = {Trans. Mach. Learn. Res.},
+  issn = {2835-8856},
+  url = {https://openreview.net/forum?id=srFEYJkqD7&noteId=zVi6DINuXT},
+  urldate = {2024-07-10},
+  abstract = {We evaluate CS-Shapley, a data valuation method introduced in Schoch et al. (2022) for classification problems. We repeat the experiments in the paper, including two additional methods, the Least Core (Yan \& Procaccia, 2021) and Data Banzhaf (Wang \& Jia, 2023), a comparison not found in the literature. We include more conservative error estimates and additional metrics, like rank stability, and a variance-corrected version of Weighted Accuracy Drop, originally introduced in Schoch et al. (2022). We conclude that while CS-Shapley helps in the scenarios it was originally tested in, in particular for the detection of corrupted labels, it is outperformed by the conceptually simpler Data Banzhaf in the task of detecting highly influential points.},
+  langid = {english}
 }
 
 @book{trefethen_numerical_1997,
@@ -471,7 +498,7 @@
   author = {Wang, Tianhao and Yang, Yu and Jia, Ruoxi},
   date = {2022-04-07},
   eprint = {2107.06336v2},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   publisher = {arXiv},
   doi = {10.48550/arXiv.2107.06336},
   url = {https://arxiv.org/abs/2107.06336v2},
@@ -487,13 +514,13 @@
   author = {Watson, Lauren and Kujawa, Zeno and Andreeva, Rayna and Yang, Hao-Tsung and Elahi, Tariq and Sarkar, Rik},
   date = {2023-11-09},
   eprint = {2311.05346},
-  eprinttype = {arxiv},
+  eprinttype = {arXiv},
   eprintclass = {cs},
   doi = {10.48550/arXiv.2311.05346},
   url = {https://arxiv.org/abs/2311.05346},
   urldate = {2023-12-07},
   abstract = {Data valuation has found various applications in machine learning, such as data filtering, efficient learning and incentives for data sharing. The most popular current approach to data valuation is the Shapley value. While popular for its various applications, Shapley value is computationally expensive even to approximate, as it requires repeated iterations of training models on different subsets of data. In this paper we show that the Shapley value of data points can be approximated more efficiently by leveraging the structural properties of machine learning problems. We derive convergence guarantees on the accuracy of the approximate Shapley value for different learning settings including Stochastic Gradient Descent with convex and non-convex loss functions. Our analysis suggests that in fact models trained on small subsets are more important in the context of data valuation. Based on this idea, we describe \$\textbackslash delta\$-Shapley -- a strategy of only using small subsets for the approximation. Experiments show that this approach preserves approximate value and rank of data, while achieving speedup of up to 9.9x. In pre-trained networks the approach is found to bring more efficiency in terms of accurate evaluation using small subsets.},
-  pubstate = {preprint}
+  pubstate = {prepublished}
 }
 
 @inproceedings{wu_davinz_2022,
@@ -512,9 +539,26 @@
   keywords = {notion}
 }
 
+@article{wu_variance_2023,
+  title = {Variance Reduced {{Shapley}} Value Estimation for Trustworthy Data Valuation},
+  author = {Wu, Mengmeng and Jia, Ruoxi and Lin, Changle and Huang, Wei and Chang, Xiangyu},
+  date = {2023-11-01},
+  journaltitle = {Computers \& Operations Research},
+  shortjournal = {Computers \& Operations Research},
+  volume = {159},
+  eprint = {2210.16835},
+  eprinttype = {arXiv},
+  pages = {106305},
+  issn = {0305-0548},
+  doi = {10.1016/j.cor.2023.106305},
+  url = {https://www.sciencedirect.com/science/article/pii/S0305054823001697},
+  urldate = {2023-09-17},
+  abstract = {Data valuation, especially quantifying data value in algorithmic prediction and decision-making, is a fundamental problem in data trading scenarios. The most widely used method is to define the data Shapley and approximate it by means of the permutation sampling algorithm. To make up for the large estimation variance of the permutation sampling that hinders the development of the data marketplace, we propose a more robust data valuation method using stratified sampling, named variance reduced data Shapley (VRDS for short). We theoretically show how to stratify, how many samples are taken at each stratum, and the sample complexity analysis of VRDS. Finally, the effectiveness of VRDS is illustrated in different types of datasets and data removal applications.}
+}
+
 @inproceedings{yan_if_2021,
   title = {If {{You Like Shapley Then You}}’ll {{Love}} the {{Core}}},
-  booktitle = {Proceedings of the 35th {{AAAI Conference}} on {{Artificial Intelligence}}, 2021},
+  booktitle = {Proceedings of the 35th {{AAAI Conference}} on {{Artificial Intelligence}}},
   author = {Yan, Tom and Procaccia, Ariel D.},
   date = {2021-05-18},
   volume = {6},
@@ -528,4 +572,16 @@
   eventtitle = {{{AAAI Conference}} on {{Artificial Intelligence}}},
   langid = {english},
   keywords = {notion}
+}
+
+@inproceedings{zaheer_deep_2017,
+  title = {Deep {{Sets}}},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Zaheer, Manzil and Kottur, Satwik and Ravanbakhsh, Siamak and Poczos, Barnabas and Salakhutdinov, Russ R and Smola, Alexander J},
+  date = {2017},
+  volume = {30},
+  publisher = {Curran Associates, Inc.},
+  url = {https://papers.nips.cc/paper_files/paper/2017/hash/f22e4747da1aa27e363d86d40ff442fe-Abstract.html},
+  urldate = {2025-03-03},
+  abstract = {We study the problem of designing models for machine learning tasks defined on sets. In contrast to the traditional approach of operating on fixed dimensional vectors, we consider objective functions defined on sets and are invariant to permutations. Such problems are widespread, ranging from the estimation of population statistics, to anomaly detection in piezometer data of embankment dams, to cosmology. Our main theorem characterizes the permutation invariant objective functions and provides a family of functions to which any permutation invariant objective function must belong. This family of functions has a special structure which enables us to design a deep network architecture that can operate on sets and which can be deployed on a variety of scenarios including both unsupervised and supervised learning tasks. We demonstrate the applicability of our method on population statistic estimation, point cloud classification, set expansion, and outlier detection.}
 }

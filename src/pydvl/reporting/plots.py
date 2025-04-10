@@ -1,30 +1,40 @@
+from __future__ import annotations
+
 from functools import partial
-from typing import Any, List, Literal, Optional, OrderedDict, Sequence
+from typing import Any, List, Literal, OrderedDict, Sequence, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import scipy as sp
 from deprecate import deprecated
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
 from scipy.stats import norm, t
 
-from pydvl.value import ValuationResult
+from pydvl.valuation.result import ValuationResult
+
+__all__ = [
+    "plot_ci_array",
+    "plot_ci_values",
+    "plot_result_errors",
+    "plot_influence_distribution",
+    "plot_influence_distribution_by_label",
+    "spearman_correlation",
+]
 
 
 @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
 def shaded_mean_std(
     data: np.ndarray,
-    abscissa: Optional[Sequence[Any]] = None,
+    abscissa: Sequence[Any] | None = None,
     num_std: float = 1.0,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    ax: Optional[Axes] = None,
-    **kwargs,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    ax: Axes | None = None,
+    **kwargs: Any,
 ) -> Axes:
     r"""The usual mean \(\pm\) std deviation plot to aggregate runs of
     experiments.
@@ -62,9 +72,11 @@ def shaded_mean_std(
     ax.fill_between(abscissa, mean - std, mean + std, alpha=0.3, color=shade_color)
     ax.plot(abscissa, mean, color=mean_color, **kwargs)
 
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_title(title or "")
+    ax.set_xlabel(xlabel or "")
+    ax.set_ylabel(ylabel or "")
+    ax.set_xticks(abscissa)
+    ax.set_xticklabels(abscissa, rotation=60)
 
     return ax
 
@@ -73,11 +85,11 @@ def plot_ci_array(
     data: NDArray,
     level: float,
     type: Literal["normal", "t", "auto"] = "normal",
-    abscissa: Optional[Sequence[str]] = None,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    ax: Optional[plt.Axes] = None,
-    **kwargs,
+    abscissa: Sequence[str] | None = None,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    ax: plt.Axes | None = None,
+    **kwargs: Any,
 ) -> plt.Axes:
     """Plot values and a confidence interval from a 2D array.
 
@@ -104,21 +116,24 @@ def plot_ci_array(
     means = np.mean(data, axis=0)
     variances = np.var(data, axis=0, ddof=1)
 
-    dummy = ValuationResult[np.int_, np.object_](
+    dummy = ValuationResult(
         algorithm="dummy",
         values=means,
         variances=variances,
         counts=np.ones_like(means, dtype=np.int_) * m,
         indices=np.arange(n),
-        data_names=np.array(abscissa, dtype=str)
-        if abscissa is not None
-        else np.arange(n, dtype=str),
-    )
+        data_names=(
+            np.array(abscissa, dtype=str)
+            if abscissa is not None
+            else np.arange(n, dtype=str)
+        ),
+    ).sort(key="index", inplace=True)
 
     return plot_ci_values(
         dummy,
         level=level,
         type=type,
+        abscissa=abscissa,
         mean_color=mean_color,
         shade_color=shade_color,
         ax=ax,
@@ -130,20 +145,19 @@ def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
-    abscissa: Optional[Sequence[str]] = None,
-    mean_color: Optional[str] = "dodgerblue",
-    shade_color: Optional[str] = "lightblue",
-    ax: Optional[plt.Axes] = None,
-    **kwargs,
-):
+    abscissa: Sequence[Any] | None = None,
+    mean_color: str | None = "dodgerblue",
+    shade_color: str | None = "lightblue",
+    ax: plt.Axes | None = None,
+    **kwargs: Any,
+) -> plt.Axes:
     """Plot values and a confidence interval.
-
-    Uses `values.data_names` for the x-axis.
 
     Supported intervals are based on the normal and the t distributions.
 
     Args:
-        values: The valuation result.
+        values: The valuation result. The object must be sorted by calling
+            `ValuationResult.sort()`.
         level: The confidence level.
         type: The type of confidence interval to use. If "auto", uses "norm" if
             the minimum number of updates for all indices is greater than 30,
@@ -159,13 +173,16 @@ def plot_ci_values(
     Returns:
         The matplotlib axes.
     """
+    assert values._sort_order is not None, "Values must be sorted first."
 
     ppfs = {
         "normal": norm.ppf,
         "t": partial(t.ppf, df=values.counts - 1),
-        "auto": norm.ppf
-        if np.min(values.counts) > 30
-        else partial(t.ppf, df=values.counts - 1),
+        "auto": (
+            norm.ppf
+            if np.min(values.counts) > 30
+            else partial(t.ppf, df=values.counts - 1)
+        ),
     }
 
     try:
@@ -176,7 +193,8 @@ def plot_ci_values(
         ) from None
 
     if abscissa is None:
-        abscissa = [str(i) for i, _ in enumerate(values)]
+        abscissa = range(len(values))
+
     bound = score * values.stderr
 
     if ax is None:
@@ -190,6 +208,7 @@ def plot_ci_values(
         color=shade_color,
     )
     ax.plot(abscissa, values.values, color=mean_color, **kwargs)
+    ax.set_xlim(left=min(abscissa), right=max(abscissa))
     return ax
 
 
@@ -208,9 +227,7 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
     for i, a in enumerate(vv):
         for j, b in enumerate(vv):
-            from scipy.stats._stats_py import SpearmanrResult
-
-            spearman: SpearmanrResult = sp.stats.spearmanr(
+            spearman = sp.stats.spearmanr(
                 list(a.keys())[:num_values], list(b.keys())[:num_values]
             )
             r[i][j] = (
@@ -232,23 +249,22 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     return fig
 
 
-def plot_shapley(
-    df: pd.DataFrame,
+def plot_result_errors(
+    result: ValuationResult,
     *,
     level: float = 0.05,
-    ax: Optional[plt.Axes] = None,
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    prefix: Optional[str] = "data_value",
+    ax: plt.Axes | None = None,
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    legend_label: str | None = None,
 ) -> plt.Axes:
-    r"""Plots the shapley values, as returned from
-    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values],
+    r"""Plots a [ValuationResult][pydvl.pydvl.valuation.result.ValuationResult],
     with error bars corresponding to an $\alpha$-level Normal confidence
     interval.
 
     Args:
-        df: dataframe with the shapley values
+        result: object to plot
         level: confidence level for the error bars
         ax: axes to plot on or None if a new subplots should be created
         title: string, title of the plot
@@ -261,18 +277,26 @@ def plot_shapley(
     if ax is None:
         _, ax = plt.subplots()
 
-    yerr = norm.ppf(1 - level / 2) * df[f"{prefix}_stderr"]
+    stderr = np.sqrt(result.variances / np.maximum(1.0, result.counts))
+    yerr = norm.ppf(1 - level / 2) * stderr
 
-    ax.errorbar(x=df.index, y=df[prefix], yerr=yerr, fmt="o", capsize=6)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
+    ax.errorbar(
+        x=result.names,
+        y=result.values,
+        yerr=yerr,
+        fmt="o",
+        capsize=6,
+        label=legend_label,
+    )
+    ax.set_xlabel(xlabel or "")
+    ax.set_ylabel(ylabel or "")
+    ax.set_title(title or "")
     plt.xticks(rotation=60)
     return ax
 
 
 def plot_influence_distribution(
-    influences: NDArray[np.float_], index: int, title_extra: str = ""
+    influences: NDArray[np.float64], index: int, title_extra: str = ""
 ) -> plt.Axes:
     """Plots the histogram of the influence that all samples in the training set
     have over a single sample index.
@@ -288,11 +312,11 @@ def plot_influence_distribution(
     ax.set_xlabel("Influence values")
     ax.set_ylabel("Number of samples")
     ax.set_title(f"Distribution of influences {title_extra}")
-    return ax
+    return cast(plt.Axes, ax)
 
 
 def plot_influence_distribution_by_label(
-    influences: NDArray[np.float_], labels: NDArray[np.float_], title_extra: str = ""
+    influences: NDArray[np.float64], labels: NDArray[np.float64], title_extra: str = ""
 ):
     """Plots the histogram of the influence that all samples in the training set
     have over a single sample index, separated by labels.

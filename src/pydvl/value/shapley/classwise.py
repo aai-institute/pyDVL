@@ -17,7 +17,7 @@ D_{-y_i}$.
 
 !!! tip "Analysis of Class-wise Shapley"
     For a detailed analysis of the method, with comparison to other valuation
-    techniques, please refer to the [main documentation][class-wise-shapley].
+    techniques, please refer to the [main documentation][classwise-shapley-intro].
 
 In practice, the quantity above is estimated using Monte Carlo sampling of
 the powerset and the set of index permutations. This results in the estimator
@@ -41,14 +41,14 @@ $y_i$ and $-y_i$, respectively.
     $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
 
     in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
-    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
-    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
-    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
+    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy
+    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting
+    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and
     $\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
     the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
     The details of the derivation are left to the eager reader.
 
-# References
+## References
 
 [^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
     Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
@@ -57,6 +57,7 @@ $y_i$ and $-y_i$, respectively.
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
 
 """
+
 import logging
 import numbers
 from concurrent.futures import FIRST_COMPLETED, Future, wait
@@ -166,7 +167,7 @@ class ClasswiseScorer(Scorer):
     def __call__(
         self: "ClasswiseScorer",
         model: SupervisedModel,
-        x_test: NDArray[np.float_],
+        x_test: NDArray[np.float64],
         y_test: NDArray[np.int_],
     ) -> float:
         (
@@ -180,7 +181,7 @@ class ClasswiseScorer(Scorer):
     def estimate_in_class_and_out_of_class_score(
         self,
         model: SupervisedModel,
-        x_test: NDArray[np.float_],
+        x_test: NDArray[np.float64],
         y_test: NDArray[np.int_],
         rescale_scores: bool = True,
     ) -> Tuple[float, float]:
@@ -268,7 +269,7 @@ def compute_classwise_shapley_values(
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
     the position where $i$ appears and $S$ is a subset of the index set of all
-    other labels (see [the main documentation][class-wise-shapley] for
+    other labels (see [the main documentation][classwise-shapley-intro] for
     details).
 
     Args:

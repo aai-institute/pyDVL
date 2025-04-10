@@ -1,7 +1,7 @@
 import itertools
 import logging
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Optional, Sequence, Tuple, cast
 
 import cvxpy as cp
 import numpy as np
@@ -15,7 +15,7 @@ from pydvl.parallel import (
     _maybe_init_parallel_backend,
 )
 from pydvl.utils import Status, Utility
-from pydvl.value import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = [
     "_solve_least_core_linear_program",
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class LeastCoreProblem(NamedTuple):
-    utility_values: NDArray[np.float_]
-    A_lb: NDArray[np.float_]
+    utility_values: NDArray[np.float64]
+    A_lb: NDArray[np.float64]
 
 
 def lc_solve_problem(
@@ -62,6 +62,8 @@ def lc_solve_problem(
 
     if solver_options is None:
         solver_options = {}
+    else:
+        solver_options = solver_options.copy()
 
     if "solver" not in solver_options:
         solver_options["solver"] = cp.SCS
@@ -113,7 +115,7 @@ def lc_solve_problem(
         solver_options=solver_options,
     )
 
-    values: Optional[NDArray[np.float_]]
+    values: Optional[NDArray[np.float64]]
 
     if subsidy is None:
         logger.debug("No values were found")
@@ -197,21 +199,21 @@ def lc_solve_problems(
 
     parallel_backend = _maybe_init_parallel_backend(parallel_backend, config)
 
-    map_reduce_job: MapReduceJob[
-        "LeastCoreProblem", "List[ValuationResult]"
-    ] = MapReduceJob(
-        inputs=problems,
-        map_func=_map_func,
-        map_kwargs=dict(
-            u=u,
-            algorithm=algorithm,
-            non_negative_subsidy=non_negative_subsidy,
-            solver_options=solver_options,
-            **options,
-        ),
-        reduce_func=lambda x: list(itertools.chain(*x)),
-        parallel_backend=parallel_backend,
-        n_jobs=n_jobs,
+    map_reduce_job: MapReduceJob["LeastCoreProblem", "List[ValuationResult]"] = (
+        MapReduceJob(
+            inputs=problems,
+            map_func=_map_func,
+            map_kwargs=dict(
+                u=u,
+                algorithm=algorithm,
+                non_negative_subsidy=non_negative_subsidy,
+                solver_options=solver_options,
+                **options,
+            ),
+            reduce_func=lambda x: list(itertools.chain(*x)),
+            parallel_backend=parallel_backend,
+            n_jobs=n_jobs,
+        )
     )
     solutions = map_reduce_job()
 
@@ -219,13 +221,13 @@ def lc_solve_problems(
 
 
 def _solve_least_core_linear_program(
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
     non_negative_subsidy: bool = False,
-) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+) -> Tuple[Optional[NDArray[np.float64]], Optional[float]]:
     r"""Solves the Least Core's linear program using cvxopt.
 
     $$
@@ -284,7 +286,7 @@ def _solve_least_core_linear_program(
                 "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
-        subsidy = e.value.item()
+        subsidy = cast(NDArray[np.float64], e.value).item()
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:
@@ -297,12 +299,12 @@ def _solve_least_core_linear_program(
 
 def _solve_egalitarian_least_core_quadratic_program(
     subsidy: float,
-    A_eq: NDArray[np.float_],
-    b_eq: NDArray[np.float_],
-    A_lb: NDArray[np.float_],
-    b_lb: NDArray[np.float_],
+    A_eq: NDArray[np.float64],
+    b_eq: NDArray[np.float64],
+    A_lb: NDArray[np.float64],
+    b_lb: NDArray[np.float64],
     solver_options: dict,
-) -> Optional[NDArray[np.float_]]:
+) -> Optional[NDArray[np.float64]]:
     r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$

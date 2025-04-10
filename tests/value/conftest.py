@@ -8,7 +8,6 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.utils import Bunch
 
 from pydvl.parallel import JoblibParallelBackend
-from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status

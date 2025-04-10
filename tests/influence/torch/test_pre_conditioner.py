@@ -1,9 +1,10 @@
 import pytest
 import torch
 
-from pydvl.influence.torch.pre_conditioner import (
-    JacobiPreConditioner,
-    NystroemPreConditioner,
+from pydvl.influence.torch.operator import MatrixOperator
+from pydvl.influence.torch.preconditioner import (
+    JacobiPreconditioner,
+    NystroemPreconditioner,
 )
 
 
@@ -35,9 +36,10 @@ def low_rank_mat():
     return approx_low_rank_matrix(size, rank)
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize("num_samples_estimator", [1, 3, 5])
 def test_jacobi_preconditioner_condition_number(high_cond_mat, num_samples_estimator):
-    preconditioner = JacobiPreConditioner(num_samples_estimator=num_samples_estimator)
+    preconditioner = JacobiPreconditioner(num_samples_estimator=num_samples_estimator)
     size = high_cond_mat.shape[0]
     regularization = 0.1
 
@@ -45,9 +47,7 @@ def test_jacobi_preconditioner_condition_number(high_cond_mat, num_samples_estim
     A = high_cond_mat
     original_cond_number = torch.linalg.cond(A + regularization * torch.eye(size))
 
-    preconditioner.fit(
-        lambda x: A @ x, size, high_cond_mat.dtype, high_cond_mat.device, regularization
-    )
+    preconditioner.fit(MatrixOperator(A), regularization)
     assert preconditioner.is_fitted
 
     preconditioned_A = preconditioner.solve(A + regularization * torch.eye(size))
@@ -55,12 +55,13 @@ def test_jacobi_preconditioner_condition_number(high_cond_mat, num_samples_estim
 
     # Assert that the condition number has decreased
     assert preconditioned_cond_number < original_cond_number * 10 ** (
-        -0.5 * (num_samples_estimator)
+        -0.5 * num_samples_estimator
     )
 
 
+@pytest.mark.torch
 def test_nystroem_preconditioner_condition_number(low_rank_mat):
-    preconditioner = NystroemPreConditioner(60)
+    preconditioner = NystroemPreconditioner(60)
     size = low_rank_mat.shape[0]
     regularization = 1e-2
 
@@ -70,10 +71,7 @@ def test_nystroem_preconditioner_condition_number(low_rank_mat):
     )
 
     preconditioner.fit(
-        lambda x: low_rank_mat @ x,
-        low_rank_mat.shape[0],
-        low_rank_mat.dtype,
-        low_rank_mat.device,
+        MatrixOperator(low_rank_mat),
         regularization,
     )
     assert preconditioner.is_fitted

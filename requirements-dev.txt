@@ -1,14 +1,7 @@
 tox<4.0.0
 tox-wheel
-pre-commit==3.1.1
-black[jupyter] == 24.3.0
-isort == 5.12.0
-pylint==3.1.0
-pylint-json2html==0.5.0
-anybadge
-mypy==1.5.1
-types-tqdm
-pandas-stubs
+-r requirements-linting.txt
+-r requirements-type-checking.txt
 bump2version==1.0.1
 jupyter
 nbconvert>=7.2.9
@@ -22,6 +15,7 @@ pytest-xdist>=3.3.1
 pytest-cases~=3.8
 pytest-split
 pytest-sugar
+pytest-rerunfailures
 nbmake
 wheel
-twine==4.0.2
+twine==5.1.1
