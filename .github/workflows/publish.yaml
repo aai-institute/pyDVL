@@ -23,8 +23,13 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-22.04
+    environment:
+      name: publish
+      url: https://pypi.org/pydvl
     concurrency:
       group: publish
+    permissions:
+      id-token: write
     steps:
       - name: Checking out last commit in release
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -54,6 +59,11 @@ jobs:
           # Make the version available as env variable for next steps
           echo CURRENT_VERSION=$CURRENT_VERSION >> $GITHUB_ENV
         shell: bash
+      - name: Build dist
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
       - name: Deploy Docs
         uses: ./.github/actions/deploy-docs
         with:
@@ -63,10 +73,3 @@ jobs:
           email: ${{ env.GITHUB_BOT_EMAIL }}
           username: ${{ env.GITHUB_BOT_USERNAME }}
           set-default: 'true'
-      - name: Build and publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload --verbose --non-interactive dist/*
