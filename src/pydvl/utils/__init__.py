@@ -7,3 +7,4 @@ from .score import *
 from .status import *
 from .types import *
 from .utility import *
+from .array_ops import *
