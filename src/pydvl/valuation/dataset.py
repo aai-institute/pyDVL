@@ -12,7 +12,8 @@ Objects of both types can be used to construct [scorers][pydvl.valuation.scorers
 the valuation set) and to `fit` (most) valuation methods.
 
 The underlying data arrays can always be accessed (read-only) via
-[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x,
+y)`.
 
 !!! tip "Logical vs data indices"
     [Dataset][pydvl.valuation.dataset.Dataset] and
@@ -59,12 +60,18 @@ or to look at the importance of certain feature sets for the model.
     [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]. In these
     cases, the logical indices are used to compute the Shapley values, while the data
     indices are used internally by the method.
+
+!!! tip "New in version 0.11.0"
+    Added support for PyTorch tensors. The Dataset and GroupedDataset classes now
+    work with both
+    NumPy arrays and PyTorch tensors, preserving the input type throughout operations.
 """
 
 from __future__ import annotations
 
 import atexit
 import logging
+import math
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -79,7 +86,7 @@ from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
-from pydvl.utils import try_torch_import
+from pydvl.utils import is_numpy, is_tensor
 from pydvl.utils.types import ArrayT, atleast1d, check_X_y
 
 logger = logging.getLogger(__name__)
@@ -93,18 +100,26 @@ class RawData(Generic[ArrayT]):
     y: ArrayT
 
     def __post_init__(self):
-        if not (isinstance(self.x, np.ndarray) and isinstance(self.y, np.ndarray)):
-            if torch := try_torch_import():
-                if not (
-                    isinstance(self.x, torch.Tensor)
-                    and isinstance(self.y, torch.Tensor)
-                ):
-                    raise TypeError("x and y must be valid arrays")
+        # Check that x and y are valid arrays (either numpy arrays or torch tensors)
+        if not (
+            (is_numpy(self.x) and is_numpy(self.y))
+            or (is_tensor(self.x) and is_tensor(self.y))
+        ):
+            raise TypeError(
+                "x and y must both be valid arrays of the same type (numpy arrays "
+                "or torch tensors)"
+            )
+
+        # Check that x and y have matching types
+        if is_numpy(self.x) != is_numpy(self.y):
+            raise TypeError("x and y must be arrays of the same type")
+
+        # Check that x and y have matching first dimensions
         try:
             if self.x.shape[0] != self.y.shape[0]:
                 raise ValueError("x and y must have the same length")
         except (TypeError, AttributeError) as e:
-            raise TypeError("x and y must be valid arrays") from e
+            raise TypeError("x and y must be valid arrays with shape attribute") from e
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
@@ -113,7 +128,7 @@ class RawData(Generic[ArrayT]):
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
         return RawData(atleast1d(self.x[item]), atleast1d(self.y[item]))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.x)
 
 
@@ -132,8 +147,8 @@ class Dataset(Generic[ArrayT]):
     classes can behave differently.
 
     Args:
-        x: training data
-        y: labels for training data
+        x: training data (NumPy array or PyTorch tensor)
+        y: labels for training data (same type as x)
         feature_names: names of the features of x data
         target_names: names of the features of y data
         data_names: names assigned to data points.
@@ -143,11 +158,14 @@ class Dataset(Generic[ArrayT]):
         description: A textual description of the dataset.
         multi_output: set to `False` if labels are scalars, or to
             `True` if they are vectors of dimension > 1.
+        mmap: Whether to use memory-mapped files (for NumPy arrays only)
 
     !!! tip "Changed in version 0.10.0"
         No longer holds split data, but only x, y.
     !!! tip "Changed in version 0.10.0"
         Slicing now return a new `Dataset` object, not raw data.
+    !!! tip "New in version 0.11.0"
+        Added support for PyTorch tensors.
     """
 
     _indices: NDArray[np.int_]
@@ -169,8 +187,9 @@ class Dataset(Generic[ArrayT]):
         mmap: bool = False,
     ):
         if mmap:
-            if not isinstance(x, np.ndarray) or not isinstance(y, np.ndarray):
+            if not is_numpy(x) or not is_numpy(y):
                 raise TypeError("x and y must be numpy arrays in order to use mmap")
+
             _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
             tmpdir = mkdtemp()
             logger.debug(f"Using temporary directory {tmpdir} for mmap files")
@@ -205,7 +224,7 @@ class Dataset(Generic[ArrayT]):
 
         def make_names(s: str, a: ArrayT) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
+            return [f"{s}{i:0{1 + int(math.log10(n))}d}" for i in range(1, n + 1)]
 
         self.feature_names = (
             list(feature_names) if feature_names is not None else make_names("x", x)
@@ -222,12 +241,15 @@ class Dataset(Generic[ArrayT]):
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
+
+        # Always use numpy arrays for indices
         self._indices = np.arange(len(self._x), dtype=np.int_)
-        self._data_names = (
-            np.array(data_names, dtype=np.str_)
-            if data_names is not None
-            else self._indices.astype(np.str_)
-        )
+
+        # Generate data names if not provided
+        if data_names is not None:
+            self._data_names = np.array(data_names, dtype=np.str_)
+        else:
+            self._data_names = self._indices.astype(np.str_)
 
     def __getstate__(self):
         """Prepare the object state for pickling."""
@@ -247,7 +269,7 @@ class Dataset(Generic[ArrayT]):
             self._x = np.memmap(
                 self._x, dtype=self._x_dtype, mode="readonly", shape=self._x_shape
             )
-        if isinstance(self._y, str):
+        if isinstance(self._y, (str, Path)):
             self._y = np.memmap(
                 self._y, dtype=self._y_dtype, mode="readonly", shape=self._y_shape
             )
@@ -318,7 +340,8 @@ class Dataset(Generic[ArrayT]):
         return self._indices[indices]
 
     def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
-        """Returns the indices in this `Dataset` for the given indices in the data array.
+        """Returns the indices in this `Dataset` for the given indices in the data
+        array.
 
         This is equivalent to using `Dataset.indices[data_indices]` but allows
         subclasses to define special behaviour, e.g. when indices in `Dataset` do not
@@ -387,7 +410,8 @@ class Dataset(Generic[ArrayT]):
     ) -> tuple[Dataset, Dataset]:
         """Constructs two [Dataset][pydvl.valuation.dataset.Dataset] objects from a
         [sklearn.utils.Bunch][], as returned by the `load_*`
-        functions in [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
+        functions in [scikit-learn toy datasets](
+        https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         ??? Example
             ```pycon
@@ -412,15 +436,19 @@ class Dataset(Generic[ArrayT]):
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
-                [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [scikit-learn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass e.g. `is_multi_output`.
+                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to
+                pass e.g. `is_multi_output`.
 
         Returns:
             Object with the sklearn dataset
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
+            constructor.
         !!! tip "Changed in version 0.10.0"
             Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
         """
@@ -460,8 +488,9 @@ class Dataset(Generic[ArrayT]):
         stratify_by_target: bool = False,
         **kwargs: Any,
     ) -> tuple[Dataset, Dataset]:
-        """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and y numpy arrays  as
-        returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+        """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and
+        y arrays as returned by the `make_*` functions in [sklearn generated datasets](
+        https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         ??? Example
             ```pycon
@@ -472,13 +501,14 @@ class Dataset(Generic[ArrayT]):
             ```
 
         Args:
-            X: numpy array of shape (n_samples, n_features)
-            y: numpy array of shape (n_samples,)
+            X: array of shape (n_samples, n_features) - either numpy array or PyTorch tensor
+            y: array of shape (n_samples,) - must be same type as X
             train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified fashion,
                 using the y variable as labels. Read more in [sklearn's user
-                guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                guide](https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass
                 e.g. `feature_names` or `target_names`.
@@ -489,18 +519,33 @@ class Dataset(Generic[ArrayT]):
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
+            constructor.
 
         !!! tip "Changed in version 0.10.0"
             Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
+            
+        !!! tip "New in version 0.11.0"
+            Added support for PyTorch tensors.
         """
-        x_train, x_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            train_size=train_size,
-            random_state=random_state,
-            stratify=y if stratify_by_target else None,
-        )
+        if stratify_by_target:
+            # Use our stratified_split_indices function for proper tensor handling
+            train_indices, test_indices = stratified_split_indices(
+                y, train_size=train_size, random_state=random_state
+            )
+            
+            # Split data using the indices
+            x_train, y_train = X[train_indices], y[train_indices]
+            x_test, y_test = X[test_indices], y[test_indices]
+        else:
+            # For non-stratified splits
+            x_train, x_test, y_train, y_test = train_test_split(
+                X,
+                y,
+                train_size=train_size,
+                random_state=random_state,
+            )
+            
         return cls(x_train, y_train, **kwargs), cls(x_test, y_test, **kwargs)
 
 
@@ -571,7 +616,8 @@ class GroupedDataset(Dataset):
             self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
         except ValueError as e:
             raise ValueError(
-                "data_groups must be a mapping from integer data indices to integer group ids"
+                "data_groups must be a mapping from integer data indices to "
+                "integer group ids"
             ) from e
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
@@ -701,10 +747,13 @@ class GroupedDataset(Dataset):
         data_groups: Sequence[int] | None = None,
         **kwargs: dict[str, Any],
     ) -> tuple[GroupedDataset, GroupedDataset]:
-        """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
+        """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+        object, and an
         ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from a
-        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
-        [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
+        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*`
+        functions in
+        [scikit-learn toy datasets](
+        https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
         it.
 
         ??? Example
@@ -730,7 +779,9 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
-                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [sklearn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             data_groups: an array holding the group index or name for each
                 data point. The length of this array must be equal to the number of
                 data points in the dataset.
@@ -741,7 +792,8 @@ class GroupedDataset(Dataset):
             Datasets with the selected sklearn data
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+            Returns a tuple of two [GroupedDataset][
+            pydvl.valuation.dataset.GroupedDataset]
                 objects.
         """
 
@@ -794,7 +846,8 @@ class GroupedDataset(Dataset):
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
         and an ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from X and y
         numpy arrays as returned by the `make_*` functions in
-        [scikit-learn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+        [scikit-learn generated datasets](
+        https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         ??? Example
             ```pycon
@@ -819,7 +872,9 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the y variable as labels. Read more in
-                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [sklearn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             data_groups: an array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
@@ -865,7 +920,8 @@ class GroupedDataset(Dataset):
         group_names: Sequence[str] | NDArray[np.str_] | None = None,
         **kwargs: Any,
     ) -> GroupedDataset:
-        """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
+        """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object
+        from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
 
         ??? Example
@@ -876,7 +932,8 @@ class GroupedDataset(Dataset):
             ...     X=np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]]),
             ...     y=np.asarray([0, 1, 0, 1]),
             ... )
-            >>> grouped_train = GroupedDataset.from_dataset(train, data_groups=[0, 0, 1, 1])
+            >>> grouped_train = GroupedDataset.from_dataset(train, data_groups=[0, 0,
+            1, 1])
             ```
 
         Args:
