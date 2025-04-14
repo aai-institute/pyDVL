@@ -63,6 +63,7 @@ or to look at the importance of certain feature sets for the model.
 
 from __future__ import annotations
 
+import atexit
 import logging
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -179,10 +180,24 @@ class Dataset(Generic[ArrayT]):
             fp_y = np.memmap(path_y, dtype=_y.dtype, mode="w+", shape=_y.shape)
             fp_x[:] = _x[:]
             fp_y[:] = _y[:]
+            self._x_dtype = _x.dtype
+            self._y_dtype = _y.dtype
+            self._x_shape = _x.shape
+            self._y_shape = _y.shape
             self._x = np.memmap(path_x, dtype=_x.dtype, mode="readonly", shape=_x.shape)  # type: ignore
             self._y = np.memmap(path_y, dtype=_y.dtype, mode="readonly", shape=_y.shape)  # type: ignore
             del fp_x, fp_y  # note this does not close the mmaps
             del _x, _y
+
+            def cleanup_mmap_files():
+                try:
+                    path_x.unlink(missing_ok=True)
+                    path_y.unlink(missing_ok=True)
+                    logger.debug("Temporary mmap files deleted successfully.")
+                except Exception as e:
+                    logger.error(f"Error while deleting mmap files: {e}")
+
+            atexit.register(cleanup_mmap_files)
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"
@@ -213,6 +228,29 @@ class Dataset(Generic[ArrayT]):
             if data_names is not None
             else self._indices.astype(np.str_)
         )
+
+    def __getstate__(self):
+        """Prepare the object state for pickling."""
+        state = self.__dict__.copy()
+        # Replace memmapped arrays with their file paths
+        if isinstance(self._x, np.memmap):
+            state["_x"] = Path(self._x.filename)
+        if isinstance(self._y, np.memmap):
+            state["_y"] = Path(self._y.filename)
+        return state
+
+    def __setstate__(self, state):
+        """Restore the object state from pickling."""
+        self.__dict__.update(state)
+
+        if isinstance(self._x, Path):
+            self._x = np.memmap(
+                self._x, dtype=self._x_dtype, mode="readonly", shape=self._x_shape
+            )
+        if isinstance(self._y, str):
+            self._y = np.memmap(
+                self._y, dtype=self._y_dtype, mode="readonly", shape=self._y_shape
+            )
 
     def __getitem__(
         self, idx: int | slice | Sequence[int] | NDArray[np.int_]

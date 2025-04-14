@@ -50,7 +50,6 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 from more_itertools import chunked, flatten
-from numpy.typing import NDArray
 
 from pydvl.utils.types import Array, try_torch_import
 from pydvl.valuation.dataset import Dataset
