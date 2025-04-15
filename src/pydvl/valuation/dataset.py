@@ -62,9 +62,8 @@ or to look at the importance of certain feature sets for the model.
     indices are used internally by the method.
 
 !!! tip "New in version 0.11.0"
-    Added support for PyTorch tensors. The Dataset and GroupedDataset classes now
-    work with both
-    NumPy arrays and PyTorch tensors, preserving the input type throughout operations.
+    The Dataset and GroupedDataset classes now work with both NumPy arrays and PyTorch
+    tensors, preserving the input type throughout operations.
 """
 
 from __future__ import annotations
@@ -76,7 +75,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any, Generic, Sequence, overload
+from typing import Any, Generic, Sequence, cast, overload
 
 import numpy as np
 from deprecate import deprecated
@@ -86,10 +85,15 @@ from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
-from pydvl.utils import is_numpy, is_tensor
-from pydvl.utils.types import ArrayT, atleast1d, check_X_y
+from pydvl.utils import array_arange, is_numpy, is_tensor, stratified_split_indices
+from pydvl.utils.array_ops import atleast1d, check_X_y
+from pydvl.utils.types import ArrayT, try_torch_import
 
 logger = logging.getLogger(__name__)
+
+# Import torch if available for typing
+torch = try_torch_import()
+Tensor = None if torch is None else torch.Tensor
 
 
 @dataclass(frozen=True)
@@ -100,21 +104,15 @@ class RawData(Generic[ArrayT]):
     y: ArrayT
 
     def __post_init__(self):
-        # Check that x and y are valid arrays (either numpy arrays or torch tensors)
         if not (
             (is_numpy(self.x) and is_numpy(self.y))
             or (is_tensor(self.x) and is_tensor(self.y))
         ):
             raise TypeError(
-                "x and y must both be valid arrays of the same type (numpy arrays "
-                "or torch tensors)"
+                f"x ({type(self.x)}) and y ({type(self.y)}) must be arrays of the same "
+                "type (numpy arrays or torch tensors)"
             )
 
-        # Check that x and y have matching types
-        if is_numpy(self.x) != is_numpy(self.y):
-            raise TypeError("x and y must be arrays of the same type")
-
-        # Check that x and y have matching first dimensions
         try:
             if self.x.shape[0] != self.y.shape[0]:
                 raise ValueError("x and y must have the same length")
@@ -168,12 +166,12 @@ class Dataset(Generic[ArrayT]):
         Added support for PyTorch tensors.
     """
 
-    _indices: NDArray[np.int_]
-    _data_names: NDArray[np.str_]
     feature_names: list[str]
     target_names: list[str]
     _x: ArrayT
     _y: ArrayT
+    _indices: ArrayT
+    _data_names: NDArray[np.str_] | Tensor
 
     def __init__(
         self,
@@ -242,14 +240,24 @@ class Dataset(Generic[ArrayT]):
 
         self.description = description or "No description"
 
-        # Always use numpy arrays for indices
-        self._indices = np.arange(len(self._x), dtype=np.int_)
+        if is_tensor(self._x) and torch is not None:
+            self._indices = array_arange(len(self._x), dtype=torch.int64, like=self._x)
+        else:
+            self._indices = np.arange(len(self._x), dtype=np.int_)
 
         # Generate data names if not provided
         if data_names is not None:
-            self._data_names = np.array(data_names, dtype=np.str_)
+            if is_tensor(self._x) and is_tensor(data_names):
+                self._data_names = data_names
+            else:
+                self._data_names = np.array(data_names, dtype=np.str_)
         else:
-            self._data_names = self._indices.astype(np.str_)
+            # Convert indices to strings for data names
+            if is_tensor(self._indices) and torch is not None:
+                str_indices = [str(i.item()) for i in self._indices]
+                self._data_names = np.array(str_indices, dtype=np.str_)
+            else:
+                self._data_names = cast(np.ndarray, self._indices).astype(np.str_)
 
     def __getstate__(self):
         """Prepare the object state for pickling."""
@@ -274,9 +282,7 @@ class Dataset(Generic[ArrayT]):
                 self._y, dtype=self._y_dtype, mode="readonly", shape=self._y_shape
             )
 
-    def __getitem__(
-        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
-    ) -> Dataset:
+    def __getitem__(self, idx: int | slice | Sequence[int] | ArrayT) -> Dataset:
         if idx is None:
             idx = slice(None)
         elif isinstance(idx, int):
@@ -293,12 +299,13 @@ class Dataset(Generic[ArrayT]):
     def feature(self, name: str) -> tuple[slice, int]:
         """Returns a slice for the feature with the given name."""
         try:
-            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
+            feature_idx = self.feature_names.index(name)
+            return (slice(None), feature_idx)
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
     def data(
-        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
+        self, indices: int | slice | Sequence[int] | ArrayT | None = None
     ) -> RawData:
         """Given a set of indices, returns the training data that refer to those
         indices, as a read-only tuple-like structure.
@@ -320,7 +327,7 @@ class Dataset(Generic[ArrayT]):
             return RawData(self._x, self._y)
         return RawData(self._x[indices], self._y[indices])
 
-    def data_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
+    def data_indices(self, indices: Sequence[int] | ArrayT | None = None) -> ArrayT:
         """Returns a subset of indices.
 
         This is equivalent to using `Dataset.indices[logical_indices]` but allows
@@ -333,13 +340,14 @@ class Dataset(Generic[ArrayT]):
             indices: A set of indices held by this object
 
         Returns:
-            The indices of the data points in the data array.
+            The indices of the data points in the data array, with the same type as
+            the original indices (numpy array or torch tensor).
         """
         if indices is None:
             return self._indices
         return self._indices[indices]
 
-    def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
+    def logical_indices(self, indices: Sequence[int] | ArrayT | None = None) -> ArrayT:
         """Returns the indices in this `Dataset` for the given indices in the data
         array.
 
@@ -351,28 +359,31 @@ class Dataset(Generic[ArrayT]):
             indices: A set of indices in the data array.
 
         Returns:
-            The abstract indices for the given data indices.
+            The abstract indices for the given data indices, with the same type as
+            the original indices (numpy array or torch tensor).
         """
         if indices is None:
             return self._indices
         return self._indices[indices]
 
     def target(self, name: str) -> tuple[slice, int]:
+        """Returns a slice for the target with the given name."""
         try:
-            return np.index_exp[:, self.target_names.index(name)]  # type: ignore
+            target_idx = self.target_names.index(name)
+            return (slice(None), target_idx)
         except ValueError:
             raise ValueError(f"Target {name} is not in {self.target_names}")
 
     @property
-    def indices(self) -> NDArray[np.int_]:
+    def indices(self) -> ArrayT:
         """Index of positions in data.x_train.
 
-        Contiguous integers from 0 to len(Dataset).
+        Contiguous integers from 0 to len(Dataset) with the same type as the input data.
         """
         return self._indices
 
     @property
-    def names(self) -> NDArray[np.str_]:
+    def names(self) -> ArrayT:
         """Names of each individual datapoint.
 
         Used for reporting Shapley values.
@@ -524,7 +535,7 @@ class Dataset(Generic[ArrayT]):
 
         !!! tip "Changed in version 0.10.0"
             Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
-            
+
         !!! tip "New in version 0.11.0"
             Added support for PyTorch tensors.
         """
@@ -533,7 +544,7 @@ class Dataset(Generic[ArrayT]):
             train_indices, test_indices = stratified_split_indices(
                 y, train_size=train_size, random_state=random_state
             )
-            
+
             # Split data using the indices
             x_train, y_train = X[train_indices], y[train_indices]
             x_test, y_test = X[test_indices], y[test_indices]
@@ -545,7 +556,7 @@ class Dataset(Generic[ArrayT]):
                 train_size=train_size,
                 random_state=random_state,
             )
-            
+
         return cls(x_train, y_train, **kwargs), cls(x_test, y_test, **kwargs)
 
 
