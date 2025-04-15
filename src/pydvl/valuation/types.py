@@ -119,24 +119,16 @@ class Sample:
         Raises:
             ValueError: If idx is None.
         """
-        # Check if idx is already in subset
         if self.idx in self.subset:
             return self
 
         if self.idx is None:
             raise ValueError("Cannot add idx to subset if idx is None.")
 
-        # Create a new subset with idx appended
         if is_tensor(self.subset):
-            # Handle tensor subset
-            if torch is None:
-                raise ImportError("PyTorch is required but not available")
-            idx_tensor = torch.tensor(
-                [self.idx], dtype=self.subset.dtype, device=self.subset.device
-            )
+            idx_tensor = self.subset.new_tensor([self.idx])
             new_subset = torch.cat([self.subset, idx_tensor])
         else:
-            # Handle numpy subset
             new_subset = np.append(self.subset, self.idx)
 
         return replace(self, subset=new_subset)
@@ -200,12 +192,10 @@ class ClasswiseSample(Sample):
 
     def __hash__(self):
         if is_tensor(self.subset) or is_tensor(self.ooc_subset):
-            # For tensor operations
             subset_bytes = as_numpy(self.subset).tobytes()
             ooc_bytes = as_numpy(self.ooc_subset).tobytes()
             array_bytes = subset_bytes + ooc_bytes
         else:
-            # For numpy operations (original implementation)
             array_bytes = self.subset.tobytes() + self.ooc_subset.tobytes()
 
         sha256_hash = hashlib.sha256(array_bytes).hexdigest()
