@@ -571,7 +571,7 @@ def test_rawdata_creation_raises_on_length_mismatch(x, y):
     "x, y", [(np.array([[1]]), 1), (3, np.array([1])), (1, 2), (None, None)]
 )
 def test_rawdata_creation_raises_on_non_arrays(x, y):
-    with pytest.raises(TypeError, match="x and y must be valid arrays"):
+    with pytest.raises(TypeError, match="must be arrays of the same type"):
         RawData(x, y)
 
 

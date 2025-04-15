@@ -1,3 +1,4 @@
+from .array_ops import *
 from .caching import *
 from .dataset import *
 from .functional import *
@@ -7,4 +8,3 @@ from .score import *
 from .status import *
 from .types import *
 from .utility import *
-from .array_ops import *
