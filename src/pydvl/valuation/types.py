@@ -14,8 +14,14 @@ from dataclasses import dataclass, replace
 from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
 
 import numpy as np
-from numpy.typing import NDArray
 from typing_extensions import Self, TypeAlias
+
+from pydvl.utils.array_ops import (
+    array_equal,
+    as_numpy,
+    is_tensor,
+)
+from pydvl.utils.types import Array, ArrayT, try_torch_import
 
 __all__ = [
     "BatchGenerator",
@@ -36,9 +42,11 @@ __all__ = [
 ]
 
 IndexT: TypeAlias = np.int_
-IndexSetT: TypeAlias = NDArray[IndexT]
+IndexSetT: TypeAlias = ArrayT  # Changed from NDArray[IndexT] to support torch tensors
 NameT: TypeAlias = Union[np.object_, np.int_, np.str_]
 NullaryPredicate: TypeAlias = Callable[[], bool]
+
+torch = try_torch_import()
 
 
 @dataclass(frozen=True)
@@ -77,7 +85,7 @@ class Sample:
     idx: IndexT | None
     """Index of current sample"""
 
-    subset: NDArray[IndexT]
+    subset: Array[IndexT]  # Can be either numpy array or torch tensor
     """Indices of current sample"""
 
     # Make the unpacking operator work
@@ -90,7 +98,14 @@ class Sample:
         same value in all processes, as opposed to hash() which is salted in each
         process
         """
-        sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
+        if is_tensor(self.subset):
+            # Convert tensor to bytes for hashing
+            sha256_hash = hashlib.sha256(
+                self.subset.cpu().numpy().tobytes()
+            ).hexdigest()
+        else:
+            # Original numpy implementation
+            sha256_hash = hashlib.sha256(self.subset.tobytes()).hexdigest()
         return int(sha256_hash, base=16)
 
     def with_idx_in_subset(self) -> Self:
@@ -104,13 +119,26 @@ class Sample:
         Raises:
             ValueError: If idx is None.
         """
+        # Check if idx is already in subset
         if self.idx in self.subset:
             return self
 
         if self.idx is None:
             raise ValueError("Cannot add idx to subset if idx is None.")
 
-        new_subset = np.append(self.subset, self.idx)
+        # Create a new subset with idx appended
+        if is_tensor(self.subset):
+            # Handle tensor subset
+            if torch is None:
+                raise ImportError("PyTorch is required but not available")
+            idx_tensor = torch.tensor(
+                [self.idx], dtype=self.subset.dtype, device=self.subset.device
+            )
+            new_subset = torch.cat([self.subset, idx_tensor])
+        else:
+            # Handle numpy subset
+            new_subset = np.append(self.subset, self.idx)
+
         return replace(self, subset=new_subset)
 
     def with_idx(self, idx: IndexT) -> Self:
@@ -129,7 +157,7 @@ class Sample:
 
         return replace(self, idx=idx)
 
-    def with_subset(self, subset: NDArray[IndexT]) -> Self:
+    def with_subset(self, subset: Array) -> Self:
         """Return a copy of sample with subset changed.
 
         Returns the original sample if subset is the same.
@@ -140,17 +168,19 @@ class Sample:
         Returns:
             Sample: A copy of the sample with subset changed.
         """
-        if np.array_equal(self.subset, subset):
+        if array_equal(self.subset, subset):
             return self
 
         return replace(self, subset=subset)
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, Sample)
-            and self.idx == other.idx
-            and np.array_equal(self.subset, other.subset)
-        )
+        if not isinstance(other, Sample):
+            return False
+
+        idx_equal = self.idx == other.idx
+        subset_equal = array_equal(self.subset, other.subset)
+
+        return idx_equal and subset_equal
 
 
 @dataclass(frozen=True)
@@ -160,7 +190,7 @@ class ClasswiseSample(Sample):
     label: int
     """Label of the current sample"""
 
-    ooc_subset: NDArray[IndexT]
+    ooc_subset: Array[IndexT]
     """Indices of out-of-class elements, i.e., those with a label different from
     this sample's label"""
 
@@ -169,18 +199,28 @@ class ClasswiseSample(Sample):
         return iter((self.idx, self.subset, self.label, self.ooc_subset))
 
     def __hash__(self):
-        array_bytes = self.subset.tobytes() + self.ooc_subset.tobytes()
+        if is_tensor(self.subset) or is_tensor(self.ooc_subset):
+            # For tensor operations
+            subset_bytes = as_numpy(self.subset).tobytes()
+            ooc_bytes = as_numpy(self.ooc_subset).tobytes()
+            array_bytes = subset_bytes + ooc_bytes
+        else:
+            # For numpy operations (original implementation)
+            array_bytes = self.subset.tobytes() + self.ooc_subset.tobytes()
+
         sha256_hash = hashlib.sha256(array_bytes).hexdigest()
         return int(sha256_hash, base=16)
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, ClasswiseSample)
-            and self.idx == other.idx
-            and np.array_equal(self.subset, other.subset)
-            and self.label == other.label
-            and np.array_equal(self.ooc_subset, other.ooc_subset)
-        )
+        if not isinstance(other, ClasswiseSample):
+            return False
+
+        idx_equal = self.idx == other.idx
+        label_equal = self.label == other.label
+        subset_equal = array_equal(self.subset, other.subset)
+        ooc_equal = array_equal(self.ooc_subset, other.ooc_subset)
+
+        return idx_equal and subset_equal and label_equal and ooc_equal
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
@@ -201,7 +241,7 @@ class UtilityEvaluation:
 
 
 class LossFunction(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
+    def __call__(self, y_true: Array, y_pred: Array) -> Array: ...
 
 
 class SemivalueCoefficient(Protocol):
