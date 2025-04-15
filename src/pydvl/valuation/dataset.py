@@ -130,6 +130,34 @@ class RawData(Generic[ArrayT]):
         return len(self.x)
 
 
+MMAP_DIR: Path | None = None
+
+
+def _create_memmap(array: NDArray) -> np.memmap:
+    global MMAP_DIR
+    if MMAP_DIR is None:
+        MMAP_DIR = Path(mkdtemp())
+        logger.debug(f"Using temporary directory {MMAP_DIR} for mmap files")
+
+    file_path = MMAP_DIR / f"array-{id(array)}.mmap"
+    mm = np.memmap(file_path, dtype=array.dtype, mode="w+", shape=array.shape)
+    mm[:] = array[:]
+    mm.flush()
+    ro_mm = np.memmap(file_path, dtype=array.dtype, mode="readonly", shape=array.shape)
+
+    def _cleanup():
+        try:
+            ro_mm._mmap.close()
+            file_path.unlink(missing_ok=True)
+        except Exception as e:
+            logger.error(
+                f"Error while closing or deleting mmap file '{file_path}': {e}"
+            )
+
+    atexit.register(_cleanup)
+    return ro_mm
+
+
 class Dataset(Generic[ArrayT]):
     """A convenience class to handle datasets.
 
@@ -189,32 +217,11 @@ class Dataset(Generic[ArrayT]):
                 raise TypeError("x and y must be numpy arrays in order to use mmap")
 
             _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
-            tmpdir = mkdtemp()
-            logger.debug(f"Using temporary directory {tmpdir} for mmap files")
-            path_x = Path(tmpdir) / "dataset-x.mmap"
-            path_y = Path(tmpdir) / "dataset-y.mmap"
-            fp_x = np.memmap(path_x, dtype=_x.dtype, mode="w+", shape=_x.shape)
-            fp_y = np.memmap(path_y, dtype=_y.dtype, mode="w+", shape=_y.shape)
-            fp_x[:] = _x[:]
-            fp_y[:] = _y[:]
-            self._x_dtype = _x.dtype
-            self._y_dtype = _y.dtype
-            self._x_shape = _x.shape
-            self._y_shape = _y.shape
-            self._x = np.memmap(path_x, dtype=_x.dtype, mode="readonly", shape=_x.shape)  # type: ignore
-            self._y = np.memmap(path_y, dtype=_y.dtype, mode="readonly", shape=_y.shape)  # type: ignore
-            del fp_x, fp_y  # note this does not close the mmaps
-            del _x, _y
 
-            def cleanup_mmap_files():
-                try:
-                    path_x.unlink(missing_ok=True)
-                    path_y.unlink(missing_ok=True)
-                    logger.debug("Temporary mmap files deleted successfully.")
-                except Exception as e:
-                    logger.error(f"Error while deleting mmap files: {e}")
-
-            atexit.register(cleanup_mmap_files)
+            self._x_dtype, self._y_dtype = _x.dtype, _y.dtype
+            self._x_shape, self._y_shape = _x.shape, _y.shape
+            self._x = _create_memmap(_x)
+            self._y = _create_memmap(_y)
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"
