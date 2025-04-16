@@ -104,6 +104,7 @@ from numpy.typing import NDArray
 from typing_extensions import Self
 
 from pydvl.utils import log_running_moments
+from pydvl.utils.array import to_numpy, array_equal, Array
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.dataset import Dataset
@@ -254,6 +255,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     Raises:
          ValueError: If input arrays have mismatching lengths.
 
+    !!! note "Tensor Support"
+        If any inputs are PyTorch tensors, they will be automatically converted to
+        numpy arrays. ValuationResult always uses numpy arrays internally for
+        efficiency and interoperability with other tools.
+
     ??? tip "Changed in 0.10.0"
         Changed the behaviour of sorting, slicing, and indexing.
     """
@@ -277,16 +283,23 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     def __init__(
         self,
         *,
-        values: Sequence[np.float64] | NDArray[np.float64],
-        variances: Sequence[np.float64] | NDArray[np.float64] | None = None,
-        counts: Sequence[np.int_] | NDArray[np.int_] | None = None,
-        indices: Sequence[IndexT] | NDArray[IndexT] | None = None,
-        data_names: Sequence[NameT] | NDArray[NameT] | None = None,
+        values: Sequence[np.float64] | NDArray[np.float64] | Array,
+        variances: Sequence[np.float64] | NDArray[np.float64] | Array | None = None,
+        counts: Sequence[np.int_] | NDArray[np.int_] | Array | None = None,
+        indices: Sequence[IndexT] | NDArray[IndexT] | Array | None = None,
+        data_names: Sequence[NameT] | NDArray[NameT] | Array | None = None,
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool | None = None,
         **extra_values: Any,
     ):
+        # Convert any tensor inputs to numpy arrays
+        values = to_numpy(values)
+        variances = to_numpy(variances) if variances is not None else None
+        counts = to_numpy(counts) if counts is not None else None
+        indices = to_numpy(indices) if indices is not None else None
+        data_names = to_numpy(data_names) if data_names is not None else None
+        
         if variances is not None and len(variances) != len(values):
             raise ValueError(
                 f"Lengths of values ({len(values)}) "

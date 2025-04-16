@@ -94,7 +94,7 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
         | SupervisedModelT,
         test_data: Dataset,
         default: float,
-        range: tuple[float, float] = (-np.inf, np.inf),
+        range: tuple[float, float] = (-float('inf'), float('inf')),
         name: str | None = None,
     ):
         super().__init__()

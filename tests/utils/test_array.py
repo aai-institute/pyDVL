@@ -10,8 +10,11 @@ from numpy.typing import NDArray
 from pydvl.utils.array import (
     array_arange,
     array_concatenate,
+    array_count_nonzero,
     array_equal,
+    array_exp,
     array_index,
+    array_nonzero,
     array_ones,
     array_ones_like,
     array_slice,
@@ -384,6 +387,85 @@ class TestArrayOperations:
         # Test error for out of bounds dim
         with pytest.raises(ValueError):
             array_index(arr, key, dim=3)
+            
+    def test_array_exp(self):
+        """Test array_exp function."""
+        # Numpy case
+        array = np.array([0.0, 1.0, 2.0])
+        result = array_exp(array)
+        assert is_numpy(result)
+        assert np.allclose(result, np.array([1.0, np.e, np.e**2]))
+
+        if torch is not None:
+            # Torch case
+            array = torch.tensor([0.0, 1.0, 2.0])
+            result = array_exp(array)
+            assert is_tensor(result)
+            assert torch.allclose(result, torch.tensor([1.0, torch.e, torch.e**2]))
+            
+    def test_array_count_nonzero(self):
+        """Test array_count_nonzero function."""
+        # Numpy case
+        array = np.array([0, 1, 0, 3, 0])
+        result = array_count_nonzero(array)
+        assert isinstance(result, int)
+        assert result == 2
+        
+        # Boolean array
+        bool_array = np.array([True, False, True])
+        result = array_count_nonzero(bool_array)
+        assert result == 2
+
+        if torch is not None:
+            # Torch case
+            array = torch.tensor([0, 1, 0, 3, 0])
+            result = array_count_nonzero(array)
+            assert isinstance(result, int)
+            assert result == 2
+            
+            # Boolean tensor
+            bool_array = torch.tensor([True, False, True])
+            result = array_count_nonzero(bool_array)
+            assert result == 2
+            
+    def test_array_nonzero(self):
+        """Test array_nonzero function."""
+        # Numpy case
+        array = np.array([0, 1, 0, 3, 0])
+        result = array_nonzero(array)
+        assert isinstance(result, tuple)
+        assert len(result) == 1
+        assert is_numpy(result[0])
+        assert np.array_equal(result[0], np.array([1, 3]))
+        
+        # 2D array
+        array_2d = np.array([[0, 1], [2, 0]])
+        result = array_nonzero(array_2d)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        assert is_numpy(result[0])
+        assert is_numpy(result[1])
+        assert np.array_equal(result[0], np.array([0, 1]))
+        assert np.array_equal(result[1], np.array([1, 0]))
+
+        if torch is not None:
+            # Torch case
+            array = torch.tensor([0, 1, 0, 3, 0])
+            result = array_nonzero(array)
+            assert isinstance(result, tuple)
+            assert len(result) == 1
+            assert is_tensor(result[0])
+            assert torch.equal(result[0], torch.tensor([1, 3]))
+            
+            # 2D tensor
+            array_2d = torch.tensor([[0, 1], [2, 0]])
+            result = array_nonzero(array_2d)
+            assert isinstance(result, tuple)
+            assert len(result) == 2
+            assert is_tensor(result[0])
+            assert is_tensor(result[1])
+            assert torch.equal(result[0], torch.tensor([0, 1]))
+            assert torch.equal(result[1], torch.tensor([1, 0]))
 
 
 class TestLibrarySpecificOperations:

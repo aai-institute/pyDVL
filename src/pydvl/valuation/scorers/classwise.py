@@ -23,9 +23,13 @@ from __future__ import annotations
 
 from typing import Callable
 
-import numpy as np
-
-from pydvl.utils.array import ArrayT
+from pydvl.utils.array import (
+    ArrayT,
+    array_count_nonzero,
+    array_exp,
+    array_nonzero,
+    array_unique,
+)
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import (
     SupervisedModelT,
@@ -84,7 +88,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
-        out_of_class_discount_fn: Callable[[float], float] = np.exp,
+        out_of_class_discount_fn: Callable[[float], float] = array_exp,
         rescale_scores: bool = True,
         name: str | None = None,
     ):
@@ -101,7 +105,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
         self.label: int | None = None
-        self.num_classes = len(np.unique(self.test_data.data().y))
+        self.num_classes = len(array_unique(self.test_data.data().y))
         self.rescale_scores = rescale_scores
 
     def __str__(self) -> str:
@@ -150,12 +154,12 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
 
         scorer = self._scorer
         label_set_match = self.test_data.data().y == self.label
-        label_set = np.where(label_set_match)[0]
+        label_set = array_nonzero(label_set_match)[0]
 
         if len(label_set) == 0:
             return 0, 1 / max(1, self.num_classes - 1)
 
-        complement_label_set = np.where(~label_set_match)[0]
+        complement_label_set = array_nonzero(~label_set_match)[0]
         in_class_score = scorer(model, *self.test_data.data(label_set))
         out_of_class_score = scorer(model, *self.test_data.data(complement_label_set))
 
@@ -163,7 +167,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
             # TODO: This can lead to NaN values
             #       We should clearly indicate this to users
             _, y_test = self.test_data.data()
-            n_in_class = np.count_nonzero(y_test == self.label)
+            n_in_class = array_count_nonzero(y_test == self.label)
             n_out_of_class = len(y_test) - n_in_class
             in_class_score *= n_in_class / (n_in_class + n_out_of_class)
             out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)

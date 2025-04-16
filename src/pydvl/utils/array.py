@@ -44,6 +44,9 @@ __all__ = [
     "array_arange",
     "array_slice",
     "array_index",
+    "array_exp",
+    "array_count_nonzero",
+    "array_nonzero",
     "stratified_split_indices",
     "for_sklearn",
     "for_pytorch",
@@ -892,3 +895,67 @@ def require_torch() -> ModuleType:
     torch = try_torch_import(require=True)
     assert torch is not None
     return torch
+
+
+def array_exp(
+    x: Array,
+) -> Array:
+    """
+    Calculate the exponential of array elements.
+
+    Args:
+        x: Input array.
+
+    Returns:
+        Exponential of each element in the input array.
+    """
+    if is_tensor(x):
+        assert torch is not None
+        return cast(Array, torch.exp(cast(Tensor, x)))
+    else:  # Fallback to numpy approach
+        return cast(Array, np.exp(to_numpy(x)))
+
+
+def array_count_nonzero(
+    x: Array,
+) -> int:
+    """
+    Count the number of non-zero elements in the array.
+
+    Args:
+        x: Input array.
+
+    Returns:
+        Number of non-zero elements.
+    """
+    if is_tensor(x):
+        assert torch is not None
+        tensor_array = cast(Tensor, x)
+        return int(torch.count_nonzero(tensor_array).item())
+    else:  # Fallback to numpy approach
+        numpy_array = to_numpy(x)
+        return int(np.count_nonzero(numpy_array))
+
+
+def array_nonzero(
+    x: Array,
+) -> tuple[Array, ...]:
+    """
+    Find the indices of non-zero elements.
+
+    Args:
+        x: Input array.
+
+    Returns:
+        Tuple of arrays, one for each dimension of x,
+        containing the indices of the non-zero elements in that dimension.
+    """
+    if is_tensor(x):
+        assert torch is not None
+        tensor_array = cast(Tensor, x)
+        # torch.nonzero returns a tensor of indices
+        indices = torch.nonzero(tensor_array, as_tuple=True)
+        return cast(tuple[Array, ...], indices)
+    else:  # Fallback to numpy approach
+        numpy_array = to_numpy(x)
+        return cast(tuple[Array, ...], np.nonzero(numpy_array))
