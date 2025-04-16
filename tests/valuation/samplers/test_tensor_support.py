@@ -1,9 +1,19 @@
 import numpy as np
 import pytest
+from typing import Any, Type
 
 from pydvl.utils.array import array_equal, is_numpy, to_numpy, try_torch_import
 from pydvl.valuation.samplers.base import IndexSampler
-from pydvl.valuation.types import Sample, ValueUpdate
+from pydvl.valuation.samplers import (
+    PermutationSampler,
+    UniformSampler,
+    LOOSampler,
+    MSRSampler,
+    OwenSampler,
+    StratifiedSampler,
+    ClasswiseSampler,
+)
+from pydvl.valuation.types import Sample, ValueUpdate, ClasswiseSample
 
 torch = try_torch_import()
 pytestmark = pytest.mark.skipif(torch is None, reason="PyTorch not installed")
@@ -32,14 +42,14 @@ def torch_sample():
 @pytest.mark.parametrize(
     "subset",
     [
-        None,
+        np.array([], dtype=np.int_),  # Empty array instead of None
         np.array([0, 1, 2], dtype=np.int_),
         torch.tensor([0, 1, 2], dtype=torch.int64),
         torch.tensor([0, 1, 2], dtype=torch.int32),
     ],
 )
 def test_sample_creation_with_tensor(subset):
-    """Test that the Sample class works with PyTorch tensors."""
+    """Test that the Sample class works with PyTorch tensors by converting them to numpy arrays."""
     # Test with int64 tensor
     sample = Sample(0, subset)
     assert is_numpy(sample.subset)
@@ -70,8 +80,8 @@ def test_sample_with_idx_tensor():
 
     new_sample = sample.with_idx(1)
     assert new_sample.idx == 1
-    assert torch.is_tensor(new_sample.subset)
-    assert torch.equal(new_sample.subset, subset)
+    assert is_numpy(new_sample.subset)  # Correct expectation: subset is numpy array
+    assert array_equal(new_sample.subset, to_numpy(subset))
 
     # Test with same idx (should return same object)
     new_sample = sample.with_idx(0)
@@ -221,3 +231,169 @@ def test_value_update_tensor_idx():
     assert update.idx == 1
     assert update.log_update == 0.5
     assert update.sign == 1
+
+
+def test_classwise_sample_tensor_support():
+    """Test that ClasswiseSample correctly handles tensor inputs."""
+    # Create a ClasswiseSample with tensor subsets
+    subset = torch.tensor([0, 1, 2], dtype=torch.int64)
+    ooc_subset = torch.tensor([3, 4, 5], dtype=torch.int64)
+    
+    sample = ClasswiseSample(0, subset, 1, ooc_subset)
+    
+    # Check that both subset and ooc_subset are converted to numpy arrays
+    assert is_numpy(sample.subset)
+    assert is_numpy(sample.ooc_subset)
+    assert array_equal(sample.subset, to_numpy(subset))
+    assert array_equal(sample.ooc_subset, to_numpy(ooc_subset))
+    
+    # Test equality and hash
+    np_sample = ClasswiseSample(0, np.array([0, 1, 2]), 1, np.array([3, 4, 5]))
+    assert sample == np_sample
+    assert hash(sample) == hash(np_sample)
+
+
+def test_sampler_with_tensor_indices():
+    """Test that samplers need to convert tensor indices to numpy arrays.
+    
+    This test is important because samplers should properly handle tensors by converting
+    them to numpy arrays since their internal logic may not be tensor-aware.
+    """
+    # Create a test sampler that only cares about converting indices to numpy
+    class TestSampler(IndexSampler):
+        def sample_limit(self, indices):
+            return len(indices)
+            
+        def generate(self, indices):
+            # First convert input indices to numpy
+            indices_np = to_numpy(indices)
+            for idx in indices_np:
+                yield Sample(idx, np.array([0]))
+                
+        def log_weight(self, n, subset_len):
+            return 0.0
+            
+        def make_strategy(self, utility, log_coefficient):
+            return None
+    
+    # Create test indices as tensor
+    indices = torch.tensor([0, 1, 2, 3, 4], dtype=torch.int64)
+    
+    # Use the sampler
+    sampler = TestSampler()
+    samples = list(sampler.generate(indices))
+    
+    # Verify conversion works correctly
+    assert len(samples) == len(indices)
+    assert set(s.idx for s in samples) == set(indices.cpu().numpy())
+
+
+def test_error_handling_mixed_tensor_numpy():
+    """Test error handling when mixing tensor and numpy arrays in Sample creation."""
+    # The Sample class should handle mixed types correctly by converting to numpy
+    
+    # Test with mixed types in subset
+    class MixedArray:
+        def __init__(self):
+            self.array = [0, 1, 2]  # Not a valid array type
+    
+    # Creating a Sample with invalid subset type should raise TypeError
+    with pytest.raises(TypeError):
+        Sample(0, MixedArray())
+        
+    # Creating a ClasswiseSample with invalid subset types should raise TypeError
+    with pytest.raises(TypeError):
+        ClasswiseSample(0, np.array([0, 1]), 1, MixedArray())
+        
+    with pytest.raises(TypeError):
+        ClasswiseSample(0, MixedArray(), 1, np.array([0, 1]))
+
+
+def test_batch_generation_with_tensor_indices():
+    """Test batch generation with tensor indices."""
+    # Custom sampler that correctly handles tensor indices
+    class TestSampler(IndexSampler):
+        def sample_limit(self, indices):
+            return len(indices)
+            
+        def generate(self, indices):
+            # First convert to numpy
+            indices_np = to_numpy(indices)
+            for idx in indices_np:
+                yield Sample(idx, np.array([idx]))
+                
+        def log_weight(self, n, subset_len):
+            return 0.0
+            
+        def make_strategy(self, utility, log_coefficient):
+            return None
+    
+    # Create test indices as tensor
+    indices = torch.tensor([0, 1, 2, 3, 4], dtype=torch.int64)
+    
+    # Use the sampler with batch_size=2
+    sampler = TestSampler(batch_size=2)
+    batches = list(sampler.generate_batches(indices))
+    
+    # Expected batches with batch_size=2 for 5 indices
+    assert len(batches) == 3  # 5 indices with batch_size=2 → 3 batches
+    assert len(batches[0]) == 2
+    assert len(batches[1]) == 2
+    assert len(batches[2]) == 1
+    
+    # Check all samples were generated
+    all_samples = [sample for batch in batches for sample in batch]
+    assert len(all_samples) == len(indices)
+    
+    # Verify all samples have numpy array subsets
+    for sample in all_samples:
+        assert is_numpy(sample.subset)
+
+
+def test_skip_indices_tensor_conversion():
+    """Test that tensor indices are properly converted in samplers that support skip_indices."""
+    # Custom sampler that supports skip_indices with proper tensor conversion
+    class CustomSampler(IndexSampler):
+        def __init__(self):
+            super().__init__()
+            self._skip_indices = np.empty(0, dtype=bool)
+            
+        @IndexSampler.skip_indices.setter
+        def skip_indices(self, indices):
+            # Should convert tensor to numpy
+            self._skip_indices = to_numpy(indices)
+            
+        def sample_limit(self, indices):
+            return len(indices)
+            
+        def generate(self, indices):
+            indices_np = to_numpy(indices)
+            for idx in indices_np:
+                if len(self._skip_indices) > 0 and self._skip_indices[idx]:
+                    continue
+                yield Sample(idx, np.array([], dtype=np.int_))
+                
+        def log_weight(self, n, subset_len):
+            return 0.0
+            
+        def make_strategy(self, utility, log_coefficient):
+            return None
+    
+    # Create indices as tensor
+    indices = torch.tensor([0, 1, 2, 3, 4], dtype=torch.int64)
+    
+    # Create skip mask as tensor
+    skip_mask = torch.zeros(5, dtype=torch.bool)
+    skip_mask[0] = True  # Skip first index
+    
+    # Test with custom sampler
+    custom_sampler = CustomSampler()
+    custom_sampler.skip_indices = skip_mask
+    
+    # Check that skip_indices is now a numpy array
+    assert is_numpy(custom_sampler._skip_indices)
+    
+    # Generate samples and verify first index is skipped
+    samples = list(custom_sampler.generate(indices))
+    assert len(samples) == len(indices) - 1
+    assert all(s.idx != 0 for s in samples)

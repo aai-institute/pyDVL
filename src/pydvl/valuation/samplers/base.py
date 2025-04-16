@@ -194,7 +194,10 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
         batch size set upon construction.
 
         Args:
-            indices: Array of indices (numpy array or torch tensor)
+            indices: Array of indices (numpy array or torch tensor). Note that when
+                receiving torch tensors, implementations should convert them to numpy arrays
+                using `pydvl.utils.array.to_numpy()` since indices are always stored as
+                numpy arrays internally.
 
         Yields:
             A tuple (idx, subset) for each sample.
