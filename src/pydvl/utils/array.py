@@ -6,19 +6,33 @@ It supports both NumPy arrays and PyTorch tensors with consistent interfaces.
 from __future__ import annotations
 
 import warnings
-from typing import Any, List, Literal, Sequence, Tuple, Union, cast, TYPE_CHECKING, overload
+from types import ModuleType
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterator,
+    List,
+    Literal,
+    Protocol,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+    runtime_checkable,
+)
 
 import numpy as np
 import sklearn.utils
 from numpy.typing import ArrayLike, NDArray
-
-from pydvl.utils.types import Array, ArrayT, require_torch, try_torch_import
+from typing_extensions import Self
 
 __all__ = [
     "is_tensor",
     "is_numpy",
-    "as_tensor",
-    "as_numpy",
+    "to_tensor",
+    "to_numpy",
     "array_zeros",
     "array_ones",
     "array_zeros_like",
@@ -36,7 +50,27 @@ __all__ = [
     "atleast1d",
     "check_X_y",
     "check_X_y_torch",
+    "require_torch",
+    "try_torch_import",
 ]
+
+DT = TypeVar("DT")
+
+
+def try_torch_import(require: bool = False) -> ModuleType | None:
+    """Import torch if available, otherwise return None.
+    Args:
+        require: If True, raise an ImportError if torch is not available.
+    """
+    try:
+        import torch
+
+        return cast(ModuleType, torch)
+    except ImportError as e:
+        if require:
+            raise ImportError("torch is required but not installed.") from e
+        return None
+
 
 torch = try_torch_import()
 
@@ -58,13 +92,58 @@ def is_numpy(array: Any) -> bool:
     return isinstance(array, np.ndarray)
 
 
-def as_tensor(array: Array | ArrayLike, device: Any | None = None) -> Tensor:
+@runtime_checkable
+class Array(Protocol[DT]):
+    """Poor man's intersection of NDArray and torch.Tensor.
+
+    !!! warning
+        This is a "best-effort" attempt at having something usable for our purposes, but
+        by no means complete. If it causes more trouble than it solves, it should be
+        removed.
+    """
+
+    @property
+    def shape(self) -> tuple[int, ...]: ...
+
+    @property
+    def ndim(self) -> int: ...
+
+    @property
+    def dtype(self) -> Any: ...
+
+    def __len__(self) -> int: ...
+
+    def __getitem__(self, key: Any) -> Self: ...
+
+    def __iter__(self) -> Iterator: ...
+
+    def __add__(self, other: Array) -> Array: ...
+
+    def __sub__(self, other) -> Array: ...
+
+    def __mul__(self, other) -> Array: ...
+
+    def __matmul__(self, other) -> Array: ...
+
+    def __array__(self, dtype: DT | None = None) -> NDArray: ...
+
+    def flatten(self, *args, **kwargs) -> Self: ...
+
+    def reshape(self, *args: Any, **kwargs: Any) -> Self: ...
+
+    def tolist(self) -> list: ...
+
+    def item(self) -> DT: ...
+
+    def sum(self, *args: Any, **kwargs: Any) -> Self: ...
+
+
+def to_tensor(array: Array | ArrayLike) -> Tensor:
     """
     Convert array to torch.Tensor if it's not already.
 
     Args:
         array: Input array.
-        device: Optional device to place the tensor on.
 
     Returns:
         A torch.Tensor representation of the input.
@@ -72,21 +151,13 @@ def as_tensor(array: Array | ArrayLike, device: Any | None = None) -> Tensor:
     Raises:
         ImportError: If PyTorch is not available.
     """
-    if torch is None:
-        raise ImportError("PyTorch is not available")
+    torch = require_torch()
     if isinstance(array, torch.Tensor):
-        if device is not None and array.device != device:
-            return cast(Tensor, array.to(device))
-        return cast(Tensor, array)
-    # Prefer as_tensor to preserve memory layout if possible.
-    try:
-        return cast(Tensor, torch.as_tensor(array, device=device))
-    except Exception:
-        # Fallback to torch.tensor in case the input is not directly convertible by as_tensor.
-        return cast(Tensor, torch.tensor(array, device=device))
+        return array
+    return cast(Tensor, torch.as_tensor(array))
 
 
-def as_numpy(array: Array | ArrayLike) -> NDArray:
+def to_numpy(array: Array | ArrayLike) -> NDArray:
     """
     Convert array to a numpy.ndarray if it's not already.
 
@@ -97,14 +168,14 @@ def as_numpy(array: Array | ArrayLike) -> NDArray:
         A numpy.ndarray representation of the input.
     """
     if isinstance(array, np.ndarray):
-        return cast(NDArray, array)
-    if is_tensor(array):
-        # Safe to use .cpu().detach().numpy() since we've verified it's a tensor
-        return cast(NDArray, cast(Tensor, array).cpu().detach().numpy())
+        return array
+    if (torch := try_torch_import()) is not None and isinstance(array, torch.Tensor):
+        return cast(NDArray, array.cpu().detach().numpy())
     return cast(NDArray, np.asarray(array))
 
 
 ShapeType = Union[int, Tuple[int, ...], List[int]]
+
 
 def array_zeros(
     shape: ShapeType,
@@ -172,8 +243,10 @@ def array_ones(
 @overload
 def array_zeros_like(array: NDArray, dtype: Any | None = None) -> NDArray: ...
 
+
 @overload
 def array_zeros_like(array: Tensor, dtype: Any | None = None) -> Tensor: ...
+
 
 def array_zeros_like(array: Array, dtype: Any | None = None) -> Array:
     """
@@ -196,8 +269,10 @@ def array_zeros_like(array: Array, dtype: Any | None = None) -> Array:
 @overload
 def array_ones_like(array: NDArray, dtype: Any | None = None) -> NDArray: ...
 
+
 @overload
 def array_ones_like(array: Tensor, dtype: Any | None = None) -> Tensor: ...
+
 
 def array_ones_like(array: Array, dtype: Any | None = None) -> Array:
     """
@@ -222,8 +297,10 @@ def array_ones_like(array: Array, dtype: Any | None = None) -> Array:
 @overload
 def array_where(condition: NDArray, x: NDArray, y: NDArray) -> NDArray: ...
 
+
 @overload
 def array_where(condition: Tensor, x: Tensor, y: Tensor) -> Tensor: ...
+
 
 def array_where(condition: Array, x: Array, y: Array) -> Array:
     """
@@ -249,32 +326,45 @@ def array_where(condition: Array, x: Array, y: Array) -> Array:
         condition_tensor = (
             condition
             if is_tensor(condition)
-            else torch.as_tensor(as_numpy(condition), device=device)
+            else torch.as_tensor(to_numpy(condition), device=device)
         )
-        x_tensor = x if is_tensor(x) else torch.as_tensor(as_numpy(x), device=device)
-        y_tensor = y if is_tensor(y) else torch.as_tensor(as_numpy(y), device=device)
+        x_tensor = x if is_tensor(x) else torch.as_tensor(to_numpy(x), device=device)
+        y_tensor = y if is_tensor(y) else torch.as_tensor(to_numpy(y), device=device)
         return cast(Array, torch.where(condition_tensor, x_tensor, y_tensor))
     else:
         return cast(Array, np.where(condition, x, y))
 
 
 @overload
-def array_unique(array: NDArray, return_index: Literal[False] = False, **kwargs: Any) -> NDArray: ...
+def array_unique(
+    array: NDArray, return_index: Literal[False] = False, **kwargs: Any
+) -> NDArray: ...
+
 
 @overload
-def array_unique(array: NDArray, return_index: Literal[True], **kwargs: Any) -> Tuple[NDArray, NDArray]: ...
+def array_unique(
+    array: NDArray, return_index: Literal[True], **kwargs: Any
+) -> Tuple[NDArray, NDArray]: ...
+
 
 @overload
-def array_unique(array: Tensor, return_index: Literal[False] = False, **kwargs: Any) -> Tensor: ...
+def array_unique(
+    array: Tensor, return_index: Literal[False] = False, **kwargs: Any
+) -> Tensor: ...
+
 
 @overload
-def array_unique(array: Tensor, return_index: Literal[True], **kwargs: Any) -> Tuple[Tensor, Tensor]: ...
+def array_unique(
+    array: Tensor, return_index: Literal[True], **kwargs: Any
+) -> Tuple[Tensor, Tensor]: ...
+
 
 def array_unique(
     array: Array, return_index: bool = False, **kwargs: Any
 ) -> Union[Array, Tuple[Array, Array]]:
     """
-    Return the unique elements in an array, optionally with indices of their first occurrences.
+    Return the unique elements in an array, optionally with indices of their first
+    occurrences.
 
     Args:
         array: Input array.
@@ -303,22 +393,32 @@ def array_unique(
             return cast(Tuple[Array, Array], (result, indices_tensor))
         return cast(Array, result)
     else:  # Fallback to numpy approach.
-        numpy_array = as_numpy(array)
+        numpy_array = to_numpy(array)
         if return_index:
             # np.unique returns a tuple when return_index=True
-            unique_vals, indices = np.unique(numpy_array, return_index=True, **{k: v for k, v in kwargs.items() if k != 'return_index'})
+            unique_vals, indices = np.unique(
+                numpy_array,
+                return_index=True,
+                **{k: v for k, v in kwargs.items() if k != "return_index"},
+            )
             return cast(Tuple[Array, Array], (unique_vals, indices))
         else:
             # Simple case - just unique values
-            result = np.unique(numpy_array, return_index=False, **{k: v for k, v in kwargs.items() if k != 'return_index'})
+            result = np.unique(
+                numpy_array,
+                return_index=False,
+                **{k: v for k, v in kwargs.items() if k != "return_index"},
+            )
             return cast(Array, result)
 
 
 @overload
 def array_concatenate(arrays: Sequence[NDArray], axis: int = 0) -> NDArray: ...
 
+
 @overload
 def array_concatenate(arrays: Sequence[Tensor], axis: int = 0) -> Tensor: ...
+
 
 def array_concatenate(arrays: Sequence[Array], axis: int = 0) -> Array:
     """
@@ -349,14 +449,14 @@ def array_concatenate(arrays: Sequence[Array], axis: int = 0) -> Array:
             if is_tensor(a):
                 tensor_arrays.append(a)
             else:
-                tensor_arrays.append(torch.as_tensor(as_numpy(a), device=device))
+                tensor_arrays.append(torch.as_tensor(to_numpy(a), device=device))
         return cast(Array, torch.cat(tensor_arrays, dim=axis))
     # Otherwise, convert all arrays to numpy arrays.
-    numpy_arrays = [as_numpy(a) for a in arrays]
+    numpy_arrays = [to_numpy(a) for a in arrays]
     return cast(Array, np.concatenate(numpy_arrays, axis=axis))
 
 
-def array_equal(array1: Array, array2: Array) -> bool:
+def array_equal(array1: Array[Any], array2: Array[Any]) -> bool:
     """
     Check if two arrays are element-wise equal.
 
@@ -372,7 +472,7 @@ def array_equal(array1: Array, array2: Array) -> bool:
     elif is_tensor(array1) and is_tensor(array2) and torch is not None:
         return bool(torch.equal(cast(Tensor, array1), cast(Tensor, array2)))
     # Fall back to comparing numpy representations.
-    return bool(np.array_equal(as_numpy(array1), as_numpy(array2)))
+    return bool(np.array_equal(to_numpy(array1), to_numpy(array2)))
 
 
 def array_arange(
@@ -380,9 +480,9 @@ def array_arange(
     stop: int | None = None,
     step: int = 1,
     *,
-    dtype: Any | None = None,
+    dtype: DT | None = None,
     like: Array | None = None,
-) -> Array:
+) -> Array[DT]:
     """
     Create an array with evenly spaced values within a given interval.
 
@@ -402,25 +502,34 @@ def array_arange(
     # If a reference is provided and is recognized as numpy or tensor, use it.
     if like is not None:
         if is_numpy(like):
-            return cast(Array, np.arange(start, stop, step, dtype=dtype))
+            return cast(Array, np.arange(start, stop, step, dtype=like.dtype))
         elif is_tensor(like):
             assert torch is not None
             like_tensor = cast(Tensor, like)
-            return cast(Array, torch.arange(
-                start, stop, step, dtype=dtype, device=like_tensor.device
-            ))
+            return cast(
+                Array,
+                torch.arange(
+                    start,
+                    stop,
+                    step,
+                    dtype=like_tensor.dtype,
+                    device=like_tensor.device,
+                ),
+            )
         else:
             warnings.warn(
                 "Reference object type not recognized. Falling back to numpy."
             )
-    return cast(Array, np.arange(start, stop, step, dtype=dtype))
+    return cast(Array, np.arange(start, stop, step, dtype=dtype))  # type: ignore
 
 
 @overload
 def array_slice(array: NDArray, indices: Any) -> NDArray: ...
 
+
 @overload
 def array_slice(array: Tensor, indices: Any) -> Tensor: ...
+
 
 def array_slice(array: Array, indices: Any) -> Array:
     """
@@ -465,7 +574,8 @@ def array_index(array: Array, key: Array, dim: int = 0) -> Array:
         else 0
     ):
         raise ValueError(
-            f"Dimension {dim} is out of bounds for array with shape {getattr(array, 'shape', None)}."
+            f"Dimension {dim} is out of bounds for array with shape "
+            f"{getattr(array, 'shape', None)}."
         )
 
     if is_numpy(array):
@@ -483,7 +593,7 @@ def array_index(array: Array, key: Array, dim: int = 0) -> Array:
         key_tensor = (
             key
             if is_tensor(key)
-            else torch.as_tensor(as_numpy(key), device=arr_tensor.device)
+            else torch.as_tensor(to_numpy(key), device=arr_tensor.device)
         )
         key_long = cast(Tensor, key_tensor).to(torch.long)
         return cast(Array, torch.index_select(arr_tensor, dim, key_long))
@@ -508,7 +618,7 @@ def for_sklearn(array: Array, function_name: str | None = None) -> NDArray:
                 f"{function_name} requires numpy arrays. Converting tensor to "
                 "numpy, which may impact performance."
             )
-        return as_numpy(array)
+        return to_numpy(array)
     return cast(NDArray, array)
 
 
@@ -537,16 +647,20 @@ def for_pytorch(
                 f"{function_name} requires PyTorch tensors. Converting numpy "
                 "array to tensor, which may impact performance."
             )
-        return as_tensor(array, device=device)
+        return to_tensor(array).to(device=device)
     tensor = cast(Tensor, array)
     if device is not None and tensor.device != device:
         return tensor.to(device)
     return tensor
 
 
+ArrayT = TypeVar("ArrayT", bound=Array, contravariant=True)
+ArrayRetT = TypeVar("ArrayRetT", bound=Array, covariant=True)
+
+
 def stratified_split_indices(
-    y: Array, train_size: float | int = 0.8, random_state: int | None = None
-) -> Tuple[Array, Array]:
+    y: ArrayT, train_size: float | int = 0.8, random_state: int | None = None
+) -> Tuple[ArrayT, ArrayT]:
     """
     Compute stratified train/test split indices based on labels.
 
@@ -558,8 +672,7 @@ def stratified_split_indices(
     Returns:
         A tuple (train_indices, test_indices) matching the type of y.
     """
-    # Torch branch
-    if is_tensor(y) and torch is not None:
+    if torch is not None and isinstance(y, torch.Tensor):
         if random_state is not None:
             torch.manual_seed(random_state)
         n_samples = len(y)
@@ -575,38 +688,30 @@ def stratified_split_indices(
             n_train = int(len(idx) * (train_size_int / n_samples))
             train_indices.append(shuffled[:n_train])
             test_indices.append(shuffled[n_train:])
-        return cast(Tuple[Array, Array], (torch.cat(train_indices), torch.cat(test_indices)))
+        return cast(
+            Tuple[ArrayT, ArrayT], (torch.cat(train_indices), torch.cat(test_indices))
+        )
     else:
-        # Numpy branch.
         from sklearn.model_selection import train_test_split
 
-        y_np = as_numpy(y)
+        y_np = to_numpy(y)
         indices = np.arange(len(y_np))
         train_indices, test_indices = train_test_split(
             indices, train_size=train_size, stratify=y_np, random_state=random_state
         )
-        # If the original was a tensor, convert back.
-        if is_tensor(y) and torch is not None:
-            return cast(
-                Tuple[Array, Array],
-                (
-                    torch.as_tensor(train_indices, device=for_pytorch(y).device),
-                    torch.as_tensor(test_indices, device=for_pytorch(y).device),
-                )
-            )
-        return cast(Tuple[Array, Array], (train_indices, test_indices))
+
+        return cast(Tuple[ArrayT, ArrayT], (train_indices, test_indices))
 
 
 @overload
 def atleast1d(a: NDArray) -> NDArray: ...
 
+
 @overload
 def atleast1d(a: Tensor) -> Tensor: ...
 
-@overload
-def atleast1d(a: ArrayLike) -> NDArray: ...
 
-def atleast1d(a: Union[Array, ArrayLike]) -> Array:
+def atleast1d(a: Array) -> Array:
     """
     Ensures that the array is at least 1D.
 
@@ -621,7 +726,9 @@ def atleast1d(a: Union[Array, ArrayLike]) -> Array:
     if is_tensor(a):
         assert torch is not None
         tensor_array = cast(Tensor, a)
-        return cast(Array, tensor_array.unsqueeze(0) if tensor_array.ndim == 0 else tensor_array)
+        return cast(
+            Array, tensor_array.unsqueeze(0) if tensor_array.ndim == 0 else tensor_array
+        )
     return cast(Array, np.atleast_1d(np.array(a)))
 
 
@@ -635,6 +742,7 @@ def check_X_y(
     copy: bool = False,
 ) -> Tuple[NDArray, NDArray]: ...
 
+
 @overload
 def check_X_y(
     X: Tensor,
@@ -644,6 +752,7 @@ def check_X_y(
     estimator: str | object | None = None,
     copy: bool = False,
 ) -> Tuple[Tensor, Tensor]: ...
+
 
 def check_X_y(
     X: Array,
@@ -673,16 +782,22 @@ def check_X_y(
     """
     if is_tensor(X) and is_tensor(y):
         assert torch is not None
-        return cast(Tuple[Array, Array], check_X_y_torch(
-            cast(Tensor, X),
-            cast(Tensor, y),
-            multi_output=multi_output,
-            estimator=estimator,
-            copy=copy,
-        ))
-    return cast(Tuple[Array, Array], sklearn.utils.check_X_y(
-        X, y, multi_output=multi_output, estimator=estimator, copy=copy
-    ))
+        return cast(
+            Tuple[Array, Array],
+            check_X_y_torch(
+                cast(Tensor, X),
+                cast(Tensor, y),
+                multi_output=multi_output,
+                estimator=estimator,
+                copy=copy,
+            ),
+        )
+    return cast(
+        Tuple[Array, Array],
+        sklearn.utils.check_X_y(
+            X, y, multi_output=multi_output, estimator=estimator, copy=copy
+        ),
+    )
 
 
 def check_X_y_torch(
@@ -734,13 +849,15 @@ def check_X_y_torch(
 
     if X.dim() < 2:
         raise ValueError(
-            f"Expected at least 2D input for X, got {X.dim()}D with shape {tuple(X.shape)}."
+            f"Expected at least 2D input for X, got {X.dim()}D with shape "
+            f"{tuple(X.shape)}."
         )
 
     if multi_output:
         if y.dim() not in (1, 2):
             raise ValueError(
-                f"Expected y to be 1D or 2D for multi_output, got {y.dim()}D with shape {tuple(y.shape)}."
+                f"Expected y to be 1D or 2D for multi_output, got {y.dim()}D with "
+                f"shape {tuple(y.shape)}."
             )
     else:
         if y.dim() == 2 and y.size(1) == 1:
@@ -752,7 +869,8 @@ def check_X_y_torch(
 
     if X.size(0) != y.size(0):
         raise ValueError(
-            f"Inconsistent sample sizes: X has {X.size(0)} samples, but y has {y.size(0)} samples."
+            f"Inconsistent sample sizes: X has {X.size(0)} samples, but y has "
+            f"{y.size(0)} samples."
         )
 
     if X.size(0) < 1:
@@ -768,3 +886,9 @@ def check_X_y_torch(
         )
 
     return X, y
+
+
+def require_torch() -> ModuleType:
+    torch = try_torch_import(require=True)
+    assert torch is not None
+    return torch

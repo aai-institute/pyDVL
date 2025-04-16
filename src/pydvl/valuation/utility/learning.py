@@ -37,9 +37,9 @@ import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pydvl.utils.array import ArrayRetT
 from pydvl.utils.functional import suppress_warnings
-from pydvl.utils.types import ArrayRetT, SupervisedModel
-from pydvl.valuation.types import Sample, SampleT
+from pydvl.valuation.types import Sample, SampleT, SupervisedModel
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["DataUtilityLearning", "IndicatorUtilityModel", "UtilityModel"]

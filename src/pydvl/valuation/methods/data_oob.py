@@ -38,10 +38,10 @@ from sklearn.ensemble._forest import (
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import Self
 
-from pydvl.utils.types import BaggingModel, PointwiseScore
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import BaggingModel, PointwiseScore
 
 T = TypeVar("T", bound=np.number)
 

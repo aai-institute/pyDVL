@@ -75,7 +75,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any, Generic, Sequence, cast, overload
+from typing import Any, Generic, Sequence, TypeVar, cast, overload
 
 import numpy as np
 from deprecate import deprecated
@@ -85,9 +85,17 @@ from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
-from pydvl.utils import array_arange, is_numpy, is_tensor, stratified_split_indices
-from pydvl.utils.array_ops import atleast1d, check_X_y
-from pydvl.utils.types import ArrayT, try_torch_import
+from pydvl.utils.array import (
+    Array,
+    ArrayT,
+    atleast1d,
+    check_X_y,
+    is_numpy,
+    is_tensor,
+    stratified_split_indices,
+    to_numpy,
+    try_torch_import,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +117,8 @@ class RawData(Generic[ArrayT]):
             or (is_tensor(self.x) and is_tensor(self.y))
         ):
             raise TypeError(
-                f"x ({type(self.x)}) and y ({type(self.y)}) must be arrays of the same "
+                f"x ({type(self.x)}) and y ({type(self.y)}) must be arrays of the "
+                f"same "
                 "type (numpy arrays or torch tensors)"
             )
 
@@ -133,7 +142,7 @@ class RawData(Generic[ArrayT]):
 MMAP_DIR: Path | None = None
 
 
-def _create_memmap(array: NDArray) -> np.memmap:
+def _create_memmap(array: NDArray) -> NDArray:
     global MMAP_DIR
     if MMAP_DIR is None:
         MMAP_DIR = Path(mkdtemp())
@@ -158,7 +167,10 @@ def _create_memmap(array: NDArray) -> np.memmap:
     return ro_mm
 
 
-class Dataset(Generic[ArrayT]):
+ArrayTT = TypeVar("ArrayTT", bound=Array, contravariant=True)
+
+
+class Dataset(Generic[ArrayT, ArrayTT]):
     """A convenience class to handle datasets.
 
     It holds a dataset, together with info on feature names, target names, and
@@ -197,14 +209,14 @@ class Dataset(Generic[ArrayT]):
     feature_names: list[str]
     target_names: list[str]
     _x: ArrayT
-    _y: ArrayT
-    _indices: ArrayT
-    _data_names: NDArray[np.str_] | Tensor
+    _y: ArrayTT
+    _indices: NDArray[np.int_]
+    _data_names: NDArray[np.str_]
 
     def __init__(
         self,
         x: ArrayT,
-        y: ArrayT,
+        y: ArrayTT,
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -215,19 +227,18 @@ class Dataset(Generic[ArrayT]):
         if mmap:
             if not is_numpy(x) or not is_numpy(y):
                 raise TypeError("x and y must be numpy arrays in order to use mmap")
-
             _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
 
             self._x_dtype, self._y_dtype = _x.dtype, _y.dtype
             self._x_shape, self._y_shape = _x.shape, _y.shape
-            self._x = _create_memmap(_x)
-            self._y = _create_memmap(_y)
+            self._x = cast(ArrayT, _create_memmap(_x))
+            self._y = cast(ArrayTT, _create_memmap(_y))
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"
             )
 
-        def make_names(s: str, a: ArrayT) -> list[str]:
+        def make_names(s: str, a: Array) -> list[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
             return [f"{s}{i:0{1 + int(math.log10(n))}d}" for i in range(1, n + 1)]
 
@@ -247,7 +258,9 @@ class Dataset(Generic[ArrayT]):
             ):
                 self.target_names = list(target_names)
             else:
-                raise ValueError("target_names must be a list, tuple, or numpy array of strings")
+                raise ValueError(
+                    "target_names must be a list, tuple, or numpy array of strings"
+                )
         else:
             self.target_names = make_names("y", y)
 
@@ -259,30 +272,18 @@ class Dataset(Generic[ArrayT]):
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
-
-        if is_tensor(self._x) and torch is not None:
-            self._indices = array_arange(len(self._x), dtype=torch.int64, like=self._x)
-        else:
-            self._indices = np.arange(len(self._x), dtype=np.int_)
-
-        # Generate data names if not provided
-        if data_names is not None:
-            if is_tensor(self._x) and is_tensor(data_names):
-                self._data_names = data_names
-            else:
-                self._data_names = np.array(data_names, dtype=np.str_)
-        else:
-            # Convert indices to strings for data names
-            if is_tensor(self._indices) and torch is not None:
-                str_indices = [str(i.item()) for i in self._indices]
-                self._data_names = np.array(str_indices, dtype=np.str_)
-            else:
-                self._data_names = cast(np.ndarray, self._indices).astype(np.str_)
+        self._indices = np.arange(len(self._x), dtype=np.int_)
+        self._data_names = (
+            np.array(data_names, dtype=np.str_)
+            if data_names is not None
+            else self._indices.astype(np.str_)
+        )
 
     def __getstate__(self):
-        """Prepare the object state for pickling."""
+        """Prepare the object state for pickling replacing memmapped arrays with
+        their file paths"""
         state = self.__dict__.copy()
-        # Replace memmapped arrays with their file paths
+
         if isinstance(self._x, np.memmap):
             state["_x"] = Path(self._x.filename)
         if isinstance(self._y, np.memmap):
@@ -302,7 +303,9 @@ class Dataset(Generic[ArrayT]):
                 self._y, dtype=self._y_dtype, mode="readonly", shape=self._y_shape
             )
 
-    def __getitem__(self, idx: int | slice | Sequence[int] | ArrayT) -> Dataset:
+    def __getitem__(
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+    ) -> Dataset:
         if idx is None:
             idx = slice(None)
         elif isinstance(idx, int):
@@ -319,13 +322,12 @@ class Dataset(Generic[ArrayT]):
     def feature(self, name: str) -> tuple[slice, int]:
         """Returns a slice for the feature with the given name."""
         try:
-            feature_idx = self.feature_names.index(name)
-            return (slice(None), feature_idx)
+            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
     def data(
-        self, indices: int | slice | Sequence[int] | ArrayT | None = None
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> RawData:
         """Given a set of indices, returns the training data that refer to those
         indices, as a read-only tuple-like structure.
@@ -347,7 +349,9 @@ class Dataset(Generic[ArrayT]):
             return RawData(self._x, self._y)
         return RawData(self._x[indices], self._y[indices])
 
-    def data_indices(self, indices: Sequence[int] | ArrayT | None = None) -> ArrayT:
+    def data_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
         """Returns a subset of indices.
 
         This is equivalent to using `Dataset.indices[logical_indices]` but allows
@@ -360,14 +364,17 @@ class Dataset(Generic[ArrayT]):
             indices: A set of indices held by this object
 
         Returns:
-            The indices of the data points in the data array, with the same type as
-            the original indices (numpy array or torch tensor).
+            The indices of the data points in the data array.
         """
         if indices is None:
             return self._indices
-        return self._indices[indices]
+        if isinstance(indices, slice):
+            return self._indices[indices]
+        return self._indices[to_numpy(indices)]
 
-    def logical_indices(self, indices: Sequence[int] | ArrayT | None = None) -> ArrayT:
+    def logical_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
         """Returns the indices in this `Dataset` for the given indices in the data
         array.
 
@@ -379,50 +386,50 @@ class Dataset(Generic[ArrayT]):
             indices: A set of indices in the data array.
 
         Returns:
-            The abstract indices for the given data indices, with the same type as
-            the original indices (numpy array or torch tensor).
+            The abstract indices for the given data indices.
         """
         if indices is None:
             return self._indices
-        return self._indices[indices]
+        if isinstance(indices, slice):
+            return self._indices[indices]
+        return self._indices[to_numpy(indices)]
 
-    def target(self, name: str) -> tuple[slice, int] | int:
+    def target(self, name: str) -> tuple[slice, int] | slice:
         """
         Returns a slice or index for the target with the given name.
-        
-        If targets are multi-dimensional (2D array), returns a tuple (slice(None), target_idx).
-        If targets are 1D, returns just the target_idx (which should be 0).
-        
+
+        If targets are multidimensional (2D array), returns a tuple (slice(None),
+        target_idx). If targets are 1D, returns just a slice(None).
+
         Args:
             name: The name of the target to retrieve.
-            
+
         Returns:
             For multi-output targets: tuple of (slice(None), target_idx)
             For single-output targets: target_idx (usually 0)
-            
+
         Raises:
             ValueError: If the target name is not found.
         """
         try:
             target_idx = self.target_names.index(name)
-            # Check if _y is 1D or has only one column
             if len(self._y.shape) == 1 or self._y.shape[1] == 1:
-                return target_idx
+                return slice(None)
             else:
-                return (slice(None), target_idx)
+                return slice(None), target_idx
         except ValueError:
             raise ValueError(f"Target {name} is not in {self.target_names}")
 
     @property
-    def indices(self) -> ArrayT:
+    def indices(self) -> NDArray[np.int_]:
         """Index of positions in data.x_train.
 
-        Contiguous integers from 0 to len(Dataset) with the same type as the input data.
+        Contiguous integers from 0 to len(Dataset).
         """
         return self._indices
 
     @property
-    def names(self) -> ArrayT:
+    def names(self) -> NDArray[np.str_]:
         """Names of each individual datapoint.
 
         Used for reporting Shapley values.
@@ -532,7 +539,7 @@ class Dataset(Generic[ArrayT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayT,
+        y: ArrayTT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -551,7 +558,8 @@ class Dataset(Generic[ArrayT]):
             ```
 
         Args:
-            X: array of shape (n_samples, n_features) - either numpy array or PyTorch tensor
+            X: array of shape (n_samples, n_features) - either numpy array or PyTorch
+            tensor
             y: array of shape (n_samples,) - must be same type as X
             train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
@@ -584,11 +592,9 @@ class Dataset(Generic[ArrayT]):
                 y, train_size=train_size, random_state=random_state
             )
 
-            # Split data using the indices
             x_train, y_train = X[train_indices], y[train_indices]
             x_test, y_test = X[test_indices], y[test_indices]
         else:
-            # For non-stratified splits
             x_train, x_test, y_train, y_test = train_test_split(
                 X,
                 y,
@@ -596,21 +602,23 @@ class Dataset(Generic[ArrayT]):
                 random_state=random_state,
             )
 
-        return cls(x_train, y_train, **kwargs), cls(x_test, y_test, **kwargs)
+        return cls(x_train, cast(ArrayTT, y_train), **kwargs), cls(
+            x_test, cast(ArrayTT, y_test), **kwargs
+        )
 
 
-class GroupedDataset(Dataset[ArrayT]):
-    _group_names: ArrayT
+class GroupedDataset(Dataset[ArrayT, ArrayTT]):
+    _group_names: NDArray[np.str_]
 
     def __init__(
         self,
         x: ArrayT,
-        y: ArrayT,
-        data_groups: Sequence[int] | ArrayT,
-        feature_names: Sequence[str] | ArrayT | None = None,
-        target_names: Sequence[str] | ArrayT | None = None,
-        data_names: Sequence[str] | ArrayT | None = None,
-        group_names: Sequence[str] | ArrayT | None = None,
+        y: ArrayTT,
+        data_groups: Sequence[int] | NDArray[np.int_],
+        feature_names: Sequence[str] | NDArray[np.str_] | None = None,
+        target_names: Sequence[str] | NDArray[np.str_] | None = None,
+        data_names: Sequence[str] | NDArray[np.str_] | None = None,
+        group_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
         **kwargs: Any,
     ):
@@ -644,7 +652,7 @@ class GroupedDataset(Dataset[ArrayT]):
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y and group information. Added
                 methods to retrieve indices for groups and vice versa.
-                
+
         !!! tip "New in version 0.11.0"
             Added support for PyTorch tensors.
         """
@@ -664,60 +672,26 @@ class GroupedDataset(Dataset[ArrayT]):
                 f"Instead got {len(data_groups)=} and {len(x)=}"
             )
 
-        # Create data_to_group with the same type as input data
+        # data index -> abstract index (group id)
         try:
-            if is_tensor(x) and torch is not None:
-                # Convert to tensor with int64 dtype if using tensors
-                if is_tensor(data_groups):
-                    self.data_to_group = cast(ArrayT, data_groups.to(dtype=torch.int64))
-                else:
-                    self.data_to_group = cast(ArrayT, torch.tensor(
-                        data_groups, dtype=torch.int64, device=cast(torch.Tensor, x).device
-                    ))
-            else:
-                self.data_to_group = cast(ArrayT, np.array(data_groups, dtype=int))
-        except (ValueError, TypeError) as e:
+            self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
+        except ValueError as e:
             raise ValueError(
                 "data_groups must be a mapping from integer data indices to "
                 "integer group ids"
             ) from e
-            
-        # Extract unique group IDs for mapping
-        if is_tensor(self.data_to_group):
-            unique_groups = cast(torch.Tensor, self.data_to_group).cpu().detach().numpy()
-            unique_group_ids = set(map(int, unique_groups))
-        else:
-            unique_group_ids = set(map(int, cast(np.ndarray, self.data_to_group)))
-            
-        # Create mapping from group ID to data indices
-        self.group_to_data: OrderedDict[int, list[int]] = OrderedDict({k: [] for k in unique_group_ids})
-        
-        # Map data indices to group indices
+        # abstract index (group id) -> data index
+        self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
+            {k.item(): [] for k in set(self.data_to_group)}
+        )
         for data_idx, group_idx in enumerate(self.data_to_group):
-            # Extract integer value from group_idx, regardless of array type
-            group_key = int(group_idx.item() if hasattr(group_idx, 'item') else group_idx)
-            self.group_to_data[group_key].append(data_idx)
-        
-        # Create indices array with the same type as input data
-        group_keys = list(self.group_to_data.keys())
-        if is_tensor(x) and torch is not None:
-            self._indices = cast(ArrayT, torch.tensor(
-                group_keys, dtype=torch.int64, device=cast(torch.Tensor, x).device
-            ))
-        else:
-            self._indices = cast(ArrayT, np.array(group_keys, dtype=np.int_))
-        
-        # Create group names with the appropriate type
-        if group_names is not None:
-            if is_tensor(x) and is_tensor(group_names) and torch is not None:
-                self._group_names = cast(ArrayT, group_names)
-            else:
-                self._group_names = cast(ArrayT, np.array(group_names, dtype=np.str_))
-        else:
-            # Convert group keys to strings for names
-            str_group_keys = [str(k) for k in group_keys]
-            self._group_names = cast(ArrayT, np.array(str_group_keys, dtype=np.str_))
-                
+            self.group_to_data[group_idx].append(data_idx)  # type: ignore
+        self._indices = np.array(list(self.group_to_data.keys()), dtype=np.int_)
+        self._group_names = (
+            np.array(group_names, dtype=np.str_)
+            if group_names is not None
+            else np.array(list(self.group_to_data.keys()), dtype=np.str_)
+        )
         if len(self._group_names) != len(self.group_to_data):
             raise ValueError(
                 f"The number of group names ({len(self._group_names)}) "
@@ -728,7 +702,7 @@ class GroupedDataset(Dataset[ArrayT]):
         return len(self._indices)
 
     def __getitem__(
-        self, idx: int | slice | Sequence[int] | ArrayT
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
     ) -> GroupedDataset:
         if isinstance(idx, int):
             idx = [idx]
@@ -745,18 +719,18 @@ class GroupedDataset(Dataset[ArrayT]):
         )
 
     @property
-    def indices(self) -> ArrayT:
-        """Indices of the groups with the same type as the input data."""
+    def indices(self) -> NDArray[np.int_]:
+        """Indices of the groups."""
         return self._indices
 
     @property
-    def names(self) -> ArrayT:
+    def names(self) -> NDArray[np.str_]:
         """Names of the groups."""
         # FIXME? this shadows _data_names (but it can still be accessed...)
         return self._group_names
 
     def data(
-        self, indices: int | slice | Sequence[int] | ArrayT | None = None
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> RawData:
         """Returns the data and labels of all samples in the given groups.
 
@@ -770,8 +744,8 @@ class GroupedDataset(Dataset[ArrayT]):
         return super().data(self.data_indices(indices))
 
     def data_indices(
-        self, indices: int | slice | Sequence[int] | ArrayT | None = None
-    ) -> ArrayT:
+        self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
+    ) -> NDArray[np.int_]:
         """Returns the indices of the samples in the given groups.
 
         Args:
@@ -779,31 +753,19 @@ class GroupedDataset(Dataset[ArrayT]):
                 all indices from all groups are returned.
 
         Returns:
-            Indices of the samples in the given groups with the same type as the 
-            original indices (numpy array or torch tensor).
+            Indices of the samples in the given groups.
         """
         if indices is None:
             indices = self._indices
-        
         if isinstance(indices, slice):
             indices = range(*indices.indices(len(self.group_to_data)))
-            
-        # Collect all data indices for the given group indices
-        data_indices_list = []
-        for i in indices:
-            # Convert to Python int for dictionary lookup
-            i_key = int(i.item() if hasattr(i, 'item') else i)
-            data_indices_list.extend(self.group_to_data[i_key])
-            
-        # Create array with the same type as input data
-        if is_tensor(self._x) and torch is not None:
-            return cast(ArrayT, torch.tensor(
-                data_indices_list, dtype=torch.int64, device=cast(torch.Tensor, self._x).device
-            ))
         else:
-            return cast(ArrayT, np.array(data_indices_list, dtype=np.int_))
+            indices = to_numpy(indices)
+        return np.concatenate([self.group_to_data[i] for i in indices], dtype=np.int_)  # type: ignore
 
-    def logical_indices(self, indices: Sequence[int] | ArrayT | None = None) -> ArrayT:
+    def logical_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
         """Returns the group indices for the given data indices.
 
         Args:
@@ -811,12 +773,13 @@ class GroupedDataset(Dataset[ArrayT]):
                 the group indices for all data points are returned.
 
         Returns:
-            Group indices for the given data indices with the same type as the
-            original indices (numpy array or torch tensor).
+            Group indices for the given data indices.
         """
         if indices is None:
             return self.data_to_group
-        return self.data_to_group[indices]
+        if isinstance(indices, slice):
+            return self.data_to_group[indices]
+        return self.data_to_group[to_numpy(indices)]
 
     @overload
     @classmethod
@@ -916,7 +879,7 @@ class GroupedDataset(Dataset[ArrayT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayT,
+        y: ArrayTT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -928,7 +891,7 @@ class GroupedDataset(Dataset[ArrayT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayT,
+        y: ArrayTT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -940,7 +903,7 @@ class GroupedDataset(Dataset[ArrayT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayT,
+        y: ArrayTT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,

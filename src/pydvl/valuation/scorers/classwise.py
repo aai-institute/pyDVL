@@ -25,7 +25,7 @@ from typing import Callable
 
 import numpy as np
 
-from pydvl.utils.types import ArrayT
+from pydvl.utils.array import ArrayT
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.supervised import (
     SupervisedModelT,

@@ -51,7 +51,7 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 import numpy as np
 from more_itertools import chunked, flatten
 
-from pydvl.utils.types import Array, try_torch_import
+from pydvl.utils.array import Array, try_torch_import
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler

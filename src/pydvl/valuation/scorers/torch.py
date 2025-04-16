@@ -5,7 +5,7 @@ import logging
 import torch
 from torch import Tensor
 
-from pydvl.utils.types import TorchSupervisedModel
+from pydvl.valuation import TorchSupervisedModel
 from pydvl.valuation.scorers.supervised import SupervisedScorer
 
 __all__ = ["TorchModelScorer"]

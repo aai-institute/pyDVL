@@ -207,9 +207,9 @@ from scipy.stats import spearmanr
 from typing_extensions import Self
 
 from pydvl.utils.status import Status
-from pydvl.utils.types import validate_number
 from pydvl.valuation.result import ValuationResult
 from pydvl.valuation.samplers.base import IndexSampler
+from pydvl.valuation.types import validate_number
 
 __all__ = [
     "AbsoluteStandardError",

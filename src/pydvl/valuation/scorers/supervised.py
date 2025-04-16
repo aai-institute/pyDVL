@@ -6,7 +6,8 @@ scoring functions for supervised problems with additional information.
 Supervised scorers can be constructed in the same way as in scikit-learn: either from
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
-[make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
+[make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics
+.make_scorer.html).
 
 [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer] holds the test data used to
 evaluate the model.
@@ -41,12 +42,12 @@ from typing import Generic, Protocol, TypeVar
 import numpy as np
 from sklearn.metrics import get_scorer
 
-from pydvl.utils.types import ArrayT, SupervisedModel
+from pydvl.utils.array import ArrayT
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.base import Scorer
+from pydvl.valuation.types import SupervisedModel
 
 __all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
-
 
 SupervisedModelT = TypeVar(
     "SupervisedModelT", bound=SupervisedModel, contravariant=True
@@ -64,7 +65,8 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
 
     Args:
         scoring: Either a string or callable that can be passed to
-            [get_scorer](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html).
+            [get_scorer](https://scikit-learn.org/stable/modules/generated/sklearn
+            .metrics.get_scorer.html).
         test_data: Dataset where the score will be evaluated.
         default: score to be used when a model cannot be fit, e.g. when too
             little data is passed, or errors arise.

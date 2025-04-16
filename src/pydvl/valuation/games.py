@@ -33,11 +33,10 @@ import scipy as sp
 from numpy.typing import NDArray
 
 from pydvl.utils.status import Status
-from pydvl.utils.types import SupervisedModel
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods._solve_least_core_problems import LeastCoreProblem
 from pydvl.valuation.result import ValuationResult
-from pydvl.valuation.types import SampleT
+from pydvl.valuation.types import SampleT, SupervisedModel
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = [
@@ -98,7 +97,7 @@ class DummyGameUtility(UtilityBase):
         if self.training_data is None:
             raise ValueError("Utility object has no training data.")
 
-        idxs: NDArray[np.int32] = np.array(sample.subset, dtype=np.int32)
+        idxs: NDArray[np.int_] = np.array(sample.subset, dtype=np.int_)
         x, _ = self.training_data.data(idxs)
         try:
             score: float = self.score(x)

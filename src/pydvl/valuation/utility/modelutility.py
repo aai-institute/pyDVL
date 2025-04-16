@@ -98,7 +98,8 @@ it before fitting, then override
     by joblib does not work for nested structures like
     [Dataset][pydvl.valuation.dataset.Dataset] objects, nor for pytorch tensors. For
     now, it should be possible to [use memmap
-    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
+    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap
+    .html)
     but it hasn't been tested.
 
     If you are working on a cluster, the data will be copied to each worker. In this
@@ -118,9 +119,8 @@ from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.functional import suppress_warnings
-from pydvl.utils.types import BaseModel
 from pydvl.valuation.scorers import Scorer
-from pydvl.valuation.types import SampleT
+from pydvl.valuation.types import BaseModel, SampleT
 
 __all__ = ["ModelUtility"]
 
@@ -164,7 +164,8 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
     Args:
         model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation](https://scikit-learn.org/stable/supervised_learning.html).
+            [sci-kit learn documentation](
+            https://scikit-learn.org/stable/supervised_learning.html).
         scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [scorers][pydvl.valuation.scorers] for ways to create
             and compose scorers, in particular how to set default values and
@@ -177,11 +178,13 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             value][pydvl.valuation.scorers.SupervisedScorer] is returned as a score and
             computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
-        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        cache_backend: Optional instance of [CacheBackend][
+        pydvl.utils.caching.base.CacheBackend]
             used to memoize results to avoid duplicate computation. Note however, that
             for most stochastic methods, cache hits are rare, making the memory expense
             of caching not worth it (YMMV).
-        cached_func_options: Optional configuration object for cached utility evaluation.
+        cached_func_options: Optional configuration object for cached utility
+        evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
     """

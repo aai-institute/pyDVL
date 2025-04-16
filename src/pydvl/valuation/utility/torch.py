@@ -7,10 +7,10 @@ import torch
 from torch import Tensor
 from torch.utils.data import TensorDataset
 
-from pydvl.utils import CacheBackend, CachedFuncConfig
-from pydvl.utils.types import TorchSupervisedModel
-from pydvl.valuation import ModelUtility, Scorer
-from pydvl.valuation.types import Sample
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig
+from pydvl.valuation.scorers.base import Scorer
+from pydvl.valuation.types import Sample, TorchSupervisedModel
+from pydvl.valuation.utility.modelutility import ModelUtility
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,8 @@ class TorchUtility(ModelUtility[Sample, TorchSupervisedModel]):
 
     This is useful for batched samplers only, since this prefetching will be triggered
     only once at the start of the loop in
-    [EvaluationStrategy.process()][pydvl.valuation.evaluation.EvaluationStrategy.process].
+    [EvaluationStrategy.process()][
+    pydvl.valuation.evaluation.EvaluationStrategy.process].
     """
 
     _torch_dataset: TensorDataset | None
@@ -52,7 +53,8 @@ class TorchUtility(ModelUtility[Sample, TorchSupervisedModel]):
             if self.training_data is None:
                 raise ValueError("No training data set for utility")
             logger.info(
-                f"Moving {len(self.training_data)} training data points to {self.model.device}"
+                f"Moving {len(self.training_data)} training data points to "
+                f"{self.model.device}"
             )
             x, y = self.training_data.data()
             x = torch.tensor(x).to(device=self.model.device)

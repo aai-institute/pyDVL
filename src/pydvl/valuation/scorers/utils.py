@@ -6,7 +6,7 @@ from typing import Callable
 
 from scipy.special import expit
 
-from pydvl.utils.types import ArrayT
+from pydvl.utils.array import ArrayT
 from pydvl.valuation.scorers.supervised import SupervisedModelT, SupervisedScorer
 
 __all__ = ["compose_score", "sigmoid"]

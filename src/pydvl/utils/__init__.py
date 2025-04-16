@@ -1,4 +1,4 @@
-from .array_ops import *
+from .array import *
 from .caching import *
 from .dataset import *
 from .functional import *

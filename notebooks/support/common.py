@@ -21,7 +21,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn.preprocessing import TargetEncoder
 
-from pydvl.utils.types import try_torch_import
+from pydvl.utils.array import try_torch_import
 from pydvl.valuation.dataset import Dataset
 
 from .influence import Losses
@@ -847,7 +847,7 @@ class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
 
 
 if torch := try_torch_import():
-    from pydvl.utils.types import TorchSupervisedModel
+    from pydvl.valuation.types import TorchSupervisedModel
 
     def profile_torch_fit(
         model: TorchSupervisedModel, train: Dataset, test: Dataset, device: str
