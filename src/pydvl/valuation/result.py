@@ -104,7 +104,7 @@ from numpy.typing import NDArray
 from typing_extensions import Self
 
 from pydvl.utils import log_running_moments
-from pydvl.utils.array import to_numpy, array_equal, Array
+from pydvl.utils.array import Array, is_tensor, to_numpy
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed
 from pydvl.valuation.dataset import Dataset
@@ -255,10 +255,11 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
     Raises:
          ValueError: If input arrays have mismatching lengths.
 
-    !!! note "Tensor Support"
-        If any inputs are PyTorch tensors, they will be automatically converted to
-        numpy arrays. ValuationResult always uses numpy arrays internally for
-        efficiency and interoperability with other tools.
+    !!! warning "Tensor Support"
+        PyTorch tensors are not accepted as inputs to ValuationResult. You must
+        explicitly convert tensor inputs to numpy arrays using `.cpu().numpy()`.
+        ValuationResult requires numpy arrays internally for efficiency and
+        interoperability with other tools.
 
     ??? tip "Changed in 0.10.0"
         Changed the behaviour of sorting, slicing, and indexing.
@@ -293,13 +294,25 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
         sort: bool | None = None,
         **extra_values: Any,
     ):
-        # Convert any tensor inputs to numpy arrays
+        if (
+            is_tensor(values)
+            or (variances is not None and is_tensor(variances))
+            or (counts is not None and is_tensor(counts))
+            or (indices is not None and is_tensor(indices))
+            or (data_names is not None and is_tensor(data_names))
+        ):
+            raise TypeError(
+                "ValuationResult requires numpy arrays. "
+                "Please convert tensor to numpy using tensor.cpu().numpy() explicitly."
+            )
+
+        # Convert non-tensor sequences to numpy arrays
         values = to_numpy(values)
         variances = to_numpy(variances) if variances is not None else None
         counts = to_numpy(counts) if counts is not None else None
         indices = to_numpy(indices) if indices is not None else None
         data_names = to_numpy(data_names) if data_names is not None else None
-        
+
         if variances is not None and len(variances) != len(values):
             raise ValueError(
                 f"Lengths of values ({len(values)}) "
@@ -965,6 +978,7 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
 
         Raises:
              ValueError: If `size` is less than 1.
+             TypeError: If any input contains tensor values (see class docstring).
 
         !!! tip "Changed in version 0.6.0"
             Added parameter `total`. Check for zero size
@@ -996,8 +1010,12 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.valuation.result.ValuationResult]. Use to
                 override status, extra_values, etc.
+
         Returns:
             Object with the results.
+
+        Raises:
+            TypeError: If any input contains tensor values (see class docstring).
         """
         options: dict[str, Any] = dict(
             algorithm=algorithm, status=Status.Pending, values=np.array([])
@@ -1030,9 +1048,23 @@ class ValuationResult(collections.abc.Sequence, Iterable[ValueItem]):
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.valuation.result.ValuationResult]. Use to
                 override status, extra_values, etc.
+
         Returns:
             Object with the results.
+
+        Raises:
+            TypeError: If any input contains tensor values (see class docstring).
         """
+        from pydvl.utils.array import is_tensor
+
+        if (indices is not None and is_tensor(indices)) or (
+            data_names is not None and is_tensor(data_names)
+        ):
+            raise TypeError(
+                "ValuationResult requires numpy arrays. "
+                "Please convert tensor to numpy using tensor.cpu().numpy() explicitly."
+            )
+
         indices = cls._create_indices_array(indices, size)
         data_names = cls._create_names_array(data_names, indices)
 

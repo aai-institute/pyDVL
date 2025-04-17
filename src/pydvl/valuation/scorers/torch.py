@@ -14,8 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class TorchModelScorer(SupervisedScorer[TorchSupervisedModel, torch.Tensor]):
-    """This scorer preloads the test data into a PyTorch dataset and moves it to the
-    model's device on first use.
+    """Scorer specifically designed for PyTorch models.
+
+    This scorer assumes the input data provided during initialization (`test_data`)
+    is already a `torch.Tensor` or can be converted to one. It preloads the test
+    data and moves it to the specified model's device upon the first call.
+
+    Important:
+        This scorer requires `torch.Tensor` inputs for its `test_data`. If you
+        have `numpy.ndarray` data, you are responsible for converting it to a
+        `torch.Tensor` *before* initializing this scorer, for example using
+        `torch.from_numpy(your_numpy_array)`. Implicit conversion is *not*
+        performed.
 
     It is mainly useful for batched samplers only, since this prefetching will be
     triggered only once at the start of the loop in
