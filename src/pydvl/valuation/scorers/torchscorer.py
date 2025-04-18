@@ -46,4 +46,4 @@ class TorchModelScorer(SupervisedScorer[TorchSupervisedModel, torch.Tensor]):
             self.x_test, self.y_test = model.reshape_inputs(x, y)
             del self.test_data
 
-        return self._scorer(model, self.x_test, self.y_test)
+        return float(self._scorer(model, self.x_test, self.y_test))

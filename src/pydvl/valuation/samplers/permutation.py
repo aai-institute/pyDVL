@@ -276,7 +276,7 @@ class PermutationEvaluationStrategy(
         for sample in batch:
             self.truncation.reset(self.utility)
             truncated = False
-            curr = prev = self.utility(None)
+            curr = prev = float(self.utility(None))
             permutation = sample.subset
             for i, idx in enumerate(permutation):  # type: int, np.int_
                 if not truncated:

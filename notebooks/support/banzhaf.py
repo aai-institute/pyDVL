@@ -12,7 +12,7 @@ from pydvl.utils import timed
 from pydvl.utils.monitor import end_memory_monitoring, start_memory_monitoring
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers import SupervisedScorer
-from pydvl.valuation.scorers.torch import TorchModelScorer
+from pydvl.valuation.scorers.torchscorer import TorchModelScorer
 from pydvl.valuation.types import TorchSupervisedModel
 from pydvl.valuation.utility.modelutility import ModelUtility
 from pydvl.valuation.utility.torchutility import TorchUtility
