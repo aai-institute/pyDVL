@@ -143,7 +143,6 @@ class Game(ABC):
     Args:
         n_players: Number of players that participate in the game.
         score_range: Minimum and maximum values of the `_score` method.
-        description: Optional string description of the dummy dataset that will be created.
 
     Attributes:
         n_players: Number of players that participate in the game.
@@ -155,10 +154,12 @@ class Game(ABC):
         self,
         n_players: int,
         score_range: tuple[float, float] = (-np.inf, np.inf),
-        description: str | None = None,
     ):
         self.n_players = n_players
-        self.data = DummyGameDataset(self.n_players, description)
+        self.data = DummyGameDataset(
+            n_players=self.n_players,
+            description=f"Dummy data for {self.__class__.__name__}",
+        )
         self.u = DummyGameUtility(score=self._score, score_range=score_range)
 
     def shapley_values(self) -> ValuationResult:
@@ -204,15 +205,10 @@ class SymmetricVotingGame(Game):
         n_players: Number of players that participate in the game.
     """
 
-    def __init__(self, n_players: int) -> None:
+    def __init__(self, n_players: int):
         if n_players % 2 != 0:
             raise ValueError("n_players must be an even number.")
-        description = "Dummy data for the symmetric voting game in Castro et al. 2009"
-        super().__init__(
-            n_players,
-            score_range=(0, 1),
-            description=description,
-        )
+        super().__init__(n_players, score_range=(0, 1))
 
     def _score(self, X: NDArray) -> float:
         return 1 if len(X) > self.n_players // 2 else 0
@@ -269,17 +265,12 @@ class AsymmetricVotingGame(Game):
         n_players: Number of players that participate in the game.
     """
 
-    def __init__(self, n_players: int = 51) -> None:
+    def __init__(self, n_players: int = 51):
         if n_players != 51:
             raise ValueError(
                 f"{self.__class__.__name__} only supports n_players=51 but got {n_players=}."
             )
-        description = "Dummy data for the asymmetric voting game in Castro et al. 2009"
-        super().__init__(
-            n_players,
-            score_range=(0, 1),
-            description=description,
-        )
+        super().__init__(n_players, score_range=(0, 1))
 
         ranges = [
             range(0, 1),
@@ -413,13 +404,12 @@ class ShoesGame(Game):
         right: Number of players with a right shoe.
     """
 
-    def __init__(self, left: int, right: int) -> None:
+    def __init__(self, left: int, right: int):
         self.left = left
         self.right = right
         n_players = self.left + self.right
-        description = "Dummy data for the shoe game in Castro et al. 2009"
         max_score = n_players // 2
-        super().__init__(n_players, score_range=(0, max_score), description=description)
+        super().__init__(n_players, score_range=(0, max_score))
 
     def _score(self, X: NDArray) -> float:
         left_sum = float(np.sum(np.asarray(X) < self.left))
@@ -548,13 +538,12 @@ class AirportGame(Game):
         n_players: Number of players that participate in the game.
     """
 
-    def __init__(self, n_players: int = 100) -> None:
+    def __init__(self, n_players: int = 100):
         if n_players != 100:
             raise ValueError(
                 f"{self.__class__.__name__} only supports n_players=100 but got {n_players=}."
             )
-        description = "A dummy dataset for the airport game in Castro et al. 2009"
-        super().__init__(n_players, score_range=(0, 100), description=description)
+        super().__init__(n_players, score_range=(0, 100))
         ranges = [
             range(0, 8),
             range(8, 20),
@@ -638,10 +627,7 @@ class MinimumSpanningTreeGame(Game):
             raise ValueError(
                 f"{self.__class__.__name__} only supports n_players=100 but got {n_players=}."
             )
-        description = (
-            "A dummy dataset for the minimum spanning tree game in Castro et al. 2009"
-        )
-        super().__init__(n_players, score_range=(0, np.inf), description=description)
+        super().__init__(n_players, score_range=(0, np.inf))
 
         graph = np.zeros(shape=(self.n_players, self.n_players))
 
@@ -705,17 +691,13 @@ class MinerGame(Game):
 
     Args:
         n_players: Number of miners that participate in the game.
+        data_description:
     """
 
-    def __init__(self, n_players: int) -> None:
+    def __init__(self, n_players: int):
         if n_players <= 2:
             raise ValueError(f"n_players, {n_players}, should be > 2")
-        description = "Dummy data for Miner Game taken from https://en.wikipedia.org/wiki/Core_(game_theory)"
-        super().__init__(
-            n_players,
-            score_range=(0, n_players // 2),
-            description=description,
-        )
+        super().__init__(n_players, score_range=(0, n_players // 2))
 
     def _score(self, X: NDArray) -> float:
         n = len(X)
