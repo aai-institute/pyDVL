@@ -34,6 +34,6 @@ from .knn import *
 from .learning import *
 
 try:
-    from .torch import *
+    from .torchutility import *
 except ImportError:
     pass

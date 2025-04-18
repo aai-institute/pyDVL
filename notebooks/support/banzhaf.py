@@ -15,7 +15,7 @@ from pydvl.valuation.scorers import SupervisedScorer
 from pydvl.valuation.scorers.torch import TorchModelScorer
 from pydvl.valuation.types import TorchSupervisedModel
 from pydvl.valuation.utility.modelutility import ModelUtility
-from pydvl.valuation.utility.torch import TorchUtility
+from pydvl.valuation.utility.torchutility import TorchUtility
 
 try:
     import torch
