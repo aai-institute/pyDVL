@@ -63,6 +63,9 @@ class DataOOBValuation(Valuation):
         score: A callable for point-wise comparison of true values with the predictions.
             If `None`, uses point-wise accuracy for classifiers and negative $l_2$
             distance for regressors.
+
+    !!! tip "New in version 0.11.0"
+        Added (partial) support for PyTorch tensors.
     """
 
     algorithm_name: str = "Data-OOB"
@@ -170,7 +173,7 @@ def point_wise_accuracy(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     Returns:
         Array with point-wise 0-1 accuracy between labels and model predictions
     """
-    return np.array(y_pred == y_true, dtype=np.float64)
+    return np.array(to_numpy(y_pred) == to_numpy(y_true), dtype=np.float64)
 
 
 def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
@@ -186,4 +189,4 @@ def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
         Array with point-wise negative $l_2$ distances between labels and model
         predictions
     """
-    return -np.square(to_numpy(y_pred - y_true), dtype=np.float64)
+    return -np.square(to_numpy(y_pred) - to_numpy(y_true), dtype=np.float64)
