@@ -1,19 +1,9 @@
 from __future__ import annotations
 
-import logging
-
 import pytest
-import torch
-from joblib import parallel_config
 from numpy.testing import assert_almost_equal, assert_array_almost_equal
 
 from pydvl.utils.array import try_torch_import
-from pydvl.valuation.dataset import Dataset
-from pydvl.valuation.games import (
-    DummyGameDataset,
-    MinerGame,
-    ShoesGame,
-)
 from pydvl.valuation.methods.least_core import (
     ExactLeastCoreValuation,
     MonteCarloLeastCoreValuation,
@@ -24,46 +14,11 @@ from pydvl.valuation.samplers import (
     FiniteNoIndexIteration,
 )
 from tests.valuation import check_total_value, check_values, recursive_make
-
-logger = logging.getLogger(__name__)
+from tests.valuation.methods.conftest import TensorMinerGame, TensorShoesGame
 
 torch = try_torch_import()
 if torch is None:
     pytest.skip("PyTorch not available", allow_module_level=True)
-
-
-class TensorDummyGameDataset(DummyGameDataset):
-    """Extends DummyGameDataset to use PyTorch tensors instead of NumPy arrays."""
-
-    def __init__(self, n_players: int, description: str = ""):
-        x = torch.arange(0, n_players, 1).reshape(-1, 1).float()
-        nil = torch.zeros_like(x)
-        (
-            Dataset.__init__(
-                self,
-                x,
-                nil.clone(),
-                feature_names=["x"],
-                target_names=["y"],
-                description=description,
-            ),
-        )
-
-
-class TensorMinerGame(MinerGame):
-    """Extends MinerGame to use PyTorch tensors."""
-
-    def __init__(self, n_players: int):
-        super().__init__(n_players)
-        self.data = TensorDummyGameDataset(self.n_players, "Tensor Miner Game dataset")
-
-
-class TensorShoesGame(ShoesGame):
-    """Extends ShoesGame to use PyTorch tensors."""
-
-    def __init__(self, left: int, right: int):
-        super().__init__(left, right)
-        self.data = TensorDummyGameDataset(self.n_players, "Tensor Shoes Game dataset")
 
 
 @pytest.mark.torch
