@@ -39,7 +39,6 @@ from __future__ import annotations
 
 from typing import Generic, Protocol, TypeVar
 
-import numpy as np
 from sklearn.metrics import get_scorer
 
 from pydvl.utils.array import ArrayT
@@ -94,7 +93,7 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
         | SupervisedModelT,
         test_data: Dataset,
         default: float,
-        range: tuple[float, float] = (-float('inf'), float('inf')),
+        range: tuple[float, float] = (-float("inf"), float("inf")),
         name: str | None = None,
     ):
         super().__init__()
@@ -119,7 +118,7 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
         self.name = name
 
     def __call__(self, model: SupervisedModelT) -> float:
-        return self._scorer(model, *self.test_data.data())
+        return float(self._scorer(model, *self.test_data.data()))
 
     def __str__(self) -> str:
         return f"{self.name}(default={self.default}, range={self.range})"
