@@ -3,7 +3,7 @@ dask==2024.8.0
 distributed==2024.8.0
 imblearn
 pillow==10.4.0
-torch==2.2.0
+torch==2.6.0
 torchvision==0.17.0
 transformers==4.44.2
 zarr>=2,<3; python_version<'3.11'
