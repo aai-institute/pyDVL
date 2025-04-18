@@ -95,7 +95,7 @@ probability values $q$ between 0 and 0.5 at random and then generates two sample
 for each index, one using the probability $q$ for index draws, and another with
 probability $1-q$.
 
-!!! Example
+??? Example
     ```python
     from pydvl.valuation import AntitheticOwenSampler, ShapleyValuation, RankCorrelation
     ...

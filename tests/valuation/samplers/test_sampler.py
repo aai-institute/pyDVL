@@ -43,6 +43,7 @@ from pydvl.valuation.samplers import (
     UniformOwenStrategy,
     UniformSampler,
 )
+from pydvl.valuation.samplers.ame import AMESampler
 from pydvl.valuation.samplers.permutation import PermutationSamplerBase
 from pydvl.valuation.types import IndexSetT, Sample, SampleGenerator
 from pydvl.valuation.utility.base import UtilityBase
@@ -148,6 +149,19 @@ def permutation_samplers():
     return [
         (PermutationSampler, {"seed": lambda seed: seed}),
         (AntitheticPermutationSampler, {"seed": lambda seed: seed}),
+    ]
+
+
+def amesampler_samplers():
+    return [
+        (
+            AMESampler,
+            {"index_iteration": RandomIndexIteration, "seed": lambda seed: seed},
+        ),
+        (
+            AMESampler,
+            {"index_iteration": SequentialIndexIteration, "seed": lambda seed: seed},
+        ),
     ]
 
 
@@ -291,20 +305,24 @@ def owen_samplers():
     ]
 
 
-def random_samplers(proper: bool = False, n_samples_per_index: int = 32):
+def random_samplers(proper: bool = False, stratified: bool = True):
     """Use this as parameter values in pytest.mark.parametrize for parameters
     "sampler_cls, sampler_kwargs"
 
     Build the objects with recursive_make(sampler_cls, sampler_kwargs, **lambda_args)
     where lambda args are named as the key in the dictionary that contains the lambda.
     """
-    return (
+    ret = (
         permutation_samplers()
         + powerset_samplers()
-        + stratified_samplers(n_samples_per_index=n_samples_per_index)
+        + amesampler_samplers()
         + owen_samplers()
-        + (improper_samplers() if not proper else [])
     )
+    if stratified:
+        ret += stratified_samplers()
+    if not proper:
+        ret += improper_samplers()
+    return ret
 
 
 @pytest.mark.parametrize(
@@ -550,9 +568,13 @@ def test_length_of_infinite_samplers(
     # check that we can generate samples that are longer than size of powerset
     batches = list(islice(sampler.generate_batches(indices), n_batches))
     if len(indices) > 0:
+        assert sampler.sample_limit(indices) is None
         assert (
             len(list(flatten(batches))) == n_batches * batch_size == sampler.n_samples
         )
+    else:
+        assert sampler.sample_limit(indices) == 0
+
     with pytest.raises(TypeError):
         len(sampler)
 
