@@ -65,7 +65,7 @@ def compute_utility_values_and_sample_masks(
             m = np.full(n_obs, False)
             m[sample.subset.astype(int)] = True
             masks.append(m)
-            u_values.append(utility(sample))
+            u_values.append(float(utility(sample)))
 
         return masks, u_values
 
