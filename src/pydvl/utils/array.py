@@ -47,9 +47,9 @@ __all__ = [
     "array_exp",
     "array_count_nonzero",
     "array_nonzero",
+    "array_sum",
+    "is_categorical",
     "stratified_split_indices",
-    "for_sklearn",
-    "for_pytorch",
     "atleast1d",
     "check_X_y",
     "check_X_y_torch",
@@ -604,59 +604,6 @@ def array_index(array: Array, key: Array, dim: int = 0) -> Array:
         raise TypeError("Unsupported array type for indexing.")
 
 
-def for_sklearn(array: Array, function_name: str | None = None) -> NDArray:
-    """
-    Convert array to numpy format for scikit-learn compatibility.
-
-    Args:
-        array: The input array.
-        function_name: Optional name of the calling function (for warning message).
-
-    Returns:
-        Numpy array.
-    """
-    if is_tensor(array):
-        if function_name:
-            warnings.warn(
-                f"{function_name} requires numpy arrays. Converting tensor to "
-                "numpy, which may impact performance."
-            )
-        return to_numpy(array)
-    return cast(NDArray, array)
-
-
-def for_pytorch(
-    array: Array, device: Any | None = None, function_name: str | None = None
-) -> Tensor:
-    """
-    Convert array to torch.Tensor for PyTorch compatibility.
-
-    Args:
-        array: The input array.
-        device: Optional device to place the tensor on.
-        function_name: Optional name of the calling function (for warning message).
-
-    Returns:
-        A torch.Tensor.
-
-    Raises:
-        ImportError: If PyTorch is not available.
-    """
-    if torch is None:
-        raise ImportError("PyTorch is not available")
-    if is_numpy(array):
-        if function_name:
-            warnings.warn(
-                f"{function_name} requires PyTorch tensors. Converting numpy "
-                "array to tensor, which may impact performance."
-            )
-        return to_tensor(array).to(device=device)
-    tensor = cast(Tensor, array)
-    if device is not None and tensor.device != device:
-        return tensor.to(device)
-    return tensor
-
-
 ArrayT = TypeVar("ArrayT", bound=Array, contravariant=True)
 ArrayRetT = TypeVar("ArrayRetT", bound=Array, covariant=True)
 
@@ -959,3 +906,61 @@ def array_nonzero(
     else:  # Fallback to numpy approach
         numpy_array = to_numpy(x)
         return cast(tuple[Array, ...], np.nonzero(numpy_array))
+
+
+def array_sum(x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
+    """
+    Calculate the sum of array elements.
+
+    Args:
+        x: Input array.
+        axis: Axis along which to perform the sum. If None, sum all elements.
+        keepdims: If True, retain the dimensions of the input array.
+
+    Returns:
+        Sum of array elements.
+    """
+    if is_tensor(x):
+        assert torch is not None
+        tensor_array = cast(Tensor, x)
+        return cast(Array, torch.sum(tensor_array, dim=axis, keepdim=keepdims))
+    else:  # Fallback to numpy approach
+        numpy_array = to_numpy(x)
+        return cast(Array, np.sum(numpy_array, axis=axis, keepdims=keepdims))
+
+
+def is_categorical(x: Array) -> bool:
+    """
+    Check if an array contains categorical data (suitable for unique labels).
+
+    For numpy arrays, checks if the dtype.kind is in "OSUiub"
+    (Object, String, Unicode, Unsigned integer, Signed integer, Boolean).
+
+    For torch tensors, checks if the dtype is an integer or boolean type.
+
+    Args:
+        x: Input array to check.
+
+    Returns:
+        True if the array contains categorical data, False otherwise.
+    """
+    if is_tensor(x):
+        assert torch is not None
+        tensor_array = cast(Tensor, x)
+        # Check for integer and boolean dtypes in torch
+        return tensor_array.dtype in [
+            torch.bool,
+            torch.uint8,
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+        ]
+    elif is_numpy(x):
+        numpy_array = cast(NDArray, x)
+        # Object, String, Unicode, Unsigned integer, Signed integer, boolean
+        return numpy_array.dtype.kind in "OSUiub"
+    else:
+        # For other array-like objects, assume it's categorical
+        # (this will be verified when operations are performed)
+        return True
