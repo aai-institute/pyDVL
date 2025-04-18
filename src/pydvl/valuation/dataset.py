@@ -75,7 +75,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import mkdtemp
-from typing import Any, Generic, Sequence, TypeVar, cast, overload
+from typing import Any, Generic, Sequence, cast, overload
 
 import numpy as np
 from deprecate import deprecated
@@ -167,10 +167,7 @@ def _create_memmap(array: NDArray) -> NDArray:
     return ro_mm
 
 
-ArrayTT = TypeVar("ArrayTT", bound=Array, contravariant=True)
-
-
-class Dataset(Generic[ArrayT, ArrayTT]):
+class Dataset(Generic[ArrayT]):
     """A convenience class to handle datasets.
 
     It holds a dataset, together with info on feature names, target names, and
@@ -209,14 +206,14 @@ class Dataset(Generic[ArrayT, ArrayTT]):
     feature_names: list[str]
     target_names: list[str]
     _x: ArrayT
-    _y: ArrayTT
+    _y: ArrayT
     _indices: NDArray[np.int_]
     _data_names: NDArray[np.str_]
 
     def __init__(
         self,
         x: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -232,7 +229,7 @@ class Dataset(Generic[ArrayT, ArrayTT]):
             self._x_dtype, self._y_dtype = _x.dtype, _y.dtype
             self._x_shape, self._y_shape = _x.shape, _y.shape
             self._x = cast(ArrayT, _create_memmap(_x))
-            self._y = cast(ArrayTT, _create_memmap(_y))
+            self._y = cast(ArrayT, _create_memmap(_y))
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"
@@ -539,7 +536,7 @@ class Dataset(Generic[ArrayT, ArrayTT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -602,18 +599,18 @@ class Dataset(Generic[ArrayT, ArrayTT]):
                 random_state=random_state,
             )
 
-        return cls(x_train, cast(ArrayTT, y_train), **kwargs), cls(
-            x_test, cast(ArrayTT, y_test), **kwargs
+        return cls(x_train, cast(ArrayT, y_train), **kwargs), cls(
+            x_test, cast(ArrayT, y_test), **kwargs
         )
 
 
-class GroupedDataset(Dataset[ArrayT, ArrayTT]):
+class GroupedDataset(Dataset[ArrayT]):
     _group_names: NDArray[np.str_]
 
     def __init__(
         self,
         x: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         data_groups: Sequence[int] | NDArray[np.int_],
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -879,7 +876,7 @@ class GroupedDataset(Dataset[ArrayT, ArrayTT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -891,7 +888,7 @@ class GroupedDataset(Dataset[ArrayT, ArrayTT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -903,7 +900,7 @@ class GroupedDataset(Dataset[ArrayT, ArrayTT]):
     def from_arrays(
         cls,
         X: ArrayT,
-        y: ArrayTT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
