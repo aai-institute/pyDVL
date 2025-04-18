@@ -338,14 +338,17 @@ class SupervisedModel(Protocol[ArrayT, ArrayRetT]):
 
 
 @runtime_checkable
-class BaggingModel(Protocol):
+class BaggingModel(Protocol[ArrayT, ArrayRetT]):
     """Any model with the attributes `n_estimators` and `max_samples` is considered a
-    bagging model."""
+    bagging model.
+    After fitting, the model must have the `estimators_` attribute.
+    If it defines `estimators_samples_`, it will be used by [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]
+    """
 
     n_estimators: int
     max_samples: float
 
-    def fit(self, x: NDArray, y: NDArray | None):
+    def fit(self, x: ArrayT, y: ArrayT | None):
         """Fit the model to the data
 
         Args:
@@ -354,7 +357,7 @@ class BaggingModel(Protocol):
         """
         pass
 
-    def predict(self, x: NDArray) -> NDArray:
+    def predict(self, x: ArrayT) -> ArrayRetT:
         """Compute predictions for the input
 
         Args:

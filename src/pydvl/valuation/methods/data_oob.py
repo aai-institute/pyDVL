@@ -38,6 +38,7 @@ from sklearn.ensemble._forest import (
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import Self
 
+from pydvl.utils.array import ArrayT, to_numpy
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
@@ -116,7 +117,16 @@ class DataOOBValuation(Valuation):
                 np.setxor1d(data.indices, np.unique(sampled))
                 for sampled in self.model.estimators_samples_
             ]
-        else:  # RandomForest*, ExtraTrees*, IsolationForest
+        elif isinstance(
+            self.model,
+            (
+                RandomForestClassifier,
+                RandomForestRegressor,
+                ExtraTreesClassifier,
+                ExtraTreesRegressor,
+                IsolationForest,
+            ),
+        ):
             n_samples_bootstrap = _get_n_samples_bootstrap(
                 len(data), self.model.max_samples
             )
@@ -126,6 +136,14 @@ class DataOOBValuation(Valuation):
                 )
                 for est in estimators
             ]
+        else:
+            raise ValueError(
+                "The model has to be an sklearn-compatible bagging model, including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "and ExtraTrees*, \n"
+                "or it must implement pydvl.valuation.types.BaggingModel.\n"
+                f"Was: {type(self.model)}"
+            )
 
         for est, oob_indices in zip(estimators, unsampled_indices):
             subset = data[oob_indices].data()
@@ -140,7 +158,7 @@ class DataOOBValuation(Valuation):
         return self
 
 
-def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
+def point_wise_accuracy(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     """Point-wise accuracy, or 0-1 score between two arrays.
 
     Higher is better.
@@ -152,10 +170,10 @@ def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
     Returns:
         Array with point-wise 0-1 accuracy between labels and model predictions
     """
-    return np.array(y_pred == y_true, dtype=y_pred.dtype)
+    return np.array(y_pred == y_true, dtype=np.float64)
 
 
-def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
+def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     r"""Point-wise negative $l_2$ distance between two arrays.
 
     Higher is better.
@@ -168,4 +186,4 @@ def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
         Array with point-wise negative $l_2$ distances between labels and model
         predictions
     """
-    return -np.square(np.array(y_pred - y_true), dtype=y_pred.dtype)
+    return -np.square(to_numpy(y_pred - y_true), dtype=np.float64)
