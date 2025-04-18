@@ -415,7 +415,7 @@ To add a citation inside a markdown file, use the notation `[@ citekey]` (with
 no space). Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
-example, in `pydvl.value.shapley.montecarlo` we have:
+example, in `pydvl.valuation.methods.shapley` we have:
 
 ```markdown
 """
