@@ -18,4 +18,3 @@ pytest-sugar
 pytest-rerunfailures
 nbmake
 wheel
-twine==5.1.1

@@ -6,5 +6,6 @@ pillow==10.4.0
 torch==2.2.0
 torchvision==0.17.0
 transformers==4.44.2
-zarr==2.16.1
--c requirements-constraints.txt
+zarr>=2,<3; python_version<'3.11'
+numcodecs<0.16.0; python_version<'3.11'
+zarr>=3,<4; python_version>='3.11'

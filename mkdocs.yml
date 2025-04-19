@@ -53,14 +53,20 @@ nav:
     # by leaving the trailing slash. Do not remove it!
     - API Reference:
       - Intro: api/pydvl/
-      - Data Valuation: api/pydvl/valuation/
-#        - Intro: api/pydvl/valuation/
-#        - Datasets: api/pydvl/valuation/dataset/
-#        - Methods: api/pydvl/valuation/methods/
-#        - Utilities: api/pydvl/valuation/utility/
-#        - Scorers: api/pydvl/valuation/scorers/
-#        - Samplers: api/pydvl/valuation/samplers/
-#        - Stopping criteria: api/pydvl/valuation/stopping/
+      - Data Valuation:
+        - Intro: api/pydvl/valuation/index.md
+        - Methods: api/pydvl/valuation/methods/
+        - Samplers: api/pydvl/valuation/samplers/
+        - Scorers: api/pydvl/valuation/scorers/
+        - Utilities: api/pydvl/valuation/utility/
+        - Datasets: api/pydvl/valuation/dataset.md
+        - Stopping criteria: api/pydvl/valuation/stopping.md
+        - Results: api/pydvl/valuation/result.md
+        - Internals:
+          - Base classes: api/pydvl/valuation/base.md
+          - Parallelization: api/pydvl/valuation/parallel.md
+          - Test games: api/pydvl/valuation/games.md
+          - Types: api/pydvl/valuation/types.md
       - Influence Function: api/pydvl/influence/
       - Reporting: api/pydvl/reporting/
       - Utilities:
@@ -93,18 +99,19 @@ hooks:
   - build_scripts/modify_binder_link.py
 
 plugins:
-#  - pub-debugger:
-#      file_log:
-#        enabled: false
-#      zip_log:
-#        enabled: false
-#      console_log:
-#        enabled: true
-#        log_level: WARNING
-#        show_code_link: false
-#        show_entry_time: false
-#        show_logger_name: true
-#        show_deprecation_warnings: false
+  - pub-debugger:
+      file_log:
+        enabled: false
+      zip_log:
+        enabled: false
+      console_log:
+        enabled: true
+        log_level: WARNING
+        show_code_link: false
+        show_entry_time: false
+        show_logger_name: true
+        show_deprecation_warnings: false
+        #filter_logger_names: ["mkdocs.plugins.griffe"]
   - search
   - autorefs
   - glightbox:

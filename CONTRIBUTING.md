@@ -415,7 +415,7 @@ To add a citation inside a markdown file, use the notation `[@ citekey]` (with
 no space). Alas,
 because of when mkdocs-bibtex enters the pipeline, it won't process docstrings.
 For module documentation, we manually inject html into the markdown files. For
-example, in `pydvl.value.shapley.montecarlo` we have:
+example, in `pydvl.valuation.methods.shapley` we have:
 
 ```markdown
 """
@@ -676,8 +676,18 @@ part):
 ```shell
 build_scripts/release-version.sh 0.1.6
 ```
+This will:
 
-To find out how to use the script, pass the `-h` or `--help` flags:
+ - Pull latest remote version of develop (fast-forward only) from origin
+ - Create a branch `release/v0.1.6`
+ - Bump version number: 0.1.5.dev1234 ⟶   0.1.6
+ - Merge release branch into master locally and on origin
+ - Tag as `v0.1.6`
+ - Bump version number again to next development pre-release
+ - Merge release branch into develop locally and on origin
+ - Delete release branch
+
+For usage details, pass the `-h` or `--help` flags:
 
 ```shell
 build_scripts/release-version.sh --help
@@ -687,11 +697,10 @@ If running in interactive mode (without `-y|--yes`), the script will output a
 summary of pending changes and ask for confirmation before executing the
 actions.
 
-Once this is done, a tag will be created on the repository. You should then
-create a GitHub
+Once the script is done, you should then create a GitHub
 [release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release)
-for that tag. That will a trigger a CI pipeline that will automatically create a
-package and publish it from CI to PyPI.
+for the tag that was created. That will a trigger a CI pipeline that will
+automatically create a package and publish it from CI to PyPI.
 
 ### Manual release process
 

@@ -11,7 +11,7 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.9.3.dev0",
+    version="0.10.1.dev0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
@@ -27,7 +27,9 @@ setup(
             "torch>=2.0.0",
             "dask>=2023.5.0",
             "distributed>=2023.5.0",
-            "zarr>=2.16.1,<3",
+            "zarr>=2,<3; python_version<'3.11'",
+            "numcodecs<0.16.0; python_version<'3.11'",
+            "zarr>=3,<4; python_version>='3.11'",
         ],
         "ray": ["ray>=0.8"],
     },

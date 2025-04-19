@@ -588,7 +588,7 @@ def plot_corrupted_influences_distribution(
     plt.show()
 
 
-def filecache(path: Path) -> Callable[[Callable], Callable]:
+def filecache(path: Path | str) -> Callable[[Callable], Callable]:
     """Wraps a function to cache its output on disk.
 
     There is no hashing of the arguments of the function. This decorator merely
@@ -602,11 +602,13 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
         _silent: if `False`, prints messages about the cache status.
 
     Args:
-        fun: Function to wrap.
-        filename: Name of the file to cache the output to.
+        path: Path to the file to cache the output to.
     Returns:
-        The wrapped function.
+        A wrapper function that caches the output of the wrapped function to the
+            specified path.
     """
+    if isinstance(path, str):
+        path = Path(path)
 
     def decorator(fun: Callable) -> Callable:
         @wraps(fun)
@@ -615,15 +617,19 @@ def filecache(path: Path) -> Callable[[Callable], Callable]:
         ) -> Any:
             try:
                 with path.open("rb") as fd:
+                    data = pickle.load(fd)
                     if not _silent:
                         print(f"Found cached file: {path.name}.")
                     if _force_rebuild:
                         if not _silent:
                             print("Ignoring and rebuilding...")
                         raise FileNotFoundError
-                    return pickle.load(fd)
-            except (FileNotFoundError, EOFError, pickle.UnpicklingError):
+                    return data
+            except (FileNotFoundError, EOFError, pickle.UnpicklingError) as e:
+                if not isinstance(e, FileNotFoundError):
+                    print(f"Unpickling error '{str(e)}'. Rebuilding '{path}'...")
                 result = fun(*args, **kwargs)
+                path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("wb") as fd:
                     pickle.dump(result, fd)
                 return result
