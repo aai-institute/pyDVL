@@ -47,15 +47,29 @@ def load_digits_dataset(
         device: Device to load the data to. If `None`, the data is left on the CPU.
         shared_mem: If `True`, the tensors are moved to shared memory.
     Returns
-        A tuple of training and test Datasets
+        A tuple of tra ining and test Datasets
     """
 
     bunch = load_digits(as_frame=True)
-    dtype = np.float16 if half_precision else np.float32
-    x = np.array(bunch.data.values / 16.0, dtype=dtype)
-    y = np.array(bunch.target.values, dtype=np.int32)
-    mb = (x.nbytes + y.nbytes) / 2**20
-    logger.debug(f"Loaded {len(x)} data points ({mb:.2f}MB, mmap={shared_mem})")
+    if use_tensors:
+        dtype = torch.float16 if half_precision else torch.float32
+        x = torch.tensor(bunch.data.values / 16.0, dtype=dtype, device=device)
+        y = torch.tensor(bunch.target.values, dtype=torch.long, device=device)
+        x, y = TorchClassifierModel.reshape_inputs(x, y)
+        mb = (x.nbytes + y.nbytes) / 2**20
+        if shared_mem:
+            x.share_memory_()
+            y.share_memory_()
+            logger.debug(
+                f"Loaded {len(x)} data points to {x.device} ({mb:.2f}MB, {shared_mem=})"
+            )
+    else:
+        dtype = np.float16 if half_precision else np.float32
+        x = np.array(bunch.data.values / 16.0, dtype=dtype)
+        y = np.array(bunch.target.values, dtype=np.int32)
+        mb = (x.nbytes + y.nbytes) / 2**20
+        logger.debug(f"Loaded {len(x)} data points ({mb:.2f}MB, mmap={shared_mem})")
+
     train, test = Dataset.from_arrays(
         x,
         y,
@@ -63,24 +77,9 @@ def load_digits_dataset(
         random_state=random_state,
         stratify_by_target=True,
         mmap=shared_mem and not use_tensors,
+        target_names=["label"],
     )
-    # HACKKKKKKK
-    if use_tensors:
-        dtype = torch.float16 if half_precision else torch.float32
-        for dataset in train, test:
-            x = torch.tensor(dataset._x, device=device, dtype=dtype)
-            y = torch.tensor(dataset._y, device=device, dtype=torch.long)
-            mb = (x.nbytes + y.nbytes) / 2**20
-            x, y = TorchClassifierModel.reshape_inputs(x, y)
-            if shared_mem:
-                x.share_memory_()
-                y.share_memory_()
-            logger.debug(
-                f"Loaded {len(x)} data points to {x.device} ({mb:.2f}MB, {shared_mem=})"
-            )
-            dataset._x = x
-            dataset._y = y
-
+    # TODO: Is this helping?
     del x, y
     import gc
 
