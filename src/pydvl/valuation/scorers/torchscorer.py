@@ -29,7 +29,7 @@ class TorchModelScorer(SupervisedScorer[TorchSupervisedModel, torch.Tensor]):
 
     It is mainly useful for batched samplers only, since this prefetching will be
     triggered only once at the start of the loop in
-    [EvaluationStrategy.process()][pydvl.valuation.evaluation.EvaluationStrategy.process].
+    [EvaluationStrategy.process()][pydvl.valuation.samplers.base.EvaluationStrategy.process].
     """
 
     x_test: Tensor

@@ -119,6 +119,59 @@ necessary:
    computation e.g. when the change in estimates is low, or the number of
    iterations or time elapsed exceed some threshold.
 
+### Tensor Support { #tensor-support }
+
+Starting from version 0.10.1, pyDVL supports both NumPy arrays and PyTorch
+tensors for data valuation. The implementation follows these key principles:
+
+1. **Type Preservation**: The valuation methods maintain the input data type
+   throughout computations, whether you provide NumPy arrays or PyTorch tensors
+   when constructing the [Dataset][pydvl.valuation.dataset.Dataset].
+2. **Transparent Usage**: The API remains the same regardless of the input type -
+   simply provide your data as tensors. The main difference is that the torch
+   model must be wrapped in a class compatible with the protocol
+   [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel].
+     !!! tip "Wrapping torch models"
+         There is an example implementation of
+         [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel]
+         in `notebooks/support/banzhaf.py`, but we would like to avoid custom 
+         classes and support [skorch](https://github.com/skorch-dev/skorch)
+         models instead in a future release.
+3. **Consistent Indexing**: Internally, indices are always managed as NumPy
+   arrays for consistency and compatibility, but the actual data operations
+   preserve tensor types when provided.
+4. [ValuationResult][pydvl.valuation.result.ValuationResult] objects always
+   contain NumPy arrays.
+
+??? example "Creating and using a tensor dataset"
+    ```python
+    import torch
+    from pydvl.valuation.dataset import Dataset
+    from sklearn.datasets import make_classification
+    
+    X, y = make_classification(n_samples=100, n_features=20, n_classes=3)
+    X_tensor = torch.tensor(X, dtype=torch.float32)
+    y_tensor = torch.tensor(y, dtype=torch.long)
+    
+    train, test = Dataset.from_arrays(X_tensor, y_tensor, stratify_by_target=True)
+    model = TorchClassifierModel(SomeNNModule(),...)
+    scorer = TorchModelScorer()
+    utility = ModelUtility(model, scorer)
+    valuation = TMCShapleyValuation(utility, )
+    ```
+
+
+
+!!! warning "Library-specific requirements"
+    Some methods that rely on specific libraries may have type requirements:
+
+      - Methods that use scikit-learn models directly will convert tensors to
+        NumPy arrays internally.
+      - The [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation]
+        method requires NumPy arrays.
+      - [TorchModelScorer][pydvl.valuation.scorers.torchscorer.TorchModelScorer]
+       is designed for PyTorch models and requires tensor inputs.
+
 
 ### Creating a Dataset
 

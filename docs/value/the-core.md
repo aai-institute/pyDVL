@@ -62,6 +62,19 @@ obtain a single valuation to use, one breaks ties by solving a quadratic program
 to select the $v$ in the LC with the smallest $\ell_2$ norm. This is called the
 _egalitarian least core_.
 
+!!! info "Pytorch support"
+    As of version 0.10.1, both
+    [ExactLeastCoreValuation][pydvl.valuation.methods.least_core.ExactLeastCoreValuation]
+    and
+    [MonteCarloLeastCoreValuation][pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation]
+    support PyTorch tensor inputs. Tensor data is used throughout the coalition
+    evaluation process to compute utility values. These utility values are then
+    assembled into numpy arrays for the constraint matrices used by the linear
+    programming solver (CVXPY), which operates on CPU. See [Tensor
+    Support][tensor-support] for more general information about tensor support
+    in pyDVL.
+
+
 ## Exact Least Core
 
 This first algorithm is just a verbatim implementation of the definition above.

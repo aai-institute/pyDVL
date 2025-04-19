@@ -59,6 +59,24 @@ makes the list of bootstrapped samples available in some way. This includes
 `BaggingRegressor`, `BaggingClassifier`, `ExtraTreesClassifier`,
 `ExtraTreesRegressor` and `IsolationForest`.
 
+!!! info "PyTorch support"
+    With the introduction of version 0.10.1, Data-OOB supports PyTorch tensor
+    inputs with certain limitations. Standard scikit-learn bagging models (like
+    [BaggingClassifier][] or [RandomForest][]) require NumPy inputs for training,
+    even though the dataset used for valuation can contain tensors. For full
+    tensor support throughout the pipeline, you must implement a custom bagging
+    model class that implements the [BaggingModel][pydvl.valuation.types.BaggingModel]
+    interface with support for tensor operations. This custom model must provide
+    the following attributes:
+    
+      - `estimators_`: list of fitted base estimators
+      - `estimators_samples_`: list of sample indices used to train each estimator
+        (as NumPy arrays)
+    
+    (There is a mock in `tests.valuation.methods.conftest.TorchBaggingClassifier`).
+    See [Tensor Support][tensor-support] for more general information about tensor
+    support in pyDVL.
+
 ## Bagging arbitrary models
 
 Through `BaggingClassifier` and `BaggingRegressor`, one can compute values

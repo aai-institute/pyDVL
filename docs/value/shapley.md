@@ -17,6 +17,12 @@ Shapley values. Empirically, one of the most useful methods is the so-called
 [Truncated Monte Carlo Shapley][tmcs-intro] [@ghorbani_data_2019], but several
 approximations exist with different convergence rates and computational costs.
 
+??? info "Support for torch models"
+    Starting from version 0.10.1, all Shapley value methods support both NumPy
+    arrays and PyTorch tensors as input data types. The implementation preserves
+    the input type throughout the computation, allowing integration with PyTorch
+    models. See [Tensor Support][tensor-support] for more details.
+
 
 ## Combinatorial Shapley  { #combinatorial-shapley-intro }
 
