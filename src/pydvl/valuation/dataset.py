@@ -68,9 +68,11 @@ or to look at the importance of certain feature sets for the model.
 
 from __future__ import annotations
 
-import atexit
 import logging
 import math
+import threading
+import uuid
+import weakref
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -140,31 +142,40 @@ class RawData(Generic[ArrayT]):
 
 
 MMAP_DIR: Path | None = None
+_MMAP_LOCK = threading.Lock()
 
 
-def _create_memmap(array: NDArray) -> NDArray:
+def _cleanup_memmap(path: Path):
+    try:
+        path.unlink(missing_ok=True)
+        logger.info(f"Deleted mmap file '{path}'")
+    except Exception as e:
+        logger.error(f"Error while deleting mmap file '{path}': {e}")
+
+
+def _create_memmap(array: NDArray) -> np.memmap:
     global MMAP_DIR
-    if MMAP_DIR is None:
-        MMAP_DIR = Path(mkdtemp())
+
+    with _MMAP_LOCK:
+        if MMAP_DIR is None:
+            MMAP_DIR = Path(mkdtemp())
         logger.debug(f"Using temporary directory {MMAP_DIR} for mmap files")
 
+    fname = f"array-{id(array)}-{uuid.uuid4().hex[:6]}.mmap"
     file_path = MMAP_DIR / f"array-{id(array)}.mmap"
     mm = np.memmap(file_path, dtype=array.dtype, mode="w+", shape=array.shape)
     mm[:] = array[:]
     mm.flush()
     ro_mm = np.memmap(file_path, dtype=array.dtype, mode="readonly", shape=array.shape)
-
-    def _cleanup():
-        try:
-            ro_mm._mmap.close()
-            file_path.unlink(missing_ok=True)
-        except Exception as e:
-            logger.error(
-                f"Error while closing or deleting mmap file '{file_path}': {e}"
-            )
-
-    atexit.register(_cleanup)
+    weakref.finalize(ro_mm, _cleanup_memmap, file_path)
     return ro_mm
+
+
+def _maybe_open_mmap(x: Any, dtype: np.dtype, shape: tuple[int, ...]) -> Any:
+    if not isinstance(x, Path):
+        return x
+
+    return np.memmap(x, dtype=dtype, mode="readonly", shape=shape)
 
 
 class Dataset(Generic[ArrayT]):
@@ -290,15 +301,8 @@ class Dataset(Generic[ArrayT]):
     def __setstate__(self, state):
         """Restore the object state from pickling."""
         self.__dict__.update(state)
-
-        if isinstance(self._x, Path):
-            self._x = np.memmap(
-                self._x, dtype=self._x_dtype, mode="readonly", shape=self._x_shape
-            )
-        if isinstance(self._y, (str, Path)):
-            self._y = np.memmap(
-                self._y, dtype=self._y_dtype, mode="readonly", shape=self._y_shape
-            )
+        self._x = _maybe_open_mmap(self._x, dtype=self._x_dtype, shape=self._x_shape)
+        self._y = _maybe_open_mmap(self._y, dtype=self._y_dtype, shape=self._y_shape)
 
     def __getitem__(
         self, idx: int | slice | Sequence[int] | NDArray[np.int_]
