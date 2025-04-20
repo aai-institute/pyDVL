@@ -2,10 +2,9 @@ import logging
 import os
 import pickle as pkl
 from pathlib import Path
-from typing import Callable, List, NamedTuple, Optional, Tuple
+from typing import Callable, List, NamedTuple, Optional
 
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from numpy.typing import NDArray
@@ -299,17 +298,3 @@ class ModelLogitsWrapper(torch.nn.Module):
 
     def forward(self, x):
         return self.model(x[:, 0], x[:, 1]).logits
-
-
-def process_imgnet_io(
-    df: pd.DataFrame, labels: dict
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    x = df["normalized_images"]
-    y = df["labels"]
-    ds_label_to_model_label = {
-        ds_label: idx for idx, ds_label in enumerate(labels.values())
-    }
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    x_nn = torch.stack(x.tolist()).to(device)
-    y_nn = torch.tensor([ds_label_to_model_label[yi] for yi in y], device=device)
-    return x_nn, y_nn

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Literal, Optional, overload
+from typing import Any, Callable
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.datasets import load_digits
 from torch.cuda.amp import GradScaler
 from tqdm import trange
 
+from notebooks.support.datasets import load_digits_dataset
 from pydvl.utils import timed
 from pydvl.utils.monitor import end_memory_monitoring, start_memory_monitoring
-from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers import SupervisedScorer
 from pydvl.valuation.scorers.torchscorer import TorchModelScorer
 from pydvl.valuation.types import TorchSupervisedModel
@@ -26,88 +25,6 @@ except ImportError as e:
     raise RuntimeError("PyTorch is required to run the Banzhaf MSR notebook") from e
 
 logger = logging.getLogger("notebooks.support.banzhaf")
-
-
-@overload
-def load_digits_dataset(
-    train_size: float,
-    random_state: Optional[int] = None,
-    use_tensors: Literal[False] = False,
-    device: str | None = "cpu",
-    shared_mem: bool = False,
-    half_precision: bool = False,
-) -> tuple[Dataset[NDArray], Dataset[NDArray]]: ...
-
-
-@overload
-def load_digits_dataset(
-    train_size: float,
-    random_state: Optional[int] = None,
-    use_tensors: Literal[True] = True,
-    device: str | None = "cpu",
-    shared_mem: bool = False,
-    half_precision: bool = False,
-) -> tuple[Dataset[Tensor], Dataset[Tensor]]: ...
-
-
-def load_digits_dataset(
-    train_size: float,
-    random_state: Optional[int] = None,
-    use_tensors: bool = True,
-    device: str | None = "cpu",
-    shared_mem: bool = False,
-    half_precision: bool = False,
-) -> tuple[Dataset, Dataset]:
-    """Loads the sklearn handwritten digits dataset.
-
-    More info can be found at
-    https://scikit-learn.org/stable/datasets/toy_dataset.html#optical-recognition-of-handwritten-digits-dataset.
-
-    Args:
-        train_size: Fraction of points used for training.
-        random_state: Fix random seed. If `None`, the default rng is taken.
-        use_tensors: If `True`, the data us stored as PyTorch tensors.
-        device: Device to load the data to. If `None`, the data is left on the CPU.
-        shared_mem: If `True`, the tensors are moved to shared memory.
-    Returns
-        A tuple of tra ining and test Datasets
-    """
-
-    bunch = load_digits(as_frame=True)
-    if use_tensors:
-        dtype = torch.float16 if half_precision else torch.float32
-        x = torch.tensor(bunch.data.values / 16.0, dtype=dtype, device=device)
-        y = torch.tensor(bunch.target.values, dtype=torch.long, device=device)
-        x, y = TorchClassifierModel.reshape_inputs(x, y)
-        mb = (x.nbytes + y.nbytes) / 2**20
-        if shared_mem:
-            x.share_memory_()
-            y.share_memory_()
-            logger.debug(
-                f"Loaded {len(x)} data points to {x.device} ({mb:.2f}MB, {shared_mem=})"
-            )
-    else:
-        dtype = np.float16 if half_precision else np.float32
-        x = np.array(bunch.data.values / 16.0, dtype=dtype)
-        y = np.array(bunch.target.values, dtype=np.int32)
-        mb = (x.nbytes + y.nbytes) / 2**20
-        logger.debug(f"Loaded {len(x)} data points ({mb:.2f}MB, mmap={shared_mem})")
-
-    train, test = Dataset.from_arrays(
-        x,
-        y,
-        train_size=train_size,
-        random_state=random_state,
-        stratify_by_target=True,
-        mmap=shared_mem and not use_tensors,
-        target_names=["label"],
-    )
-    # TODO: Is this helping?
-    del x, y
-    import gc
-
-    gc.collect()
-    return train, test
 
 
 class SimpleCNN(nn.Module):
@@ -132,9 +49,6 @@ class SimpleCNN(nn.Module):
 
     def forward(self, x):
         return self.layers(x)
-
-    def n_params(self) -> int:
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
 
 class TorchClassifierModel(TorchSupervisedModel):
@@ -266,10 +180,6 @@ class TorchClassifierModel(TorchSupervisedModel):
             "device": self.device,
         }
 
-    @staticmethod
-    def reshape_inputs(x: Tensor, y: Tensor) -> tuple[Tensor, Tensor]:
-        return x.reshape((x.shape[0], 1, 8, 8)), y
-
     def make_model(self) -> torch.nn.Module:
         """Creates a new model instance.
 
@@ -309,13 +219,13 @@ def config():
 
     lr = 0.01  # noqa: F841
     n_epochs = 24  # noqa: F841
-    batch_size = 256  # noqa: F841
-    model_device = "cuda"  # noqa: F841
-    data_device = "cuda"  # noqa: F841
+    batch_size = 128  # noqa: F841
+    model_device = "cpu"  # noqa: F841
+    data_device = "cpu"  # noqa: F841
     half_precision = False  # noqa: F841
     load_as_tensors = True  # noqa: F841
     shared_mem = False  # noqa: F841
-    custom_utility = False  # noqa: F841
+    custom_utility = True  # noqa: F841
     custom_scorer = False  # noqa: F841
     clone_before_fit = True  # noqa: F841
 
@@ -326,6 +236,8 @@ def config():
 
 @ex.automain
 def run(_config):
+    logging.getLogger("matplotlib").setLevel(logging.WARNING)
+
     if _config["memory_monitor"]:
         start_memory_monitoring()
 
