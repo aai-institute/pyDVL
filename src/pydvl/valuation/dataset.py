@@ -75,6 +75,7 @@ import uuid
 import weakref
 from collections import OrderedDict
 from dataclasses import dataclass
+from numbers import Integral
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import Any, Generic, Sequence, cast, overload
@@ -214,8 +215,8 @@ class Dataset(Generic[ArrayT]):
         Added support for PyTorch tensors.
     """
 
-    feature_names: list[str]
-    target_names: list[str]
+    feature_names: NDArray[np.str_]
+    target_names: NDArray[np.str_]
     _x: ArrayT
     _y: ArrayT
     _indices: NDArray[np.int_]
@@ -246,31 +247,24 @@ class Dataset(Generic[ArrayT]):
                 x, y, multi_output=multi_output, estimator="Dataset"
             )
 
-        def make_names(s: str, a: Array) -> list[str]:
+        def make_names(s: str, a: Array) -> NDArray[np.str_]:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return [f"{s}{i:0{1 + int(math.log10(n))}d}" for i in range(1, n + 1)]
+            return np.array(
+                [f"{s}{i:0{1 + int(math.log10(n))}d}" for i in range(1, n + 1)],
+                dtype=str,
+            )
 
         self.feature_names = (
-            list(feature_names) if feature_names is not None else make_names("x", x)
+            np.array(feature_names, dtype=str)
+            if feature_names is not None
+            else make_names("x", x)
         )
 
-        if target_names is not None:
-            # Handle numpy arrays and convert them to list
-            if isinstance(target_names, np.ndarray):
-                if np.issubdtype(target_names.dtype, np.str_):
-                    self.target_names = list(target_names)
-                else:
-                    raise ValueError("target_names array must contain strings")
-            elif isinstance(target_names, (list, tuple)) and all(
-                isinstance(name, str) for name in target_names
-            ):
-                self.target_names = list(target_names)
-            else:
-                raise ValueError(
-                    "target_names must be a list, tuple, or numpy array of strings"
-                )
-        else:
-            self.target_names = make_names("y", y)
+        self.target_names = (
+            np.array(target_names, dtype=str)
+            if target_names is not None
+            else make_names("y", y)
+        )
 
         if len(self._x.shape) > 1:
             if len(self.feature_names) != self._x.shape[1]:
@@ -323,9 +317,10 @@ class Dataset(Generic[ArrayT]):
     def feature(self, name: str) -> tuple[slice, int]:
         """Returns a slice for the feature with the given name."""
         try:
-            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
-        except ValueError:
-            raise ValueError(f"Feature {name} is not in {self.feature_names}")
+            feature_idx = np.where(self.feature_names == name)[0][0]
+            return np.index_exp[:, feature_idx]  # type: ignore
+        except IndexError as e:
+            raise ValueError(f"Feature {name} is not in {self.feature_names}") from e
 
     def data(
         self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
@@ -413,13 +408,14 @@ class Dataset(Generic[ArrayT]):
             ValueError: If the target name is not found.
         """
         try:
-            target_idx = self.target_names.index(name)
-            if len(self._y.shape) == 1 or self._y.shape[1] == 1:
+            target_idx = np.where(self.target_names == name)[0][0]
+            if self.n_targets == 1:
                 return slice(None)
             else:
                 return slice(None), target_idx
-        except ValueError:
-            raise ValueError(f"Target {name} is not in {self.target_names}")
+        except IndexError as e:
+            raise ValueError(f"Target {name} is not in {self.target_names}") from e
+
     @property
     def n_targets(self) -> int:
         """Returns the number of target variables."""
