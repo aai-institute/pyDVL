@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Literal, Optional, overload
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.datasets import load_digits
 from torch.cuda.amp import GradScaler
 from tqdm import trange

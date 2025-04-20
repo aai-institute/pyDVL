@@ -80,7 +80,6 @@ __all__ = [
     "array_exp",
     "array_count_nonzero",
     "array_nonzero",
-    "array_sum",
     "is_categorical",
     "stratified_split_indices",
     "atleast1d",
@@ -407,8 +406,8 @@ def array_unique(
 
 
 def array_unique(
-    array: Array, return_index: bool = False, **kwargs: Any
-) -> Union[Array, Tuple[Array, Array]]:
+    array: ArrayT, return_index: bool = False, **kwargs: Any
+) -> Union[ArrayT, Tuple[ArrayT, NDArray]]:
     """
     Return the unique elements in an array, optionally with indices of their first
     occurrences.
@@ -437,8 +436,8 @@ def array_unique(
             indices_tensor = torch.tensor(
                 indices, dtype=torch.long, device=tensor_array.device
             )
-            return cast(Tuple[Array, Array], (result, indices_tensor))
-        return cast(Array, result)
+            return cast(Tuple[ArrayT, NDArray], (result, indices_tensor.cpu().numpy()))
+        return cast(ArrayT, result)
     else:  # Fallback to numpy approach.
         numpy_array = to_numpy(array)
         if return_index:
@@ -448,7 +447,7 @@ def array_unique(
                 return_index=True,
                 **{k: v for k, v in kwargs.items() if k != "return_index"},
             )
-            return cast(Tuple[Array, Array], (unique_vals, indices))
+            return cast(Tuple[ArrayT, NDArray], (unique_vals, indices))
         else:
             # Simple case - just unique values
             result = np.unique(
@@ -456,7 +455,7 @@ def array_unique(
                 return_index=False,
                 **{k: v for k, v in kwargs.items() if k != "return_index"},
             )
-            return cast(Array, result)
+            return cast(ArrayT, result)
 
 
 @overload
@@ -929,8 +928,8 @@ def array_count_nonzero(
 
 
 def array_nonzero(
-    x: Array,
-) -> tuple[Array, ...]:
+    x: ArrayT,
+) -> tuple[NDArray[np.int_], ...]:
     """
     Find the indices of non-zero elements.
 
@@ -946,34 +945,13 @@ def array_nonzero(
         tensor_array = cast(Tensor, x)
         # torch.nonzero returns a tensor of indices
         indices = torch.nonzero(tensor_array, as_tuple=True)
-        return cast(tuple[Array, ...], indices)
+        return cast(tuple[NDArray, ...], tuple(t.cpu().numpy() for t in indices))
     else:  # Fallback to numpy approach
         numpy_array = to_numpy(x)
-        return cast(tuple[Array, ...], np.nonzero(numpy_array))
+        return cast(tuple[NDArray, ...], np.nonzero(numpy_array))
 
 
-def array_sum(x: Array, axis: int | None = None, keepdims: bool = False) -> Array:
-    """
-    Calculate the sum of array elements.
-
-    Args:
-        x: Input array.
-        axis: Axis along which to perform the sum. If None, sum all elements.
-        keepdims: If True, retain the dimensions of the input array.
-
-    Returns:
-        Sum of array elements.
-    """
-    if is_tensor(x):
-        assert torch is not None
-        tensor_array = cast(Tensor, x)
-        return cast(Array, torch.sum(tensor_array, dim=axis, keepdim=keepdims))
-    else:  # Fallback to numpy approach
-        numpy_array = to_numpy(x)
-        return cast(Array, np.sum(numpy_array, axis=axis, keepdims=keepdims))
-
-
-def is_categorical(x: Array) -> bool:
+def is_categorical(x: Array[Any]) -> bool:
     """
     Check if an array contains categorical data (suitable for unique labels).
 

@@ -21,12 +21,15 @@ refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_20
 
 from __future__ import annotations
 
+from math import exp
 from typing import Callable
+
+import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils.array import (
     ArrayT,
     array_count_nonzero,
-    array_exp,
     array_nonzero,
     array_unique,
 )
@@ -88,7 +91,7 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
         default: float = 0.0,
         range: tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
-        out_of_class_discount_fn: Callable[[float], float] = array_exp,
+        out_of_class_discount_fn: Callable[[float], float] = exp,
         rescale_scores: bool = True,
         name: str | None = None,
     ):
@@ -153,13 +156,13 @@ class ClasswiseSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
             )
 
         scorer = self._scorer
-        label_set_match = self.test_data.data().y == self.label
+        label_set_match: NDArray[np.int_] = self.test_data.data().y == self.label
         label_set = array_nonzero(label_set_match)[0]
 
         if len(label_set) == 0:
             return 0, 1 / max(1, self.num_classes - 1)
 
-        complement_label_set = array_nonzero(~label_set_match)[0]
+        complement_label_set: NDArray[np.int_] = array_nonzero(~label_set_match)[0]
         in_class_score = scorer(model, *self.test_data.data(label_set))
         out_of_class_score = scorer(model, *self.test_data.data(complement_label_set))
 

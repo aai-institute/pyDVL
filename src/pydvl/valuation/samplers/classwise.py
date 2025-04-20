@@ -51,7 +51,7 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 import numpy as np
 from more_itertools import chunked, flatten
 
-from pydvl.utils.array import Array, array_unique, is_categorical, try_torch_import
+from pydvl.utils.array import Array, array_unique, is_categorical
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
@@ -104,7 +104,10 @@ def roundrobin(
             remaining_generators = cycle(islice(remaining_generators, n_active))
 
 
-def get_unique_labels(arr: Array[int]) -> Array[int]:
+T = TypeVar("T")
+
+
+def get_unique_labels(arr: Array[T]) -> Array[T]:
     """Returns unique labels in a categorical dataset.
 
     Args:
@@ -119,7 +122,7 @@ def get_unique_labels(arr: Array[int]) -> Array[int]:
         ValueError: If the input array is not of a categorical type.
     """
     if is_categorical(arr):
-        return array_unique(arr)
+        return cast(Array[T], array_unique(arr))
     else:
         raise ValueError(
             f"Input array has an unsupported data type for categorical labels: {type(arr)}. "
@@ -142,7 +145,7 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
             Typically, a
             [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
         out_of_class: Sampling scheme for elements of different labels (outer sampler).
-            E.g. a [UniformSampler][pydvl.valuation.samplers.uniform.UniformSampler] or
+            E.g. a [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] or
             a [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler]. This
             sampler must use
             [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or

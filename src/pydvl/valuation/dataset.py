@@ -265,14 +265,16 @@ class Dataset(Generic[ArrayT]):
                 raise TypeError("x and y must be numpy arrays in order to use mmap")
             _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
 
-            self._x_dtype, self._y_dtype = _x.dtype, _y.dtype
-            self._x_shape, self._y_shape = _x.shape, _y.shape
             self._x = cast(ArrayT, _create_memmap(_x))
             self._y = cast(ArrayT, _create_memmap(_y))
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"
             )
+
+        # These are for __setstate__
+        self._x_dtype, self._y_dtype = self._x.dtype, self._y.dtype
+        self._x_shape, self._y_shape = self._x.shape, self._y.shape
 
         def make_names(s: str, a: Array) -> NDArray[np.str_]:
             n = a.shape[1] if len(a.shape) > 1 else 1
@@ -371,7 +373,7 @@ class Dataset(Generic[ArrayT]):
         if indices is None:
             return RawData(self._x, self._y)
         if isinstance(indices, Integral):
-            indices = [indices]
+            indices = [indices]  # type: ignore
         return RawData(self._x[indices], self._y[indices])
 
     def data_indices(
@@ -821,7 +823,7 @@ class GroupedDataset(Dataset[ArrayT]):
             return self.data_to_group
         if isinstance(indices, slice):
             return self.data_to_group[indices]
-        return self.data_to_group[to_numpy(indices)]
+        return cast(NDArray, self.data_to_group[to_numpy(indices)])
 
     @overload
     @classmethod

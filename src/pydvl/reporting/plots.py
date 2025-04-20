@@ -259,7 +259,7 @@ def plot_result_errors(
     ylabel: str | None = None,
     legend_label: str | None = None,
 ) -> plt.Axes:
-    r"""Plots a [ValuationResult][pydvl.pydvl.valuation.result.ValuationResult],
+    r"""Plots a [ValuationResult][pydvl.valuation.result.ValuationResult],
     with error bars corresponding to an $\alpha$-level Normal confidence
     interval.
 

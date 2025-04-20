@@ -64,7 +64,7 @@ implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has 
 ??? Example "Enabling the cache"
     In this example an in-memory cache is used. Note that caching is only useful
     under certain conditions, and does not really speed typical Monte Carlo
-    approximations. See [the introduction][#getting-started-cache] and the [module
+    approximations. See [the introduction][getting-started-cache] and the [module
     documentation][pydvl.utils.caching] for more.
 
     ```python

@@ -33,7 +33,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from pydvl.utils.array import array_nonzero, array_sum
+from pydvl.utils.array import array_nonzero
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset, GroupedDataset
@@ -163,7 +163,7 @@ class ClasswiseShapleyValuation(Valuation):
                 self.utility.model
             )
 
-            sigma = array_sum(self._result.values[indices_label_set])
+            sigma = np.sum(self._result.values[indices_label_set])
             if sigma != 0:
                 self._result.scale(in_class_acc / sigma, data_indices=indices_label_set)
 

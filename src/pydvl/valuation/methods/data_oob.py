@@ -23,14 +23,22 @@ As such it is not a semi-value, and it is not based on marginal contributions.
 from __future__ import annotations
 
 import logging
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.base import is_classifier
 
 # HACK: we use some private sklearn stuff to obtain the indices of the bootstrap samples
-#  in RandomForest and ExtraTrees, which do not have the `estimators_samples_` attribute.
+#  in RandomForest and ExtraTrees, which do not have the `estimators_samples_`
+#  attribute.
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    IsolationForest,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
 from sklearn.ensemble._forest import (
     _generate_unsampled_indices,
     _get_n_samples_bootstrap,
@@ -57,7 +65,8 @@ class DataOOBValuation(Valuation):
 
     Args:
         model: A fitted bagging model. Bagging models in sklearn include
-            [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]], RandomForest*,
+            [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]],
+            RandomForest*,
             ExtraTrees*, or any model which defines an attribute `estimators_` and uses
             bootstrapped subsamples to compute predictions.
         score: A callable for point-wise comparison of true values with the predictions.
@@ -66,9 +75,11 @@ class DataOOBValuation(Valuation):
 
     !!! note "Tensor Support"
         DataOOBValuation supports PyTorch tensors for input data with some limitations:
-        - The scoring functions (point_wise_accuracy and neg_l2_distance) have been updated
+        - The scoring functions (point_wise_accuracy and neg_l2_distance) have been
+        updated
           to work with both NumPy arrays and PyTorch tensors.
-        - Custom scoring functions must handle both array types if you plan to use tensors.
+        - Custom scoring functions must handle both array types if you plan to use
+        tensors.
         - The bagging model implementation must be tensor-compatible and implement the
           required BaggingModel interface attributes and methods.
 
@@ -105,7 +116,8 @@ class DataOOBValuation(Valuation):
 
         check_is_fitted(
             self.model,
-            msg="The bagging model has to be fitted before calling the valuation method.",
+            msg="The bagging model has to be fitted before calling the valuation "
+            "method.",
         )
 
         # This should always be present after fitting
@@ -113,8 +125,10 @@ class DataOOBValuation(Valuation):
             estimators = self.model.estimators_  # type: ignore
         except AttributeError:
             raise ValueError(
-                "The model has to be an sklearn-compatible bagging model, including "
-                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "The model has to be an sklearn-compatible bagging model, "
+                "including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, "
+                "RandomForest*, "
                 "and ExtraTrees*"
             )
 
@@ -149,8 +163,10 @@ class DataOOBValuation(Valuation):
             ]
         else:
             raise ValueError(
-                "The model has to be an sklearn-compatible bagging model, including "
-                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "The model has to be an sklearn-compatible bagging model, "
+                "including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, "
+                "RandomForest*, "
                 "and ExtraTrees*, \n"
                 "or it must implement pydvl.valuation.types.BaggingModel.\n"
                 f"Was: {type(self.model)}"
@@ -181,7 +197,9 @@ def point_wise_accuracy(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     Returns:
         Array with point-wise 0-1 accuracy between labels and model predictions
     """
-    return np.array(to_numpy(y_pred) == to_numpy(y_true), dtype=np.float64)
+    return cast(
+        NDArray, np.array(to_numpy(y_pred) == to_numpy(y_true), dtype=np.float64)
+    )
 
 
 def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
@@ -197,4 +215,6 @@ def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
         Array with point-wise negative $l_2$ distances between labels and model
         predictions
     """
-    return -np.square(to_numpy(y_pred) - to_numpy(y_true), dtype=np.float64)
+    return cast(
+        NDArray, -np.square(to_numpy(y_pred) - to_numpy(y_true), dtype=np.float64)
+    )
