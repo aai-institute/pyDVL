@@ -77,11 +77,18 @@ class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
         name: The name of the scorer. If not provided, the name of the
             function passed will be used.
 
+    !!! note "Tensor Support"
+        SupervisedScorer supports both NumPy arrays and PyTorch tensors. Subclasses
+        specialising in either type must specify the array type in the generic type.
+
     !!! tip "New in version 0.5.0"
 
     !!! tip "Changed in version 0.10.0"
         This is now `SupervisedScorer` and holds the test data used to evaluate the
         model.
+
+    !!! tip "New in version 0.11.0"
+        Added generic type support for arrays and tensor compatibility.
     """
 
     _scorer: SupervisedScorerCallable[SupervisedModelT, ArrayT]

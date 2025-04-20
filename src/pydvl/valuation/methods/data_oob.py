@@ -64,6 +64,14 @@ class DataOOBValuation(Valuation):
             If `None`, uses point-wise accuracy for classifiers and negative $l_2$
             distance for regressors.
 
+    !!! note "Tensor Support"
+        DataOOBValuation supports PyTorch tensors for input data with some limitations:
+        - The scoring functions (point_wise_accuracy and neg_l2_distance) have been updated
+          to work with both NumPy arrays and PyTorch tensors.
+        - Custom scoring functions must handle both array types if you plan to use tensors.
+        - The bagging model implementation must be tensor-compatible and implement the
+          required BaggingModel interface attributes and methods.
+
     !!! tip "New in version 0.11.0"
         Added (partial) support for PyTorch tensors.
     """

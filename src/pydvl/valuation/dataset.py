@@ -26,6 +26,23 @@ y)`.
         [RawData][pydvl.valuation.dataset.RawData] object returned by
         [Dataset.data()][pydvl.valuation.dataset.Dataset.data].
 
+## NumPy and PyTorch support
+
+It is possible to instantiate [Dataset][pydvl.valuation.dataset.Dataset] and
+[GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with either NumPy
+arrays or PyTorch tensors. The type of the input arrays is preserved throughout all
+operations. Indices are always returned as NumPy arrays, even if the input arrays are
+PyTorch tensors.
+
+## Memmapping data
+
+When using numpy arrays for data (and only in that case), it is possible to use
+memory mapping to avoid loading the whole dataset into memory, e.g. in subprocesses.
+This is done by passing `mmap=True` to the constructor. The data will be stored in a
+temporary file, which will be deleted automatically when the creating object is garbage
+collected.
+
+
 ## Slicing
 
 Slicing a [Dataset][] object, e.g. `dataset[0]`, will return a new `Dataset` with the
@@ -109,7 +126,12 @@ Tensor = None if torch is None else torch.Tensor
 
 @dataclass(frozen=True)
 class RawData(Generic[ArrayT]):
-    """A view on a dataset's raw data. This is not a copy."""
+    """A view on a dataset's raw data. This is not a copy.
+
+    RawData is a generic container that preserves the type of the arrays it holds.
+    It supports both NumPy arrays and PyTorch tensors, but both `x` and `y` must be of
+    the same type.
+    """
 
     x: ArrayT
     y: ArrayT
@@ -206,6 +228,11 @@ class Dataset(Generic[ArrayT]):
         multi_output: set to `False` if labels are scalars, or to
             `True` if they are vectors of dimension > 1.
         mmap: Whether to use memory-mapped files (for NumPy arrays only)
+
+    !!! tip "Type preservation"
+        The Dataset class preserves the type of input arrays (NumPy or PyTorch)
+        throughout all operations. When you access data with slicing or the data()
+        method, the arrays maintain their original type.
 
     !!! tip "Changed in version 0.10.0"
         No longer holds split data, but only x, y.
@@ -654,6 +681,12 @@ class GroupedDataset(Dataset[ArrayT]):
             description: A textual description of the dataset
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+
+        !!! note "Type Preservation with Groups"
+            GroupedDataset preserves the type of input arrays (NumPy or PyTorch) while
+            maintaining all indices as numpy arrays. When accessing grouped data with
+            methods like `data()`, the x and y arrays will maintain their original type,
+            but indices are always returned as numpy arrays.
 
         !!! tip "Changed in version 0.6.0"
             Added `group_names` and forwarding of `kwargs`

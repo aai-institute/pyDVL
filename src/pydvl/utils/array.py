@@ -1,6 +1,39 @@
 """
 This module contains utility functions for working with arrays in a type-agnostic way.
-It supports both NumPy arrays and PyTorch tensors with consistent interfaces.
+It provides a consistent interface for operations on both NumPy arrays and PyTorch tensors.
+
+The functions in this module are designed to:
+1. Detect array types automatically (numpy.ndarray or torch.Tensor)
+2. Perform operations using the appropriate library
+3. Preserve the input type in the output
+4. Minimize unnecessary type conversions
+
+Usage examples:
+
+```python
+import numpy as np
+import torch
+from pydvl.utils.array import array_zeros, array_concatenate, is_tensor
+
+# Works with NumPy arrays
+x_np = np.array([1, 2, 3])
+zeros_np = array_zeros((3,), like=x_np)  # Returns numpy.ndarray
+
+# Works with PyTorch tensors
+x_torch = torch.tensor([1, 2, 3])
+zeros_torch = array_zeros((3,), like=x_torch)  # Returns torch.Tensor
+
+# Type checking
+is_tensor(x_torch)  # Returns True
+is_tensor(x_np)     # Returns False
+
+# Operations preserve types
+result = array_concatenate([x_np, zeros_np])  # Returns numpy.ndarray
+result = array_concatenate([x_torch, zeros_torch])  # Returns torch.Tensor
+```
+
+The module uses a TypeVar `ArrayT` to ensure type preservation across functions,
+allowing for proper static type checking with both array types.
 """
 
 from __future__ import annotations
@@ -97,12 +130,23 @@ def is_numpy(array: Any) -> bool:
 
 @runtime_checkable
 class Array(Protocol[DT]):
-    """Poor man's intersection of NDArray and torch.Tensor.
+    """Protocol defining a common interface for NumPy arrays and PyTorch tensors.
+
+    This protocol defines the essential methods and properties required for array-like
+    operations in PyDVL. It serves as a structural type for both numpy.ndarray
+    and torch.Tensor, enabling type-safe generic functions that work with either type.
+
+    The generic parameter DT represents the data type of the array elements.
+
+    !!! note "Type Preservation"
+        Functions that accept Array types will generally preserve the input type
+        in their outputs. For example, if you pass a torch.Tensor, you'll get a
+        torch.Tensor back; if you pass a numpy.ndarray, you'll get a numpy.ndarray back.
 
     !!! warning
-        This is a "best-effort" attempt at having something usable for our purposes, but
-        by no means complete. If it causes more trouble than it solves, it should be
-        removed.
+        This is a "best-effort" implementation that covers the methods and properties
+        needed by PyDVL, but it is not a complete representation of all functionality
+        in NumPy and PyTorch arrays.
     """
 
     @property
