@@ -27,6 +27,28 @@ except ImportError as e:
 logger = logging.getLogger("notebooks.support.banzhaf")
 
 
+@overload
+def load_digits_dataset(
+    train_size: float,
+    random_state: Optional[int] = None,
+    use_tensors: Literal[False] = False,
+    device: str | None = "cpu",
+    shared_mem: bool = False,
+    half_precision: bool = False,
+) -> tuple[Dataset[NDArray], Dataset[NDArray]]: ...
+
+
+@overload
+def load_digits_dataset(
+    train_size: float,
+    random_state: Optional[int] = None,
+    use_tensors: Literal[True] = True,
+    device: str | None = "cpu",
+    shared_mem: bool = False,
+    half_precision: bool = False,
+) -> tuple[Dataset[Tensor], Dataset[Tensor]]: ...
+
+
 def load_digits_dataset(
     train_size: float,
     random_state: Optional[int] = None,
