@@ -343,6 +343,8 @@ class Dataset(Generic[ArrayT]):
         """
         if indices is None:
             return RawData(self._x, self._y)
+        if isinstance(indices, Integral):
+            indices = [indices]
         return RawData(self._x[indices], self._y[indices])
 
     def data_indices(
@@ -366,7 +368,7 @@ class Dataset(Generic[ArrayT]):
             return self._indices
         if isinstance(indices, slice):
             return self._indices[indices]
-        return self._indices[to_numpy(indices)]
+        return cast(NDArray, self._indices[to_numpy(indices)])
 
     def logical_indices(
         self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
@@ -388,7 +390,7 @@ class Dataset(Generic[ArrayT]):
             return self._indices
         if isinstance(indices, slice):
             return self._indices[indices]
-        return self._indices[to_numpy(indices)]
+        return cast(NDArray, self._indices[to_numpy(indices)])
 
     def target(self, name: str) -> tuple[slice, int] | slice:
         """
