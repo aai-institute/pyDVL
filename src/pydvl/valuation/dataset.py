@@ -416,6 +416,10 @@ class Dataset(Generic[ArrayT]):
                 return slice(None), target_idx
         except ValueError:
             raise ValueError(f"Target {name} is not in {self.target_names}")
+    @property
+    def n_targets(self) -> int:
+        """Returns the number of target variables."""
+        return int(self._y.shape[1]) if len(self._y.shape) > 1 else 1
 
     @property
     def indices(self) -> NDArray[np.int_]:
@@ -449,6 +453,12 @@ class Dataset(Generic[ArrayT]):
 
     def __str__(self):
         return self.description
+
+    def __repr__(self):
+        return (
+            f"Dataset({len(self)} samples, {self.n_features} features, "
+            f"{self.n_targets} targets, {self.description})"
+        )
 
     def __len__(self):
         return len(self._x)
