@@ -59,7 +59,6 @@ class TorchUtility(ModelUtility[Sample, TorchSupervisedModel]):
             x, y = self.training_data.data()
             x = torch.tensor(x).to(device=self.model.device)
             y = torch.tensor(y).to(device=self.model.device)
-            x, y = self.model.reshape_inputs(x, y)
             del self._training_data
             self._torch_dataset = TensorDataset(x, y)
 

@@ -27,7 +27,7 @@ from typing import (
 import numpy as np
 import torch as torch_mod
 from numpy.typing import NDArray
-from torch import Tensor, nn
+from torch import Tensor
 from typing_extensions import Self, TypeAlias
 
 from pydvl.utils.array import (
@@ -372,8 +372,8 @@ class BaggingModel(Protocol[ArrayT, ArrayRetT]):
 @runtime_checkable
 class TorchSupervisedModel(Protocol):
     """This is the standard sklearn Protocol with the methods `fit()`, `predict()`
-    and `score()`, but accepting Tensors and with some additional methods
-    used by TorchUtility
+    and `score()`, but accepting Tensors and with some any additional properties
+    required by TorchUtility. It is compatible with [skorch.net.NeuralNet][].
     """
 
     device: str | torch_mod.device
@@ -409,16 +409,6 @@ class TorchSupervisedModel(Protocol):
             The score of the model on `(x, y)`
         """
         ...
-
-    def get_params(self, deep: bool = False) -> dict[str, Any]: ...
-
-    @staticmethod
-    def reshape_inputs(x: Tensor, y: Tensor) -> tuple[Tensor, Tensor]:
-        """Reshape arbitrary tensors into the shapes required by the
-        model."""
-        ...
-
-    def make_model(self) -> nn.Module: ...
 
 
 T = TypeVar("T", bound=Union[int, float, np.number])
