@@ -337,7 +337,7 @@ class Dataset(Generic[ArrayT]):
         self._y = _maybe_open_mmap(self._y, dtype=self._y_dtype, shape=self._y_shape)
 
     def __getitem__(
-        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> Dataset:
         if idx is None:
             idx = slice(None)
