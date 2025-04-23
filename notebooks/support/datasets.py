@@ -56,8 +56,7 @@ def load_digits_dataset(
 def load_digits_dataset(
     train_size: float,
     random_state: Optional[int] = None,
-    use_tensors: bool = True,
-    device: str | None = "cpu",
+    device: str | None = None,
     shared_mem: bool = False,
     half_precision: bool = False,
 ) -> tuple[Dataset, Dataset]:
@@ -69,16 +68,16 @@ def load_digits_dataset(
     Args:
         train_size: Fraction of points used for training.
         random_state: Fix random seed. If `None`, the default rng is taken.
-        use_tensors: If `True`, the data us stored as PyTorch tensors.
-        device: Device to load the data to. If `None`, the data is left on the CPU.
+        device: If `None`, the data is stored as numpy arrays. Otherwise, torch.Tensors
+            are used and moved to the selected device
         shared_mem: If `True`, the tensors are moved to shared memory.
     Returns
         A tuple of tra ining and test Datasets
     """
 
     bunch = load_digits(as_frame=True)
-    if use_tensors:
-        dtype = torch.float16 if half_precision else torch.float32
+    if device is not None:
+        dtype: Type = torch.float16 if half_precision else torch.float32
         x = torch.tensor(bunch.data.values / 16.0, dtype=dtype, device=device).reshape(
             -1, 1, 8, 8
         )
@@ -103,7 +102,7 @@ def load_digits_dataset(
         train_size=train_size,
         random_state=random_state,
         stratify_by_target=True,
-        mmap=shared_mem and not use_tensors,
+        mmap=device is None and shared_mem,
         target_names=["label"],
     )
     # TODO: Is this helping?
