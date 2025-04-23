@@ -4,17 +4,15 @@ import logging
 from typing import Any, Callable, Type
 
 import numpy as np
+from sacred import Experiment
+from sacred.observers import TinyDbObserver
 from skorch import NeuralNetClassifier
 from torch.cuda.amp import GradScaler
 from tqdm import trange
 
 from pydvl.utils import timed
 from pydvl.utils.monitor import end_memory_monitoring, start_memory_monitoring
-from pydvl.valuation.scorers import SupervisedScorer
-from pydvl.valuation.scorers.torchscorer import TorchModelScorer
 from pydvl.valuation.types import TorchSupervisedModel
-from pydvl.valuation.utility.modelutility import ModelUtility
-from pydvl.valuation.utility.torchutility import TorchUtility
 
 from .datasets import load_digits_dataset
 
@@ -213,12 +211,6 @@ def move_optimizer_to_device(optimizer: optim.Optimizer, device: str | torch.dev
                 state[k] = v.to(device)
 
 
-from sacred import Experiment
-from sacred.observers import TinyDbObserver
-
-from pydvl.valuation import MinUpdates, PermutationSampler, RelativeTruncation
-from pydvl.valuation.methods import BanzhafValuation
-
 ex = Experiment("bzf_torch_utility", save_git_info=False)
 ex.observers.append(TinyDbObserver("bzf_torch_utility"))
 
@@ -279,32 +271,32 @@ def run(_config):
         verbose=False,
     )
 
-    scorer_cls = TorchModelScorer if _config["custom_scorer"] else SupervisedScorer
-    scorer = scorer_cls(model, test, default=0.0, range=(0.0, 1.0))
+    # scorer_cls = TorchModelScorer if _config["custom_scorer"] else SupervisedScorer
+    # scorer = scorer_cls(model, test, default=0.0, range=(0.0, 1.0))
 
-    utility_cls = TorchUtility if _config["custom_utility"] else ModelUtility
-    utility = utility_cls(
-        model,
-        scorer,
-        catch_errors=_config["catch_errors"],
-        show_warnings=_config["show_warnings"],
-        clone_before_fit=_config["clone_before_fit"],
-    )
+    # utility_cls = TorchUtility if _config["custom_utility"] else ModelUtility
+    # utility = utility_cls(
+    #     model,
+    #     scorer,
+    #     catch_errors=_config["catch_errors"],
+    #     show_warnings=_config["show_warnings"],
+    #     clone_before_fit=_config["clone_before_fit"],
+    # )
+    #
+    # truncation = RelativeTruncation(
+    #     rtol=_config["truncation_rtol"],
+    #     burn_in_fraction=_config["truncation_burn_in_fraction"],
+    # )
+    # sampler = PermutationSampler(truncation=truncation)
+    # stopping = MinUpdates(_config["min_updates"])
 
-    truncation = RelativeTruncation(
-        rtol=_config["truncation_rtol"],
-        burn_in_fraction=_config["truncation_burn_in_fraction"],
-    )
-    sampler = PermutationSampler(truncation=truncation)
-    stopping = MinUpdates(_config["min_updates"])
-
-    valuation = BanzhafValuation(
-        utility,
-        sampler=sampler,
-        is_done=stopping,
-        progress=True,
-        show_warnings=_config["show_warnings"],
-    )
+    # valuation = BanzhafValuation(
+    #     utility,
+    #     sampler=sampler,
+    #     is_done=stopping,
+    #     progress=True,
+    #     show_warnings=_config["show_warnings"],
+    # )
 
     # timed_fit = timed(model.fit)
     # timed_score = timed(accumulate=True)(model.score)

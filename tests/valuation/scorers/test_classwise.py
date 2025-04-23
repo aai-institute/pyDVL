@@ -73,32 +73,32 @@ def test_classwise_scorer_with_tensor():
     """Test ClasswiseSupervisedScorer with PyTorch tensor inputs."""
     if torch is None:
         pytest.skip("PyTorch not installed")
-        
+
     class TorchThresholdClassifier:
         def fit(self, x, y=None):
             return self
-            
+
         def predict(self, x):
             y = x > 0.5
             return y[:, 0].long()
-            
+
         def score(self, x, y=None):
             assert y is not None
             return float((self.predict(x) == y).float().mean().item())
-    
+
     model = TorchThresholdClassifier()
-    
+
     # Create test data with torch tensors
     test_data = Dataset(
         x=torch.tensor([[0.0], [0.5], [1.0]]),
         y=torch.tensor([0, 0, 1]),
     )
-    
+
     # Expected scores should match the numpy version
     expected_scores = {0: 0.93, 1: 0.64}
-    
+
     scorer = ClasswiseSupervisedScorer("accuracy", test_data)
-    
+
     for label, expected_score in expected_scores.items():
         scorer.label = label
         score = scorer(model)

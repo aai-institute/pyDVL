@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Self
+
 import pytest
 
 from pydvl.utils import Seed, try_torch_import
