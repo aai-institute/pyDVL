@@ -42,6 +42,13 @@ This is done by passing `mmap=True` to the constructor. The data will be stored 
 temporary file, which will be deleted automatically when the creating object is garbage
 collected.
 
+If you pass numpy arrays to the constructor, a temporary file will be created and the
+data dumped to it, then opened again as a memory map. You must set `mmap=True` even if
+the data is already memory-mapped, and in this case no additional shape consistency
+checks will be performed, since these might result in new copies. This means that you
+might want to call `check_X_y()` manually before constructing the `Dataset`.
+
+See [Working with large datasets][large-datasets-parallelization].
 
 ## Slicing
 
@@ -181,12 +188,18 @@ def _cleanup_memmap(path: Path):
     try:
         path.unlink(missing_ok=True)
         logger.info(f"Deleted mmap file '{path}'")
+        with _MMAP_LOCK:
+            if MMAP_DIR is not None and not MMAP_DIR.exists():
+                MMAP_DIR.rmdir()
+                logger.info(f"Deleted temporary directory '{MMAP_DIR}'")
     except Exception as e:
         logger.error(f"Error while deleting mmap file '{path}': {e}")
 
 
-def _create_memmap(array: NDArray) -> np.memmap:
+def _maybe_create_memmap(array: NDArray | np.memmap) -> np.memmap:
     global MMAP_DIR
+    if isinstance(array, np.memmap):
+        return array
 
     with _MMAP_LOCK:
         if MMAP_DIR is None:
@@ -194,8 +207,9 @@ def _create_memmap(array: NDArray) -> np.memmap:
         logger.debug(f"Using temporary directory {MMAP_DIR} for mmap files")
 
     fname = f"array-{id(array)}-{uuid.uuid4().hex[:6]}.mmap"
-    file_path = MMAP_DIR / f"array-{id(array)}.mmap"
+    file_path = MMAP_DIR / fname
     mm = np.memmap(file_path, dtype=array.dtype, mode="w+", shape=array.shape)
+    logger.debug(f"Created mmap file '{file_path}'")
     mm[:] = array[:]
     mm.flush()
     ro_mm = np.memmap(file_path, dtype=array.dtype, mode="readonly", shape=array.shape)
@@ -236,19 +250,28 @@ class Dataset(Generic[ArrayT]):
         description: A textual description of the dataset.
         multi_output: set to `False` if labels are scalars, or to
             `True` if they are vectors of dimension > 1.
-        mmap: Whether to use memory-mapped files (for NumPy arrays only)
+        mmap: Whether to use memory-mapped files (for NumPy arrays only). If you pass
+            `ndarrays`, a temporary file will be created and the data dumped to it, then
+            opened again as a memory map. Use this when working in parallel in a single
+            node to avoid unnecessary data copying (at a performance cost). You must set
+            `mmap=True` even if the data is already memmapped, and in this case no
+            additional shape consistency checks will be performed, meaning you might
+            want to call `check_X_y()` manually before memmapping and constructing the
+            `Dataset`.
 
     !!! tip "Type preservation"
-        The Dataset class preserves the type of input arrays (NumPy or PyTorch)
-        throughout all operations. When you access data with slicing or the data()
-        method, the arrays maintain their original type.
+        The `Dataset` class preserves the type of input arrays (NumPy or PyTorch)
+        throughout all operations. When you access data with slicing or the
+        [data()][pydvl.valuation.dataset.Dataset.data] method, the arrays maintain their
+        original type.
 
     !!! tip "Changed in version 0.10.0"
-        No longer holds split data, but only x, y.
-    !!! tip "Changed in version 0.10.0"
+        No longer holds split data, but only `x`, `y`.
         Slicing now return a new `Dataset` object, not raw data.
+
     !!! tip "New in version 0.11.0"
         Added support for PyTorch tensors.
+        Added memory mapping support for numpy arrays.
     """
 
     feature_names: NDArray[np.str_]
@@ -272,10 +295,19 @@ class Dataset(Generic[ArrayT]):
         if mmap:
             if not is_numpy(x) or not is_numpy(y):
                 raise TypeError("x and y must be numpy arrays in order to use mmap")
-            _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
 
-            self._x = cast(ArrayT, _create_memmap(_x))
-            self._y = cast(ArrayT, _create_memmap(_y))
+            if isinstance(x, np.memmap) and isinstance(y, np.memmap):
+                logger.info(
+                    "Skipping check_X_y for memmapped arrays. "
+                    "Make sure that the data has the proper shape before "
+                    "constructing a Dataset"
+                )
+                _x, _y = x, y
+            else:
+                _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
+
+            self._x = cast(ArrayT, _maybe_create_memmap(_x))
+            self._y = cast(ArrayT, _maybe_create_memmap(_y))
         else:
             self._x, self._y = check_X_y(
                 x, y, multi_output=multi_output, estimator="Dataset"

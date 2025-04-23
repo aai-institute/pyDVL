@@ -708,6 +708,37 @@ def test_dataset_mmap_creates_memmap(dataset, x_data, y_data):
     assert np.array_equal(dataset._y, y_data)
 
 
+def test_dataset_reuses_existing_memmap(x_data, y_data):
+    import logging
+    import sys
+
+    from pydvl.valuation.dataset import _maybe_create_memmap
+
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
+    logger = logging.getLogger(__name__)
+    logger.info("Testing memmap reuse")
+
+    mm_x_ro = _maybe_create_memmap(x_data)
+    mm_y_ro = _maybe_create_memmap(y_data)
+
+    x_path = Path(mm_x_ro.filename)
+    y_path = Path(mm_y_ro.filename)
+
+    data = Dataset(x=mm_x_ro, y=mm_y_ro, mmap=True)
+
+    assert isinstance(data._x, np.memmap)
+    assert isinstance(data._y, np.memmap)
+
+    assert np.array_equal(data._x, x_data)
+    assert np.array_equal(data._y, y_data)
+
+    assert Path(data._x.filename).samefile(x_path)
+    assert Path(data._y.filename).samefile(y_path)
+
+    assert data._x is mm_x_ro
+    assert data._y is mm_y_ro
+
+
 @pytest.mark.parametrize("mmap_dataset", [True], indirect=True)
 def test_dataset_pickling_with_mmap(dataset, x_data, y_data):
     with tempfile.NamedTemporaryFile() as f:
