@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Type
 
 import numpy as np
-from numpy.typing import NDArray
+from skorch import NeuralNetClassifier
 from torch.cuda.amp import GradScaler
 from tqdm import trange
 
-from notebooks.support.datasets import load_digits_dataset
 from pydvl.utils import timed
 from pydvl.utils.monitor import end_memory_monitoring, start_memory_monitoring
 from pydvl.valuation.scorers import SupervisedScorer
@@ -16,6 +15,8 @@ from pydvl.valuation.scorers.torchscorer import TorchModelScorer
 from pydvl.valuation.types import TorchSupervisedModel
 from pydvl.valuation.utility.modelutility import ModelUtility
 from pydvl.valuation.utility.torchutility import TorchUtility
+
+from .datasets import load_digits_dataset
 
 try:
     import torch
@@ -56,14 +57,18 @@ class TorchClassifierModel(TorchSupervisedModel):
     [SupervisedModel][pydvl.utils.types.SupervisedModel] interface expected by pyDVL,
     and takes care of the training and evaluation of the model.
 
-    !!! note
-        This is just a PoC. Loss function and optimizer choice are hard-coded, there
-        is no validation, no early-stopping, no learning rate scheduling, etc.
+    !!! warning
+        This is just a proof-of-concept to showcase requirements. There is no validation,
+        no early-stopping, no learning rate scheduling, etc. We recommend that you use
+        [NeuralNetClassifier][skorch.classifier.NeuralNetClassifier] from the [skorch
+        library](https://skorch.readthedocs.io/) instead.
 
     Args:
-        model: A PyTorch nn.Module to be trained.
+        model_factory: A PyTorch nn.Module to be trained.
         lr: Learning rate for the Adam optimizer.
-        epochs: Number of epochs to train the model.
+        max_epochs: Number of epochs to train the model.
+        optimizer:
+        criterion: Loss function
         batch_size: Size of the batches used for training.
         device: Device to use for training. Can be 'cpu' or 'cuda'.
     """
@@ -72,17 +77,20 @@ class TorchClassifierModel(TorchSupervisedModel):
         self,
         model_factory: Callable[[], nn.Module],
         lr: float,
-        epochs: int,
+        optimizer: Type[torch.optim.optimizer.Optimizer],
+        criterion: Type[torch.nn.Module],
+        max_epochs: int,
         batch_size: int,
         device: torch.device | str,
+        **kwargs,  # Swallow unknown parameters used by skorch.NeuralNetClassifier
     ):
         self.model_factory = model_factory
         self.lr = lr
-        self.epochs = epochs
+        self.epochs = max_epochs
         self.batch_size = batch_size
         self.device = device
-        self.loss = nn.CrossEntropyLoss()
-        self.optimizer = None  # TODO
+        self.criterion = criterion
+        self.optimizer = optimizer
         self.model = None
 
     def fit(self, x: Tensor, y: Tensor):
@@ -98,7 +106,8 @@ class TorchClassifierModel(TorchSupervisedModel):
         self.model = self.make_model()
         device = next(self.model.parameters()).device
         assert x.device == y.device == device, (
-            f"Data and model not on the same device: {x.device}, {y.device} and {device}. "
+            f"Data and model not on the same device: {x.device}, {y.device} and "
+            f"{device}. "
             f"Should be {self.device}."
         )
 
@@ -106,12 +115,13 @@ class TorchClassifierModel(TorchSupervisedModel):
         torch_dataloader = DataLoader(
             torch_dataset, batch_size=self.batch_size, shuffle=True
         )
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        loss = self.criterion()
+        optimizer = self.optimizer(self.model.parameters(), lr=self.lr)
         for epoch in range(self.epochs):
             for features, labels in torch_dataloader:
                 optimizer.zero_grad()
                 pred = self.model(features)
-                loss = self.loss(pred, labels)
+                loss = loss(pred, labels)
                 loss.backward()
                 optimizer.step()
 
@@ -132,20 +142,23 @@ class TorchClassifierModel(TorchSupervisedModel):
         logger.debug(f"Using autocast for {dtype}")
         torch_dataset = TensorDataset(x, y)
         torch_dataloader = DataLoader(torch_dataset, batch_size=self.batch_size)
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        loss = self.criterion()
+        optimizer = self.optimizer(self.model.parameters(), lr=self.lr)
         scaler = GradScaler()
         for epoch in range(self.epochs):
             for features, labels in torch_dataloader:
                 optimizer.zero_grad()
                 with torch.autocast(device_type=device.type, dtype=dtype):
                     pred = self.model(features)
-                    loss = self.loss(pred, labels)
+                    loss = loss(pred, labels)
                 # Calls backward() on scaled loss to create scaled gradients.
                 # Backward passes under autocast are not recommended.
-                # Backward ops run in the same dtype autocast chose for corresponding forward ops.
+                # Backward ops run in the same dtype autocast chose for corresponding
+                # forward ops.
                 scaler.scale(loss).backward()
                 # first unscales the gradients of the optimizer's assigned params.
-                # If these gradients do not contain infs or NaNs, optimizer.step() is then called,
+                # If these gradients do not contain infs or NaNs, optimizer.step() is
+                # then called,
                 # otherwise, optimizer.step() is skipped
                 scaler.step(optimizer)
                 scaler.update()
@@ -223,8 +236,8 @@ def config():
     model_device = "cpu"  # noqa: F841
     data_device = "cpu"  # noqa: F841
     half_precision = False  # noqa: F841
-    load_as_tensors = True  # noqa: F841
     shared_mem = False  # noqa: F841
+    custom_model = False  # noqa: F841
     custom_utility = True  # noqa: F841
     custom_scorer = False  # noqa: F841
     clone_before_fit = True  # noqa: F841
@@ -248,40 +261,35 @@ def run(_config):
     train, test = load_digits_dataset(
         0.7,
         random_state=_config["seed"],
-        use_tensors=_config["load_as_tensors"],
         device=_config["data_device"],
         shared_mem=_config["shared_mem"],
         half_precision=_config["half_precision"],
     )
 
-    model = TorchClassifierModel(
-        model_factory=SimpleCNN,
+    model_cls = TorchClassifierModel if _config["custom_model"] else NeuralNetClassifier
+    model = model_cls(
+        SimpleCNN,
         lr=_config["lr"],
-        epochs=_config["n_epochs"],
+        optimizer=torch.optim.Adam,
+        criterion=torch.nn.CrossEntropyLoss,
+        max_epochs=_config["n_epochs"],
         batch_size=_config["batch_size"],
         device=_config["model_device"],
+        train_split=None,
+        verbose=False,
     )
-    if _config["custom_scorer"]:
-        scorer = TorchModelScorer(model, test, default=0.0, range=(0.0, 1.0))
-    else:
-        scorer = SupervisedScorer(model, test, default=0.0, range=(0.0, 1.0))
 
-    if _config["custom_utility"]:
-        utility = TorchUtility(
-            model,
-            scorer,
-            catch_errors=_config["catch_errors"],
-            show_warnings=_config["show_warnings"],
-            clone_before_fit=_config["clone_before_fit"],
-        )
-    else:
-        utility = ModelUtility(
-            model,
-            scorer,
-            catch_errors=_config["catch_errors"],
-            show_warnings=_config["show_warnings"],
-            clone_before_fit=_config["clone_before_fit"],
-        )
+    scorer_cls = TorchModelScorer if _config["custom_scorer"] else SupervisedScorer
+    scorer = scorer_cls(model, test, default=0.0, range=(0.0, 1.0))
+
+    utility_cls = TorchUtility if _config["custom_utility"] else ModelUtility
+    utility = utility_cls(
+        model,
+        scorer,
+        catch_errors=_config["catch_errors"],
+        show_warnings=_config["show_warnings"],
+        clone_before_fit=_config["clone_before_fit"],
+    )
 
     truncation = RelativeTruncation(
         rtol=_config["truncation_rtol"],
