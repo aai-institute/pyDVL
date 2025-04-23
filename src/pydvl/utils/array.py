@@ -681,8 +681,15 @@ def stratified_split_indices(
             n_train = int(len(idx) * (train_size_int / n_samples))
             train_indices.append(shuffled[:n_train])
             test_indices.append(shuffled[n_train:])
+        # Final shuffling to avoid sorting the datasets by class
+        train_cat = torch.cat(train_indices)
+        test_cat = torch.cat(test_indices)
         return cast(
-            Tuple[ArrayT, ArrayT], (torch.cat(train_indices), torch.cat(test_indices))
+            Tuple[ArrayT, ArrayT],
+            (
+                train_cat[torch.randperm(len(train_cat))],
+                test_cat[torch.randperm(len(test_cat))],
+            ),
         )
     else:
         from sklearn.model_selection import train_test_split
