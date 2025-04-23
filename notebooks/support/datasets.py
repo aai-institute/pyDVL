@@ -4,7 +4,17 @@ import logging
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    overload,
+)
 
 import numpy as np
 import pandas as pd
@@ -14,18 +24,18 @@ from sklearn.datasets import load_digits, load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, TargetEncoder
 
-from notebooks.support.common import filecache
 from pydvl.utils import try_torch_import
 from pydvl.valuation.dataset import Dataset
+from support.common import filecache
 
 __all__ = ["load_digits_dataset", "load_spotify_dataset", "load_wine_dataset"]
 
-torch = try_torch_import()
 
 # Define Tensor type properly for type checking
 if TYPE_CHECKING:
     from torch import Tensor
 else:
+    torch = try_torch_import()
     Tensor = Any if torch is None else torch.Tensor
 
 logger = logging.getLogger(__name__)
@@ -35,8 +45,7 @@ logger = logging.getLogger(__name__)
 def load_digits_dataset(
     train_size: float,
     random_state: Optional[int] = None,
-    use_tensors: Literal[False] = False,
-    device: str | None = "cpu",
+    device: Literal[None] = None,
     shared_mem: bool = False,
     half_precision: bool = False,
 ) -> tuple[Dataset[NDArray], Dataset[NDArray]]: ...
@@ -46,8 +55,7 @@ def load_digits_dataset(
 def load_digits_dataset(
     train_size: float,
     random_state: Optional[int] = None,
-    use_tensors: Literal[True] = True,
-    device: str | None = "cpu",
+    device: str = "cpu",
     shared_mem: bool = False,
     half_precision: bool = False,
 ) -> tuple[Dataset[Tensor], Dataset[Tensor]]: ...
@@ -86,9 +94,9 @@ def load_digits_dataset(
         if shared_mem:
             x.share_memory_()
             y.share_memory_()
-            logger.debug(
-                f"Loaded {len(x)} data points to {x.device} ({mb:.2f}MB, {shared_mem=})"
-            )
+        logger.debug(
+            f"Loaded {len(x)} data points to {x.device} ({mb:.2f}MB, {shared_mem=})"
+        )
     else:
         dtype = np.float16 if half_precision else np.float32
         x = np.array(bunch.data.values / 16.0, dtype=dtype)
@@ -410,7 +418,7 @@ def corrupt_imagenet(
     """
     labels = dataset["labels"].unique()
     corrupted_dataset = deepcopy(dataset)
-    corrupted_indices = {l: [] for l in labels}
+    corrupted_indices: dict[str, int] = {l: [] for l in labels}
 
     avg_influences_series = pd.DataFrame()
     avg_influences_series["avg_influences"] = avg_influences

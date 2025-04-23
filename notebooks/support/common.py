@@ -158,12 +158,12 @@ def plot_influences(
 
 def plot_iris(
     data: Dataset,
-    indices: list[int] = None,
+    indices: list[int] | None = None,
     highlight_indices: Sequence[int] | None = None,
-    suptitle: str = None,
-    legend_title: str = None,
-    legend_labels: Sequence[str] = None,
-    colors: Iterable = None,
+    suptitle: str | None = None,
+    legend_title: str | None = None,
+    legend_labels: Sequence[str] | None = None,
+    colors: Iterable | None = None,
     colorbar_limits: tuple | None = None,
     figsize: tuple[int, int] = (20, 8),
 ):
