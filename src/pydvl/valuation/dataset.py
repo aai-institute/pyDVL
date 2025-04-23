@@ -163,6 +163,15 @@ class RawData(Generic[ArrayT]):
     def __len__(self) -> int:
         return len(self.x)
 
+    def cpu(self) -> RawData:
+        """Returns a new RawData object with tensors moved to the CPU.
+
+        If this `RawData` object hold numpy arrays it returns itself.
+        """
+        if is_tensor(self.x) and is_tensor(self.y):
+            return RawData(self.x.cpu(), self.y.cpu())  # type: ignore
+        return self
+
 
 MMAP_DIR: Path | None = None
 _MMAP_LOCK = threading.Lock()
