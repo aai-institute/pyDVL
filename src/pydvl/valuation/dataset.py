@@ -787,9 +787,11 @@ class GroupedDataset(Dataset[ArrayT]):
         return len(self._indices)
 
     def __getitem__(
-        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> GroupedDataset:
-        if isinstance(idx, int):
+        if idx is None:
+            idx = slice(None)
+        elif isinstance(idx, int):
             idx = [idx]
         indices = self.data_indices(idx)
         return GroupedDataset(

@@ -22,17 +22,17 @@ def train_size(request):
 
 @pytest.fixture(scope="function")
 def x_data():
-    return np.array([[1, 2], [3, 4], [5, 6]])
+    return np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
 
 
 @pytest.fixture(scope="function")
 def y_data():
-    return np.array([0, 1, 0])
+    return np.array([0, 1, -1, 1])
 
 
 @pytest.fixture(scope="function")
 def data_names():
-    return ["a", "b", "c"]
+    return ["a", "b", "c", "d"]
 
 
 @pytest.fixture
@@ -194,8 +194,7 @@ def test_grouped_dataset_results():
 
 
 @pytest.mark.parametrize(
-    "idx, expected_x, expected_y, expected_groups, expected_names, "
-    "expected_group_names",
+    "idx, expected_x, expected_y, expected_groups, expected_names, expected_group_names",
     [
         (
             0,
@@ -221,16 +220,32 @@ def test_grouped_dataset_results():
             ["a", "c", "d"],
             ["group1", "group3"],
         ),
+        (
+            None,
+            np.array([[1, 2], [5, 6], [3, 4], [7, 8]]),
+            np.array([0, -1, 1, 1]),
+            [0, 0, 1, 2],
+            ["a", "c", "b", "d"],
+            ["group1", "group2", "group3"],
+        ),
     ],
 )
 def test_getitem_returns_correct_grouped_dataset(
-    idx, expected_x, expected_y, expected_groups, expected_names, expected_group_names
+    idx,
+    expected_x,
+    expected_y,
+    expected_groups,
+    expected_names,
+    expected_group_names,
+    x_data,
+    y_data,
+    data_names,
 ):
     dataset = GroupedDataset(
-        x=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
-        y=np.array([0, 1, -1, 1]),
+        x=x_data,
+        y=y_data,
         data_groups=[0, 1, 0, 2],
-        data_names=["a", "b", "c", "d"],
+        data_names=data_names,
         group_names=["group1", "group2", "group3"],
     )
     sliced_dataset = dataset[idx]
@@ -254,14 +269,12 @@ def test_default_group_names():
     assert all(dataset.names == expected)
 
 
-def test_incomplete_group_names():
+def test_incomplete_group_names(x_data, y_data):
     """Test that providing an incomplete group_names dictionary raise an exception."""
-    x = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
-    y = np.array([0, 1, -1, 1])
     with pytest.raises(ValueError, match="The number of group names"):
         _ = GroupedDataset(
-            x=x,
-            y=y,
+            x=x_data,
+            y=y_data,
             data_groups=[0, 1, 0, 2],
             group_names=["g1", "g3"],
         )
@@ -272,12 +285,12 @@ def test_incomplete_group_names():
     [
         (0, np.array([[1, 2]]), np.array([0]), ["a"]),
         (slice(0, 2), np.array([[1, 2], [3, 4]]), np.array([0, 1]), ["a", "b"]),
-        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, 0]), ["a", "c"]),
+        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, -1]), ["a", "c"]),
         (
             None,
-            np.array([[1, 2], [3, 4], [5, 6]]),
-            np.array([0, 1, 0]),
-            ["a", "b", "c"],
+            np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+            np.array([0, 1, -1, 1]),
+            ["a", "b", "c", "d"],
         ),
     ],
     ids=["single_index", "slice", "sequence", "all"],
@@ -434,9 +447,9 @@ def test_feature_raises_value_error_for_invalid_feature(
     "indices, expected_x, expected_y",
     [
         (1, np.array([[3, 4]]), np.array([1])),
-        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, 0])),
-        (slice(1, 3), np.array([[3, 4], [5, 6]]), np.array([1, 0])),
-        (None, np.array([[1, 2], [3, 4], [5, 6]]), np.array([0, 1, 0])),
+        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, -1])),
+        (slice(1, 3), np.array([[3, 4], [5, 6]]), np.array([1, -1])),
+        (None, np.array([[1, 2], [3, 4], [5, 6], [7, 8]]), np.array([0, 1, -1, 1])),
     ],
     ids=["single_index", "sequence", "slice", "all"],
 )
@@ -449,7 +462,7 @@ def test_data_returns_correct_subset(indices, dataset, expected_x, expected_y):
 @pytest.mark.parametrize(
     "indices, expected_indices",
     [
-        (None, np.array([0, 1, 2])),
+        (None, np.array([0, 1, 2, 3])),
         ([0, 2], np.array([0, 2])),
         (slice(1, 3), np.array([1, 2])),
     ],
@@ -462,7 +475,7 @@ def test_data_indices_returns_correct_indices(dataset, indices, expected_indices
 @pytest.mark.parametrize(
     "indices, expected_indices",
     [
-        (None, np.array([0, 1, 2])),
+        (None, np.array([0, 1, 2, 3])),
         ([0, 2], np.array([0, 2])),
         (slice(1, 3), np.array([1, 2])),
     ],
@@ -525,11 +538,11 @@ def test_target_raises_value_error_for_invalid_target(target_name):
 
 
 def test_indices_property_returns_correct_indices(dataset):
-    assert np.array_equal(dataset.indices, np.array([0, 1, 2]))
+    assert np.array_equal(dataset.indices, np.array([0, 1, 2, 3]))
 
 
 def test_names_property_returns_correct_names(dataset):
-    assert np.array_equal(dataset.names, np.array(["a", "b", "c"]))
+    assert np.array_equal(dataset.names, np.array(["a", "b", "c", "d"]))
 
 
 def test_n_features_property_returns_correct_dimension():
