@@ -163,6 +163,7 @@ plugins:
             - https://pandas.pydata.org/docs/objects.inv
             - https://scikit-learn.org/stable/objects.inv
             - https://pytorch.org/docs/stable/objects.inv
+            - https://skorch.readthedocs.io/en/latest/objects.inv
             - https://pymemcache.readthedocs.io/en/latest/objects.inv
             - https://joblib.readthedocs.io/en/stable/objects.inv
             - https://loky.readthedocs.io/en/stable/objects.inv
