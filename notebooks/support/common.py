@@ -3,13 +3,22 @@ from __future__ import annotations
 import pickle
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import skorch
 from matplotlib import gridspec
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
@@ -22,6 +31,9 @@ from pydvl.utils.array import try_torch_import
 from pydvl.valuation.dataset import Dataset
 
 from .influence import Losses
+
+if TYPE_CHECKING:
+    import skorch
 
 
 def plot_gaussian_blobs(
