@@ -127,16 +127,16 @@ tensors for data valuation. The implementation follows these key principles:
 1. **Type Preservation**: The valuation methods maintain the input data type
    throughout computations, whether you provide NumPy arrays or PyTorch tensors
    when constructing the [Dataset][pydvl.valuation.dataset.Dataset].
-2. **Transparent Usage**: The API remains the same regardless of the input type -
-   simply provide your data as tensors. The main difference is that the torch
+2. **Transparent Usage**: The API remains the same regardless of the input type.
+   Simply provide your data as tensors. The main difference is that the torch
    model must be wrapped in a class compatible with the protocol
    [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel].
      !!! tip "Wrapping torch models"
          There is an example implementation of
          [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel]
-         in `notebooks/support/banzhaf.py`, but we would like to avoid custom 
-         classes and support [skorch](https://github.com/skorch-dev/skorch)
-         models instead in a future release.
+         in `notebooks/support/banzhaf.py`. But you should consider using
+         [skorch](https://github.com/skorch-dev/skorch) models instead, which
+         are entirely compatible with pyDVL.
 3. **Consistent Indexing**: Internally, indices are always managed as NumPy
    arrays for consistency and compatibility, but the actual data operations
    preserve tensor types when provided.
@@ -148,19 +148,21 @@ tensors for data valuation. The implementation follows these key principles:
     import torch
     from pydvl.valuation.dataset import Dataset
     from sklearn.datasets import make_classification
-    
+    from skorch import NeuralNetClassifier
+
     X, y = make_classification(n_samples=100, n_features=20, n_classes=3)
     X_tensor = torch.tensor(X, dtype=torch.float32)
     y_tensor = torch.tensor(y, dtype=torch.long)
     
     train, test = Dataset.from_arrays(X_tensor, y_tensor, stratify_by_target=True)
-    model = TorchClassifierModel(SomeNNModule(),...)
-    scorer = TorchModelScorer()
+    model = NeuralNetClassifier(SomeNNModule(), 
+                                 max_epochs=10,
+                                 criterion=torch.nn.CrossEntropyLoss,
+                                 optimizer=torch.optim.Adam)
+    scorer = SupervisedScorer(model, test, default=0.0, range=(0, 1))
     utility = ModelUtility(model, scorer)
-    valuation = TMCShapleyValuation(utility, )
+    valuation = TMCShapleyValuation(utility)
     ```
-
-
 
 !!! warning "Library-specific requirements"
     Some methods that rely on specific libraries may have type requirements:
@@ -169,9 +171,6 @@ tensors for data valuation. The implementation follows these key principles:
         NumPy arrays internally.
       - The [KNNShapleyValuation][pydvl.valuation.methods.knn_shapley.KNNShapleyValuation]
         method requires NumPy arrays.
-      - [TorchModelScorer][pydvl.valuation.scorers.torchscorer.TorchModelScorer]
-       is designed for PyTorch models and requires tensor inputs.
-
 
 ### Creating a Dataset
 
@@ -270,6 +269,8 @@ constructor accepts the same types of arguments as those of
 [None][] for the default.
 
 ```python
+import numpy as np
+from pydvl.valuation.scorers import SupervisedScorer
 scorer = SupervisedScorer("explained_variance", default=0.0, range=(-np.inf, 1))
 ```
 
