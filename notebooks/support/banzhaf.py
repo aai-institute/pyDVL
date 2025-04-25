@@ -4,8 +4,6 @@ import logging
 from typing import Any, Callable, Type
 
 import numpy as np
-from sacred import Experiment
-from sacred.observers import TinyDbObserver
 from skorch import NeuralNetClassifier
 from torch.cuda.amp import GradScaler
 from tqdm import trange
@@ -24,6 +22,28 @@ except ImportError as e:
     raise RuntimeError("PyTorch is required to run the Banzhaf MSR notebook") from e
 
 logger = logging.getLogger("notebooks.support.banzhaf")
+
+try:
+    from sacred import Experiment
+    from sacred.observers import TinyDbObserver
+
+    ex = Experiment("bzf_torch_utility", save_git_info=False)
+    ex.observers.append(TinyDbObserver("bzf_torch_utility"))
+except ImportError:
+    if __name__ == "__main__":
+        raise RuntimeError("sacred is required to run this file.")
+
+    class Experiment:
+        def config(self, f):
+            return f
+
+        def automain(self, f):
+            return f
+
+        def add_artifact(self, *args, **kwargs):
+            pass
+
+    ex = Experiment()
 
 
 class SimpleCNN(nn.Module):
@@ -56,7 +76,8 @@ class TorchClassifierModel(TorchSupervisedModel):
     and takes care of the training and evaluation of the model.
 
     !!! warning
-        This is just a proof-of-concept to showcase requirements. There is no validation,
+        This is just a proof-of-concept to showcase requirements. There is no
+        validation,
         no early-stopping, no learning rate scheduling, etc. We recommend that you use
         [NeuralNetClassifier][skorch.classifier.NeuralNetClassifier] from the [skorch
         library](https://skorch.readthedocs.io/) instead.
@@ -211,10 +232,6 @@ def move_optimizer_to_device(optimizer: optim.Optimizer, device: str | torch.dev
                 state[k] = v.to(device)
 
 
-ex = Experiment("bzf_torch_utility", save_git_info=False)
-ex.observers.append(TinyDbObserver("bzf_torch_utility"))
-
-
 @ex.config
 def config():
     n_jobs = 6  # noqa: F841
@@ -231,7 +248,6 @@ def config():
     shared_mem = False  # noqa: F841
     custom_model = False  # noqa: F841
     custom_utility = True  # noqa: F841
-    custom_scorer = False  # noqa: F841
     clone_before_fit = True  # noqa: F841
 
     memory_monitor = False  # noqa: F841
@@ -271,8 +287,7 @@ def run(_config):
         verbose=False,
     )
 
-    # scorer_cls = TorchModelScorer if _config["custom_scorer"] else SupervisedScorer
-    # scorer = scorer_cls(model, test, default=0.0, range=(0.0, 1.0))
+    # scorer = SupervisedScorer(model, test, default=0.0, range=(0.0, 1.0))
 
     # utility_cls = TorchUtility if _config["custom_utility"] else ModelUtility
     # utility = utility_cls(

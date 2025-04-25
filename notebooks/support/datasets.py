@@ -26,7 +26,8 @@ from sklearn.preprocessing import MinMaxScaler, TargetEncoder
 
 from pydvl.utils import try_torch_import
 from pydvl.valuation.dataset import Dataset
-from support.common import filecache
+
+from .common import filecache
 
 __all__ = ["load_digits_dataset", "load_spotify_dataset", "load_wine_dataset"]
 
