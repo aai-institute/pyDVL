@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Self
-
 import pytest
+from typing_extensions import Self
 
 from pydvl.utils import Seed, try_torch_import
 from pydvl.valuation.dataset import Dataset
