@@ -247,7 +247,6 @@ def config():
     half_precision = False  # noqa: F841
     shared_mem = False  # noqa: F841
     custom_model = False  # noqa: F841
-    custom_utility = True  # noqa: F841
     clone_before_fit = True  # noqa: F841
 
     memory_monitor = False  # noqa: F841
@@ -289,8 +288,7 @@ def run(_config):
 
     # scorer = SupervisedScorer(model, test, default=0.0, range=(0.0, 1.0))
 
-    # utility_cls = TorchUtility if _config["custom_utility"] else ModelUtility
-    # utility = utility_cls(
+    # utility = ModelUtility(
     #     model,
     #     scorer,
     #     catch_errors=_config["catch_errors"],

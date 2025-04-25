@@ -372,8 +372,8 @@ class BaggingModel(Protocol[ArrayT, ArrayRetT]):
 @runtime_checkable
 class TorchSupervisedModel(Protocol):
     """This is the standard sklearn Protocol with the methods `fit()`, `predict()`
-    and `score()`, but accepting Tensors and with some any additional properties
-    required by TorchUtility. It is compatible with [skorch.net.NeuralNet][].
+    and `score()`, but accepting Tensors and with any additional info required.
+    It is compatible with [skorch.net.NeuralNet][].
     """
 
     device: str | torch_mod.device
