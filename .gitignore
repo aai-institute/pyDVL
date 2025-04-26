@@ -153,3 +153,6 @@ prof/
 node_modules/
 package.json
 package-lock.json
+
+#
+.serena
