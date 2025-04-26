@@ -56,7 +56,7 @@ __all__ = [
     "SampleT",
     "SemivalueCoefficient",
     "SupervisedModel",
-    "TorchSupervisedModel",
+    "SkorchSupervisedModel",
     "UtilityEvaluation",
     "ValueUpdate",
     "ValueUpdateT",
@@ -304,7 +304,7 @@ class SupervisedModel(Protocol[ArrayT, ArrayRetT]):
     `score()`.
     """
 
-    def fit(self, x: ArrayT, y: ArrayT | None):
+    def fit(self, x: ArrayT, y: ArrayT):
         """Fit the model to the data
 
         Args:
@@ -324,7 +324,7 @@ class SupervisedModel(Protocol[ArrayT, ArrayRetT]):
         """
         pass
 
-    def score(self, x: ArrayT, y: ArrayT | None) -> float:
+    def score(self, x: ArrayT, y: ArrayT) -> float:
         """Compute the score of the model given test data
 
         Args:
@@ -370,7 +370,7 @@ class BaggingModel(Protocol[ArrayT, ArrayRetT]):
 
 
 @runtime_checkable
-class TorchSupervisedModel(Protocol):
+class SkorchSupervisedModel(Protocol[ArrayT]):
     """This is the standard sklearn Protocol with the methods `fit()`, `predict()`
     and `score()`, but accepting Tensors and with any additional info required.
     It is compatible with [skorch.net.NeuralNet][].
@@ -378,7 +378,7 @@ class TorchSupervisedModel(Protocol):
 
     device: str | torch_mod.device
 
-    def fit(self, x: Tensor, y: Tensor | None):
+    def fit(self, x: ArrayT, y: Tensor):
         """Fit the model to the data
 
         Args:
@@ -387,7 +387,7 @@ class TorchSupervisedModel(Protocol):
         """
         ...
 
-    def predict(self, x: Tensor) -> Tensor:
+    def predict(self, x: ArrayT) -> NDArray:
         """Compute predictions for the input
 
         Args:
@@ -398,7 +398,7 @@ class TorchSupervisedModel(Protocol):
         """
         ...
 
-    def score(self, x: Tensor, y: Tensor | None) -> float:
+    def score(self, x: ArrayT, y: NDArray) -> float:
         """Compute the score of the model given test data
 
         Args:

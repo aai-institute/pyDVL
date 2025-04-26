@@ -127,8 +127,8 @@ tensors for data valuation. The implementation follows these key principles:
 1. **Type Preservation**: The valuation methods maintain the input data type
    throughout computations, whether you provide NumPy arrays or PyTorch tensors
    when constructing the [Dataset][pydvl.valuation.dataset.Dataset].
-2. **Transparent Usage**: The API remains the same regardless of the input type.
-   Simply provide your data as tensors. The main difference is that the torch
+2. **Transparent Usage**: The API remains the same regardless of the input type -
+   simply provide your data as tensors. The main difference is that the torch
    model must be wrapped in a class compatible with the protocol
    [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel].
      !!! tip "Wrapping torch models"

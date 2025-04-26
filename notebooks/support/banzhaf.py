@@ -10,7 +10,6 @@ from tqdm import trange
 
 from pydvl.utils import timed
 from pydvl.utils.monitor import end_memory_monitoring, start_memory_monitoring
-from pydvl.valuation.types import TorchSupervisedModel
 
 from .datasets import load_digits_dataset
 
@@ -70,7 +69,7 @@ class SimpleCNN(nn.Module):
         return self.layers(x)
 
 
-class TorchClassifierModel(TorchSupervisedModel):
+class TorchClassifierModel:
     """This class wraps a torch classification model to comply with the
     [SupervisedModel][pydvl.utils.types.SupervisedModel] interface expected by pyDVL,
     and takes care of the training and evaluation of the model.
@@ -286,7 +285,7 @@ def run(_config):
         verbose=False,
     )
 
-    # scorer = SupervisedScorer(model, test, default=0.0, range=(0.0, 1.0))
+    # scorer = SkorchSupervisedScorer(model, test, default=0.0, range=(0.0, 1.0))
 
     # utility = ModelUtility(
     #     model,

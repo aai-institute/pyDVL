@@ -14,4 +14,5 @@ for a certain quality of approximation.
 from .base import *
 from .classwise import *
 from .supervised import *
+from .torchscorer import *
 from .utils import *
