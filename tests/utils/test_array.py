@@ -260,7 +260,7 @@ def test_array_unique_torch():
     result, indices = array_unique(arr, return_index=True)
     assert is_tensor(result)
     assert torch.equal(result, torch.tensor([1, 2, 3]))
-    assert torch.equal(indices, torch.tensor([0, 1, 3]))
+    np.testing.assert_array_equal(indices, np.array([0, 1, 3]))
 
 
 def test_array_concatenate():
@@ -467,18 +467,18 @@ def test_array_nonzero_torch():
     result = array_nonzero(array)
     assert isinstance(result, tuple)
     assert len(result) == 1
-    assert is_tensor(result[0])
-    assert torch.equal(result[0], torch.tensor([1, 3]))
+    assert is_numpy(result[0])
+    np.testing.assert_array_equal(result[0], np.array([1, 3]))
 
     # 2D tensor
     array_2d = torch.tensor([[0, 1], [2, 0]])
     result = array_nonzero(array_2d)
     assert isinstance(result, tuple)
     assert len(result) == 2
-    assert is_tensor(result[0])
-    assert is_tensor(result[1])
-    assert torch.equal(result[0], torch.tensor([0, 1]))
-    assert torch.equal(result[1], torch.tensor([1, 0]))
+    assert is_numpy(result[0])
+    assert is_numpy(result[1])
+    np.testing.assert_array_equal(result[0], np.array([0, 1]))
+    np.testing.assert_array_equal(result[1], np.array([1, 0]))
 
 
 def test_stratified_split_indices():

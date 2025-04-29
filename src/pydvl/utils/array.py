@@ -949,13 +949,9 @@ def array_nonzero(
     """
     if is_tensor(x):
         assert torch is not None
-        tensor_array = cast(Tensor, x)
-        # torch.nonzero returns a tensor of indices
-        indices = torch.nonzero(tensor_array, as_tuple=True)
-        return cast(tuple[NDArray, ...], tuple(t.cpu().numpy() for t in indices))
-    else:  # Fallback to numpy approach
-        numpy_array = to_numpy(x)
-        return cast(tuple[NDArray, ...], np.nonzero(numpy_array))
+        nz = torch.nonzero(cast(Tensor, x), as_tuple=True)
+        return cast(tuple[NDArray, ...], tuple(t.cpu().numpy() for t in nz))
+    return cast(tuple[NDArray, ...], np.nonzero(to_numpy(x)))
 
 
 def is_categorical(x: Array[Any]) -> bool:
