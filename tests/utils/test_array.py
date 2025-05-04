@@ -15,9 +15,7 @@ from pydvl.utils.array import (
     array_nonzero,
     array_ones,
     array_ones_like,
-    array_slice,
     array_unique,
-    array_where,
     array_zeros,
     array_zeros_like,
     atleast1d,
@@ -212,31 +210,6 @@ def test_array_arange_torch():
     assert torch.equal(result, torch.arange(5))
 
 
-def test_array_where():
-    condition = np.array([True, False, True])
-    x = np.array([1, 2, 3])
-    y = np.array([4, 5, 6])
-    result = array_where(condition, x, y)
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([1, 5, 3]))
-
-
-@pytest.mark.torch
-def test_array_where_torch():
-    condition = torch.tensor([True, False, True])
-    x = torch.tensor([1, 2, 3])
-    y = torch.tensor([4, 5, 6])
-    result = array_where(condition, x, y)
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([1, 5, 3]))
-
-    # Mixed case (should return torch tensor)
-    condition = np.array([True, False, True])
-    result = array_where(condition, x, y)
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([1, 5, 3]))
-
-
 def test_array_unique():
     arr = np.array([1, 2, 2, 3, 1])
     result = array_unique(arr)
@@ -322,39 +295,6 @@ def test_array_equal_torch():
     arr1 = np.array([1, 2, 3])
     arr2 = torch.tensor([1, 2, 3])
     assert array_equal(arr1, arr2)
-
-
-def test_array_slice():
-    arr = np.array([1, 2, 3, 4, 5])
-    result = array_slice(arr, slice(1, 4))
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([2, 3, 4]))
-
-    # With list indices
-    result = array_slice(arr, [0, 2, 4])
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([1, 3, 5]))
-
-    # Test error for non-indexable
-    with pytest.raises(TypeError):
-        array_slice(5, slice(1, 4))
-
-
-@pytest.mark.torch
-def test_array_slice_torch():
-    arr = torch.tensor([1, 2, 3, 4, 5])
-    result = array_slice(arr, slice(1, 4))
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([2, 3, 4]))
-
-    # With list indices
-    result = array_slice(arr, [0, 2, 4])
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([1, 3, 5]))
-
-    # Test error for non-indexable
-    with pytest.raises(TypeError):
-        array_slice(5, slice(1, 4))
 
 
 def test_array_index():
@@ -524,10 +464,8 @@ def test_atleast1d():
     assert is_numpy(result)
     assert result is arr  # Should be the same object
 
-    # List
-    result = atleast1d([1, 2, 3])
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([1, 2, 3]))
+    with pytest.raises(TypeError, match="Unsupported array or scalar type"):
+        _ = atleast1d([1, 2, 3])
 
 
 @pytest.mark.torch
