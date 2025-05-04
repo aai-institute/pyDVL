@@ -127,7 +127,7 @@ tensors for data valuation. The implementation follows these key principles:
 1. **Type Preservation**: The valuation methods maintain the input data type
    throughout computations, whether you provide NumPy arrays or PyTorch tensors
    when constructing the [Dataset][pydvl.valuation.dataset.Dataset].
-2. **Transparent Usage**: The API remains the same regardless of the input type -
+2. **Transparent Usage**: The API remains the same regardless of the input type,
    simply provide your data as tensors. The main difference is that the torch
    model must be wrapped in a class compatible with the protocol
    [TorchSupervisedModel][pydvl.valuation.types.TorchSupervisedModel].
@@ -139,7 +139,9 @@ tensors for data valuation. The implementation follows these key principles:
          are entirely compatible with pyDVL.
 3. **Consistent Indexing**: Internally, indices are always managed as NumPy
    arrays for consistency and compatibility, but the actual data operations
-   preserve tensor types when provided.
+   preserve tensor types when provided. In particular, samplers always return
+    NumPy arrays, and the [Dataset][pydvl.valuation.dataset.Dataset] class
+   uses NumPy arrays for indexing.
 4. [ValuationResult][pydvl.valuation.result.ValuationResult] objects always
    contain NumPy arrays.
 
