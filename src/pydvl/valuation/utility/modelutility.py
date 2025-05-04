@@ -64,7 +64,7 @@ implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has 
 ??? Example "Enabling the cache"
     In this example an in-memory cache is used. Note that caching is only useful
     under certain conditions, and does not really speed typical Monte Carlo
-    approximations. See [the introduction][#getting-started-cache] and the [module
+    approximations. See [the introduction][getting-started-cache] and the [module
     documentation][pydvl.utils.caching] for more.
 
     ```python
@@ -91,20 +91,11 @@ method. Be sure not to rely on the data being static for this. If you need to tr
 it before fitting, then override
 [with_dataset()][pydvl.valuation.utility.base.UtilityBase.with_dataset].
 
-!!! warning "Caveats with parallel computation"
-    When running in parallel, the utility is copied to each worker, which implies
-    copying the dataset as well, which can obviously be very expensive. In order to
-    alleviate the problem, one can memmap the data to disk. Alas, automatic memmapping
-    by joblib does not work for nested structures like
-    [Dataset][pydvl.valuation.dataset.Dataset] objects, nor for pytorch tensors. For
-    now, it should be possible to [use memmap
-    manually](https://joblib.readthedocs.io/en/latest/auto_examples/parallel_memmap.html)
-    but it hasn't been tested.
-
-    If you are working on a cluster, the data will be copied to each worker. In this
-    case, subclassing of `Dataset` and `Utility` will be necessary to minimize copying,
-    and the solution will depend on your storage solution. Feel free to open an issue if
-    you need help with this.
+!!! warning "Data copying when running in parallel"
+    When running in parallel, the utility and the dataset are copied to each worker. To
+    avoid this, you can use `mmap=True` when constructing
+    [Dataset][pydvl.valuation.dataset.Dataset]. Read [Working with large
+    datasets][large-datasets-parallelization] for more information on the subject.
 """
 
 from __future__ import annotations
@@ -118,9 +109,8 @@ from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.functional import suppress_warnings
-from pydvl.utils.types import BaseModel
 from pydvl.valuation.scorers import Scorer
-from pydvl.valuation.types import SampleT
+from pydvl.valuation.types import BaseModel, SampleT
 
 __all__ = ["ModelUtility"]
 
@@ -164,7 +154,8 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
 
     Args:
         model: Any supervised model. Typical choices can be found in the
-            [sci-kit learn documentation](https://scikit-learn.org/stable/supervised_learning.html).
+            [sci-kit learn documentation](
+            https://scikit-learn.org/stable/supervised_learning.html).
         scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [scorers][pydvl.valuation.scorers] for ways to create
             and compose scorers, in particular how to set default values and
@@ -177,11 +168,13 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             value][pydvl.valuation.scorers.SupervisedScorer] is returned as a score and
             computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
-        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        cache_backend: Optional instance of [CacheBackend][
+        pydvl.utils.caching.base.CacheBackend]
             used to memoize results to avoid duplicate computation. Note however, that
             for most stochastic methods, cache hits are rare, making the memory expense
             of caching not worth it (YMMV).
-        cached_func_options: Optional configuration object for cached utility evaluation.
+        cached_func_options: Optional configuration object for cached utility
+        evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
     """

@@ -11,25 +11,51 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from typing import Callable, Generator, Iterable, Protocol, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Iterable,
+    Protocol,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    runtime_checkable,
+)
 
 import numpy as np
+import torch as torch_mod
 from numpy.typing import NDArray
+from torch import Tensor
 from typing_extensions import Self, TypeAlias
 
+from pydvl.utils.array import (
+    Array,
+    ArrayRetT,
+    ArrayT,
+    array_concatenate,
+    to_numpy,
+    try_torch_import,
+)
+
 __all__ = [
+    "BaggingModel",
     "BatchGenerator",
+    "ClasswiseSample",
     "IndexT",
     "IndexSetT",
     "LossFunction",
     "NameT",
     "NullaryPredicate",
+    "PointwiseScore",
     "Sample",
-    "ClasswiseSample",
     "SampleBatch",
     "SampleGenerator",
     "SampleT",
     "SemivalueCoefficient",
+    "SupervisedModel",
+    "SkorchSupervisedModel",
     "UtilityEvaluation",
     "ValueUpdate",
     "ValueUpdateT",
@@ -39,6 +65,8 @@ IndexT: TypeAlias = np.int_
 IndexSetT: TypeAlias = NDArray[IndexT]
 NameT: TypeAlias = Union[np.object_, np.int_, np.str_]
 NullaryPredicate: TypeAlias = Callable[[], bool]
+
+torch = try_torch_import()
 
 
 @dataclass(frozen=True)
@@ -77,8 +105,23 @@ class Sample:
     idx: IndexT | None
     """Index of current sample"""
 
-    subset: NDArray[IndexT]
+    subset: NDArray[np.int_]
     """Indices of current sample"""
+
+    def __post_init__(self):
+        """Ensure that the subset is a numpy array of integers."""
+        try:
+            self.__dict__["subset"] = to_numpy(self.subset)
+        except Exception:
+            raise TypeError(
+                f"subset must be a numpy array, got {type(self.subset).__name__}"
+            )
+        if self.subset.size == 0:
+            self.__dict__["subset"] = self.subset.astype(int)
+        if not np.issubdtype(self.subset.dtype, np.integer):
+            raise TypeError(
+                f"subset must be a numpy array of integers, got {self.subset.dtype}"
+            )
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
@@ -110,7 +153,7 @@ class Sample:
         if self.idx is None:
             raise ValueError("Cannot add idx to subset if idx is None.")
 
-        new_subset = np.append(self.subset, self.idx)
+        new_subset = array_concatenate([self.subset, np.array([self.idx])])
         return replace(self, subset=new_subset)
 
     def with_idx(self, idx: IndexT) -> Self:
@@ -129,28 +172,25 @@ class Sample:
 
         return replace(self, idx=idx)
 
-    def with_subset(self, subset: NDArray[IndexT]) -> Self:
-        """Return a copy of sample with subset changed.
-
-        Returns the original sample if subset is the same.
+    def with_subset(self, subset: Array[IndexT]) -> Self:
+        """Return a copy of sample with the subset changed.
 
         Args:
             subset: New value for subset.
 
         Returns:
-            Sample: A copy of the sample with subset changed.
+            A copy of the sample with subset changed.
         """
-        if np.array_equal(self.subset, subset):
-            return self
-
-        return replace(self, subset=subset)
+        return replace(self, subset=to_numpy(subset))
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, Sample)
-            and self.idx == other.idx
-            and np.array_equal(self.subset, other.subset)
-        )
+        if not isinstance(other, Sample):
+            return False
+
+        idx_equal = self.idx == other.idx
+        subset_equal = np.array_equal(self.subset, other.subset)
+
+        return idx_equal and subset_equal
 
 
 @dataclass(frozen=True)
@@ -160,9 +200,25 @@ class ClasswiseSample(Sample):
     label: int
     """Label of the current sample"""
 
-    ooc_subset: NDArray[IndexT]
+    ooc_subset: NDArray[np.int_]
     """Indices of out-of-class elements, i.e., those with a label different from
     this sample's label"""
+
+    def __post_init__(self):
+        """Ensure that the subset and ooc_subset are numpy arrays of integers."""
+        super().__post_init__()
+        try:
+            self.__dict__["ooc_subset"] = to_numpy(self.ooc_subset)
+        except Exception:
+            raise TypeError(
+                f"ooc_subset must be a numpy array, got {type(self.ooc_subset).__name__}"
+            )
+        if self.ooc_subset.size == 0:
+            self.__dict__["ooc_subset"] = self.ooc_subset.astype(int)
+        if not np.issubdtype(self.ooc_subset.dtype, np.integer):
+            raise TypeError(
+                f"ooc_subset must be a numpy array of integers, got {self.ooc_subset.dtype}"
+            )
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
@@ -174,13 +230,15 @@ class ClasswiseSample(Sample):
         return int(sha256_hash, base=16)
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, ClasswiseSample)
-            and self.idx == other.idx
-            and np.array_equal(self.subset, other.subset)
-            and self.label == other.label
-            and np.array_equal(self.ooc_subset, other.ooc_subset)
-        )
+        if not isinstance(other, ClasswiseSample):
+            return False
+
+        idx_equal = self.idx == other.idx
+        label_equal = self.label == other.label
+        subset_equal = np.array_equal(self.subset, other.subset)
+        ooc_equal = np.array_equal(self.ooc_subset, other.ooc_subset)
+
+        return idx_equal and subset_equal and label_equal and ooc_equal
 
 
 SampleT = TypeVar("SampleT", bound=Sample)
@@ -201,7 +259,7 @@ class UtilityEvaluation:
 
 
 class LossFunction(Protocol):
-    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray: ...
+    def __call__(self, y_true: Array, y_pred: Array) -> Array: ...
 
 
 class SemivalueCoefficient(Protocol):
@@ -219,3 +277,181 @@ class SemivalueCoefficient(Protocol):
             The natural logarithm of the semi-value coefficient.
         """
         ...
+
+
+class PointwiseScore(Protocol[ArrayT, ArrayRetT]):
+    def __call__(self, y_true: ArrayT, y_pred: ArrayT) -> ArrayRetT: ...
+
+
+@runtime_checkable
+class BaseModel(Protocol[ArrayT]):
+    """This is the minimal model protocol with the method `fit()`"""
+
+    def fit(self, x: ArrayT, y: ArrayT | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+
+@runtime_checkable
+class SupervisedModel(Protocol[ArrayT, ArrayRetT]):
+    """This is the standard sklearn Protocol with the methods `fit()`, `predict()` and
+    `score()`.
+    """
+
+    def fit(self, x: ArrayT, y: ArrayT):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+    def predict(self, x: ArrayT) -> ArrayRetT:
+        """Compute predictions for the input
+
+        Args:
+            x: Independent variables for which to compute predictions
+
+        Returns:
+            Predictions for the input
+        """
+        pass
+
+    def score(self, x: ArrayT, y: ArrayT) -> float:
+        """Compute the score of the model given test data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+
+        Returns:
+            The score of the model on `(x, y)`
+        """
+        pass
+
+
+@runtime_checkable
+class BaggingModel(Protocol[ArrayT, ArrayRetT]):
+    """Any model with the attributes `n_estimators` and `max_samples` is considered a
+    bagging model.
+    After fitting, the model must have the `estimators_` attribute.
+    If it defines `estimators_samples_`, it will be used by [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]
+    """
+
+    n_estimators: int
+    max_samples: float
+
+    def fit(self, x: ArrayT, y: ArrayT | None):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        pass
+
+    def predict(self, x: ArrayT) -> ArrayRetT:
+        """Compute predictions for the input
+
+        Args:
+            x: Independent variables for which to compute predictions
+
+        Returns:
+            Predictions for the input
+        """
+        pass
+
+
+@runtime_checkable
+class SkorchSupervisedModel(Protocol[ArrayT]):
+    """This is the standard sklearn Protocol with the methods `fit()`, `predict()`
+    and `score()`, but accepting Tensors and with any additional info required.
+    It is compatible with [skorch.net.NeuralNet][].
+    """
+
+    device: str | torch_mod.device
+
+    def fit(self, x: ArrayT, y: Tensor):
+        """Fit the model to the data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+        """
+        ...
+
+    def predict(self, x: ArrayT) -> NDArray:
+        """Compute predictions for the input
+
+        Args:
+            x: Independent variables for which to compute predictions
+
+        Returns:
+            Predictions for the input
+        """
+        ...
+
+    def score(self, x: ArrayT, y: NDArray) -> float:
+        """Compute the score of the model given test data
+
+        Args:
+            x: Independent variables
+            y: Dependent variable
+
+        Returns:
+            The score of the model on `(x, y)`
+        """
+        ...
+
+
+T = TypeVar("T", bound=Union[int, float, np.number])
+
+
+def validate_number(
+    name: str,
+    value: Any,
+    dtype: Type[T],
+    lower: T | None = None,
+    upper: T | None = None,
+) -> T:
+    """Ensure that the value is of the given type and within the given bounds.
+
+    For int and float types, this function is lenient with numpy numeric types and
+    will convert them to the appropriate Python type as long as no precision is lost.
+
+    Args:
+        name: The name of the variable to validate.
+        value: The value to validate.
+        dtype: The type to convert the value to.
+        lower: The lower bound for the value (inclusive).
+        upper: The upper bound for the value (inclusive).
+
+    Raises:
+        TypeError: If the value is not of the given type.
+        ValueError: If the value is not within the given bounds, if there is precision
+            loss, e.g. when forcing a float to an int, or if `dtype` is not a valid
+            scalar type.
+    """
+    if not isinstance(value, (int, float, np.number)):
+        raise TypeError(f"'{name}' is not a number, it is {type(value).__name__}")
+    if not issubclass(dtype, (np.number, int, float)):
+        raise ValueError(f"type '{dtype}' is not a valid scalar type")
+
+    converted = dtype(value)
+    if not np.isnan(converted) and not np.isclose(converted, value, rtol=0, atol=0):
+        raise ValueError(
+            f"'{name}' cannot be converted to {dtype.__name__} without precision loss"
+        )
+    value = cast(T, converted)
+
+    if lower is not None and value < lower:  # type: ignore
+        raise ValueError(f"'{name}' is {value}, but it should be >= {lower}")
+    if upper is not None and value > upper:  # type: ignore
+        raise ValueError(f"'{name}' is {value}, but it should be <= {upper}")
+    return value

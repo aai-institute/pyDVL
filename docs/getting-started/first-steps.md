@@ -14,9 +14,8 @@ alias:
 ## Main concepts
 
 pyDVL aims to be a repository of production-ready, reference implementations of
-algorithms for data valuation and influence functions. Even though we only
-briefly introduce key concepts in the documentation, the following sections 
-should be enough to get you started.
+algorithms for data valuation and influence functions. Read the following
+sections to get started:
 
 <div class="grid cards" markdown>
 
@@ -35,6 +34,23 @@ should be enough to get you started.
     [[influence-function|:octicons-arrow-right-24: Influence functions]]
 
 </div>
+
+## Supported frameworks
+
+* The module for influence functions is built around PyTorch. Because of our use
+  of the `torch.func` stateless api, we do not support jitted modules yet (see
+  [#640](https://github.com/aai-institute/pyDVL/issues/640)).
+
+* Up until v0.10.0, pyDVL only supported NumPy arrays for data valuation. From
+  version 0.10.1 onwards, the library also supports PyTorch tensors for most
+  valuation methods. The implementation attempts to preserve the input data type
+  for the [Dataset][pydvl.valuation.dataset.Dataset] throughout computations where
+  possible.
+
+  Note that some features have specific requirements or limitations when using
+  tensors. For details on tensor support and caveats, see the [[tensor-support]]
+  section.
+
 
 ## Running the examples
 

@@ -110,7 +110,7 @@ celerybeat.pid
 .venv
 env/
 venv/
-venv38/
+venv39/
 ENV/
 env.bak/
 venv.bak/
@@ -148,3 +148,11 @@ docs_build
 
 # pytest-profiling
 prof/
+
+# JS tooling
+node_modules/
+package.json
+package-lock.json
+
+#
+.serena

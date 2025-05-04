@@ -194,7 +194,7 @@ class IndexSampler(ABC, Generic[SampleT, ValueUpdateT]):
         batch size set upon construction.
 
         Args:
-            indices:
+            indices: Array of indices.
 
         Yields:
             A tuple (idx, subset) for each sample.

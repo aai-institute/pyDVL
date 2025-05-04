@@ -199,7 +199,6 @@ from pydvl.utils import (
     maybe_add_argument,
     random_subset_of_size,
     suppress_warnings,
-    validate_number,
 )
 from pydvl.valuation.samplers.permutation import (
     PermutationEvaluationStrategy,
@@ -220,6 +219,7 @@ from pydvl.valuation.types import (
     SampleGenerator,
     SemivalueCoefficient,
     ValueUpdate,
+    validate_number,
 )
 from pydvl.valuation.utility.base import UtilityBase
 

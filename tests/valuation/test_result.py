@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from pydvl.utils.array import try_torch_import
 from pydvl.utils.status import Status
 from pydvl.valuation.result import LogResultUpdater, ValuationResult, ValueItem
 from pydvl.valuation.types import ValueUpdate
@@ -806,3 +807,30 @@ def test_version_mismatch_raises():
 
     with pytest.raises(ValueError, match="Pickled ValuationResult version mismatch"):
         pickle.loads(pickled)
+
+
+@pytest.mark.torch
+def test_tensor_inputs():
+    """Test that tensor inputs to ValuationResult raise a TypeError."""
+    torch = try_torch_import(require=True)
+
+    tensor_values = torch.tensor([1.0, 2.0, 3.0])
+    np_values = np.array([1.0, 2.0, 3.0])
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult(values=tensor_values)
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult(values=np_values, variances=tensor_values)
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult(values=np_values, counts=tensor_values.long())
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult(values=np_values, indices=tensor_values.long())
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult(values=np_values, data_names=tensor_values)
+
+    with pytest.raises(TypeError, match="ValuationResult requires numpy arrays"):
+        ValuationResult.zeros(indices=tensor_values.long())

@@ -33,6 +33,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
+from pydvl.utils.array import array_nonzero
 from pydvl.utils.progress import Progress
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset, GroupedDataset
@@ -154,7 +155,7 @@ class ClasswiseShapleyValuation(Valuation):
 
         for idx_label, label in enumerate(unique_labels):
             active_elements = y == label
-            indices_label_set = np.where(active_elements)[0]
+            indices_label_set = array_nonzero(active_elements)[0]
             indices_label_set = self.utility.training_data.indices[indices_label_set]
 
             self.scorer.label = label

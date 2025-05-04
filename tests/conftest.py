@@ -7,7 +7,6 @@ from typing import Optional, Tuple
 import numpy as np
 import pytest
 from pytest import Config, FixtureRequest
-from sklearn import datasets
 from sklearn.utils import Bunch
 
 from pydvl.parallel import available_cpus

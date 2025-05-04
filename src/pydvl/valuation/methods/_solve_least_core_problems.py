@@ -60,10 +60,10 @@ def lc_solve_problem(
             For additional options see [here](https://www.cvxpy.org/tutorial/solvers/index.html#setting-solver-options).
 
     """
-    if u.training_data is not None:
-        n_obs = len(u.training_data)
-    else:
+    if u.training_data is None:
         raise ValueError("Utility object must have a training dataset.")
+
+    n_obs = len(u.training_data)
 
     if np.any(np.isnan(problem.utility_values)):
         warnings.warn(

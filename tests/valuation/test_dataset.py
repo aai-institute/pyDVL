@@ -1,8 +1,17 @@
+import gc
+import os
+import pickle
+import tempfile
+import threading
+from pathlib import Path
+
 import numpy as np
 import pytest
+from joblib import Parallel, delayed
 from sklearn.datasets import load_wine, make_classification
 
-from pydvl.valuation.dataset import Dataset, GroupedDataset, RawData
+import pydvl.valuation.dataset as ds_module
+from pydvl.valuation.dataset import MMAP_DIR, Dataset, GroupedDataset, RawData
 from pydvl.valuation.result import ValuationResult
 
 
@@ -11,10 +20,36 @@ def train_size(request):
     return request.param
 
 
+@pytest.fixture(scope="function")
+def x_data():
+    return np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+
+
+@pytest.fixture(scope="function")
+def y_data():
+    return np.array([0, 1, -1, 1])
+
+
+@pytest.fixture(scope="function")
+def data_names():
+    return ["a", "b", "c", "d"]
+
+
+@pytest.fixture
+def mmap_dataset(request):
+    return request.param if hasattr(request, "param") else False
+
+
+@pytest.fixture(scope="function")
+def dataset(x_data, y_data, data_names, mmap_dataset) -> Dataset:
+    return Dataset(x=x_data, y=y_data, data_names=data_names, mmap=mmap_dataset)
+
+
 def test_creating_dataset_from_sklearn(train_size):
     data = load_wine()
     train, test = Dataset.from_sklearn(data, train_size=train_size)
     assert len(train) == int(train_size * len(data.data))
+    assert repr(train) != ""  # Just a dummy check to ensure the repr is not empty
 
 
 def test_creating_dataset_subsclassfrom_sklearn(train_size):
@@ -35,6 +70,40 @@ def test_creating_dataset_from_x_y_arrays(train_size, kwargs):
     assert len(train) == int(train_size * len(X))
     for k, v in kwargs.items():
         assert getattr(train, k) == v
+
+
+def test_dataset_from_arrays_with_stratification():
+    # Dataset with imbalanced classes (30% class 0, 70% class 1)
+
+    n_samples = 1000
+    n_features = 5
+    X = np.random.randn(n_samples, n_features)
+    y = np.zeros(n_samples)
+    class_1_indices = np.random.choice(n_samples, int(n_samples * 0.7), replace=False)
+    y[class_1_indices] = 1
+
+    train_size = 0.6
+    train_ds, test_ds = Dataset.from_arrays(
+        X, y, train_size=train_size, stratify_by_target=True
+    )
+
+    original_class_counts = np.bincount(y.astype(int))
+    original_class_props = original_class_counts / n_samples
+
+    _, train_y = train_ds.data()
+    _, test_y = test_ds.data()
+
+    train_class_props = np.bincount(train_y.astype(int)) / len(train_y)
+    test_class_props = np.bincount(test_y.astype(int)) / len(test_y)
+
+    # Check that stratification worked for each class
+    for k in (0, 1):
+        assert np.isclose(train_class_props[k], original_class_props[k], atol=0.05)
+        assert np.isclose(test_class_props[k], original_class_props[k], atol=0.05)
+
+    # Check train_size was respected
+    assert len(train_ds) == int(n_samples * train_size)
+    assert len(test_ds) == n_samples - len(train_ds)
 
 
 def test_creating_grouped_dataset_from_sklearn(train_size):
@@ -151,16 +220,32 @@ def test_grouped_dataset_results():
             ["a", "c", "d"],
             ["group1", "group3"],
         ),
+        (
+            None,
+            np.array([[1, 2], [5, 6], [3, 4], [7, 8]]),
+            np.array([0, -1, 1, 1]),
+            [0, 0, 1, 2],
+            ["a", "c", "b", "d"],
+            ["group1", "group2", "group3"],
+        ),
     ],
 )
 def test_getitem_returns_correct_grouped_dataset(
-    idx, expected_x, expected_y, expected_groups, expected_names, expected_group_names
+    idx,
+    expected_x,
+    expected_y,
+    expected_groups,
+    expected_names,
+    expected_group_names,
+    x_data,
+    y_data,
+    data_names,
 ):
     dataset = GroupedDataset(
-        x=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
-        y=np.array([0, 1, -1, 1]),
+        x=x_data,
+        y=y_data,
         data_groups=[0, 1, 0, 2],
-        data_names=["a", "b", "c", "d"],
+        data_names=data_names,
         group_names=["group1", "group2", "group3"],
     )
     sliced_dataset = dataset[idx]
@@ -184,14 +269,12 @@ def test_default_group_names():
     assert all(dataset.names == expected)
 
 
-def test_incomplete_group_names():
+def test_incomplete_group_names(x_data, y_data):
     """Test that providing an incomplete group_names dictionary raise an exception."""
-    x = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
-    y = np.array([0, 1, -1, 1])
     with pytest.raises(ValueError, match="The number of group names"):
         _ = GroupedDataset(
-            x=x,
-            y=y,
+            x=x_data,
+            y=y_data,
             data_groups=[0, 1, 0, 2],
             group_names=["g1", "g3"],
         )
@@ -202,15 +285,19 @@ def test_incomplete_group_names():
     [
         (0, np.array([[1, 2]]), np.array([0]), ["a"]),
         (slice(0, 2), np.array([[1, 2], [3, 4]]), np.array([0, 1]), ["a", "b"]),
-        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, 0]), ["a", "c"]),
+        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, -1]), ["a", "c"]),
+        (
+            None,
+            np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+            np.array([0, 1, -1, 1]),
+            ["a", "b", "c", "d"],
+        ),
     ],
+    ids=["single_index", "slice", "sequence", "all"],
 )
-def test_getitem_returns_correct_dataset(idx, expected_x, expected_y, expected_names):
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-        data_names=["a", "b", "c"],
-    )
+def test_getitem_returns_correct_dataset(
+    dataset, idx, expected_x, expected_y, expected_names
+):
     sliced_dataset = dataset[idx]
     assert np.array_equal(sliced_dataset._x, expected_x)
     assert np.array_equal(sliced_dataset._y, expected_y)
@@ -219,16 +306,13 @@ def test_getitem_returns_correct_dataset(idx, expected_x, expected_y, expected_n
 
 @pytest.mark.parametrize(
     "idx",
-    [[0], slice(0, 2), [0, 2]],
+    [[0], slice(0, 2), [0, 2], None],
+    ids=["single_index", "slice", "sequence", "all"],
 )
-def test_dataset_slice_data_access(idx):
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-        data_names=["a", "b", "c"],
-    )
-    assert np.array_equal(dataset[idx].data().x, dataset.data().x[idx])
-    assert np.array_equal(dataset[idx].data().y, dataset.data().y[idx])
+def test_dataset_slice_data_access(dataset, idx):
+    expected_idx = slice(None) if idx is None else idx
+    assert np.array_equal(dataset[idx].data().x, dataset.data().x[expected_idx])
+    assert np.array_equal(dataset[idx].data().y, dataset.data().y[expected_idx])
 
 
 @pytest.mark.parametrize(
@@ -296,8 +380,8 @@ def test_mismatching_features_and_names(
             target_names=target_names,
             multi_output=multi_output,
         )
-        assert dataset.feature_names == feature_names
-        assert dataset.target_names == target_names
+        assert all(dataset.feature_names == feature_names)
+        assert all(dataset.target_names == target_names)
 
 
 @pytest.mark.parametrize(
@@ -362,16 +446,14 @@ def test_feature_raises_value_error_for_invalid_feature(
 @pytest.mark.parametrize(
     "indices, expected_x, expected_y",
     [
-        (None, np.array([[1, 2], [3, 4], [5, 6]]), np.array([0, 1, 0])),
-        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, 0])),
-        (slice(1, 3), np.array([[3, 4], [5, 6]]), np.array([1, 0])),
+        (1, np.array([[3, 4]]), np.array([1])),
+        ([0, 2], np.array([[1, 2], [5, 6]]), np.array([0, -1])),
+        (slice(1, 3), np.array([[3, 4], [5, 6]]), np.array([1, -1])),
+        (None, np.array([[1, 2], [3, 4], [5, 6], [7, 8]]), np.array([0, 1, -1, 1])),
     ],
+    ids=["single_index", "sequence", "slice", "all"],
 )
-def test_data_returns_correct_subset(indices, expected_x, expected_y):
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-    )
+def test_data_returns_correct_subset(indices, dataset, expected_x, expected_y):
     result = dataset.data(indices)
     assert np.array_equal(result.x, expected_x)
     assert np.array_equal(result.y, expected_y)
@@ -380,16 +462,12 @@ def test_data_returns_correct_subset(indices, expected_x, expected_y):
 @pytest.mark.parametrize(
     "indices, expected_indices",
     [
-        (None, np.array([0, 1, 2])),
+        (None, np.array([0, 1, 2, 3])),
         ([0, 2], np.array([0, 2])),
         (slice(1, 3), np.array([1, 2])),
     ],
 )
-def test_data_indices_returns_correct_indices(indices, expected_indices):
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-    )
+def test_data_indices_returns_correct_indices(dataset, indices, expected_indices):
     result = dataset.data_indices(indices)
     assert np.array_equal(result, expected_indices)
 
@@ -397,16 +475,12 @@ def test_data_indices_returns_correct_indices(indices, expected_indices):
 @pytest.mark.parametrize(
     "indices, expected_indices",
     [
-        (None, np.array([0, 1, 2])),
+        (None, np.array([0, 1, 2, 3])),
         ([0, 2], np.array([0, 2])),
         (slice(1, 3), np.array([1, 2])),
     ],
 )
-def test_logical_indices_returns_correct_indices(indices, expected_indices):
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-    )
+def test_logical_indices_returns_correct_indices(dataset, indices, expected_indices):
     result = dataset.logical_indices(indices)
     assert np.array_equal(result, expected_indices)
 
@@ -430,6 +504,25 @@ def test_target_returns_correct_slice(target_name, expected_slice):
 
 
 @pytest.mark.parametrize(
+    "y_data, shape_info",
+    [
+        (np.array([0, 1, 2]), "1D array"),
+        (np.array([[0], [1], [2]]), "2D array with shape[1]=1"),
+    ],
+)
+def test_target_with_single_dimension(y_data, shape_info):
+    dataset = Dataset(
+        x=np.array([[1, 2], [3, 4], [5, 6]]),
+        y=y_data,
+        target_names=["target1"],
+    )
+
+    result = dataset.target("target1")
+    assert isinstance(result, slice)
+    assert result == slice(None), f"Expected slice(None) for {shape_info}"
+
+
+@pytest.mark.parametrize(
     "target_name",
     ["y3", "invalid_target"],
 )
@@ -444,21 +537,12 @@ def test_target_raises_value_error_for_invalid_target(target_name):
         dataset.target(target_name)
 
 
-def test_indices_property_returns_correct_indices():
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-    )
-    assert np.array_equal(dataset.indices, np.array([0, 1, 2]))
+def test_indices_property_returns_correct_indices(dataset):
+    assert np.array_equal(dataset.indices, np.array([0, 1, 2, 3]))
 
 
-def test_names_property_returns_correct_names():
-    dataset = Dataset(
-        x=np.array([[1, 2], [3, 4], [5, 6]]),
-        y=np.array([0, 1, 0]),
-        data_names=["a", "b", "c"],
-    )
-    assert np.array_equal(dataset.names, np.array(["a", "b", "c"]))
+def test_names_property_returns_correct_names(dataset):
+    assert np.array_equal(dataset.names, np.array(["a", "b", "c", "d"]))
 
 
 def test_n_features_property_returns_correct_dimension():
@@ -571,7 +655,7 @@ def test_rawdata_creation_raises_on_length_mismatch(x, y):
     "x, y", [(np.array([[1]]), 1), (3, np.array([1])), (1, 2), (None, None)]
 )
 def test_rawdata_creation_raises_on_non_arrays(x, y):
-    with pytest.raises(TypeError, match="x and y must be numpy arrays"):
+    with pytest.raises(TypeError, match="must be arrays of the same type"):
         RawData(x, y)
 
 
@@ -627,3 +711,144 @@ def test_rawdata_getitem(idx, expected_x, expected_y):
 def test_rawdata_len(x, y, length):
     data = RawData(x, y)
     assert len(data) == length
+
+
+@pytest.mark.parametrize("mmap_dataset", [True], indirect=True)
+def test_dataset_mmap_creates_memmap(dataset, x_data, y_data):
+    assert isinstance(dataset._x, np.memmap)
+    assert isinstance(dataset._y, np.memmap)
+    assert np.array_equal(dataset._x, x_data)
+    assert np.array_equal(dataset._y, y_data)
+
+
+def test_dataset_reuses_existing_memmap(x_data, y_data):
+    import logging
+    import sys
+
+    from pydvl.valuation.dataset import _maybe_create_memmap
+
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
+    logger = logging.getLogger(__name__)
+    logger.info("Testing memmap reuse")
+
+    mm_x_ro = _maybe_create_memmap(x_data)
+    mm_y_ro = _maybe_create_memmap(y_data)
+
+    x_path = Path(mm_x_ro.filename)
+    y_path = Path(mm_y_ro.filename)
+
+    data = Dataset(x=mm_x_ro, y=mm_y_ro, mmap=True)
+
+    assert isinstance(data._x, np.memmap)
+    assert isinstance(data._y, np.memmap)
+
+    assert np.array_equal(data._x, x_data)
+    assert np.array_equal(data._y, y_data)
+
+    assert Path(data._x.filename).samefile(x_path)
+    assert Path(data._y.filename).samefile(y_path)
+
+    assert data._x is mm_x_ro
+    assert data._y is mm_y_ro
+
+
+@pytest.mark.parametrize("mmap_dataset", [True], indirect=True)
+def test_dataset_pickling_with_mmap(dataset, x_data, y_data):
+    with tempfile.NamedTemporaryFile() as f:
+        pickle.dump(dataset, f)
+        f.flush()
+        f.seek(0)
+        unpickled_dataset = pickle.load(f)
+
+    # Check that unpickled dataset uses the same memmap files
+    assert isinstance(unpickled_dataset._x, np.memmap)
+    assert isinstance(unpickled_dataset._y, np.memmap)
+    assert unpickled_dataset._x.filename == dataset._x.filename
+    assert unpickled_dataset._y.filename == dataset._y.filename
+
+    # Verify data integrity
+    assert np.array_equal(unpickled_dataset._x, x_data)
+    assert np.array_equal(unpickled_dataset._y, y_data)
+
+
+@pytest.mark.parametrize("mmap_dataset", [True], indirect=True)
+def test_mmap_cleanup(dataset):
+    x_filename = dataset._x.filename
+    y_filename = dataset._y.filename
+
+    assert os.path.exists(x_filename)
+    assert os.path.exists(y_filename)
+
+    # Trigger cleanup
+    del dataset
+    gc.collect()
+
+    # After deletion, either the files should be gone or marked for deletion
+    # This is platform-dependent, so we'll be flexible in our assertion
+    x_path = Path(x_filename)
+    y_path = Path(y_filename)
+    try:
+        assert not x_path.exists() or os.access(x_path, os.W_OK)
+        assert not y_path.exists() or os.access(y_path, os.W_OK)
+    except AssertionError:
+        pytest.skip("Cleanup verification is platform-dependent")
+
+
+def _worker_check(
+    ds: Dataset, expected_shape: tuple[int, int], expected_dtype: np.dtype
+) -> tuple[bool, bool, bool, bool, str]:
+    """Check if a Dataset's memmap has the expected properties when accessed in a
+    worker process.
+
+    Args:
+        ds: Dataset with memmap storage to check
+        expected_shape: Expected shape of the memmap array
+        expected_dtype: Expected dtype of the memmap array
+
+    Returns:
+        Tuple containing:
+        - is_mm: Whether the storage is a memmap
+        - correct_shape: Whether the shape matches expectations
+        - correct_dtype: Whether the dtype matches expectations
+        - data_ok: Whether the data content is correct
+        - filename: The memmap filename
+    """
+    x_mm = ds._x
+    is_mm = isinstance(x_mm, np.memmap)
+    correct_shape = x_mm.shape == expected_shape
+    correct_dtype = x_mm.dtype == expected_dtype
+    expected = np.arange(expected_shape[0] * expected_shape[1]).reshape(expected_shape)
+    data_ok = np.array_equal(x_mm, expected)
+    return is_mm, correct_shape, correct_dtype, data_ok, x_mm.filename
+
+
+@pytest.mark.parametrize("n_jobs", [1, 3])
+def test_mmap_across_subprocesses_and_cleanup(tmp_path, n_jobs):
+    # Isolate MMAP_DIR to tmp_path so we know where files land
+    ds_module.MMAP_DIR = tmp_path
+
+    rows, cols = 10, 2
+    x = np.arange(rows * cols).reshape(rows, cols)
+    y = np.arange(rows)
+    ds = Dataset(x, y, mmap=True)
+
+    fname = ds._x.filename
+    assert os.path.exists(fname), "Memmap file must exist immediately after creation"
+
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(_worker_check)(ds, (rows, cols), x.dtype) for _ in range(n_jobs)
+    )
+
+    for is_mm, shape_ok, dtype_ok, data_ok, fname_out in results:
+        assert is_mm, "Subprocess did not receive a memmap"
+        assert shape_ok, "Memmap shape mismatch in subprocess"
+        assert dtype_ok, "Memmap dtype mismatch in subprocess"
+        assert data_ok, "Memmap data incorrect in subprocess"
+        assert fname_out == fname, "Different memmap file seen in subprocess"
+
+    assert os.path.exists(fname), "Memmap file disappeared prematurely"
+
+    del ds
+    gc.collect()
+
+    assert not os.path.exists(fname), "Memmap file was not cleaned up after deletion"

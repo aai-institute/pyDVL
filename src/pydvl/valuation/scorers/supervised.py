@@ -6,7 +6,8 @@ scoring functions for supervised problems with additional information.
 Supervised scorers can be constructed in the same way as in scikit-learn: either from
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
-[make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
+[make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics
+.make_scorer.html).
 
 [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer] holds the test data used to
 evaluate the model.
@@ -36,38 +37,35 @@ evaluate the model.
 
 from __future__ import annotations
 
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Generic, Protocol, TypeVar
 
-import numpy as np
-from numpy.typing import NDArray
 from sklearn.metrics import get_scorer
 
-from pydvl.utils.types import SupervisedModel
-
-__all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
-
+from pydvl.utils.array import ArrayT
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers.base import Scorer
+from pydvl.valuation.types import SupervisedModel
+
+__all__ = ["SupervisedScorer", "SupervisedScorerCallable"]
 
 SupervisedModelT = TypeVar(
     "SupervisedModelT", bound=SupervisedModel, contravariant=True
 )
 
 
-class SupervisedScorerCallable(Protocol[SupervisedModelT]):
+class SupervisedScorerCallable(Protocol[SupervisedModelT, ArrayT]):
     """Signature for a supervised scorer"""
 
-    def __call__(
-        self, model: SupervisedModelT, X: NDArray[Any], y: NDArray[Any]
-    ) -> float: ...
+    def __call__(self, model: SupervisedModelT, X: ArrayT, y: ArrayT) -> float: ...
 
 
-class SupervisedScorer(Generic[SupervisedModelT], Scorer):
+class SupervisedScorer(Generic[SupervisedModelT, ArrayT], Scorer):
     """A scoring callable that takes a model, data, and labels and returns a scalar.
 
     Args:
         scoring: Either a string or callable that can be passed to
-            [get_scorer](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html).
+            [get_scorer](https://scikit-learn.org/stable/modules/generated/sklearn
+            .metrics.get_scorer.html).
         test_data: Dataset where the score will be evaluated.
         default: score to be used when a model cannot be fit, e.g. when too
             little data is passed, or errors arise.
@@ -79,21 +77,30 @@ class SupervisedScorer(Generic[SupervisedModelT], Scorer):
         name: The name of the scorer. If not provided, the name of the
             function passed will be used.
 
+    !!! note "Tensor Support"
+        SupervisedScorer supports both NumPy arrays and PyTorch tensors. Subclasses
+        specialising in either type must specify the array type in the generic type.
+
     !!! tip "New in version 0.5.0"
 
     !!! tip "Changed in version 0.10.0"
         This is now `SupervisedScorer` and holds the test data used to evaluate the
         model.
+
+    !!! tip "New in version 0.11.0"
+        Added generic type support for arrays and tensor compatibility.
     """
 
-    _scorer: SupervisedScorerCallable[SupervisedModelT]
+    _scorer: SupervisedScorerCallable[SupervisedModelT, ArrayT]
 
     def __init__(
         self,
-        scoring: str | SupervisedScorerCallable[SupervisedModelT] | SupervisedModelT,
+        scoring: str
+        | SupervisedScorerCallable[SupervisedModelT, ArrayT]
+        | SupervisedModelT,
         test_data: Dataset,
         default: float,
-        range: tuple[float, float] = (-np.inf, np.inf),
+        range: tuple[float, float] = (-float("inf"), float("inf")),
         name: str | None = None,
     ):
         super().__init__()
@@ -118,7 +125,7 @@ class SupervisedScorer(Generic[SupervisedModelT], Scorer):
         self.name = name
 
     def __call__(self, model: SupervisedModelT) -> float:
-        return self._scorer(model, *self.test_data.data())
+        return float(self._scorer(model, *self.test_data.data()))
 
     def __str__(self) -> str:
         return f"{self.name}(default={self.default}, range={self.range})"

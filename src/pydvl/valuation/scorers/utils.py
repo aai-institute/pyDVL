@@ -6,16 +6,17 @@ from typing import Callable
 
 from scipy.special import expit
 
+from pydvl.utils.array import ArrayT
 from pydvl.valuation.scorers.supervised import SupervisedModelT, SupervisedScorer
 
 __all__ = ["compose_score", "sigmoid"]
 
 
 def compose_score(
-    scorer: SupervisedScorer,
+    scorer: SupervisedScorer[SupervisedModelT, ArrayT],
     transformation: Callable[[float], float],
     name: str,
-) -> SupervisedScorer:
+) -> SupervisedScorer[SupervisedModelT, ArrayT]:
     """Composes a scoring function with an arbitrary scalar transformation.
 
     Useful to squash unbounded scores into ranges manageable by data valuation
@@ -36,7 +37,7 @@ def compose_score(
         The composite [SupervisedScorer][pydvl.valuation.scorers.SupervisedScorer].
     """
 
-    class CompositeSupervisedScorer(SupervisedScorer[SupervisedModelT]):
+    class CompositeSupervisedScorer(SupervisedScorer[SupervisedModelT, ArrayT]):
         def __call__(self, model: SupervisedModelT) -> float:
             raw = super().__call__(model)
             return transformation(raw)

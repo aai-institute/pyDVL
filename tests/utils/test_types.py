@@ -20,7 +20,8 @@ from sklearn.ensemble import (
     VotingRegressor,
 )
 
-from pydvl.utils.types import BaggingModel, validate_number
+from pydvl.utils.types import BaggingModel
+from pydvl.valuation.types import validate_number
 
 
 @pytest.mark.parametrize(

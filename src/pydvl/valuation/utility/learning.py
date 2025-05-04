@@ -31,15 +31,15 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Collection
+from typing import Collection, Generic
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
+from pydvl.utils.array import ArrayRetT
 from pydvl.utils.functional import suppress_warnings
-from pydvl.utils.types import SupervisedModel
-from pydvl.valuation.types import Sample, SampleT
+from pydvl.valuation.types import Sample, SampleT, SupervisedModel
 from pydvl.valuation.utility.base import UtilityBase
 
 __all__ = ["DataUtilityLearning", "IndicatorUtilityModel", "UtilityModel"]
@@ -48,7 +48,7 @@ __all__ = ["DataUtilityLearning", "IndicatorUtilityModel", "UtilityModel"]
 logger = logging.getLogger(__name__)
 
 
-class UtilityModel(ABC):
+class UtilityModel(ABC, Generic[ArrayRetT]):
     """Interface for utility models.
 
     A _utility model_ predicts the value of a utility function given a sample. The model
@@ -58,17 +58,17 @@ class UtilityModel(ABC):
     Utility models:
 
     * are fitted on dictionaries of Sample -> utility value
-    * predict: Collection[samples] -> NDArray[utility values]
+    * predict: Collection[samples] -> Array[utility values]
     """
 
     @abstractmethod
     def fit(self, x: dict[Sample, float]) -> Self: ...
 
     @abstractmethod
-    def predict(self, x: Collection[Sample]) -> NDArray: ...
+    def predict(self, x: Collection[Sample]) -> ArrayRetT: ...
 
 
-class IndicatorUtilityModel(UtilityModel):
+class IndicatorUtilityModel(UtilityModel[NDArray]):
     """A simple wrapper for arbitrary predictors.
 
     Uses 1-hot encoding of the indices as input for the model, as done in Wang et al.,
@@ -86,7 +86,7 @@ class IndicatorUtilityModel(UtilityModel):
             matrix for the model.
     """
 
-    def __init__(self, predictor: SupervisedModel, n_data: int):
+    def __init__(self, predictor: SupervisedModel[NDArray, NDArray], n_data: int):
         self.n_data = n_data
         self.predictor = predictor
 

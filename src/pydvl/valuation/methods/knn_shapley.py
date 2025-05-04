@@ -61,7 +61,7 @@ class KNNShapleyValuation(Valuation):
     def __init__(
         self,
         model: KNeighborsClassifier,
-        test_data: Dataset,
+        test_data: Dataset[NDArray],
         progress: bool = True,
         clone_before_fit: bool = True,
     ):
@@ -73,7 +73,9 @@ class KNNShapleyValuation(Valuation):
         self.progress = progress
         self.clone_before_fit = clone_before_fit
 
-    def fit(self, data: Dataset, continue_from: ValuationResult | None = None) -> Self:
+    def fit(
+        self, data: Dataset[NDArray], continue_from: ValuationResult | None = None
+    ) -> Self:
         """Calculate exact shapley values for a KNN model on a dataset.
 
         This fit method bypasses direct evaluations of the utility function and

@@ -50,8 +50,8 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 
 import numpy as np
 from more_itertools import chunked, flatten
-from numpy.typing import NDArray
 
+from pydvl.utils.array import DT, Array, array_unique, is_categorical
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
@@ -104,13 +104,13 @@ def roundrobin(
             remaining_generators = cycle(islice(remaining_generators, n_active))
 
 
-def get_unique_labels(array: NDArray) -> NDArray:
+def get_unique_labels(arr: Array[DT]) -> Array[DT]:
     """Returns unique labels in a categorical dataset.
 
     Args:
-        array: The input array to find unique labels from. It should be of
-               categorical types such as Object, String, Unicode, Unsigned
-               integer, Signed integer, or Boolean.
+        arr: The input array to find unique labels from. It should be of
+             categorical types such as Object, String, Unicode, Unsigned
+             integer, Signed integer, or Boolean.
 
     Returns:
         An array of unique labels.
@@ -118,13 +118,13 @@ def get_unique_labels(array: NDArray) -> NDArray:
     Raises:
         ValueError: If the input array is not of a categorical type.
     """
-    # Object, String, Unicode, Unsigned integer, Signed integer, boolean
-    if array.dtype.kind in "OSUiub":
-        return cast(NDArray, np.unique(array))
-    raise ValueError(
-        f"Input array has an unsupported data type for categorical labels: {array.dtype}. "
-        "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
-    )
+    if is_categorical(arr):
+        return cast(Array[DT], array_unique(arr))
+    else:
+        raise ValueError(
+            f"Input array has an unsupported data type for categorical labels: {type(arr)}. "
+            "Expected types: Object, String, Unicode, Unsigned integer, Signed integer, or Boolean."
+        )
 
 
 class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
@@ -142,7 +142,7 @@ class ClasswiseSampler(IndexSampler[ClasswiseSample, ValueUpdate]):
             Typically, a
             [PermutationSampler][pydvl.valuation.samplers.permutation.PermutationSampler].
         out_of_class: Sampling scheme for elements of different labels (outer sampler).
-            E.g. a [UniformSampler][pydvl.valuation.samplers.uniform.UniformSampler] or
+            E.g. a [UniformSampler][pydvl.valuation.samplers.powerset.UniformSampler] or
             a [VRDSSampler][pydvl.valuation.samplers.stratified.VRDSSampler]. This
             sampler must use
             [NoIndexIteration][pydvl.valuation.samplers.powerset.NoIndexIteration] or

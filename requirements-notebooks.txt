@@ -3,6 +3,7 @@ dask==2024.8.0
 distributed==2024.8.0
 imblearn
 pillow==10.4.0
+skorch>=1.1.0
 torch==2.2.0
 torchvision==0.17.0
 transformers==4.44.2

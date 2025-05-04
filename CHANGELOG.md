@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for `torch.Tensor` as underlying data type in `Dataset` and
+  `GroupedDataset`
+  [PR #673](https://github.com/aai-institute/pyDVL/pull/673)
+- Support for pytorch models in most valuation methods when wrapped in
+  classes implementing the protocol `TorchSupervisedModel`, e.g. by using
+  [skorch.NeuralNetClassifier](https://skorch.readthedocs.io/en/stable/classifier.html)
+  models
+  [PR #673](https://github.com/aai-institute/pyDVL/pull/673)
+
+### Fixed
+
+- Issues with `Dataset` indexing
+  [PR #673](https://github.com/aai-institute/pyDVL/pull/673)
+
+### Changed
+
+
 ## v0.10.0 - 💥📚🐞🆕 New valuation interface, improved docs, new methods, breaking changes and tons of improvements
 
 

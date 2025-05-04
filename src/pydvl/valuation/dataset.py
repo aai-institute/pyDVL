@@ -12,7 +12,8 @@ Objects of both types can be used to construct [scorers][pydvl.valuation.scorers
 the valuation set) and to `fit` (most) valuation methods.
 
 The underlying data arrays can always be accessed (read-only) via
-[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x, y)`.
+[Dataset.data()][pydvl.valuation.dataset.Dataset.data], which returns the tuple `(x,
+y)`.
 
 !!! tip "Logical vs data indices"
     [Dataset][pydvl.valuation.dataset.Dataset] and
@@ -24,6 +25,30 @@ The underlying data arrays can always be accessed (read-only) via
         underlying data arrays. They are the indices used in the
         [RawData][pydvl.valuation.dataset.RawData] object returned by
         [Dataset.data()][pydvl.valuation.dataset.Dataset.data].
+
+## NumPy and PyTorch support
+
+It is possible to instantiate [Dataset][pydvl.valuation.dataset.Dataset] and
+[GroupedDataset][pydvl.valuation.dataset.GroupedDataset] with either NumPy
+arrays or PyTorch tensors. The type of the input arrays is preserved throughout all
+operations. Indices are always returned as NumPy arrays, even if the input arrays are
+PyTorch tensors.
+
+## Memmapping data
+
+When using numpy arrays for data (and only in that case), it is possible to use
+memory mapping to avoid loading the whole dataset into memory, e.g. in subprocesses.
+This is done by passing `mmap=True` to the constructor. The data will be stored in a
+temporary file, which will be deleted automatically when the creating object is garbage
+collected.
+
+If you pass numpy arrays to the constructor, a temporary file will be created and the
+data dumped to it, then opened again as a memory map. You must set `mmap=True` even if
+the data is already memory-mapped, and in this case no additional shape consistency
+checks will be performed, since these might result in new copies. This means that you
+might want to call `check_X_y()` manually before constructing the `Dataset`.
+
+See [Working with large datasets][large-datasets-parallelization].
 
 ## Slicing
 
@@ -59,53 +84,147 @@ or to look at the importance of certain feature sets for the model.
     [DataOOBValuation][pydvl.valuation.methods.data_oob.DataOOBValuation]. In these
     cases, the logical indices are used to compute the Shapley values, while the data
     indices are used internally by the method.
+
+!!! tip "New in version 0.11.0"
+    The Dataset and GroupedDataset classes now work with both NumPy arrays and PyTorch
+    tensors, preserving the input type throughout operations.
 """
 
 from __future__ import annotations
 
 import logging
+import math
+import threading
+import uuid
+import weakref
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Sequence, overload
+from numbers import Integral
+from pathlib import Path
+from tempfile import mkdtemp
+from typing import Any, Generic, Sequence, cast, overload
 
 import numpy as np
 from deprecate import deprecated
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
-from sklearn.utils import Bunch, check_X_y
+from sklearn.utils import Bunch
 
 __all__ = ["Dataset", "GroupedDataset", "RawData"]
 
+from pydvl.utils.array import (
+    Array,
+    ArrayT,
+    atleast1d,
+    check_X_y,
+    is_numpy,
+    is_tensor,
+    stratified_split_indices,
+    to_numpy,
+    try_torch_import,
+)
 
 logger = logging.getLogger(__name__)
 
+# Import torch if available for typing
+torch = try_torch_import()
+Tensor = None if torch is None else torch.Tensor
+
 
 @dataclass(frozen=True)
-class RawData:
-    """A view on a dataset's raw data. This is not a copy."""
+class RawData(Generic[ArrayT]):
+    """A view on a dataset's raw data. This is not a copy.
 
-    x: NDArray
-    y: NDArray
+    RawData is a generic container that preserves the type of the arrays it holds.
+    It supports both NumPy arrays and PyTorch tensors, but both `x` and `y` must be of
+    the same type.
+    """
+
+    x: ArrayT
+    y: ArrayT
 
     def __post_init__(self):
+        if not (
+            (is_numpy(self.x) and is_numpy(self.y))
+            or (is_tensor(self.x) and is_tensor(self.y))
+        ):
+            raise TypeError(
+                f"x ({type(self.x)}) and y ({type(self.y)}) must be arrays of the "
+                f"same "
+                "type (numpy arrays or torch tensors)"
+            )
+
         try:
-            if len(self.x) != len(self.y):
+            if self.x.shape[0] != self.y.shape[0]:
                 raise ValueError("x and y must have the same length")
-        except TypeError as e:
-            raise TypeError("x and y must be numpy arrays") from e
+        except (TypeError, AttributeError) as e:
+            raise TypeError("x and y must be valid arrays with shape attribute") from e
 
     # Make the unpacking operator work
     def __iter__(self):  # No way to type the return Iterator properly
         return iter((self.x, self.y))
 
     def __getitem__(self, item: int | slice | Sequence[int]) -> RawData:
-        return RawData(np.atleast_1d(self.x[item]), np.atleast_1d(self.y[item]))
+        return RawData(atleast1d(self.x[item]), atleast1d(self.y[item]))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.x)
 
+    def cpu(self) -> RawData:
+        """Returns a new RawData object with tensors moved to the CPU.
 
-class Dataset:
+        If this `RawData` object hold numpy arrays it returns itself.
+        """
+        if is_tensor(self.x) and is_tensor(self.y):
+            return RawData(self.x.cpu(), self.y.cpu())  # type: ignore
+        return self
+
+
+MMAP_DIR: Path | None = None
+_MMAP_LOCK = threading.Lock()
+
+
+def _cleanup_memmap(path: Path):
+    try:
+        path.unlink(missing_ok=True)
+        logger.info(f"Deleted mmap file '{path}'")
+        with _MMAP_LOCK:
+            if MMAP_DIR is not None and not MMAP_DIR.exists():
+                MMAP_DIR.rmdir()
+                logger.info(f"Deleted temporary directory '{MMAP_DIR}'")
+    except Exception as e:
+        logger.error(f"Error while deleting mmap file '{path}': {e}")
+
+
+def _maybe_create_memmap(array: NDArray | np.memmap) -> np.memmap:
+    global MMAP_DIR
+    if isinstance(array, np.memmap):
+        return array
+
+    with _MMAP_LOCK:
+        if MMAP_DIR is None:
+            MMAP_DIR = Path(mkdtemp())
+        logger.debug(f"Using temporary directory {MMAP_DIR} for mmap files")
+
+    fname = f"array-{id(array)}-{uuid.uuid4().hex[:6]}.mmap"
+    file_path = MMAP_DIR / fname
+    mm = np.memmap(file_path, dtype=array.dtype, mode="w+", shape=array.shape)
+    logger.debug(f"Created mmap file '{file_path}'")
+    mm[:] = array[:]
+    mm.flush()
+    ro_mm = np.memmap(file_path, dtype=array.dtype, mode="readonly", shape=array.shape)
+    weakref.finalize(ro_mm, _cleanup_memmap, file_path)
+    return ro_mm
+
+
+def _maybe_open_mmap(x: Any, dtype: np.dtype, shape: tuple[int, ...]) -> Any:
+    if not isinstance(x, Path):
+        return x
+
+    return np.memmap(x, dtype=dtype, mode="readonly", shape=shape)
+
+
+class Dataset(Generic[ArrayT]):
     """A convenience class to handle datasets.
 
     It holds a dataset, together with info on feature names, target names, and
@@ -120,8 +239,8 @@ class Dataset:
     classes can behave differently.
 
     Args:
-        x: training data
-        y: labels for training data
+        x: training data (NumPy array or PyTorch tensor)
+        y: labels for training data (same type as x)
         feature_names: names of the features of x data
         target_names: names of the features of y data
         data_names: names assigned to data points.
@@ -131,48 +250,97 @@ class Dataset:
         description: A textual description of the dataset.
         multi_output: set to `False` if labels are scalars, or to
             `True` if they are vectors of dimension > 1.
+        mmap: Whether to use memory-mapped files (for NumPy arrays only). If you pass
+            `ndarrays`, a temporary file will be created and the data dumped to it, then
+            opened again as a memory map. Use this when working in parallel in a single
+            node to avoid unnecessary data copying (at a performance cost). You must set
+            `mmap=True` even if the data is already memmapped, and in this case no
+            additional shape consistency checks will be performed, meaning you might
+            want to call `check_X_y()` manually before memmapping and constructing the
+            `Dataset`.
+
+    !!! tip "Type preservation"
+        The `Dataset` class preserves the type of input arrays (NumPy or PyTorch)
+        throughout all operations. When you access data with slicing or the
+        [data()][pydvl.valuation.dataset.Dataset.data] method, the arrays maintain their
+        original type.
 
     !!! tip "Changed in version 0.10.0"
-        No longer holds split data, but only x, y.
-    !!! tip "Changed in version 0.10.0"
+        No longer holds split data, but only `x`, `y`.
         Slicing now return a new `Dataset` object, not raw data.
+
+    !!! tip "New in version 0.11.0"
+        Added support for PyTorch tensors.
+        Added memory mapping support for numpy arrays.
     """
 
+    feature_names: NDArray[np.str_]
+    target_names: NDArray[np.str_]
+    _x: ArrayT
+    _y: ArrayT
     _indices: NDArray[np.int_]
     _data_names: NDArray[np.str_]
-    feature_names: list[str]
-    target_names: list[str]
 
     def __init__(
         self,
-        x: NDArray,
-        y: NDArray,
+        x: ArrayT,
+        y: ArrayT,
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
         data_names: Sequence[str] | NDArray[np.str_] | None = None,
         description: str | None = None,
         multi_output: bool = False,
+        mmap: bool = False,
     ):
-        self._x, self._y = check_X_y(
-            x, y, multi_output=multi_output, estimator="Dataset"
-        )
+        if mmap:
+            if not is_numpy(x) or not is_numpy(y):
+                raise TypeError("x and y must be numpy arrays in order to use mmap")
 
-        def make_names(s: str, a: np.ndarray) -> list[str]:
+            if isinstance(x, np.memmap) and isinstance(y, np.memmap):
+                logger.info(
+                    "Skipping check_X_y for memmapped arrays. "
+                    "Make sure that the data has the proper shape before "
+                    "constructing a Dataset"
+                )
+                _x, _y = x, y
+            else:
+                _x, _y = check_X_y(x, y, multi_output=multi_output, estimator="Dataset")
+
+            self._x = cast(ArrayT, _maybe_create_memmap(_x))
+            self._y = cast(ArrayT, _maybe_create_memmap(_y))
+        else:
+            self._x, self._y = check_X_y(
+                x, y, multi_output=multi_output, estimator="Dataset"
+            )
+
+        # These are for __setstate__
+        self._x_dtype, self._y_dtype = self._x.dtype, self._y.dtype
+        self._x_shape, self._y_shape = self._x.shape, self._y.shape
+
+        def make_names(s: str, a: Array) -> NDArray[np.str_]:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
+            return np.array(
+                [f"{s}{i:0{1 + int(math.log10(n))}d}" for i in range(1, n + 1)],
+                dtype=str,
+            )
 
         self.feature_names = (
-            list(feature_names) if feature_names is not None else make_names("x", x)
+            np.array(feature_names, dtype=str)
+            if feature_names is not None
+            else make_names("x", x)
         )
+
         self.target_names = (
-            list(target_names) if target_names is not None else make_names("y", y)
+            np.array(target_names, dtype=str)
+            if target_names is not None
+            else make_names("y", y)
         )
 
         if len(self._x.shape) > 1:
-            if len(self.feature_names) != self._x.shape[-1]:
+            if len(self.feature_names) != self._x.shape[1]:
                 raise ValueError("Mismatching number of features and names")
         if len(self._y.shape) > 1:
-            if len(self.target_names) != self._y.shape[-1]:
+            if len(self.target_names) != self._y.shape[1]:
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
@@ -183,8 +351,25 @@ class Dataset:
             else self._indices.astype(np.str_)
         )
 
+    def __getstate__(self):
+        """Prepare the object state for pickling replacing memmapped arrays with
+        their file paths"""
+        state = self.__dict__.copy()
+
+        if isinstance(self._x, np.memmap):
+            state["_x"] = Path(self._x.filename)
+        if isinstance(self._y, np.memmap):
+            state["_y"] = Path(self._y.filename)
+        return state
+
+    def __setstate__(self, state):
+        """Restore the object state from pickling."""
+        self.__dict__.update(state)
+        self._x = _maybe_open_mmap(self._x, dtype=self._x_dtype, shape=self._x_shape)
+        self._y = _maybe_open_mmap(self._y, dtype=self._y_dtype, shape=self._y_shape)
+
     def __getitem__(
-        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> Dataset:
         if idx is None:
             idx = slice(None)
@@ -202,9 +387,10 @@ class Dataset:
     def feature(self, name: str) -> tuple[slice, int]:
         """Returns a slice for the feature with the given name."""
         try:
-            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
-        except ValueError:
-            raise ValueError(f"Feature {name} is not in {self.feature_names}")
+            feature_idx = np.where(self.feature_names == name)[0][0]
+            return np.index_exp[:, feature_idx]  # type: ignore
+        except IndexError as e:
+            raise ValueError(f"Feature {name} is not in {self.feature_names}") from e
 
     def data(
         self, indices: int | slice | Sequence[int] | NDArray[np.int_] | None = None
@@ -227,9 +413,13 @@ class Dataset:
         """
         if indices is None:
             return RawData(self._x, self._y)
+        if isinstance(indices, Integral):
+            indices = [indices]  # type: ignore
         return RawData(self._x[indices], self._y[indices])
 
-    def data_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
+    def data_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
         """Returns a subset of indices.
 
         This is equivalent to using `Dataset.indices[logical_indices]` but allows
@@ -246,10 +436,15 @@ class Dataset:
         """
         if indices is None:
             return self._indices
-        return self._indices[indices]
+        if isinstance(indices, slice):
+            return self._indices[indices]
+        return cast(NDArray, self._indices[to_numpy(indices)])
 
-    def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
-        """Returns the indices in this `Dataset` for the given indices in the data array.
+    def logical_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
+        """Returns the indices in this `Dataset` for the given indices in the data
+        array.
 
         This is equivalent to using `Dataset.indices[data_indices]` but allows
         subclasses to define special behaviour, e.g. when indices in `Dataset` do not
@@ -263,13 +458,40 @@ class Dataset:
         """
         if indices is None:
             return self._indices
-        return self._indices[indices]
+        if isinstance(indices, slice):
+            return self._indices[indices]
+        return cast(NDArray, self._indices[to_numpy(indices)])
 
-    def target(self, name: str) -> tuple[slice, int]:
+    def target(self, name: str) -> tuple[slice, int] | slice:
+        """
+        Returns a slice or index for the target with the given name.
+
+        If targets are multidimensional (2D array), returns a tuple (slice(None),
+        target_idx). If targets are 1D, returns just a slice(None).
+
+        Args:
+            name: The name of the target to retrieve.
+
+        Returns:
+            For multi-output targets: tuple of (slice(None), target_idx)
+            For single-output targets: target_idx (usually 0)
+
+        Raises:
+            ValueError: If the target name is not found.
+        """
         try:
-            return np.index_exp[:, self.target_names.index(name)]  # type: ignore
-        except ValueError:
-            raise ValueError(f"Target {name} is not in {self.target_names}")
+            target_idx = np.where(self.target_names == name)[0][0]
+            if self.n_targets == 1:
+                return slice(None)
+            else:
+                return slice(None), target_idx
+        except IndexError as e:
+            raise ValueError(f"Target {name} is not in {self.target_names}") from e
+
+    @property
+    def n_targets(self) -> int:
+        """Returns the number of target variables."""
+        return int(self._y.shape[1]) if len(self._y.shape) > 1 else 1
 
     @property
     def indices(self) -> NDArray[np.int_]:
@@ -304,6 +526,12 @@ class Dataset:
     def __str__(self):
         return self.description
 
+    def __repr__(self):
+        return (
+            f"Dataset({len(self)} samples, {self.n_features} features, "
+            f"{self.n_targets} targets, {self.description})"
+        )
+
     def __len__(self):
         return len(self._x)
 
@@ -318,7 +546,8 @@ class Dataset:
     ) -> tuple[Dataset, Dataset]:
         """Constructs two [Dataset][pydvl.valuation.dataset.Dataset] objects from a
         [sklearn.utils.Bunch][], as returned by the `load_*`
-        functions in [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
+        functions in [scikit-learn toy datasets](
+        https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         ??? Example
             ```pycon
@@ -343,15 +572,19 @@ class Dataset:
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
-                [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [scikit-learn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass e.g. `is_multi_output`.
+                [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to
+                pass e.g. `is_multi_output`.
 
         Returns:
             Object with the sklearn dataset
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
+            constructor.
         !!! tip "Changed in version 0.10.0"
             Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
         """
@@ -384,15 +617,16 @@ class Dataset:
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
         **kwargs: Any,
     ) -> tuple[Dataset, Dataset]:
-        """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and y numpy arrays  as
-        returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+        """Constructs a [Dataset][pydvl.valuation.dataset.Dataset] object from X and
+        y arrays as returned by the `make_*` functions in [sklearn generated datasets](
+        https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         ??? Example
             ```pycon
@@ -403,13 +637,15 @@ class Dataset:
             ```
 
         Args:
-            X: numpy array of shape (n_samples, n_features)
-            y: numpy array of shape (n_samples,)
+            X: array of shape (n_samples, n_features) - either numpy array or PyTorch
+            tensor
+            y: array of shape (n_samples,) - must be same type as X
             train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified fashion,
                 using the y variable as labels. Read more in [sklearn's user
-                guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                guide](https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.valuation.dataset.Dataset] constructor. Use this to pass
                 e.g. `feature_names` or `target_names`.
@@ -420,28 +656,43 @@ class Dataset:
         !!! tip "New in version 0.4.0"
 
         !!! tip "Changed in version 0.6.0"
-            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset] constructor.
+            Added kwargs to pass to the [Dataset][pydvl.valuation.dataset.Dataset]
+            constructor.
 
         !!! tip "Changed in version 0.10.0"
             Returns a tuple of two [Dataset][pydvl.valuation.dataset.Dataset] objects.
+
+        !!! tip "New in version 0.11.0"
+            Added support for PyTorch tensors.
         """
-        x_train, x_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            train_size=train_size,
-            random_state=random_state,
-            stratify=y if stratify_by_target else None,
+        if stratify_by_target:
+            # Use our stratified_split_indices function for proper tensor handling
+            train_indices, test_indices = stratified_split_indices(
+                y, train_size=train_size, random_state=random_state
+            )
+
+            x_train, y_train = X[train_indices], y[train_indices]
+            x_test, y_test = X[test_indices], y[test_indices]
+        else:
+            x_train, x_test, y_train, y_test = train_test_split(
+                X,
+                y,
+                train_size=train_size,
+                random_state=random_state,
+            )
+
+        return cls(x_train, cast(ArrayT, y_train), **kwargs), cls(
+            x_test, cast(ArrayT, y_test), **kwargs
         )
-        return cls(x_train, y_train, **kwargs), cls(x_test, y_test, **kwargs)
 
 
-class GroupedDataset(Dataset):
+class GroupedDataset(Dataset[ArrayT]):
     _group_names: NDArray[np.str_]
 
     def __init__(
         self,
-        x: NDArray,
-        y: NDArray,
+        x: ArrayT,
+        y: ArrayT,
         data_groups: Sequence[int] | NDArray[np.int_],
         feature_names: Sequence[str] | NDArray[np.str_] | None = None,
         target_names: Sequence[str] | NDArray[np.str_] | None = None,
@@ -457,8 +708,8 @@ class GroupedDataset(Dataset):
         a continuous feature falls, or by label.
 
         Args:
-            x: training data
-            y: labels of training data
+            x: training data (numpy array or PyTorch tensor)
+            y: labels of training data (same type as x)
             data_groups: Sequence of the same length as `x_train` containing
                 a group id for each training data point. Data points with the same
                 id will then be grouped by this object and considered as one for
@@ -474,12 +725,21 @@ class GroupedDataset(Dataset):
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.valuation.dataset.Dataset] constructor.
 
+        !!! note "Type Preservation with Groups"
+            GroupedDataset preserves the type of input arrays (NumPy or PyTorch) while
+            maintaining all indices as numpy arrays. When accessing grouped data with
+            methods like `data()`, the x and y arrays will maintain their original type,
+            but indices are always returned as numpy arrays.
+
         !!! tip "Changed in version 0.6.0"
             Added `group_names` and forwarding of `kwargs`
 
         !!! tip "Changed in version 0.10.0"
             No longer holds split data, but only x, y and group information. Added
                 methods to retrieve indices for groups and vice versa.
+
+        !!! tip "New in version 0.11.0"
+            Added support for PyTorch tensors.
         """
         super().__init__(
             x=x,
@@ -502,11 +762,12 @@ class GroupedDataset(Dataset):
             self.data_to_group: NDArray[np.int_] = np.array(data_groups, dtype=int)
         except ValueError as e:
             raise ValueError(
-                "data_groups must be a mapping from integer data indices to integer group ids"
+                "data_groups must be a mapping from integer data indices to "
+                "integer group ids"
             ) from e
         # abstract index (group id) -> data index
         self.group_to_data: OrderedDict[int, list[int]] = OrderedDict(
-            {k: [] for k in set(data_groups)}
+            {k.item(): [] for k in set(self.data_to_group)}
         )
         for data_idx, group_idx in enumerate(self.data_to_group):
             self.group_to_data[group_idx].append(data_idx)  # type: ignore
@@ -522,13 +783,15 @@ class GroupedDataset(Dataset):
                 f"does not match the number of groups ({len(self.group_to_data)})"
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._indices)
 
     def __getitem__(
-        self, idx: int | slice | Sequence[int] | NDArray[np.int_]
+        self, idx: int | slice | Sequence[int] | NDArray[np.int_] | None = None
     ) -> GroupedDataset:
-        if isinstance(idx, int):
+        if idx is None:
+            idx = slice(None)
+        elif isinstance(idx, int):
             idx = [idx]
         indices = self.data_indices(idx)
         return GroupedDataset(
@@ -543,7 +806,7 @@ class GroupedDataset(Dataset):
         )
 
     @property
-    def indices(self):
+    def indices(self) -> NDArray[np.int_]:
         """Indices of the groups."""
         return self._indices
 
@@ -583,9 +846,13 @@ class GroupedDataset(Dataset):
             indices = self._indices
         if isinstance(indices, slice):
             indices = range(*indices.indices(len(self.group_to_data)))
+        else:
+            indices = to_numpy(indices)
         return np.concatenate([self.group_to_data[i] for i in indices], dtype=np.int_)  # type: ignore
 
-    def logical_indices(self, indices: Sequence[int] | None = None) -> NDArray[np.int_]:
+    def logical_indices(
+        self, indices: Sequence[int] | NDArray[np.int_] | slice | None = None
+    ) -> NDArray[np.int_]:
         """Returns the group indices for the given data indices.
 
         Args:
@@ -597,7 +864,9 @@ class GroupedDataset(Dataset):
         """
         if indices is None:
             return self.data_to_group
-        return self.data_to_group[indices]
+        if isinstance(indices, slice):
+            return self.data_to_group[indices]
+        return cast(NDArray, self.data_to_group[to_numpy(indices)])
 
     @overload
     @classmethod
@@ -632,10 +901,13 @@ class GroupedDataset(Dataset):
         data_groups: Sequence[int] | None = None,
         **kwargs: dict[str, Any],
     ) -> tuple[GroupedDataset, GroupedDataset]:
-        """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object, and an
+        """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+        object, and an
         ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from a
-        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
-        [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
+        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*`
+        functions in
+        [scikit-learn toy datasets](
+        https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
         it.
 
         ??? Example
@@ -661,7 +933,9 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
-                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [sklearn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             data_groups: an array holding the group index or name for each
                 data point. The length of this array must be equal to the number of
                 data points in the dataset.
@@ -672,7 +946,8 @@ class GroupedDataset(Dataset):
             Datasets with the selected sklearn data
 
         !!! tip "Changed in version 0.10.0"
-            Returns a tuple of two [GroupedDataset][pydvl.valuation.dataset.GroupedDataset]
+            Returns a tuple of two [GroupedDataset][
+            pydvl.valuation.dataset.GroupedDataset]
                 objects.
         """
 
@@ -690,8 +965,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -702,8 +977,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -714,8 +989,8 @@ class GroupedDataset(Dataset):
     @classmethod
     def from_arrays(
         cls,
-        X: NDArray,
-        y: NDArray,
+        X: ArrayT,
+        y: ArrayT,
         train_size: float = 0.8,
         random_state: int | None = None,
         stratify_by_target: bool = False,
@@ -725,7 +1000,8 @@ class GroupedDataset(Dataset):
         """Constructs a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object,
         and an ungrouped [Dataset][pydvl.valuation.dataset.Dataset] object from X and y
         numpy arrays as returned by the `make_*` functions in
-        [scikit-learn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+        [scikit-learn generated datasets](
+        https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         ??? Example
             ```pycon
@@ -750,7 +1026,9 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the y variable as labels. Read more in
-                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+                [sklearn's user guide](
+                https://scikit-learn.org/stable/modules/cross_validation.html
+                #stratification).
             data_groups: an array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
@@ -796,7 +1074,8 @@ class GroupedDataset(Dataset):
         group_names: Sequence[str] | NDArray[np.str_] | None = None,
         **kwargs: Any,
     ) -> GroupedDataset:
-        """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object from a
+        """Creates a [GroupedDataset][pydvl.valuation.dataset.GroupedDataset] object
+        from a
         [Dataset][pydvl.valuation.dataset.Dataset] object and a mapping of data groups.
 
         ??? Example
@@ -807,7 +1086,8 @@ class GroupedDataset(Dataset):
             ...     X=np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]]),
             ...     y=np.asarray([0, 1, 0, 1]),
             ... )
-            >>> grouped_train = GroupedDataset.from_dataset(train, data_groups=[0, 0, 1, 1])
+            >>> grouped_train = GroupedDataset.from_dataset(train, data_groups=[0, 0,
+            1, 1])
             ```
 
         Args:

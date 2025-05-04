@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-import logging
-import os
 import pickle
-from copy import deepcopy
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -18,15 +25,15 @@ from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import f1_score
-from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
-from sklearn.preprocessing import TargetEncoder
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
 
+from pydvl.utils.array import try_torch_import
 from pydvl.valuation.dataset import Dataset
 
 from .influence import Losses
 
-logger = logging.getLogger(__name__)
-DATA_DIR = Path(__file__).parent.parent.parent / "data"
+if TYPE_CHECKING:
+    import skorch
 
 
 def plot_gaussian_blobs(
@@ -163,12 +170,12 @@ def plot_influences(
 
 def plot_iris(
     data: Dataset,
-    indices: list[int] = None,
+    indices: list[int] | None = None,
     highlight_indices: Sequence[int] | None = None,
-    suptitle: str = None,
-    legend_title: str = None,
-    legend_labels: Sequence[str] = None,
-    colors: Iterable = None,
+    suptitle: str | None = None,
+    legend_title: str | None = None,
+    legend_labels: Sequence[str] | None = None,
+    colors: Iterable | None = None,
     colorbar_limits: tuple | None = None,
     figsize: tuple[int, int] = (20, 8),
 ):
@@ -286,111 +293,6 @@ def plot_iris(
             sc1.set_clim(*colorbar_limits)
 
 
-def load_preprocess_imagenet(
-    train_size: float,
-    test_size: float,
-    downsampling_ratio: float = 1,
-    keep_labels: Optional[dict] = None,
-    random_state: Optional[int] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Loads the tiny imagenet dataset from huggingface and preprocesses it
-    for model input.
-
-    Args:
-        train_size: fraction of indices to use for training
-        test_size: fraction of data to use for testing
-        downsampling_ratio: which fraction of the full dataset to keep.
-            E.g. downsample_ds_to_fraction=0.2 only 20% of the dataset is kept
-        keep_labels: which of the original labels to keep and their names.
-            E.g. keep_labels={10:"a", 20: "b"} only returns the images with labels
-            10 and 20 and changes the values to "a" and "b" respectively.
-        random_state: Random state. Fix this for reproducibility of sampling.
-
-    Returns:
-        a tuple of three dataframes, first holding the training data,
-        second validation, third test.
-
-        Each has 3 keys: normalized_images has all the input images, rescaled
-        to mean 0.5 and std 0.225,
-        labels has the labels of each image, while images has the unmodified
-        PIL images.
-    """
-    try:
-        from datasets import load_dataset, utils
-        from torchvision import transforms
-    except ImportError as e:
-        raise RuntimeError(
-            "Torchvision and Huggingface datasets are required to load and "
-            "process the imagenet dataset."
-        ) from e
-
-    utils.logging.set_verbosity_error()
-
-    preprocess_rgb = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.225, 0.225, 0.225]),
-        ]
-    )
-
-    def _process_dataset(ds):
-        processed_ds = {"normalized_images": [], "labels": [], "images": []}
-        for i, item in enumerate(ds):
-            if item["image"].mode == "RGB":
-                processed_ds["normalized_images"].append(preprocess_rgb(item["image"]))
-                processed_ds["images"].append(item["image"])
-                if keep_labels is not None:
-                    processed_ds["labels"].append(keep_labels[item["label"]])
-                else:
-                    processed_ds["labels"].append(item["label"])
-        return pd.DataFrame.from_dict(processed_ds)
-
-    def split_ds_by_size(dataset, split_size):
-        split_ds = dataset.train_test_split(
-            train_size=split_size,
-            seed=random_state,
-            stratify_by_column="label",
-        )
-        return split_ds
-
-    dataset_path = "Maysee/tiny-imagenet"
-
-    if os.environ.get("CI"):
-        tiny_imagenet = load_dataset(dataset_path, split="valid")
-        if keep_labels is not None:
-            tiny_imagenet = tiny_imagenet.filter(
-                lambda item: item["label"] in keep_labels
-            )
-        split = tiny_imagenet.shard(2, 0)
-        tiny_imagenet_test = tiny_imagenet.shard(2, 1)
-        tiny_imagenet_train = split.shard(5, 0)
-        tiny_imagenet_val = split.shard(5, 1)
-        train_ds = _process_dataset(tiny_imagenet_train)
-        val_ds = _process_dataset(tiny_imagenet_val)
-        test_ds = _process_dataset(tiny_imagenet_test)
-        return train_ds, val_ds, test_ds
-
-    tiny_imagenet = load_dataset(dataset_path, split="train")
-
-    if downsampling_ratio != 1:
-        tiny_imagenet = tiny_imagenet.shard(
-            num_shards=int(1 / downsampling_ratio), index=0
-        )
-    if keep_labels is not None:
-        tiny_imagenet = tiny_imagenet.filter(
-            lambda item: item["label"] in keep_labels.keys()
-        )
-
-    split_ds = split_ds_by_size(tiny_imagenet, 1 - test_size)
-    test_ds = _process_dataset(split_ds["test"])
-
-    split_ds = split_ds_by_size(split_ds["train"], train_size)
-    train_ds = _process_dataset(split_ds["train"])
-    val_ds = _process_dataset(split_ds["test"])
-
-    return train_ds, val_ds, test_ds
-
-
 def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
     """Plots several images for each class of a pre-processed imagenet dataset
     (or a subset of it).
@@ -460,46 +362,6 @@ def plot_losses(losses: Losses):
     ax.set_xlabel("Train epoch")
     ax.legend()
     plt.show()
-
-
-def corrupt_imagenet(
-    dataset: pd.DataFrame,
-    fraction_to_corrupt: float,
-    avg_influences: NDArray[np.float64],
-) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
-    """Given the preprocessed tiny imagenet dataset (or a subset of it),
-    it takes a fraction of the images with the highest influence and (randomly)
-    flips their labels.
-
-    Args:
-        dataset: preprocessed tiny imagenet dataset
-        fraction_to_corrupt: float, fraction of data to corrupt
-        avg_influences: average influences of each training point on the test set in the \
-            non-corrupted case.
-    Returns:
-        first element is the corrupted dataset, second is the list of indices \
-        related to the images that have been corrupted.
-    """
-    labels = dataset["labels"].unique()
-    corrupted_dataset = deepcopy(dataset)
-    corrupted_indices = {l: [] for l in labels}
-
-    avg_influences_series = pd.DataFrame()
-    avg_influences_series["avg_influences"] = avg_influences
-    avg_influences_series["labels"] = dataset["labels"]
-
-    for label in labels:
-        class_data = avg_influences_series[avg_influences_series["labels"] == label]
-        num_corrupt = int(fraction_to_corrupt * len(class_data))
-        indices_to_corrupt = class_data.nlargest(
-            num_corrupt, "avg_influences"
-        ).index.tolist()
-        wrong_labels = [l for l in labels if l != label]
-        for img_idx in indices_to_corrupt:
-            sample_label = np.random.choice(wrong_labels)
-            corrupted_dataset.at[img_idx, "labels"] = sample_label
-            corrupted_indices[sample_label].append(img_idx)
-    return corrupted_dataset, corrupted_indices
 
 
 def compute_mean_corrupted_influences(
@@ -638,134 +500,6 @@ def filecache(path: Path | str) -> Callable[[Callable], Callable]:
     return decorator
 
 
-@filecache(path=DATA_DIR / "adult_data_raw.pkl")
-def load_adult_data_raw() -> pd.DataFrame:
-    """
-    Downloads the adult dataset from UCI and returns it as a pandas DataFrame.
-
-    Returns:
-        The adult dataset as a pandas DataFrame.
-    """
-    data_url = (
-        "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
-    )
-
-    column_names = [
-        "age",
-        "workclass",
-        "fnlwgt",
-        "education",
-        "education-num",
-        "marital-status",
-        "occupation",
-        "relationship",
-        "race",
-        "sex",
-        "capital-gain",
-        "capital-loss",
-        "hours-per-week",
-        "native-country",
-        "income",
-    ]
-
-    data_types = {
-        "age": int,
-        "workclass": "category",
-        "fnlwgt": int,
-        "education": "category",
-        "education-num": int,  # increasing level of education
-        "marital-status": "category",
-        "occupation": "category",
-        "relationship": "category",
-        "race": "category",
-        "sex": "category",
-        "capital-gain": int,
-        "capital-loss": int,
-        "hours-per-week": int,
-        "native-country": "category",
-        "income": "category",
-    }
-
-    return pd.read_csv(
-        data_url,
-        names=column_names,
-        sep=r",\s*",
-        engine="python",
-        na_values="?",
-        dtype=data_types,
-    )
-
-
-def load_adult_data(
-    train_size: float = 0.7,
-    subsample: float = 1.0,
-    random_state: Optional[int] = None,
-    **kwargs,
-) -> Tuple[Dataset, Dataset]:
-    """
-    Loads the adult dataset from UCI and performs some preprocessing.
-
-    The data is preprocessed by performing target encoding of the categorical variables,
-    dropping the "education" column and dropping NaNs
-
-    Ideally the encoding would be done in a pipeline, but we are trying to remove as
-    much complexity from the notebooks as possible.
-
-    Args:
-        subsample: fraction of the data to keep. Range [0,1]
-        train_size: fraction of the (subsampled) data to use for training
-        random_state: random state for reproducibility
-
-    Returns:
-        A tuple with training and test datasets.
-    """
-
-    df = load_adult_data_raw(**kwargs)
-    if subsample < 1:
-        df = df.sample(frac=subsample, random_state=random_state)
-    column_names = df.columns.tolist()
-
-    df["income"] = df["income"].cat.codes
-    df.drop(columns=["education"], inplace=True)  # education-num is enough
-    df.dropna(inplace=True)
-    column_names.remove("education")
-    column_names.remove("income")
-
-    x_train, x_test, y_train, y_test = train_test_split(
-        df.drop(columns=["income"]).values,
-        df["income"].values,
-        train_size=train_size,
-        random_state=random_state,
-        stratify=df["income"].values,
-    )
-
-    te = TargetEncoder(target_type="binary", random_state=random_state)
-    x_train = te.fit_transform(x_train, y_train)
-    x_test = te.transform(x_test)
-
-    return (
-        Dataset(x_train, y_train, feature_names=column_names, target_names=["income"]),
-        Dataset(x_test, y_test, feature_names=column_names, target_names=["income"]),
-    )
-
-
-def to_dataframe(dataset: Dataset) -> pd.DataFrame:
-    """
-    Converts a dataset to a pandas DataFrame
-
-    Args:
-        dataset: Dataset to convert
-
-    Returns:
-        A pandas DataFrame
-    """
-    y = dataset.y[:, np.newaxis] if dataset.y.ndim == 1 else dataset.y
-    df = pd.DataFrame(dataset.x, columns=dataset.feature_names).assign(
-        **{name: y[:, i] for i, name in enumerate(dataset.target_names)}
-    )
-    return df
-
-
 class ConstantBinaryClassifier(BaseEstimator):
     def __init__(self, p: float, random_state: int | None = None):
         """A classifier that always predicts class 0 with probability p and class 1
@@ -849,3 +583,43 @@ class ThresholdTunerCV(BaseEstimator, ClassifierMixin):
 
     def __getattr__(self, item):
         return getattr(self.base_estimator, item)
+
+
+if torch := try_torch_import():
+
+    def num_model_params(model: torch.nn.Module) -> int:
+        """Returns the number of parameters of a model.
+
+        Args:
+            model: A torch model.
+
+        Returns:
+            The number of parameters of the model.
+        """
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    def profile_torch_fit(
+        model: skorch.NeuralNetClassifier, train: Dataset, test: Dataset, device: str
+    ):
+        """
+        Profiles the fit of a torch model inside a skorch wrapper.
+
+        Args:
+            model: A skorch model.
+            train: Training dataset
+            test: Test set
+            device: Device to use for the model.
+        """
+        import torch.autograd.profiler as profiler
+
+        model.initialize_module()
+        _model = model.module_
+        _model.to(device=device)
+        print(f"Model has {num_model_params(_model)} parameters")
+        with profiler.profile(record_shapes=False, use_cuda=True) as prof:
+            with profiler.record_function("model_forward"):
+                model.fit(*train.data())
+                print(f"Training accuracy: {model.score(*train.data()):.3f}")
+                print(f"Test accuracy: {model.score(*test.data()):.3f}")
+        torch.cuda.synchronize()
+        print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=10))

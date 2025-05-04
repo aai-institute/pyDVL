@@ -23,14 +23,22 @@ As such it is not a semi-value, and it is not based on marginal contributions.
 from __future__ import annotations
 
 import logging
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.base import is_classifier
 
 # HACK: we use some private sklearn stuff to obtain the indices of the bootstrap samples
-#  in RandomForest and ExtraTrees, which do not have the `estimators_samples_` attribute.
+#  in RandomForest and ExtraTrees, which do not have the `estimators_samples_`
+#  attribute.
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    IsolationForest,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
 from sklearn.ensemble._forest import (
     _generate_unsampled_indices,
     _get_n_samples_bootstrap,
@@ -38,10 +46,11 @@ from sklearn.ensemble._forest import (
 from sklearn.utils.validation import check_is_fitted
 from typing_extensions import Self
 
-from pydvl.utils.types import BaggingModel, PointwiseScore
+from pydvl.utils.array import ArrayT, to_numpy
 from pydvl.valuation.base import Valuation
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.result import ValuationResult
+from pydvl.valuation.types import BaggingModel, PointwiseScore
 
 T = TypeVar("T", bound=np.number)
 
@@ -56,12 +65,26 @@ class DataOOBValuation(Valuation):
 
     Args:
         model: A fitted bagging model. Bagging models in sklearn include
-            [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]], RandomForest*,
+            [[BaggingClassifier]], [[BaggingRegressor]], [[IsolationForest]],
+            RandomForest*,
             ExtraTrees*, or any model which defines an attribute `estimators_` and uses
             bootstrapped subsamples to compute predictions.
         score: A callable for point-wise comparison of true values with the predictions.
             If `None`, uses point-wise accuracy for classifiers and negative $l_2$
             distance for regressors.
+
+    !!! note "Tensor Support"
+        DataOOBValuation supports PyTorch tensors for input data with some limitations:
+        - The scoring functions (point_wise_accuracy and neg_l2_distance) have been
+        updated
+          to work with both NumPy arrays and PyTorch tensors.
+        - Custom scoring functions must handle both array types if you plan to use
+        tensors.
+        - The bagging model implementation must be tensor-compatible and implement the
+          required BaggingModel interface attributes and methods.
+
+    !!! tip "New in version 0.11.0"
+        Added (partial) support for PyTorch tensors.
     """
 
     algorithm_name: str = "Data-OOB"
@@ -93,7 +116,8 @@ class DataOOBValuation(Valuation):
 
         check_is_fitted(
             self.model,
-            msg="The bagging model has to be fitted before calling the valuation method.",
+            msg="The bagging model has to be fitted before calling the valuation "
+            "method.",
         )
 
         # This should always be present after fitting
@@ -101,8 +125,10 @@ class DataOOBValuation(Valuation):
             estimators = self.model.estimators_  # type: ignore
         except AttributeError:
             raise ValueError(
-                "The model has to be an sklearn-compatible bagging model, including "
-                "BaggingClassifier, BaggingRegressor, IsolationForest, RandomForest*, "
+                "The model has to be an sklearn-compatible bagging model, "
+                "including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, "
+                "RandomForest*, "
                 "and ExtraTrees*"
             )
 
@@ -116,7 +142,16 @@ class DataOOBValuation(Valuation):
                 np.setxor1d(data.indices, np.unique(sampled))
                 for sampled in self.model.estimators_samples_
             ]
-        else:  # RandomForest*, ExtraTrees*, IsolationForest
+        elif isinstance(
+            self.model,
+            (
+                RandomForestClassifier,
+                RandomForestRegressor,
+                ExtraTreesClassifier,
+                ExtraTreesRegressor,
+                IsolationForest,
+            ),
+        ):
             n_samples_bootstrap = _get_n_samples_bootstrap(
                 len(data), self.model.max_samples
             )
@@ -126,6 +161,16 @@ class DataOOBValuation(Valuation):
                 )
                 for est in estimators
             ]
+        else:
+            raise ValueError(
+                "The model has to be an sklearn-compatible bagging model, "
+                "including "
+                "BaggingClassifier, BaggingRegressor, IsolationForest, "
+                "RandomForest*, "
+                "and ExtraTrees*, \n"
+                "or it must implement pydvl.valuation.types.BaggingModel.\n"
+                f"Was: {type(self.model)}"
+            )
 
         for est, oob_indices in zip(estimators, unsampled_indices):
             subset = data[oob_indices].data()
@@ -140,7 +185,7 @@ class DataOOBValuation(Valuation):
         return self
 
 
-def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
+def point_wise_accuracy(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     """Point-wise accuracy, or 0-1 score between two arrays.
 
     Higher is better.
@@ -152,10 +197,12 @@ def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
     Returns:
         Array with point-wise 0-1 accuracy between labels and model predictions
     """
-    return np.array(y_pred == y_true, dtype=y_pred.dtype)
+    return cast(
+        NDArray, np.array(to_numpy(y_pred) == to_numpy(y_true), dtype=np.float64)
+    )
 
 
-def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
+def neg_l2_distance(y_true: ArrayT, y_pred: ArrayT) -> NDArray[np.float64]:
     r"""Point-wise negative $l_2$ distance between two arrays.
 
     Higher is better.
@@ -168,4 +215,6 @@ def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
         Array with point-wise negative $l_2$ distances between labels and model
         predictions
     """
-    return -np.square(np.array(y_pred - y_true), dtype=y_pred.dtype)
+    return cast(
+        NDArray, -np.square(to_numpy(y_pred) - to_numpy(y_true), dtype=np.float64)
+    )

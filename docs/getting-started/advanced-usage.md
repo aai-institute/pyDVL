@@ -72,6 +72,26 @@ anything up.
     to each worker, but in general you should make sure that each worker has
     enough memory to handle the whole dataset.
 
+### Working with large datasets { #large-datasets-parallelization }
+
+When running in parallel, the utility is copied to each worker. This implies
+copying the dataset as well, which can obviously be very expensive. In order to
+alleviate the problem, one can memmap the data from disk by setting `mmap=True`
+when creating the [Dataset][pydvl.valuation.dataset.Dataset] objects. In case
+you create the `Dataset` with previously memory-mapped arrays, you must ensure
+that the shapes conform to the requirements, since internal checks are disabled
+to avoid additional copying. This amounts to calling
+[check_X_y()][pydvl.utils.array.check_X_y] on the arrays beforehand.
+
+If you are working with torch tensors as underlying raw data, you can try
+activating shared memory for them using `tensor.share_memory_()`, but whether
+this yields a benefit or not will depend on the precise situation.
+
+If you are working on a cluster, the data will be copied to each worker node. In
+this case, subclassing of `Dataset` to leverage your particular distributed
+storage solution will be necessary. Feel free to open an issue if you need help
+with this.
+
 
 ### Influence functions { #influence-parallelization }
 

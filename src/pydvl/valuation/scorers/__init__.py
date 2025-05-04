@@ -13,5 +13,6 @@ for a certain quality of approximation.
 
 from .base import *
 from .classwise import *
+from .skorch import *
 from .supervised import *
 from .utils import *
