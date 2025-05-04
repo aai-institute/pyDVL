@@ -73,7 +73,7 @@ __all__ = [
     "try_torch_import",
 ]
 
-DT = TypeVar("DT")
+DT = TypeVar("DT", bound=np.generic)
 
 
 def try_torch_import(require: bool = False) -> ModuleType | None:
@@ -138,7 +138,8 @@ class Array(Protocol[DT]):
         in NumPy and PyTorch arrays.
     """
 
-    nbytes: int
+    @property
+    def nbytes(self) -> int: ...
 
     @property
     def shape(self) -> tuple[int, ...]: ...
@@ -163,7 +164,7 @@ class Array(Protocol[DT]):
 
     def __matmul__(self, other) -> Array: ...
 
-    def __array__(self, dtype: DT | None = None) -> NDArray: ...
+    def __array__(self, dtype: DT | None = None) -> NDArray[DT]: ...
 
     def flatten(self, *args, **kwargs) -> Self: ...
 

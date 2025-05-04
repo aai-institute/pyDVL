@@ -51,7 +51,7 @@ from typing import Generator, Iterable, Mapping, TypeVar, cast
 import numpy as np
 from more_itertools import chunked, flatten
 
-from pydvl.utils.array import Array, array_unique, is_categorical
+from pydvl.utils.array import DT, Array, array_unique, is_categorical
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.samplers.base import EvaluationStrategy, IndexSampler
 from pydvl.valuation.samplers.powerset import NoIndexIteration, PowersetSampler
@@ -104,10 +104,7 @@ def roundrobin(
             remaining_generators = cycle(islice(remaining_generators, n_active))
 
 
-T = TypeVar("T")
-
-
-def get_unique_labels(arr: Array[T]) -> Array[T]:
+def get_unique_labels(arr: Array[DT]) -> Array[DT]:
     """Returns unique labels in a categorical dataset.
 
     Args:
@@ -122,7 +119,7 @@ def get_unique_labels(arr: Array[T]) -> Array[T]:
         ValueError: If the input array is not of a categorical type.
     """
     if is_categorical(arr):
-        return cast(Array[T], array_unique(arr))
+        return cast(Array[DT], array_unique(arr))
     else:
         raise ValueError(
             f"Input array has an unsupported data type for categorical labels: {type(arr)}. "
