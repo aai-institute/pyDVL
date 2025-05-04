@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://pydvl.org/stable/api/pydvl/valuation/scorers/supervised/">
       
       
-        <link rel="prev" href="../classwise/">
+        <link rel="prev" href="../skorch/">
       
       
         <link rel="next" href="../utils/">
@@ -2476,6 +2476,8 @@
       
         
       
+        
+      
     
     
     
@@ -2548,6 +2550,29 @@
   
   <span class="md-ellipsis">
     Classwise
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skorch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skorch
     
   </span>
   
@@ -3993,7 +4018,8 @@ scoring functions for supervised problems with additional information.</p>
 <p>Supervised scorers can be constructed in the same way as in scikit-learn: either from
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
-<a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html">make_scorer()</a>.</p>
+<a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics
+.make_scorer.html">make_scorer()</a>.</p>
 <p><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;SupervisedScorer" href="#pydvl.valuation.scorers.supervised.SupervisedScorer">SupervisedScorer</a> holds the test data used to
 evaluate the model.</p>
 <div class="admonition example">
@@ -4044,18 +4070,18 @@ evaluate the model.</p>
 <a href="#pydvl.valuation.scorers.supervised.SupervisedScorer" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">SupervisedScorer</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">scoring</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;SupervisedScorerCallable (&lt;code&gt;pydvl.valuation.scorers.supervised.SupervisedScorerCallable&lt;/code&gt;)" href="#pydvl.valuation.scorers.supervised.SupervisedScorerCallable">SupervisedScorerCallable</a></span><span class="p">[</span><span class="n"><span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span></span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;SupervisedScorerCallable (&lt;code&gt;pydvl.valuation.scorers.supervised.SupervisedScorerCallable&lt;/code&gt;)" href="#pydvl.valuation.scorers.supervised.SupervisedScorerCallable">SupervisedScorerCallable</a></span><span class="p">[</span><span class="n"><span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span></span><span class="p">,</span> <span class="n"><span title="pydvl.utils.array.ArrayT">ArrayT</span></span><span class="p">]</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="o">|</span> <span class="n"><span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span></span><span class="p">,</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">test_data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;Dataset (&lt;code&gt;pydvl.valuation.dataset.Dataset&lt;/code&gt;)" href="../../dataset/#pydvl.valuation.dataset.Dataset">Dataset</a></span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">default</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="nb">range</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;numpy.inf&lt;/code&gt;" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf">inf</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;numpy.inf&lt;/code&gt;" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf">inf</a></span><span class="p">),</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="nb">range</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)),</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">name</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Generic&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Generic">Generic</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>]</code>, <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;Scorer (&lt;code&gt;pydvl.valuation.scorers.base.Scorer&lt;/code&gt;)" href="../base/#pydvl.valuation.scorers.base.Scorer">Scorer</a></code></p>
+              Bases: <code><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Generic&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Generic">Generic</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>, <span title="pydvl.utils.array.ArrayT">ArrayT</span>]</code>, <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;Scorer (&lt;code&gt;pydvl.valuation.scorers.base.Scorer&lt;/code&gt;)" href="../base/#pydvl.valuation.scorers.base.Scorer">Scorer</a></code></p>
 
 
         <p>A scoring callable that takes a model, data, and labels and returns a scalar.</p>
@@ -4076,12 +4102,13 @@ evaluate the model.</p>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>Either a string or callable that can be passed to
-<a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html">get_scorer</a>.</p>
+<a href="https://scikit-learn.org/stable/modules/generated/sklearn
+.metrics.get_scorer.html">get_scorer</a>.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;SupervisedScorerCallable (&lt;code&gt;pydvl.valuation.scorers.supervised.SupervisedScorerCallable&lt;/code&gt;)" href="#pydvl.valuation.scorers.supervised.SupervisedScorerCallable">SupervisedScorerCallable</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>] | <span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span></code>
+                      <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;SupervisedScorerCallable (&lt;code&gt;pydvl.valuation.scorers.supervised.SupervisedScorerCallable&lt;/code&gt;)" href="#pydvl.valuation.scorers.supervised.SupervisedScorerCallable">SupervisedScorerCallable</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>, <span title="pydvl.utils.array.ArrayT">ArrayT</span>] | <span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span></code>
                   </span>
               </p>
             </td>
@@ -4138,7 +4165,7 @@ constructed with <a class="autorefs autorefs-internal" title="&lt;code class=&qu
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
-                      <code>(-<a class="autorefs autorefs-external" title="&lt;code&gt;numpy.inf&lt;/code&gt;" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf">inf</a>, <a class="autorefs autorefs-external" title="&lt;code&gt;numpy.inf&lt;/code&gt;" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf">inf</a>)</code>
+                      <code>(-<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>(&#39;inf&#39;), <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>(&#39;inf&#39;))</code>
                   </span>
               </p>
             </td>
@@ -4166,13 +4193,22 @@ function passed will be used.</p>
           </tr>
       </tbody>
     </table>
-        <div class="admonition tip">
+        <div class="admonition note">
+<p class="admonition-title">Tensor Support</p>
+<p>SupervisedScorer supports both NumPy arrays and PyTorch tensors. Subclasses
+specialising in either type must specify the array type in the generic type.</p>
+</div>
+<div class="admonition tip">
 <p class="admonition-title">New in version 0.5.0</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Changed in version 0.10.0</p>
 <p>This is now <code>SupervisedScorer</code> and holds the test data used to evaluate the
 model.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">New in version 0.11.0</p>
+<p>Added generic type support for arrays and tensor compatibility.</p>
 </div>
 
 
@@ -4182,12 +4218,7 @@ model.</p>
 
                   <details class="quote">
                     <summary>Source code in <code>src/pydvl/valuation/scorers/supervised.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
 <span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
@@ -4209,34 +4240,43 @@ model.</p>
 <span class="normal"><a href="#__codelineno-0-115">115</a></span>
 <span class="normal"><a href="#__codelineno-0-116">116</a></span>
 <span class="normal"><a href="#__codelineno-0-117">117</a></span>
-<span class="normal"><a href="#__codelineno-0-118">118</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="n">scoring</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">SupervisedScorerCallable</span><span class="p">[</span><span class="n">SupervisedModelT</span><span class="p">]</span> <span class="o">|</span> <span class="n">SupervisedModelT</span><span class="p">,</span>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="n">test_data</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="n">default</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="nb">range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="p">):</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="n">SupervisedModel</span><span class="p">):</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_scoring</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">check_scoring</span><span class="p">(</span><span class="n">scoring</span><span class="p">)</span>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Default scorer for </span><span class="si">{</span><span class="n">scoring</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">get_scorer</span><span class="p">(</span><span class="n">scoring</span><span class="p">)</span>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a>            <span class="n">name</span> <span class="o">=</span> <span class="n">scoring</span>
-</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">scoring</span>
-</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a>            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="s2">&quot;scorer&quot;</span><span class="p">)</span>
-</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">test_data</span> <span class="o">=</span> <span class="n">test_data</span>
-</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
-</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="c1"># TODO: auto-fill from known scorers ?</span>
-</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="nb">range</span>
-</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="n">scoring</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="o">|</span> <span class="n">SupervisedScorerCallable</span><span class="p">[</span><span class="n">SupervisedModelT</span><span class="p">,</span> <span class="n">ArrayT</span><span class="p">]</span>
+</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="o">|</span> <span class="n">SupervisedModelT</span><span class="p">,</span>
+</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="n">test_data</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
+</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="n">default</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="nb">range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)),</span>
+</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="p">):</span>
+</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="n">SupervisedModel</span><span class="p">):</span>
+</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_scoring</span>
+</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a>
+</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">check_scoring</span><span class="p">(</span><span class="n">scoring</span><span class="p">)</span>
+</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a>            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Default scorer for </span><span class="si">{</span><span class="n">scoring</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">get_scorer</span><span class="p">(</span><span class="n">scoring</span><span class="p">)</span>
+</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a>            <span class="n">name</span> <span class="o">=</span> <span class="n">scoring</span>
+</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_scorer</span> <span class="o">=</span> <span class="n">scoring</span>
+</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a>        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a>            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scoring</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="s2">&quot;scorer&quot;</span><span class="p">)</span>
+</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">test_data</span> <span class="o">=</span> <span class="n">test_data</span>
+</span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="c1"># TODO: auto-fill from known scorers ?</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="nb">range</span>
+</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -4273,7 +4313,7 @@ model.</p>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Protocol&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Protocol">Protocol</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>]</code></p>
+              Bases: <code><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Protocol&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Protocol">Protocol</a>[<span title="pydvl.valuation.scorers.supervised.SupervisedModelT">SupervisedModelT</span>, <span title="pydvl.utils.array.ArrayT">ArrayT</span>]</code></p>
 
 
         <p>Signature for a supervised scorer</p>
@@ -4334,7 +4374,7 @@ model.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 18, 2025 10:31:06">2025-04-18</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 4, 2025 15:38:03">2025-05-04</span>
   </span>
 
     
@@ -4344,7 +4384,7 @@ model.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 18, 2025 10:31:06">2025-04-18</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 4, 2025 15:38:03">2025-05-04</span>
   </span>
 
     
@@ -4381,7 +4421,7 @@ model.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../classwise/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Classwise">
+          <a href="../skorch/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Skorch">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4391,7 +4431,7 @@ model.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Classwise
+                Skorch
               </div>
             </div>
           </a>

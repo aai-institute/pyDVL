@@ -2534,6 +2534,8 @@
       
         
       
+        
+      
     
     
     
@@ -2606,6 +2608,29 @@
   
   <span class="md-ellipsis">
     Classwise
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pydvl/valuation/scorers/skorch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skorch
     
   </span>
   
@@ -4029,6 +4054,19 @@ following linear program:</p>
 obtain a single valuation to use, one breaks ties by solving a quadratic program
 to select the <span class="arithmatex">\(v\)</span> in the <abbr title="Least Core">LC</abbr> with the smallest <span class="arithmatex">\(\ell_2\)</span> norm. This is called the
 <em>egalitarian least core</em>.</p>
+<div class="admonition info">
+<p class="admonition-title">Pytorch support</p>
+<p>As of version 0.10.1, both
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;ExactLeastCoreValuation" href="../../api/pydvl/valuation/methods/least_core/#pydvl.valuation.methods.least_core.ExactLeastCoreValuation">ExactLeastCoreValuation</a>
+and
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-toc doc-symbol-class&quot;&gt;&lt;/code&gt;&amp;nbsp;MonteCarloLeastCoreValuation" href="../../api/pydvl/valuation/methods/least_core/#pydvl.valuation.methods.least_core.MonteCarloLeastCoreValuation">MonteCarloLeastCoreValuation</a>
+support PyTorch tensor inputs. Tensor data is used throughout the coalition
+evaluation process to compute utility values. These utility values are then
+assembled into numpy arrays for the constraint matrices used by the linear
+programming solver (CVXPY), which operates on CPU. See <a class="autorefs autorefs-internal" title="Tensor Support" href="../#tensor-support">Tensor
+Support</a> for more general information about tensor support
+in pyDVL.</p>
+</div>
 <h2 id="exact-least-core">Exact Least Core<a class="headerlink" href="#exact-least-core" title="Permanent link">&para;</a></h2>
 <p>This first algorithm is just a verbatim implementation of the definition above.
 It is available through
@@ -4145,7 +4183,7 @@ model design.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="March 10, 2025 14:15:31">2025-03-10</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 19, 2025 15:42:23">2025-04-19</span>
   </span>
 
     
