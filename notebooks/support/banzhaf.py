@@ -133,13 +133,13 @@ class TorchClassifierModel:
         torch_dataloader = DataLoader(
             torch_dataset, batch_size=self.batch_size, shuffle=True
         )
-        loss = self.criterion()
+        criterion = self.criterion()
         optimizer = self.optimizer(self.model.parameters(), lr=self.lr)
         for epoch in range(self.epochs):
             for features, labels in torch_dataloader:
                 optimizer.zero_grad()
                 pred = self.model(features)
-                loss = loss(pred, labels)
+                loss = criterion(pred, labels)
                 loss.backward()
                 optimizer.step()
 
