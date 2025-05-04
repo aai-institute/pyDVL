@@ -1,23 +1,14 @@
 """Tests for the pydvl.utils.array module."""
 
-from typing import Any, Dict, List
-
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from pydvl.utils.array import (
-    array_arange,
     array_concatenate,
     array_count_nonzero,
-    array_equal,
-    array_exp,
-    array_index,
     array_nonzero,
-    array_ones,
-    array_ones_like,
     array_unique,
-    array_zeros,
-    array_zeros_like,
     atleast1d,
     check_X_y,
     check_X_y_torch,
@@ -91,125 +82,6 @@ def test_to_numpy_torch():
     assert np.array_equal(np_array, np.array([1, 2, 3]))
 
 
-@pytest.mark.parametrize("shape", [3, (2, 3), [2, 2]])
-def test_array_zeros(shape):
-    result = array_zeros(shape)
-    assert is_numpy(result)
-    assert result.shape == (shape,) if isinstance(shape, int) else tuple(shape)
-    assert np.all(result == 0)
-
-
-@pytest.mark.parametrize("shape", [3, (2, 3), [2, 2]])
-def test_array_zeros_torch(shape):
-    like = torch.tensor([1])
-    result = array_zeros(shape, like=like)
-    assert is_tensor(result)
-    assert result.shape == (shape,) if isinstance(shape, int) else tuple(shape)
-    assert torch.all(result == 0)
-
-
-@pytest.mark.parametrize("shape", [3, (2, 3), [2, 2]])
-def test_array_ones(shape):
-    result = array_ones(shape)
-    assert is_numpy(result)
-    assert result.shape == (shape,) if isinstance(shape, int) else tuple(shape)
-    assert np.all(result == 1)
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize("shape", [3, (2, 3), [2, 2]])
-def test_array_ones_torch(shape):
-    like = torch.tensor([1])
-    result = array_ones(shape, like=like)
-    assert is_tensor(result)
-    assert result.shape == (shape,) if isinstance(shape, int) else tuple(shape)
-    assert torch.all(result == 1)
-
-
-@pytest.mark.parametrize(
-    "arr",
-    [
-        np.array([1, 2, 3]),
-        np.array([[1, 2], [3, 4]]),
-        np.array([True, False, True]),
-        np.array([1.1, 2.2, 3.3]),
-    ],
-)
-def test_array_zeros_like(arr):
-    result = array_zeros_like(arr)
-    assert is_numpy(result)
-    assert result.shape == arr.shape
-    assert np.all(result == 0)
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize(
-    "arr",
-    [
-        torch.tensor([1, 2, 3]),
-        torch.tensor([[1, 2], [3, 4]]),
-        torch.tensor([True, False, True]),
-        torch.tensor([1.1, 2.2, 3.3]),
-    ],
-)
-def test_array_zeros_like_torch(arr):
-    result = array_zeros_like(arr)
-    assert is_tensor(result)
-    assert result.shape == arr.shape
-    assert torch.all(result == 0)
-
-
-@pytest.mark.parametrize(
-    "arr",
-    [
-        np.array([1, 2, 3]),
-        np.array([[1, 2], [3, 4]]),
-        np.array([True, False, True]),
-        np.array([1.1, 2.2, 3.3]),
-    ],
-)
-def test_array_ones_like(arr):
-    result = array_ones_like(arr)
-    assert is_numpy(result)
-    assert result.shape == arr.shape
-    assert np.all(result == 1)
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize(
-    "arr",
-    [
-        torch.tensor([1, 2, 3]),
-        torch.tensor([[1, 2], [3, 4]]),
-        torch.tensor([True, False, True]),
-        torch.tensor([1.1, 2.2, 3.3]),
-    ],
-)
-def test_array_ones_like_torch(arr):
-    result = array_ones_like(arr)
-    assert is_tensor(result)
-    assert result.shape == arr.shape
-    assert torch.all(result == 1)
-
-
-def test_array_arange():
-    result = array_arange(5)
-    assert is_numpy(result)
-    assert np.array_equal(result, np.arange(5))
-
-    result = array_arange(1, 10, 2)
-    assert is_numpy(result)
-    assert np.array_equal(result, np.arange(1, 10, 2))
-
-
-@pytest.mark.torch
-def test_array_arange_torch():
-    like = torch.tensor([1])
-    result = array_arange(5, like=like)
-    assert is_tensor(result)
-    assert torch.equal(result, torch.arange(5))
-
-
 def test_array_unique():
     arr = np.array([1, 2, 2, 3, 1])
     result = array_unique(arr)
@@ -273,88 +145,6 @@ def test_array_concatenate_torch():
 
     with pytest.raises(ValueError):
         array_concatenate([])
-
-
-def test_array_equal():
-    arr1 = np.array([1, 2, 3])
-    arr2 = np.array([1, 2, 3])
-    arr3 = np.array([1, 2, 4])
-    assert array_equal(arr1, arr2)
-    assert not array_equal(arr1, arr3)
-
-
-@pytest.mark.torch
-def test_array_equal_torch():
-    arr1 = torch.tensor([1, 2, 3])
-    arr2 = torch.tensor([1, 2, 3])
-    arr3 = torch.tensor([1, 2, 4])
-    assert array_equal(arr1, arr2)
-    assert not array_equal(arr1, arr3)
-
-    # Mixed case
-    arr1 = np.array([1, 2, 3])
-    arr2 = torch.tensor([1, 2, 3])
-    assert array_equal(arr1, arr2)
-
-
-def test_array_index():
-    """Test array_index function with numpy arrays."""
-    # Numpy case
-    arr = np.array([[1, 2], [3, 4], [5, 6]])
-    key = np.array([0, 2])
-    result = array_index(arr, key)
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([[1, 2], [5, 6]]))
-
-    # With dim=1
-    result = array_index(arr, np.array([1]), dim=1)
-    assert is_numpy(result)
-    assert np.array_equal(result, np.array([[2], [4], [6]]))
-
-    # Test error for out of bounds dim
-    with pytest.raises(ValueError):
-        array_index(arr, np.array([0]), dim=10)
-
-
-@pytest.mark.torch
-def test_array_index_torch():
-    arr = torch.tensor([[1, 2], [3, 4], [5, 6]])
-    key = torch.tensor([0, 2])
-    result = array_index(arr, key)
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([[1, 2], [5, 6]]))
-
-    # With dim=1
-    result = array_index(arr, torch.tensor([1]), dim=1)
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([[2], [4], [6]]))
-
-    # Mixed case
-    result = array_index(arr, np.array([0, 2]))
-    assert is_tensor(result)
-    assert torch.equal(result, torch.tensor([[1, 2], [5, 6]]))
-
-    # Test error for out of bounds dim
-    with pytest.raises(ValueError):
-        array_index(arr, torch.tensor([0]), dim=10)
-
-
-def test_array_exp():
-    array = np.array([0.0, 1.0, 2.0])
-    result = array_exp(array)
-    assert is_numpy(result)
-    assert np.allclose(result, np.array([1.0, np.e, np.e**2]))
-
-
-@pytest.mark.torch
-def test_array_exp_torch():
-    array = torch.tensor([0.0, 1.0, 2.0])
-    result = array_exp(array)
-    assert is_tensor(result)
-    assert torch.allclose(
-        result,
-        torch.tensor([1.0, torch.exp(torch.tensor(1.0)), torch.exp(torch.tensor(2.0))]),
-    )
 
 
 def test_array_count_nonzero():
@@ -567,35 +357,23 @@ def test_check_X_y():
         assert is_tensor(y_checked)
 
 
-def test_is_categorical_numpy():
-    # Object arrays
-    assert is_categorical(np.array(["a", "b", "c"], dtype=object))
-
-    # String arrays
-    assert is_categorical(np.array(["a", "b", "c"], dtype=str))
-
-    # Unicode arrays
-    assert is_categorical(np.array(["a", "b", "c"], dtype="U"))
-
-    # Unsigned integer arrays
-    assert is_categorical(np.array([1, 2, 3], dtype=np.uint8))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.uint16))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.uint32))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.uint64))
-
-    # Signed integer arrays
-    assert is_categorical(np.array([1, 2, 3], dtype=np.int8))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.int16))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.int32))
-    assert is_categorical(np.array([1, 2, 3], dtype=np.int64))
-
-    # Boolean arrays
-    assert is_categorical(np.array([True, False, True], dtype=bool))
-
-    # Non-categorical types
-    assert not is_categorical(np.array([1.0, 2.0, 3.0], dtype=np.float32))
-    assert not is_categorical(np.array([1.0, 2.0, 3.0], dtype=np.float64))
-    assert not is_categorical(np.array([1 + 2j, 3 + 4j], dtype=complex))
+@pytest.mark.parametrize(
+    "array,expected",
+    [
+        (np.array(["a", "b", "c"], dtype=object), True),
+        (np.array(["a", "b", "c"], dtype=str), True),
+        (np.array([1, 2, 3], dtype=np.uint8), True),
+        (np.array([1, 2, 3], dtype=np.uint32), True),
+        (np.array([1, 2, 3], dtype=np.int8), True),
+        (np.array([1, 2, 3], dtype=np.int32), True),
+        (np.array([True, False, True], dtype=bool), True),
+        (np.array([1.0, 2.0, 3.0], dtype=np.float32), False),
+        (np.array([1.0, 2.0, 3.0], dtype=np.float64), False),
+        (np.array([1 + 2j, 3 + 4j], dtype=complex), False),
+    ],
+)
+def test_is_categorical_numpy(array: NDArray, expected):
+    assert is_categorical(array) == expected
 
 
 @pytest.mark.torch

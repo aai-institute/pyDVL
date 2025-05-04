@@ -15,15 +15,7 @@ The functions in this module are designed to:
     ```python
     import numpy as np
     import torch
-    from pydvl.utils.array import array_zeros, array_concatenate, is_tensor
-
-    # Works with NumPy arrays
-    x_np = np.array([1, 2, 3])
-    zeros_np = array_zeros((3, ), like=x_np)  # Returns numpy.ndarray
-
-    # Works with PyTorch tensors
-    x_torch = torch.tensor([1, 2, 3])
-    zeros_torch = array_zeros((3, ), like=x_torch)  # Returns torch.Tensor
+    from pydvl.utils.array import array_concatenate, is_tensor
 
     # Type checking
     is_tensor(x_torch)  # Returns True
@@ -40,7 +32,6 @@ allowing for proper static type checking with both array types.
 
 from __future__ import annotations
 
-import warnings
 from numbers import Number
 from types import ModuleType
 from typing import (
@@ -69,16 +60,8 @@ __all__ = [
     "is_numpy",
     "to_tensor",
     "to_numpy",
-    "array_zeros",
-    "array_ones",
-    "array_zeros_like",
-    "array_ones_like",
     "array_unique",
     "array_concatenate",
-    "array_equal",
-    "array_arange",
-    "array_index",
-    "array_exp",
     "array_count_nonzero",
     "array_nonzero",
     "is_categorical",
@@ -116,6 +99,12 @@ if TYPE_CHECKING:
 else:
     # At runtime this is just a reference to the actual class
     Tensor = Any if torch is None else torch.Tensor
+
+
+def require_torch() -> ModuleType:
+    torch = try_torch_import(require=True)
+    assert torch is not None
+    return torch
 
 
 def is_tensor(array: Any) -> bool:
@@ -224,131 +213,6 @@ def to_numpy(array: Array | ArrayLike) -> NDArray:
 
 
 ShapeType = Union[int, Tuple[int, ...], List[int]]
-
-
-def array_zeros(
-    shape: ShapeType,
-    *,
-    dtype: Any | None = None,
-    like: Array | None = None,
-) -> Array:
-    """
-    Create a zero-filled array with the same type as `like`.
-
-    Args:
-        shape: Desired shape for the new array.
-        dtype: Data type (optional).
-        like: Reference array (numpy array or torch tensor).
-
-    Returns:
-        An array of zeros (np.ndarray or torch.Tensor).
-    """
-    if like is None:
-        return cast(Array, np.zeros(shape, dtype=dtype))
-
-    if is_numpy(like):
-        return cast(Array, np.zeros(shape, dtype=dtype))
-    elif is_tensor(like):
-        assert torch is not None
-        like_tensor = cast(Tensor, like)
-        return cast(Array, torch.zeros(shape, dtype=dtype, device=like_tensor.device))
-    else:
-        # In case 'like' is an unsupported type, fallback with numpy.
-        warnings.warn("Reference object type is not recognized. Falling back to numpy.")
-        return cast(Array, np.zeros(shape, dtype=dtype))
-
-
-def array_ones(
-    shape: ShapeType,
-    *,
-    dtype: Any | None = None,
-    like: Array | None = None,
-) -> Array:
-    """
-    Create a one-filled array with the same type as `like`.
-
-    Args:
-        shape: Desired shape for the new array.
-        dtype: Data type (optional).
-        like: Reference array (numpy array or torch tensor).
-
-    Returns:
-        An array of ones (np.ndarray or torch.Tensor).
-    """
-    if like is None:
-        return cast(Array, np.ones(shape, dtype=dtype))
-
-    if is_numpy(like):
-        return cast(Array, np.ones(shape, dtype=dtype))
-    elif is_tensor(like):
-        assert torch is not None
-        like_tensor = cast(Tensor, like)
-        return cast(Array, torch.ones(shape, dtype=dtype, device=like_tensor.device))
-    else:
-        warnings.warn("Reference object type is not recognized. Falling back to numpy.")
-        return cast(Array, np.ones(shape, dtype=dtype))
-
-
-@overload
-def array_zeros_like(a: NDArray, dtype: Any | None = None) -> NDArray: ...
-
-
-@overload
-def array_zeros_like(a: Tensor, dtype: Any | None = None) -> Tensor: ...
-
-
-def array_zeros_like(a: NDArray | Tensor, dtype: Any | None = None) -> NDArray | Tensor:
-    """
-    Create a zero-filled array with the same shape and type as `array`.
-
-    Args:
-        a: Reference array (numpy array or torch tensor).
-        dtype: Data type (optional).
-
-    Returns:
-        An array of zeros matching the input type.
-
-    Raises:
-        TypeError:
-    """
-    if is_tensor(a):
-        assert torch is not None  # Keep mypy happy
-        tensor_array = cast(Tensor, a)
-        return cast(Tensor, torch.zeros_like(tensor_array, dtype=dtype))
-    elif is_numpy(a):
-        return cast(NDArray, np.zeros_like(a, dtype=dtype))
-    raise TypeError(f"Unsupported array type: {type(a).__name__}")
-
-
-@overload
-def array_ones_like(a: NDArray, dtype: Any | None = None) -> NDArray: ...
-
-
-@overload
-def array_ones_like(a: Tensor, dtype: Any | None = None) -> Tensor: ...
-
-
-def array_ones_like(a: NDArray | Tensor, dtype: Any | None = None) -> NDArray | Tensor:
-    """
-    Create a one-filled array with the same shape and type as `array`.
-
-    Args:
-        a: Reference array (numpy array or torch tensor).
-        dtype: Data type (optional).
-
-    Returns:
-        An array of ones matching the input type.
-
-    Raises:
-        TypeError:
-    """
-    if is_numpy(a):
-        return cast(NDArray, np.ones_like(a, dtype=dtype))
-    elif is_tensor(a):
-        assert torch is not None
-        tensor_array = cast(Tensor, a)
-        return cast(Array, torch.ones_like(tensor_array, dtype=dtype))
-    raise TypeError(f"Unsupported array type: {type(a).__name__}")
 
 
 @overload
@@ -472,122 +336,6 @@ def array_concatenate(
     # Otherwise, convert all arrays to numpy arrays.
     numpy_arrays = [to_numpy(a) for a in arrays]
     return cast(NDArray, np.concatenate(numpy_arrays, axis=axis))
-
-
-def array_equal(array1: Array[Any], array2: Array[Any]) -> bool:
-    """
-    Check if two arrays are element-wise equal.
-
-    Args:
-        array1: First array.
-        array2: Second array.
-
-    Returns:
-        True if arrays are equal, otherwise False.
-    """
-    if is_numpy(array1) and is_numpy(array2):
-        return bool(np.array_equal(array1, array2))
-    elif is_tensor(array1) and is_tensor(array2) and torch is not None:
-        return bool(torch.equal(cast(Tensor, array1), cast(Tensor, array2)))
-    # Fall back to comparing numpy representations.
-    return bool(np.array_equal(to_numpy(array1), to_numpy(array2)))
-
-
-def array_arange(
-    start: int,
-    stop: int | None = None,
-    step: int = 1,
-    *,
-    dtype: DT | None = None,
-    like: Array | None = None,
-) -> Array[DT]:
-    """
-    Create an array with evenly spaced values within a given interval.
-
-    Args:
-        start: Start of interval, or stop if stop is None.
-        stop: End of interval (exclusive).
-        step: Step size.
-        dtype: Data type (optional).
-        like: Reference array to infer the type and device.
-
-    Returns:
-        An array (numpy.ndarray or torch.Tensor) of the specified range.
-    """
-    if stop is None:
-        start, stop = 0, start
-
-    # If a reference is provided and is recognized as numpy or tensor, use it.
-    if like is not None:
-        if is_numpy(like):
-            return cast(Array, np.arange(start, stop, step, dtype=like.dtype))
-        elif is_tensor(like):
-            assert torch is not None
-            like_tensor = cast(Tensor, like)
-            return cast(
-                Array,
-                torch.arange(
-                    start,
-                    stop,
-                    step,
-                    dtype=like_tensor.dtype,
-                    device=like_tensor.device,
-                ),
-            )
-        else:
-            warnings.warn(
-                "Reference object type not recognized. Falling back to numpy."
-            )
-    return cast(Array, np.arange(start, stop, step, dtype=dtype))  # type: ignore
-
-
-def array_index(array: Array, key: Array, dim: int = 0) -> Array:
-    """
-    Index into an array along the specified dimension.
-
-    Args:
-        array: The input array.
-        key: The indices to select.
-        dim: Dimension along which to index.
-
-    Returns:
-        An array of the same type as the input with the specified indexing applied.
-
-    Raises:
-        ValueError: If the dimension is out of bounds.
-    """
-    # Verify that dim is within valid range.
-    if not (
-        0 <= dim < array.shape[0]
-        if hasattr(array, "shape") and len(array.shape) > 0
-        else 0
-    ):
-        raise ValueError(
-            f"Dimension {dim} is out of bounds for array with shape "
-            f"{getattr(array, 'shape', None)}."
-        )
-
-    if is_numpy(array):
-        # Handle indexing along specified dimension.
-        if dim == 0:
-            return array[key]
-        elif dim == 1:
-            return array[:, key]
-        else:
-            idx = tuple(slice(None) if i != dim else key for i in range(array.ndim))
-            return array[idx]
-    elif is_tensor(array) and torch is not None:
-        arr_tensor = cast(Tensor, array)
-        # Ensure key is a tensor.
-        key_tensor = (
-            key
-            if is_tensor(key)
-            else torch.as_tensor(to_numpy(key), device=arr_tensor.device)
-        )
-        key_long = cast(Tensor, key_tensor).to(torch.long)
-        return cast(Array, torch.index_select(arr_tensor, dim, key_long))
-    else:
-        raise TypeError("Unsupported array type for indexing.")
 
 
 ArrayT = TypeVar("ArrayT", bound=Array, contravariant=True)
@@ -833,31 +581,6 @@ def check_X_y_torch(
         )
 
     return X, y
-
-
-def require_torch() -> ModuleType:
-    torch = try_torch_import(require=True)
-    assert torch is not None
-    return torch
-
-
-def array_exp(
-    x: Array,
-) -> Array:
-    """
-    Calculate the exponential of array elements.
-
-    Args:
-        x: Input array.
-
-    Returns:
-        Exponential of each element in the input array.
-    """
-    if is_tensor(x):
-        assert torch is not None
-        return cast(Array, torch.exp(cast(Tensor, x)))
-    else:  # Fallback to numpy approach
-        return cast(Array, np.exp(to_numpy(x)))
 
 
 def array_count_nonzero(

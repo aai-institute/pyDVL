@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from sklearn.ensemble import BaggingClassifier
 
-from pydvl.utils.array import array_equal, try_torch_import
+from pydvl.utils.array import is_numpy, try_torch_import
 from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.methods.data_oob import (
     DataOOBValuation,
@@ -33,8 +33,8 @@ def test_point_wise_accuracy_tensor():
 
     # Should be numpy array with [1, 1, 0, 1, 0]
     expected = np.array([1.0, 1.0, 0.0, 1.0, 0.0])
-    assert isinstance(scores, np.ndarray)
-    assert array_equal(scores, expected)
+    assert is_numpy(scores)
+    assert np.array_equal(scores, expected)
 
 
 @pytest.mark.torch

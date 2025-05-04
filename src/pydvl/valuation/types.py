@@ -35,7 +35,6 @@ from pydvl.utils.array import (
     ArrayRetT,
     ArrayT,
     array_concatenate,
-    array_equal,
     to_numpy,
     try_torch_import,
 )
@@ -189,7 +188,7 @@ class Sample:
             return False
 
         idx_equal = self.idx == other.idx
-        subset_equal = array_equal(self.subset, other.subset)
+        subset_equal = np.array_equal(self.subset, other.subset)
 
         return idx_equal and subset_equal
 
@@ -236,8 +235,8 @@ class ClasswiseSample(Sample):
 
         idx_equal = self.idx == other.idx
         label_equal = self.label == other.label
-        subset_equal = array_equal(self.subset, other.subset)
-        ooc_equal = array_equal(self.ooc_subset, other.ooc_subset)
+        subset_equal = np.array_equal(self.subset, other.subset)
+        ooc_equal = np.array_equal(self.ooc_subset, other.ooc_subset)
 
         return idx_equal and subset_equal and label_equal and ooc_equal
 

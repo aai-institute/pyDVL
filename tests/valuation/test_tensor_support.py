@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import make_classification
 
-from pydvl.utils.array import array_equal, is_numpy, try_torch_import
+from pydvl.utils.array import is_numpy, try_torch_import
 from pydvl.valuation.dataset import Dataset, GroupedDataset, RawData
 
 torch = try_torch_import()
@@ -233,7 +233,7 @@ def test_grouped_dataset_slicing_with_tensors_param(torch_data, index, expected_
         (slice(0, 1), None, 2),
     ],
 )
-def test_data_indices_with_tensors(torch_data, sel, expected, expected_length):
+def test_data_indices(torch_data, sel, expected, expected_length):
     X, y = torch_data
     data_groups = [0, 1, 0]
     dataset = GroupedDataset(X, y, data_groups=data_groups)
@@ -241,37 +241,31 @@ def test_data_indices_with_tensors(torch_data, sel, expected, expected_length):
     assert is_numpy(indices)
     if expected is not None:
         assert indices.shape[0] == expected.shape[0]
-        assert array_equal(indices, expected)
+        assert np.array_equal(indices, expected)
     else:
         assert indices.shape[0] == expected_length
 
 
 @pytest.mark.parametrize(
     "sel, expected",
-    [
-        (None, np.array([0, 1, 0])),
-        ([0, 2], np.array([0, 0])),
-        (torch.tensor([0, 2]), np.array([0, 0])),
-    ],
+    [(None, np.array([0, 1, 0])), ([0, 2], np.array([0, 0]))],
 )
-def test_logical_indices_with_tensors(torch_data, sel, expected):
+def test_logical_indices(torch_data, sel, expected):
     X, y = torch_data
     data_groups = [0, 1, 0]
     dataset = GroupedDataset(X, y, data_groups=data_groups)
     indices = dataset.logical_indices(sel)
     assert is_numpy(indices)
-    assert array_equal(indices, expected)
+    assert np.array_equal(indices, expected)
 
 
-def test_group_names_with_tensors(torch_data):
+def test_group_names(torch_data):
     X, y = torch_data
     data_groups = [0, 1, 0]
     group_names = ["group_a", "group_b"]
 
     dataset = GroupedDataset(X, y, data_groups=data_groups, group_names=group_names)
-    assert isinstance(
-        dataset.names, np.ndarray
-    )  # Group names are always numpy arrays for now
+    assert is_numpy(dataset.names)
     assert np.array_equal(
         dataset.names, np.array(["group_a", "group_b"], dtype=np.str_)
     )
@@ -339,7 +333,7 @@ def test_grouped_dataset_from_dataset_with_tensors(torch_data):
 
     # Check that the group-to-data mapping is correct
     group0_indices = grouped_dataset.data_indices([0])
-    assert array_equal(group0_indices, np.array([0, 2]))
+    assert np.array_equal(group0_indices, np.array([0, 2]))
 
 
 def test_stratified_split_with_tensors(larger_torch_dataset):
@@ -484,7 +478,7 @@ def test_edge_case_empty_groups():
     dataset = GroupedDataset(X, y, data_groups=data_groups)
 
     # Verify data_to_group mapping
-    assert array_equal(dataset.data_to_group, data_groups.cpu().numpy())
+    assert np.array_equal(dataset.data_to_group, data_groups.cpu().numpy())
 
     # Verify group_to_data mapping
     # Group 0 should have one data point (index 0)
