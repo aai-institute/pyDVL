@@ -61,6 +61,7 @@ __all__ = [
     "ValueUpdateT",
 ]
 
+
 IndexT: TypeAlias = np.int_
 IndexSetT: TypeAlias = NDArray[IndexT]
 NameT: TypeAlias = Union[np.object_, np.int_, np.str_]

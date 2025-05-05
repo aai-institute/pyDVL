@@ -179,6 +179,11 @@ class PermutationSampler(StochasticSamplerMixin, PermutationSamplerBase):
         estimates if not done carefully."""
         self._skip_indices = indices
 
+    def sample_limit(self, indices: IndexSetT) -> int | None:
+        if len(indices) == 0:
+            return 0
+        return None
+
     def generate(self, indices: IndexSetT) -> SampleGenerator:
         """Generates the permutation samples.
 
