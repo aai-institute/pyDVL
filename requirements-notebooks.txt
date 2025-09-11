@@ -6,7 +6,7 @@ pillow==10.4.0
 skorch>=1.2.0
 torch>=2.8.0
 torchvision>=0.23.0
-transformers==4.44.2
+transformers>=4.48.0
 zarr>=2,<3; python_version<'3.11'
 numcodecs<0.16.0; python_version<'3.11'
 zarr>=3,<4; python_version>='3.11'
