@@ -66,7 +66,7 @@ def test_log_coefficients(n, valuation_cls, kwargs):
 )
 @pytest.mark.parametrize(
     "sampler_cls, sampler_kwargs",
-    deterministic_samplers() + random_samplers(proper=True),
+    deterministic_samplers() + random_samplers(proper=True, stratified=False),
 )
 @pytest.mark.parametrize(
     "valuation_cls, valuation_kwargs, exact_values_attr",
@@ -95,10 +95,11 @@ def test_games(
         sampler_cls,
         sampler_kwargs,
         seed=seed,
-        # For stratified samplers:
-        lower_bound=1,
-        upper_bound=None,
-        n_samples=n_samples,  # Required for cases using FiniteSequentialSizeIteration
+        # Testing stratified samplers is too slow and they are tested elsewhere.
+        # # For stratified samplers:
+        # lower_bound=1,
+        # upper_bound=None,
+        # n_samples=n_samples,  # Required for cases using FiniteSequentialSizeIteration
     )
     valuation = valuation_cls(
         utility=test_game.u,

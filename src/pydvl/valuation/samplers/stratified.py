@@ -725,7 +725,13 @@ class FiniteSequentialSizeIteration(SampleSizeIteration):
 
 
 class RandomSizeIteration(SampleSizeIteration):
-    """Draws a set size $k$ following the distribution of sizes given by the strategy."""
+    """Draws a set size $k$ following the distribution of sizes given by the strategy.
+
+    Args:
+        strategy: The strategy to use for computing the number of samples to take.
+        n_indices: The number of indices in the index set from which samples are taken.
+        seed: The seed for the random number generator.
+    """
 
     def __init__(
         self, strategy: SampleSizeStrategy, n_indices: int, seed: Seed | None = None
