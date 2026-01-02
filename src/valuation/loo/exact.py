@@ -12,9 +12,25 @@ LinearSmoother = Union[KernelRidge, GaussianProcessRegressor]
 def smoothing_diag(model: LinearSmoother, x: np.ndarray) -> np.ndarray:
     if isinstance(model, KernelRidge):
         # FIXME: check this is the right formula AND avoid naive computation
-        return np.diag(x @ np.linalg.inv(x.T @ x) @ x.T)
+        K=model.kernel(x)
+        n=K.shape[0]
+        lamda=model.alpha
+        
+        L=np.linalg.cholesky(K+lamda*np.eye(n))
+        A=np.linalg.solve(L.T,np.linalg.solve(L,K))
+        
+        return np.diag(A)
+        #return np.diag(x @ np.linalg.inv(x.T @ x) @ x.T) OLS hat matrix
     elif isinstance(model, GaussianProcessRegressor):
-        return model.kernel.diag(x)
+        K=model.kernel(x)
+        n=K.shape[0]
+        sigma2=model.alpha
+        
+        L = np.linalg.cholesky(K + sigma2 * np.eye(n))
+        A = np.linalg.solve(L.T, np.linalg.solve(L, K))
+
+        return np.diag(A)
+        #return model.kernel.diag(x)
 
     else:
         raise ValueError(f"Unknown model type {type(model)}")
@@ -31,6 +47,7 @@ def linear_smoother_loo(model: LinearSmoother,
     y = data.y_train
     yhat = model.predict(data.x_train)
     # FIXME: is this true?
+    # Looks good in this particular case
     loss = np.square
     values = loss((y-yhat)/(1-l))
 
