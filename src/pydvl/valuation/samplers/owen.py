@@ -146,6 +146,48 @@ class GridOwenStrategy(OwenStrategy):
         return np.linspace(start=0, stop=q_stop, num=self.n_samples_outer)
 
 
+class GaussianSetSizeStrategy(OwenStrategy):
+    """
+    OwenStrategy subclass that samples subset sizes k using a bell-shaped
+    (Gaussian) probability distribution.
+     
+    Args:
+        n_samples_outer: Number of samples to draw
+        std_frac: Standard deviation as fraction of n_players
+        seed: Random seed
+        
+    """
+
+    def __init__(self, n_samples_outer: int, std_frac: float = 0.25, seed: Seed = None):
+        super().__init__(n_samples_outer=n_samples_outer)
+        self.std = std_frac
+        self.rng = np.random.default_rng(seed)
+
+        self.grid=np.linspace(0,1,1000)
+        mean = 0.5
+        p = np.exp(-mean*((self.grid-mean)/self.std)**2)
+        self.p_k = p / p.sum()
+
+    def __call__(self, q_stop: float):
+        probs=self.rng.choice(
+            self.grid, size=self.n_samples_outer, p=self.p_k
+        )
+        return probs*q_stop
+
+
+# Gauss-Legendre Quadrature
+class GaussLegendreOwenStrategy(OwenStrategy):
+    def __init__(self, n_samples_outer: int):
+        n_nodes = n_samples_outer // 2
+        super().__init__(n_samples_outer=n_nodes)
+        self.nodes, self.weights = np.polynomial.legendre.leggauss(n_nodes)
+
+    def __call__(self, q_stop: float):
+        q_nodes = 0.5 * (self.nodes + 1) * q_stop
+        q_weights = 0.5 * self.weights * q_stop
+        return q_nodes, q_weights
+        
+
 class OwenSampler(StochasticSamplerMixin, PowersetSampler):
     """A sampler for semi-values using the Owen method.
 
@@ -211,6 +253,27 @@ class OwenSampler(StochasticSamplerMixin, PowersetSampler):
                 for _ in range(self.n_samples_inner):
                     subset = random_subset(_complement, q=prob, seed=self._rng)
                     yield Sample(idx, subset)
+
+     def GLQgenerate(self, indices: IndexSetT) -> SampleGenerator:
+        for idx in self.index_iterable(indices):
+            _complement = complement(indices, [idx])
+            res = self.sampling_probabilities(self.q_stop)
+            
+            if isinstance(res, tuple):
+                q_nodes, q_weights = res
+            else:
+                q_nodes = res
+                q_weights = np.ones_like(q_nodes) / len(q_nodes)
+            
+            samples=[]
+            weights=[]
+            
+            for q, w in zip(q_nodes, q_weights):
+                for _ in range(self.n_samples_inner):
+                    subset = random_subset(_complement, q=q, seed=self._rng)
+                    samples.append((idx,subset))
+                    weights.append(np.exp(self.log_weight(len(indices),len(subset))+np.log(w)))
+                  
 
     def log_weight(self, n: int, subset_len: int) -> float:
         r"""For each $q_j, j \in \{1, ..., N\}$ in the outer probabilities, the
