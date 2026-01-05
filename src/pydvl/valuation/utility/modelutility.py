@@ -10,6 +10,15 @@ This class is geared towards sci-kit-learn models, but can be used with any obje
 implements the [BaseModel][pydvl.utils.types.BaseModel] protocol, i.e. that has a
 `fit()` method.
 
+## Incremental training with partial_fit
+
+[PartialFitModelUtility][pydvl.valuation.utility.modelutility.PartialFitModelUtility]
+extends ModelUtility to support models with `partial_fit` capability. This is particularly
+beneficial for TMC Shapley and other permutation-based methods, where training data grows
+incrementally. Instead of retraining from scratch for each subset, the utility uses
+`partial_fit` to update the model incrementally, significantly reducing computation time
+for compatible models (e.g., SGDClassifier, MLPClassifier, PassiveAggressiveClassifier).
+
 !!! danger "Errors are hidden by default"
     During semi-value computations, the utility can be evaluated on subsets that
     break the fitting process. For instance, a classifier might require at least two
@@ -104,15 +113,18 @@ import logging
 import warnings
 from typing import Generic, TypeVar, cast
 
+from typing_extensions import Self
+
 import numpy as np
 from sklearn.base import clone
 
 from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.functional import suppress_warnings
+from pydvl.valuation.dataset import Dataset
 from pydvl.valuation.scorers import Scorer
 from pydvl.valuation.types import BaseModel, SampleT
 
-__all__ = ["ModelUtility"]
+__all__ = ["ModelUtility", "PartialFitModelUtility"]
 
 from pydvl.valuation.utility.base import UtilityBase
 
@@ -207,6 +219,7 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
             cached_func_options.hash_prefix = str(hash((model, scorer)))
         self.cached_func_options = cached_func_options
         self._initialize_utility_wrapper()
+        self.full_fit_count = 0
 
     def _initialize_utility_wrapper(self):
         if self.cache is not None:
@@ -282,6 +295,9 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
                 model or the scorer returns [numpy.nan][]. Otherwise, the score
                 of the model.
         """
+        print("Utility")
+        self.full_fit_count += 1
+        print(f"Full fit count: {self.full_fit_count}")
         x_train, y_train = self.sample_to_data(sample)
 
         try:
@@ -335,3 +351,206 @@ class ModelUtility(UtilityBase[SampleT], Generic[SampleT, ModelT]):
         self.__dict__.update(state)
         # Add _utility_wrapper back since it doesn't exist in the pickle
         self._initialize_utility_wrapper()
+
+
+class PartialFitModelUtility(ModelUtility[SampleT, ModelT]):
+    """Model utility that supports incremental training with partial_fit.
+
+    This utility extends ModelUtility to support models with partial_fit capability
+    (e.g., SGDClassifier, MLPClassifier, MiniBatchKMeans). When used with permutation
+    samplers in TMC Shapley, this allows for incremental training as data points are
+    added sequentially, avoiding complete retraining for each subset.
+
+    The utility automatically detects if the model supports partial_fit and uses it
+    when appropriate. If partial_fit is not available, it falls back to regular fit().
+
+    !!! info "How it works"
+        When processing a permutation like [σ₁] → [σ₁, σ₂] → [σ₁, σ₂, σ₃], instead of:
+        - Training from scratch on [σ₁]
+        - Training from scratch on [σ₁, σ₂]
+        - Training from scratch on [σ₁, σ₂, σ₃]
+
+        We do:
+        - Train on [σ₁]
+        - partial_fit with [σ₂] to get model trained on [σ₁, σ₂]
+        - partial_fit with [σ₃] to get model trained on [σ₁, σ₂, σ₃]
+
+    !!! warning "Parallelization considerations"
+        The partial_fit optimization works within a single permutation processing.
+        When running in parallel, each worker processes its permutations independently.
+        Since the state is maintained per-worker, this is safe.
+
+    Args:
+        model: Any supervised model. Models supporting partial_fit (like SGDClassifier,
+            MLPClassifier) will benefit from incremental training.
+        scorer: A scoring object.
+        catch_errors: Set to `True` to catch errors when `fit()` or `partial_fit()` fails.
+        show_warnings: Set to `False` to suppress warnings thrown by `fit()` or `partial_fit()`.
+        cache_backend: Optional cache backend for memoization.
+        cached_func_options: Optional configuration for cached utility evaluation.
+        clone_before_fit: If `True`, the model will be cloned before calling `fit()`.
+            Note: For partial_fit, we always clone to maintain state correctly.
+
+    ??? Example "Usage with TMC Shapley"
+        ```python
+        from sklearn.linear_model import SGDClassifier
+        from pydvl.valuation import (
+            PartialFitModelUtility, SupervisedScorer, TMCShapleyValuation, Dataset
+        )
+
+        train, test = Dataset.from_arrays(X_train, y_train, X_test, y_test)
+        model = SGDClassifier(random_state=42)
+        scorer = SupervisedScorer("accuracy", test, default=0.0, range=(0.0, 1.0))
+        utility = PartialFitModelUtility(model, scorer)
+        valuation = TMCShapleyValuation(utility, is_done=MinUpdates(1000))
+        valuation.fit(train)
+        ```
+    """
+
+    def __init__(
+        self,
+        model: ModelT,
+        scorer: Scorer,
+        *,
+        catch_errors: bool = True,
+        show_warnings: bool = True,
+        cache_backend: CacheBackend | None = None,
+        cached_func_options: CachedFuncConfig | None = None,
+        clone_before_fit: bool = True,
+    ):
+        super().__init__(
+            model,
+            scorer,
+            catch_errors=catch_errors,
+            show_warnings=show_warnings,
+            cache_backend=cache_backend,
+            cached_func_options=cached_func_options,
+            clone_before_fit=clone_before_fit,
+        )
+        # State for partial_fit optimization
+        self._current_model: ModelT | None = None
+        self._current_indices: set[int] = set()
+        self._supports_partial_fit = hasattr(model, "partial_fit")
+        # Cache for unique classes, computed once per dataset
+        self._classes: np.ndarray | None = None
+        self.full_fit_count = 0
+        self.partial_fit_count = 0
+
+    def with_dataset(self, data: Dataset, copy: bool = True) -> Self:
+        utility = super().with_dataset(data, copy)
+        # Invalidate classes cache when dataset changes
+        utility._classes = None
+        return utility
+
+    def reset_partial_fit_state(self):
+        """Reset the partial_fit state for a new permutation.
+
+        This should be called at the start of each permutation to ensure
+        we start with a fresh model.
+        """
+        self._current_model = None
+        self._current_indices = set()
+
+    @suppress_warnings(flag="show_warnings")
+    def _utility(self, sample: SampleT) -> float:
+        """Fits or partially fits the model on a subset and scores it.
+
+        This method tries to use partial_fit when possible for efficiency.
+        If partial_fit is not applicable, it falls back to full fit().
+
+        Args:
+            sample: Contains indices for training.
+
+        Returns:
+            The score of the model, or scorer.default on error.
+        """
+        if sample is None or len(sample.subset) == 0:
+            return self.scorer.default
+
+        print("Partial fit utility")
+        print(f"Partial fit count: {self.partial_fit_count}")
+        print(f"Full fit count: {self.full_fit_count}")
+        try:
+            # Check if we can use partial_fit
+            # Optimization: logic integrated to avoid double set creation
+            use_partial = False
+            x_new = None
+            y_new = None
+            new_indices = set()
+
+            if self._supports_partial_fit and self._current_model is not None:
+                # Fast check on lengths first to avoid set creation if obviously not adding points
+                # Note: We assume only adding points (superset)
+                if len(sample.subset) >= len(self._current_indices):
+                    sample_set = set(sample.subset)
+                    if self._current_indices.issubset(sample_set):
+                        use_partial = True
+                        new_indices = sample_set - self._current_indices
+                        if len(new_indices) > 0:
+                            if self.training_data is None:
+                                raise ValueError("No training data provided")
+                            new_indices_array = np.array(sorted(new_indices))
+                            x_new, y_new = self.training_data.data(new_indices_array)
+
+            if use_partial:
+                # Incremental training with partial_fit
+                print("Partial fit")
+                self.partial_fit_count += 1
+                # Only proceed with partial_fit if there are new points
+                if x_new is not None and len(x_new) > 0:
+                    # For classifiers, partial_fit may need classes parameter on first call
+                    if hasattr(self._current_model, "classes_") or not hasattr(
+                        self._current_model, "partial_fit"
+                    ):
+                        # Model already has classes or doesn't need them (e.g. regressor or already fitted)
+                        self._current_model.partial_fit(x_new, y_new)
+                    else:
+                        # First partial_fit call for a classifier - need to provide classes
+                        if self._classes is None:
+                            if self.training_data is None:
+                                raise ValueError("No training data provided")
+                            _, y_all = self.training_data.data()
+                            self._classes = np.unique(y_all)
+
+                        self._current_model.partial_fit(x_new, y_new, classes=self._classes)
+
+                    self._current_indices.update(new_indices)
+
+                score = self._compute_score(self._current_model)
+                return score
+            else:
+                print("Full fit")
+                self.full_fit_count += 1
+                # Full training from scratch
+                x_train, y_train = self.sample_to_data(sample)
+                model = self._maybe_clone_model(self.model, self.clone_before_fit)
+                model.fit(x_train, y_train)
+
+                # Update state for potential future partial_fit
+                if self._supports_partial_fit:
+                    self._current_model = model
+                    self._current_indices = set(sample.subset)
+
+                score = self._compute_score(model)
+                return score
+
+        except Exception as e:
+            if self.catch_errors:
+                warnings.warn(str(e), RuntimeWarning)
+                # Reset state on error to avoid corrupted model
+                self.reset_partial_fit_state()
+                return self.scorer.default
+            raise
+
+    def __getstate__(self):
+        state = super().__getstate__()
+        # Don't pickle the current model state (it's worker-specific)
+        state.pop("_current_model", None)
+        state.pop("_current_indices", None)
+        return state
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        # Restore the partial_fit state attributes
+        self._current_model = None
+        self._current_indices = set()

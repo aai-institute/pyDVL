@@ -97,6 +97,7 @@ __all__ = [
     "DeterministicPermutationSampler",
     "PermutationSampler",
     "PermutationEvaluationStrategy",
+    "PermutationEvaluationStrategyWithPartialFit",
     "TruncationPolicy",
 ]
 
@@ -141,6 +142,21 @@ class PermutationSamplerBase(IndexSampler, ABC):
         utility: UtilityBase,
         coefficient: SemivalueCoefficient | None,
     ) -> PermutationEvaluationStrategy:
+        """Create an appropriate evaluation strategy for this sampler.
+
+        Automatically detects if the utility supports partial_fit and uses
+        the optimized strategy if available.
+
+        Args:
+            utility: The utility object to use for evaluation.
+            coefficient: Optional semi-value coefficient for importance sampling.
+
+        Returns:
+            An evaluation strategy appropriate for the utility type.
+        """
+        # Check if utility has reset_partial_fit_state method (PartialFitModelUtility)
+        if hasattr(utility, "reset_partial_fit_state"):
+            return PermutationEvaluationStrategyWithPartialFit(self, utility, coefficient)
         return PermutationEvaluationStrategy(self, utility, coefficient)
 
 
@@ -274,6 +290,73 @@ class PermutationEvaluationStrategy(
     ) -> list[ValueUpdate]:
         r = []
         for sample in batch:
+            self.truncation.reset(self.utility)
+            truncated = False
+            curr = prev = float(self.utility(None))
+            permutation = sample.subset
+            for i, idx in enumerate(permutation):  # type: int, np.int_
+                if not truncated:
+                    new_sample = sample.with_idx(idx).with_subset(permutation[: i + 1])
+                    curr = self.utility(new_sample)
+                marginal = curr - prev
+                sign = np.sign(marginal)
+                log_marginal = -np.inf if marginal == 0 else np.log(marginal * sign)
+                log_marginal += self.valuation_coefficient(self.n_indices, i)
+                r.append(ValueUpdate(idx, log_marginal, sign))
+                prev = curr
+                if not truncated and self.truncation(idx, curr, self.n_indices):
+                    truncated = True
+                if is_interrupted():
+                    return r
+        return r
+
+
+class PermutationEvaluationStrategyWithPartialFit(PermutationEvaluationStrategy):
+    """Evaluation strategy that resets partial_fit state for each permutation.
+
+    This strategy extends PermutationEvaluationStrategy to work with
+    PartialFitModelUtility. It resets the utility's partial_fit state at the
+    start of each permutation, ensuring that incremental training starts fresh
+    for each new permutation.
+
+    This is necessary because partial_fit optimization only works within a single
+    permutation where we have monotonically growing subsets. Across different
+    permutations, we need to start fresh.
+
+    !!! tip "When to use this strategy"
+        Use this strategy automatically when your utility is a PartialFitModelUtility.
+        The sampler will detect this and use the appropriate strategy.
+
+    Args:
+        sampler: The permutation sampler.
+        utility: The utility object, expected to be PartialFitModelUtility.
+        coefficient: Optional semi-value coefficient for importance sampling.
+    """
+
+    @suppress_warnings(categories=(RuntimeWarning,), flag="show_warnings")
+    def process(
+        self, batch: SampleBatch, is_interrupted: NullaryPredicate
+    ) -> list[ValueUpdate]:
+        """Process a batch of permutations with partial_fit state management.
+
+        For each permutation in the batch, this method:
+        1. Resets the utility's partial_fit state
+        2. Processes the permutation as normal
+        3. Allows the utility to use partial_fit for sequential samples
+
+        Args:
+            batch: Batch of samples (permutations) to process.
+            is_interrupted: Callable that returns True if computation should stop.
+
+        Returns:
+            List of value updates for all samples in the batch.
+        """
+        r = []
+        for sample in batch:
+            # Reset partial_fit state for each new permutation
+            if hasattr(self.utility, "reset_partial_fit_state"):
+                self.utility.reset_partial_fit_state()
+
             self.truncation.reset(self.utility)
             truncated = False
             curr = prev = float(self.utility(None))
