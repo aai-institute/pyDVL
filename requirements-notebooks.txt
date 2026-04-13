@@ -2,7 +2,7 @@ datasets==2.21.0
 dask==2024.8.0
 distributed==2024.8.0
 imblearn
-pillow==10.4.0
+pillow==12.2.0
 skorch>=1.2.0
 torch>=2.8.0
 torchvision>=0.23.0
