@@ -6,7 +6,7 @@ bump2version==1.0.1
 jupyter
 nbconvert>=7.2.9
 nbstripout == 0.6.1
-pytest==7.4.2
+pytest==9.0.3
 pytest-cov
 pytest-mock
 pytest-timeout
